@@ -1,0 +1,4 @@
+fiducials
+=========
+
+Fiducial recognition code.
