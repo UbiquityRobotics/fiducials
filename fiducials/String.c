@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "Character.h"
 #include "String.h"
 #include "Memory.h"
 #include "Unsigned.h"
@@ -39,7 +40,7 @@ String String__format(String format, ...) {
     String formatted = (String)Memory__allocate(formatted_size + 1);
 
     // Format *formatted*:
-    (void)vsnprintf(formatted, formatted_size, format, variadic_arguments);
+    (void)vsnprintf(formatted, formatted_size + 1, format, variadic_arguments);
 
     return formatted;
 }
@@ -51,3 +52,21 @@ void String__free(String string) {
     Memory__free((Memory)string);
 }
 
+/// @brief will convert from decimal string into a number and return it.
+/// @param string to convert.
+///
+/// *String__to_unsigned*() will convert from decimal string into a
+/// number and return it.
+
+Unsigned String__to_unsigned(String string) {
+    Unsigned result  = 0;
+    while (1) {
+	Character character = *string++;
+	if (Character__is_decimal_digit(character)) {
+	    result = result * 10 + (character - '0');
+	} else {
+	    break;
+	}
+    }
+    return result;
+}

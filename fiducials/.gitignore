@@ -1,5 +1,6 @@
 *~
+*.ezc
 *.o
 *.d
+*.svg
 Tags
-Tags.ezc

@@ -33,7 +33,10 @@ C_OPTIONS := \
 CC := gcc ${C_OPTIONS}
 
 COMMON_O_FILES := \
+    Character.o \
+    CRC.o \
     Double.o \
+    FEC.o \
     File.o \
     Integer.o \
     Logical.o \
@@ -67,7 +70,7 @@ clean:
 	rm -f ${ALL_H_BACKUPS}
 	rm -f ${ALL_O_FILES}
 	rm -f ${PROGRAMS}
-	rm Makefile~ Tags.ezc~
+	rm -f Makefile~ Tags.ezc~
 
 %.o: %c
 	$(CC) -c -o $@ $<

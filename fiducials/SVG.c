@@ -64,7 +64,7 @@ SVG SVG__open(String base_name,
     // Get *svg_stream* opened:
     SVG svg = (SVG)0;
     String file_name = String__format("%s.svg", base_name);
-    File svg_stream = File__open(file_name, "r");
+    File svg_stream = File__open(file_name, "w");
     if (svg_stream == (File)0) {
 	File__format(stderr, "Unable to open %s.svg\n", base_name);
     } else {
@@ -158,6 +158,6 @@ void SVG__text(SVG svg,
       "<text x=\"%f%s\" y=\"%f%s\"",
       (x + x_offset) * x_scale, units, (y + y_offset) * y_scale, units);
     File__format(svg_stream,
-      " style=\"font-family:%s; font-size:%d\"/>", font_family, font_size);
-    File__format(svg_stream, "%s%</text>\n", message);
+      " style=\"font-family:%s; font-size:%d\">", font_family, font_size);
+    File__format(svg_stream, "%s</text>\n", message);
 }
