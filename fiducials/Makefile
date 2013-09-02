@@ -47,6 +47,7 @@ COMMON_O_FILES := \
 
 DEMO_O_FILES := \
     CV.o \
+    High_GUI2.o \
     Demo.o \
 
 TAGS_O_FILES := \

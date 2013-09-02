@@ -216,3 +216,4 @@ void SVG__tag_write(/* Extractor extractor, */
     // Close *svg*:
     SVG__close(svg);
 }
+

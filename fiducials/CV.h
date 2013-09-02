@@ -1,9 +1,4 @@
-/*
- * Header for OpenCV.
- *
- * Copyright (c) 2010 by Wayne C. Gramlich
- * All rights reserved.
- */
+// Copyright (c) 2010 by Wayne C. Gramlich.  All rights reserved.
 
 #if !defined(CV_C_H_INCLUDED)
 #define CV_C_H_INCLUDED 1
@@ -11,6 +6,7 @@
 #include "opencv/cv.h"
 #include "opencv/highgui.h"
 
+#include "Integer.h"
 #include "String.h"
 
 typedef CvContour *CV_Contour;
@@ -39,6 +35,9 @@ extern CvScalar CV_Scalar__Initial;
 extern CvSlice CV_Slice__Initial;
 extern CvTermCriteria CV_Term_Criteria__Initial;
 
+extern Integer CV__window_auto_size;
+
+extern void CV__release_image(CV_Image image);
 extern CV_Image CV__tga_read(CV_Image image, String file_name);
 extern void CV__tga_write(CV_Image image, String file_name);
 
