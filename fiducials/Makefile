@@ -45,6 +45,10 @@ COMMON_O_FILES := \
     SVG.o \
     Unsigned.o \
 
+DEMO_O_FILES := \
+    CV.o \
+    Demo.o \
+
 TAGS_O_FILES := \
     Tags.o \
 
@@ -56,13 +60,24 @@ ALL_C_BACKUPS := ${ALL_O_FILES:%.o=%.c~}
 ALL_D_FILES := ${ALL_O_FILES:%.o=%.d}
 ALL_H_BACKUPS := ${ALL_O_FILES:%.o=%.h~}
 
+OPENCV_LIBRARIES := \
+    -lm \
+    -lopencv_core \
+    -lopencv_imgproc \
+    -lopencv_calib3d \
+    -lopencv_highgui \
+
 PROGRAMS := \
+    Demo \
     Tags \
 
 all: ${PROGRAMS}
 
 Tags: ${COMMON_O_FILES} ${TAGS_O_FILES}
 	$(CC) -o $@ ${TAGS_O_FILES} ${COMMON_O_FILES}
+
+Demo: ${COMMON_O_FILES} ${DEMO_O_FILES}
+	$(CC) -o $@ ${DEMO_O_FILES} ${COMMON_O_FILES} ${OPENCV_LIBRARIES}
 
 clean:
 	rm -f ${ALL_C_BACKUPS}

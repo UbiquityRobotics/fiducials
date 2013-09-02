@@ -3,9 +3,33 @@
 #include <assert.h>
 
 #include "File.h"
+#include "Integer.h"
 #include "String.h"
+#include "Unsigned.h"
 
 // *File* routines:
+
+/// @brief Read a byte from *file*.
+/// @param file to read from.
+/// @returns byte read from *file*.
+///
+/// *File__byte_read*() will read a byte from *file* and return it.
+
+Unsigned File__byte_read(File file) {
+    Integer byte = fgetc(file);
+    assert (byte >= 0);
+    return (Unsigned)byte;
+}
+
+/// @brief Write *byte* ot *file*.
+/// @param file to read from.
+/// @param byte to write out.
+///
+/// *File__byte_write*() will write *byte* to *file*.
+
+void File__byte_write(File file, Unsigned byte) {
+    fputc(byte, file);
+}
 
 /// @brief Closes *file*.
 /// @param file to close.
@@ -31,6 +55,34 @@ void File__format(File file, String format, ...) {
 
     // Perform the format:
     Unsigned formatted_size = vfprintf(file, format, variadic_arguments);
+}
+
+/// @brief Read a little endian short (16-bits) from *file*.
+/// @param file to read from.
+/// @returns 16-bit value from *file*.
+///
+/// *File__little_endian_short_read*() will read a 16-bit unsigned integer
+/// from *file* and return it.
+
+Unsigned File__little_endian_short_read(File file) {
+    Integer low_byte = fgetc(file);
+    assert (low_byte >= 0);
+    Integer high_byte = fgetc(file);
+    assert (high_byte >= 0);
+    Unsigned result = ((Unsigned)high_byte << 8) | (Unsigned)low_byte;
+    return result;
+}
+
+/// @brief Write 16-bit *xshort* to *file* in little endian format.
+/// @param file to write.
+/// @param xshort to write.
+///
+/// *File__little_endian_short_write*() will write write *xshort* to *file*
+/// as a little endian 16-bit unsigned integer.
+
+void File__little_endian_short_write(File file, Unsigned xshort) {
+    fputc(xshort & 0xff, file);
+    fputc((xshort >> 8) & 0xff, file);
 }
 
 /// @brief will open *file_name* using *flags* to specify read/write options.
