@@ -6,7 +6,10 @@
 #include "opencv/cv.h"
 #include "opencv/highgui.h"
 
+#include "Logical.h"
+#include "Double.h"
 #include "Integer.h"
+#include "Memory.h"
 #include "String.h"
 
 typedef CvContour *CV_Contour;
@@ -22,20 +25,62 @@ typedef CvSize *CV_Size;
 typedef CvSlice *CV_Slice;
 typedef CvTermCriteria *CV_Term_Criteria;
 
-extern CvContour CV_Contour__Initial;
-extern IplImage CV_Image__Initial;
-/* extern CvCapture CV_Capture__Initial; */
-extern CvSize CV_Size__Initial;
-extern CvMat CV_Matrix__Initial;
-extern CvMemStorage CV_Memory_Storage__Initial;
-extern CvPoint CV_Point__Initial;
-extern CvPoint2D32f CV_Point2D32F__Initial;
-extern CvPoint2D32f CV_Point2D32F_Vector__Initial;
-extern CvScalar CV_Scalar__Initial;
-extern CvSlice CV_Slice__Initial;
-extern CvTermCriteria CV_Term_Criteria__Initial;
-
+extern Integer CV__chain_approx_simple;
+extern Integer CV__adaptive_thresh_gaussian_c;
+extern Integer CV__depth_8u;
+extern Integer CV__gaussian;
+extern Integer CV__gray_to_rgb;
+extern Integer CV__poly_approx_dp;
+extern Integer CV__retr_list;
+extern Integer CV__rgb_to_gray;
+extern Integer CV__thresh_binary;
 extern Integer CV__window_auto_size;
+
+
+extern void CV_Image__adaptive_threshold(CV_Image source_image,
+  CV_Image destination_image, Double maximum_value, Integer adaptive_method,
+  Integer threshold_type, Integer block_size, Double parameter1);
+extern CV_Image CV_Image__create(
+  CV_Size size, Unsigned depth, Unsigned channels);
+extern Integer CV_Image__channels_get(CV_Image image);
+extern void CV_Image__copy(
+  CV_Image source_image, CV_Image destination_image, CV_Image mask);
+extern CV_Sequence CV_Image__find_contours(CV_Image image,
+  CV_Memory_Storage storage, Integer header_size, Integer mode,
+  Integer method, CV_Point point);
+extern void CV_Image__draw_contours(CV_Image image, CV_Sequence contour,
+  CV_Scalar external_color, CV_Scalar hole_color, Integer maximal_level,
+  Integer thickness, Integer line_type, CV_Point offset);
+extern Integer CV_Image__height_get(CV_Image image);
+extern Integer CV_Image__width_get(CV_Image image);
+extern void CV_Image__convert_color(
+  CV_Image source_image, CV_Image destination_image, Integer conversion_code);
+extern void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
+  Integer smooth_type, Integer parameter1, Integer parameter2,
+  Double parameter3, Double parameter4);
+
+extern void CV_Memory_Storage__clear(CV_Memory_Storage storage);
+extern CV_Memory_Storage CV_Memory_Storage__create(Integer block_size);
+
+extern CV_Point CV_Point__create(Integer x, Integer y);
+
+extern CV_Scalar CV_Scalar__create(
+  Double value0, Double value1, Double value2, Double value3);
+extern CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue);
+
+
+extern Double CV_Sequence__arc_length(
+ CV_Sequence contour, CV_Slice slice, Integer is_closed);
+extern CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
+  Integer header_size, CV_Memory_Storage storage, Integer method,
+  Integer parameter1, Double parameter2);
+extern Logical CV_Sequence__check_contour_convexity(CV_Sequence contour);
+extern Double CV_Sequence__contour_area(
+  CV_Sequence contour, CV_Slice slice, Integer oriented);
+extern CV_Sequence CV_Sequence__next_get(CV_Sequence sequence);
+extern Integer CV_Sequence__total_get(CV_Sequence sequence);
+
+extern CV_Size CV_Size__create(Integer width, Integer height);
 
 extern void CV__release_image(CV_Image image);
 extern CV_Image CV__tga_read(CV_Image image, String file_name);

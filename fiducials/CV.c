@@ -163,43 +163,26 @@ Integer CV__f64c4 = CV_64FC4;
 
 Integer Cv__auto_step = CV_AUTO_STEP;
 
-void
-CV__adaptive_threshold(
-  CV_Image source_image,
-  CV_Image destination_image,
-  Double maximum_value,
-  Integer adaptive_method,
-  Integer threshold_type,
-  Integer block_size,
-  Double parameter1)
-{
+void CV_Image__adaptive_threshold(CV_Image source_image,
+  CV_Image destination_image, Double maximum_value, Integer adaptive_method,
+  Integer threshold_type, Integer block_size, Double parameter1) {
     cvAdaptiveThreshold(source_image, destination_image, maximum_value,
       adaptive_method, threshold_type, block_size, parameter1);
 }
 
 Integer CV__poly_approx_dp = CV_POLY_APPROX_DP;
 
-CV_Sequence
-CV__approx_poly(
-  CV_Sequence contour,
-  Integer header_size,
-  CV_Memory_Storage storage,
-  Integer method,
-  Integer parameter1,
-  Double parameter2)
-{
+CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
+  Integer header_size, CV_Memory_Storage storage, Integer method,
+  Integer parameter1, Double parameter2) {
     //(void)printf("sizeof=%d method=%d param1=%d\n",
     //  sizeof(CvContour), method, parameter1);
     return cvApproxPoly(contour,
       sizeof(CvContour), storage, method, parameter1, parameter2);
 }
 
-Double
-CV__arc_length(
-  CV_Sequence contour,
-  CV_Slice slice,
-  Integer is_closed)
-{
+Double CV_Sequence__arc_length(
+  CV_Sequence contour, CV_Slice slice, Integer is_closed) {
     return cvArcLength(contour, *slice, is_closed);
 }    
 
@@ -220,17 +203,11 @@ CV__calibrate_camera2(
       translation_vectors, flags);
 }
 
-Logical
-CV__check_contour_convexity(
-  CV_Sequence contour)
-{
+Logical CV_Sequence__check_contour_convexity(CV_Sequence contour) {
     return (Logical)(cvCheckContourConvexity(contour) ? 1 : 0);
 }
 
-void
-CV__clear_mem_storage(
-  CV_Memory_Storage storage)
-{
+void CV_Memory_Storage__clear(CV_Memory_Storage storage) {
     cvClearMemStorage(storage);
 }
 
@@ -241,39 +218,26 @@ CV__clone_image(
     return cvCloneImage(image);
 }
 
-Double
-CV__contour_area(
-  CV_Sequence contour,
-  CV_Slice slice,
-  Integer oriented)
-{
+Double CV_Sequence__contour_area(
+  CV_Sequence contour, CV_Slice slice, Integer oriented) {
     return cvContourArea(contour, *slice, oriented);
 }
 
-CV_Image
-CV__create_image(
-  CV_Size size,
-  Integer depth,
-  Integer channels)
-{
+CV_Memory_Storage CV_Memory_Storage__create(Integer block_size) {
+    return cvCreateMemStorage(block_size);
+}
+
+CV_Image CV_Image__create(CV_Size size, Unsigned depth, Unsigned channels) {
     return cvCreateImage(*size, depth, channels);
 }
 
-void
-CV__cvt_color(
-  CV_Image source_image,
-  CV_Image destination_image,
-  Integer conversion_code)
-{
-  cvCvtColor(source_image, destination_image, conversion_code);
+void CV_Image__convert_color(
+ CV_Image source_image, CV_Image destination_image, Integer conversion_code) {
+    cvCvtColor(source_image, destination_image, conversion_code);
 }
 
-void
-CV__copy(
-  CV_Image source_image,
-  CV_Image destination_image,
-  CV_Image mask)
-{
+void CV_Image__copy(
+  CV_Image source_image, CV_Image destination_image, CV_Image mask) {
     cvCopy(source_image, destination_image, mask);
 }
 
@@ -289,17 +253,9 @@ CV__draw_chessboard_corners(
       *pattern_size, corners, count, pattern_was_found);
 }
 
-void
-CV__draw_contours(
-  CV_Image image,
-  CV_Sequence contour,
-  CV_Scalar external_color,
-  CV_Scalar hole_color,
-  Integer maximal_level,
-  Integer thickness,
-  Integer line_type,
-  CV_Point offset)
-{
+void CV_Image__draw_contours(CV_Image image, CV_Sequence contour,
+  CV_Scalar external_color, CV_Scalar hole_color, Integer maximal_level,
+  Integer thickness, Integer line_type, CV_Point offset) {
   cvDrawContours(image, contour, *external_color,
     *hole_color, maximal_level, thickness, line_type, *offset);
 }
@@ -340,15 +296,8 @@ CV__find_chessboard_corners(
     return result;
 }
 
-CV_Sequence
-CV__find_contours(
-  CV_Image image,
-  CV_Memory_Storage storage,
-  Integer header_size,
-  Integer mode,
-  Integer method,
-  CV_Point point)
-{
+CV_Sequence CV_Image__find_contours(CV_Image image, CV_Memory_Storage storage,
+  Integer header_size, Integer mode, Integer method, CV_Point point) {
     Integer result;
     CV_Sequence contours;
 
@@ -511,23 +460,14 @@ Integer CV__gaussian = CV_GAUSSIAN;
 Integer CV__median = CV_MEDIAN;
 Integer CV__bilateral = CV_BILATERAL;
 
-void
-CV_smooth(
-  CV_Image source_image,
-  CV_Image destination_image,
-  Integer smooth_type,
-  Integer parameter1,
-  Integer parameter2,
-  Double parameter3,
-  Double parameter4)
-{
+void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
+  Integer smooth_type, Integer parameter1, Integer parameter2,
+  Double parameter3, Double parameter4) {
     cvSmooth(source_image, destination_image, smooth_type, parameter1,
       parameter2, parameter3, parameter4);
 }
 
-Unsigned CV_Image__channels_get(
-  CV_Image image)
-{
+Integer CV_Image__channels_get(CV_Image image) {
     return image->nChannels;
 }
 
@@ -601,10 +541,7 @@ CV_Image__gray_fetch(
     return result;
 }
 
-Integer
-CV_Image__height_get(
-  CV_Image image)
-{
+Integer CV_Image__height_get(CV_Image image) {
     return image->height;
 }
 
@@ -620,11 +557,8 @@ CV_Image__store3(
     pointer[channel] = (unsigned char)value;
 }
 
-Integer
-CV_Image__width_get(
-  CV_Image image)
-{
-    return image->width;
+Integer CV_Image__width_get(CV_Image image) {
+    return (Unsigned)image->width;
 }
 
 Integer
@@ -653,11 +587,7 @@ CV_Matrix__save(
       matrix, (const char *)0, (const char *)0, attributes);
 }
 
-CV_Point
-CV_Point__create(
-  Integer x,
-  Integer y)
-{
+CV_Point CV_Point__create(Integer x, Integer y) {
     Unsigned malloc_bytes = sizeof *((CV_Point)0);
     // (void)printf("CV_Point__create: malloc_bytes=%d\n", malloc_bytes);
     CV_Point point = (CV_Point) malloc(sizeof *((CV_Point *)0) );
@@ -769,16 +699,9 @@ CV_Point2D32F_Vector__fetch1(
     return &vector[index];
 }
 
-CV_Scalar
-CV_Scalar__create(
-  Double value0,
-  Double value1,
-  Double value2,
-  Double value3)
-{
-    Unsigned malloc_bytes = sizeof *((CV_Scalar)0);
-    // (void)printf("CV_Scalar__create: malloc_bytes=%d\n", malloc_bytes);
-    CV_Scalar scalar = (CV_Scalar)malloc(malloc_bytes);
+CV_Scalar CV_Scalar__create(
+  Double value0, Double value1, Double value2, Double value3) {
+    CV_Scalar scalar = Memory__new(CV_Scalar);
     scalar->val[0] = value0;
     scalar->val[1] = value1;
     scalar->val[2] = value2;
@@ -786,10 +709,14 @@ CV_Scalar__create(
     return scalar;
 }
 
-CV_Sequence
-CV_Sequence__next_get(
-  CV_Sequence sequence)
-{
+// This routine will return a {CV_Scalar} that encodes {red}, {green},
+// and {blue} as a color.
+
+CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue) {
+    return CV_Scalar__create(blue, green, red, 0.0);
+}
+
+CV_Sequence CV_Sequence__next_get(CV_Sequence sequence) {
     return sequence->h_next;
 }
 
@@ -801,24 +728,14 @@ CV_Sequence__point_fetch(
     return (CV_Point)cvGetSeqElem(sequence, index);
 }
 
-Integer
-CV_Sequence__total_get(
-  CV_Sequence sequence)
-{
+Integer CV_Sequence__total_get(CV_Sequence sequence) {
     return sequence->total;
 }
 
-CV_Size
-CV_Size__create(
-  Integer width,
-  Integer height)
-{
-    Unsigned malloc_bytes = sizeof *((CV_Size)0);
-    // (void)printf("CV_Size__create: malloc_bytes=%d\n", malloc_bytes);
-    CV_Size size = (CV_Size)malloc(malloc_bytes);
-
-    size->width = width;
-    size->height = height;
+CV_Size CV_Size__create(Integer width, Integer height) {
+    CV_Size size = Memory__new(CV_Size);
+    size->width = (Integer)width;
+    size->height = (Integer)height;
     return size;
 }
 
@@ -931,9 +848,9 @@ CV_Image CV__tga_read(CV_Image image, String tga_file_name) {
     if (image == (CV_Image)0) {
 	CV_Size size = CV_Size__create((Integer)width, (Integer)height);
 	if (gray_mode) {
-	    image = CV__create_image(size, 8, 1);
+	    image = CV_Image__create(size, 8, 1);
 	} else {
-	    image = CV__create_image(size, 8, 3);
+	    image = CV_Image__create(size, 8, 3);
 	}
     }
 
