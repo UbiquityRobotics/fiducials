@@ -36,38 +36,69 @@ extern Integer CV__rgb_to_gray;
 extern Integer CV__thresh_binary;
 extern Integer CV__window_auto_size;
 
+extern Integer CV__round(Double value);
 
 extern void CV_Image__adaptive_threshold(CV_Image source_image,
   CV_Image destination_image, Double maximum_value, Integer adaptive_method,
   Integer threshold_type, Integer block_size, Double parameter1);
-extern CV_Image CV_Image__create(
-  CV_Size size, Unsigned depth, Unsigned channels);
 extern Integer CV_Image__channels_get(CV_Image image);
+extern void CV_Image__convert_color(
+  CV_Image source_image, CV_Image destination_image, Integer conversion_code);
 extern void CV_Image__copy(
   CV_Image source_image, CV_Image destination_image, CV_Image mask);
-extern CV_Sequence CV_Image__find_contours(CV_Image image,
-  CV_Memory_Storage storage, Integer header_size, Integer mode,
-  Integer method, CV_Point point);
+extern CV_Image CV_Image__create(
+  CV_Size size, Unsigned depth, Unsigned channels);
+extern void CV_Image__cross_draw(
+  CV_Image image, Integer x, Integer y, CV_Scalar color);
 extern void CV_Image__draw_contours(CV_Image image, CV_Sequence contour,
   CV_Scalar external_color, CV_Scalar hole_color, Integer maximal_level,
   Integer thickness, Integer line_type, CV_Point offset);
+extern CV_Sequence CV_Image__find_contours(CV_Image image,
+  CV_Memory_Storage storage, Integer header_size, Integer mode,
+  Integer method, CV_Point point);
+extern void CV_Image__find_corner_sub_pix(CV_Image image,
+  CV_Point2D32F_Vector corners, Integer count, CV_Size window,
+  CV_Size zero_zone, CV_Term_Criteria criteria);
+extern Integer CV_Image__gray_fetch(CV_Image image, Integer x, Integer y);
 extern Integer CV_Image__height_get(CV_Image image);
-extern Integer CV_Image__width_get(CV_Image image);
-extern void CV_Image__convert_color(
-  CV_Image source_image, CV_Image destination_image, Integer conversion_code);
+extern Integer CV_Image__points_maximum(CV_Image image,
+  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+extern Integer CV_Image__points_minimum(CV_Image image,
+  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+extern Integer CV_Image__point_sample(CV_Image image, CV_Point2D32F point);
 extern void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
   Integer smooth_type, Integer parameter1, Integer parameter2,
   Double parameter3, Double parameter4);
+extern Integer CV_Image__width_get(CV_Image image);
+
+extern Integer CV__term_criteria_iterations;
+extern Integer CV__term_criteria_eps;
+extern CV_Term_Criteria CV_Term_Criteria__create(
+  Integer type, Integer maximum_iterations, Double epsilon);
 
 extern void CV_Memory_Storage__clear(CV_Memory_Storage storage);
 extern CV_Memory_Storage CV_Memory_Storage__create(Integer block_size);
 
 extern CV_Point CV_Point__create(Integer x, Integer y);
+extern Integer CV_Point__y_get(CV_Point point);
+extern Integer CV_Point__x_get(CV_Point point);
+
+extern void CV_Point2D32F_Vector__corners_normalize(
+  CV_Point2D32F_Vector corners);
+extern CV_Point2D32F_Vector CV_Point2D32F_Vector__create(Unsigned size);
+extern CV_Point2D32F CV_Point2D32F_Vector__fetch1(
+  CV_Point2D32F_Vector vector,  Unsigned index);
+extern Logical CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners);
+
+extern void CV_Point2D32F__point_set(CV_Point2D32F point2d32f, CV_Point point);
+extern Double CV_Point2D32F__x_get(CV_Point2D32F point);
+extern void CV_Point2D32F__x_set(CV_Point2D32F point, Double x);
+extern Double CV_Point2D32F__y_get(CV_Point2D32F point);
+extern void CV_Point2D32F__y_set(CV_Point2D32F point, Double y);
 
 extern CV_Scalar CV_Scalar__create(
   Double value0, Double value1, Double value2, Double value3);
 extern CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue);
-
 
 extern Double CV_Sequence__arc_length(
  CV_Sequence contour, CV_Slice slice, Integer is_closed);
@@ -78,6 +109,7 @@ extern Logical CV_Sequence__check_contour_convexity(CV_Sequence contour);
 extern Double CV_Sequence__contour_area(
   CV_Sequence contour, CV_Slice slice, Integer oriented);
 extern CV_Sequence CV_Sequence__next_get(CV_Sequence sequence);
+extern CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, Unsigned index);
 extern Integer CV_Sequence__total_get(CV_Sequence sequence);
 
 extern CV_Size CV_Size__create(Integer width, Integer height);

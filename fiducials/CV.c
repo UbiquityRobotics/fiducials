@@ -307,15 +307,8 @@ CV_Sequence CV_Image__find_contours(CV_Image image, CV_Memory_Storage storage,
     return contours;
 }  
 
-void
-CV__find_corner_sub_pix(
-  CV_Image image,
-  CV_Point2D32F_Vector corners,
-  Integer count,
-  CV_Size window,
-  CV_Size zero_zone,
-  CV_Term_Criteria criteria)
-{
+void CV_Image__find_corner_sub_pix(CV_Image image, CV_Point2D32F_Vector corners,
+  Integer count, CV_Size window, CV_Size zero_zone, CV_Term_Criteria criteria) {
     cvFindCornerSubPix(image, corners, count, *window, *zero_zone, *criteria);
 }
 
@@ -471,13 +464,8 @@ Integer CV_Image__channels_get(CV_Image image) {
     return image->nChannels;
 }
 
-void
-CV_Image__cross_draw(
-  CV_Image img,
-  Integer x,
-  Integer y,
-  CV_Scalar color)
-{
+void CV_Image__cross_draw(
+  CV_Image image, Integer x, Integer y, CV_Scalar color) {
     // Draw a small cross at the indicated point.
     uchar *pixel;
     uchar *pixel_lt;
@@ -487,11 +475,11 @@ CV_Image__cross_draw(
     uchar red = cvRound(color->val[0]);
     uchar green = cvRound(color->val[1]);
     uchar blue = cvRound(color->val[2]);
-    uchar *data = (uchar *)img->imageData;
-    int width_step = img->widthStep;
+    uchar *data = (uchar *)image->imageData;
+    int width_step = image->widthStep;
 
     // Sanity check the values.
-    if (x < 1 || y < 1 || x >= (img->width - 1) || y >= (img->height - 1)) {
+    if (x < 1 || y < 1 || x >= (image->width - 1) || y >= (image->height - 1)) {
 	return;
     }
 
@@ -527,12 +515,7 @@ CV_Image__fetch3(
     return pointer[channel];
 }
 
-Integer
-CV_Image__gray_fetch(
-  CV_Image image,
-  Integer x,
-  Integer y)
-{
+Integer CV_Image__gray_fetch(CV_Image image, Integer x, Integer y) {
     Integer result = -1;
     if (0 <= x && x < image->width && 0 <= y && y < image->height) {
 	result =
@@ -597,10 +580,7 @@ CV_Point CV_Point__create(Integer x, Integer y) {
     return point;
 }
 
-Integer
-CV_Point__x_get(
-  CV_Point point)
-{
+Integer CV_Point__x_get(CV_Point point) {
     return point->x;
 }
 
@@ -612,10 +592,7 @@ CV_Point__x_set(
     point->x = x;
 }
 
-Integer
-CV_Point__y_get(
-  CV_Point point)
-{
+Integer CV_Point__y_get(CV_Point point) {
     return point->y;
 }
 
@@ -644,40 +621,30 @@ CV_Point2D32F__create(
     return point;
 }
 
-Double
-CV_Point2D32F__x_get(
-  CV_Point2D32F point)
-{
+Double CV_Point2D32F__x_get(CV_Point2D32F point) {
     return point->x;
 }
 
-void
-CV_Point2D32F__x_set(
-  CV_Point2D32F point,
-  Double x)
-{
+void CV_Point2D32F__x_set(CV_Point2D32F point, Double x) {
     point->x = x;
 }
 
-Double
-CV_Point2D32F__y_get(
-  CV_Point2D32F point)
-{
+Double CV_Point2D32F__y_get(CV_Point2D32F point) {
     return point->y;
 }
 
-void
-CV_Point2D32F__y_set(
-  CV_Point2D32F point,
-  Double y)
-{
+void CV_Point2D32F__y_set(CV_Point2D32F point, Double y) {
     point->y = y;
 }
 
-CV_Point2D32F_Vector
-CV_Point2D32F_Vector__create(
-  Unsigned size)
-{
+void CV_Point2D32F__point_set(CV_Point2D32F point2d32f, CV_Point point) {
+    int x = CV_Point__x_get(point);
+    int y = CV_Point__y_get(point);
+    (void)CV_Point2D32F__x_set(point2d32f, (double)x);
+    (void)CV_Point2D32F__y_set(point2d32f, (double)y);
+}
+
+CV_Point2D32F_Vector CV_Point2D32F_Vector__create(Unsigned size) {
     Unsigned malloc_bytes = size * sizeof *((CV_Point2D32F)0);
     // (void)printf("CV_Point2D32F_Vector__create: size=%d malloc_bytes=%d\n",
     //   size, malloc_bytes);
@@ -691,10 +658,8 @@ CV_Point2D32F_Vector__create(
     return vector;
 }
 
-CV_Point2D32F
-CV_Point2D32F_Vector__fetch1(
-  CV_Point2D32F_Vector vector,
-  Unsigned index)
+CV_Point2D32F CV_Point2D32F_Vector__fetch1(
+  CV_Point2D32F_Vector vector,  Unsigned index)
 {
     return &vector[index];
 }
@@ -720,11 +685,7 @@ CV_Sequence CV_Sequence__next_get(CV_Sequence sequence) {
     return sequence->h_next;
 }
 
-CV_Point
-CV_Sequence__point_fetch(
-  CV_Sequence sequence,
-  Unsigned index)
-{
+CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, Unsigned index) {
     return (CV_Point)cvGetSeqElem(sequence, index);
 }
 
@@ -756,12 +717,8 @@ CV_Slice__create(
 Integer CV__term_criteria_iterations = CV_TERMCRIT_ITER;
 Integer CV__term_criteria_eps = CV_TERMCRIT_EPS;
 
-CV_Term_Criteria
-CV_Term_Criteria__create(
-  Integer type,
-  Integer maximum_iterations,
-  Double epsilon)
-{
+CV_Term_Criteria CV_Term_Criteria__create(
+  Integer type, Integer maximum_iterations, Double epsilon) {
     Unsigned malloc_bytes = sizeof *((CV_Term_Criteria)0);
     // (void)printf("CV_Term_Criteria__create: malloc_bytes=%d\n",
     //   malloc_bytes);
@@ -954,4 +911,6 @@ void CV__tga_write(CV_Image image, String file_name) {
     File__close(tga_out_file);
 }
 
-
+Integer CV__round(Double value) {
+    return cvRound(value);
+}
