@@ -34,7 +34,7 @@ will generate tag41.svg and tag42.svg.  To print:
 The Demo program is used to debug and show what is going
 on under the covers.
 
-   Demo image-05.tga
+    Demo image-05.tga
 
 will load the image-05.tga file and do fiducial recognition
 on it.  Move the cursor over the window that pops up and
