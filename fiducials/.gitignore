@@ -1,7 +1,8 @@
 *~
+*.d
 *.ezc
 *.o
-*.d
+*.pdf
 *.svg
 Tags
 Demo
