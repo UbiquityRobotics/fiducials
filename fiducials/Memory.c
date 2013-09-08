@@ -26,3 +26,19 @@ Memory Memory__allocate(Unsigned bytes) {
 void Memory__free(Memory memory) {
     free(memory);
 }
+
+/// @brief Expands/contracts *memory* to be *new_size* bytes.
+/// @param memory to expand or contract.
+/// @param new_size is the new size of the memory segement.
+/// @returns *memory* or a copy of *memory*.
+///
+/// *Memory__reallocate*() will either *resize* *memory* to be *new_bytes*
+/// bytes in size, or allocate a new chunk of memory that is *new_bytes* in
+/// size.  If the later case, the previous contents of memory is copied over
+/// before releasing the original storage.
+
+Memory Memory__reallocate(Memory memory, Unsigned new_size) {
+    memory = realloc(memory, new_size);
+    assert (memory != (Memory)0);
+    return memory;
+}

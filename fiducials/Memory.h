@@ -29,7 +29,7 @@ typedef void *Memory;
 
 extern Memory Memory__allocate(Unsigned bytes);
 extern void Memory__free(Memory memory);
-
+extern Memory Memory__reallocate(Memory memory, Unsigned new_size);
 
 #endif // !defined(MEMORY_H_INCLUDED)
 

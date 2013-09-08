@@ -14,6 +14,7 @@ The following are known dependencies:
 * GCC (sudo apt-get install build-essential)
 * OpenCV (sudo apt-get install libopencv-dev)
 * InkScape (sudo apt-get install inkscape)
+* doxygen (sudo apt-get install doxygen)
 
 If you run across any additional dependencies, update this file
 with your copy of the repository, and send me a pull request.
@@ -28,6 +29,23 @@ will generate tag41.svg and tag42.svg.  To print:
 
     inkscape --without-gui --export-pdf=tag41.pdf tag41.svg
     lpr tag41.pdf
+
+## Video_Capture
+
+The Video_Capture program capture is used to display video from
+a video camera and capture a sequence of images from the video
+stream.  To use:
+
+    Video_Capture camera_number [capture_base_name]
+
+If the image does not come up, try again.  If comes up with
+the image rotated horizontally.  If it keeps coming up screwy,
+unplug the camera and try again.  Honest, it is unclear what
+the issue is.
+
+To use image capture, first click on the image to shift the
+input focus to Video capture.  To capture an image, type the
+[space] key.  To exit, type the [Esc] key.
 
 ## Demo
 

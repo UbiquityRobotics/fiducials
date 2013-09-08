@@ -14,7 +14,17 @@ typedef CvVideoWriter *CV_Video_Writer;
 extern CvCapture CV_Capture__Initial;
 extern CvVideoWriter CV_Video_Writer__Initial;
 
-extern CV_Capture CV__create_file_capture(String capture_file_name);
+extern Integer CV__capture_any;
+extern Integer CV_Capture__property_frame_width;
+extern Integer CV_Capture__property_frame_height;
+extern CV_Capture CV_Capture__create_camera(Integer camera_number);
+extern CV_Capture CV_Capture__create_file(String capture_file_name);
+extern Integer CV_Capture__set_property(
+ CV_Capture capture, Integer property_id, Double value);
+extern CV_Image CV_Capture__query_frame(CV_Capture capture);
+extern void CV_Image__show(CV_Image image, String window_name);
+extern void CV_Capture__release(CV_Capture capture);
+
 extern CV_Video_Writer CV__create_video_writer(String out_file_name,
   Integer four_cc, Double fps, CV_Size size, Integer is_color);
 extern void CV__destroy_window(String window_name);

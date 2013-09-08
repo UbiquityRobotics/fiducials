@@ -1,6 +1,5 @@
 # Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
-
 C_WARNING_OPTIONS := \
     -Wreturn-type \
     -Wno-missing-braces \
@@ -39,23 +38,32 @@ COMMON_O_FILES := \
     FEC.o \
     File.o \
     Integer.o \
+    List.o \
     Logical.o \
     Memory.o \
     String.o \
     SVG.o \
+    Table.o \
     Unsigned.o \
 
 DEMO_O_FILES := \
     CV.o \
-    High_GUI2.o \
     Demo.o \
+    High_GUI2.o \
 
 TAGS_O_FILES := \
     Tags.o \
 
+VIDEO_CAPTURE_O_FILES := \
+    CV.o \
+    High_GUI2.o \
+    Video_Capture.o \
+
 ALL_O_FILES := \
     ${COMMON_O_FILES} \
+    ${DEMO_O_FILES} \
     ${TAGS_O_FILES} \
+    ${VIDOE_CAPTURE_O_FILES} \
 
 ALL_C_BACKUPS := ${ALL_O_FILES:%.o=%.c~}
 ALL_D_FILES := ${ALL_O_FILES:%.o=%.d}
@@ -71,6 +79,7 @@ OPENCV_LIBRARIES := \
 PROGRAMS := \
     Demo \
     Tags \
+    Video_Capture \
 
 all: ${PROGRAMS}
 
@@ -79,6 +88,10 @@ Tags: ${COMMON_O_FILES} ${TAGS_O_FILES}
 
 Demo: ${COMMON_O_FILES} ${DEMO_O_FILES}
 	$(CC) -o $@ ${DEMO_O_FILES} ${COMMON_O_FILES} ${OPENCV_LIBRARIES}
+
+Video_Capture: ${COMMON_O_FILES} ${VIDEO_CAPTURE_O_FILES}
+	$(CC) -o $@ ${VIDEO_CAPTURE_O_FILES} \
+	    ${COMMON_O_FILES} ${OPENCV_LIBRARIES}
 
 clean:
 	rm -f ${ALL_C_BACKUPS}

@@ -9,30 +9,6 @@
 #include "High_GUI2.h"
 #include "Integer.h"
 
-// Bogus structure definitions:
-struct CvCapture {
-    Integer zilch;
-};
-
-struct CvVideoWriter {
-    Integer zilch;
-};
-
-/* null objects: */
-CvCapture CV_Capture__Initial;
-CV_Capture CV_Capture__null = &CV_Capture__Initial;
-CvVideoWriter CV_Video_Writer__Initial;
-CV_Video_Writer CV_Video_Writer__null = &CV_Video_Writer__Initial;
-
-/* Initial objects: */
-void CV_Capture__Initialize(void)
-{
-}
-
-void CV_Video_Writer__Initialize(void)
-{
-}
-
 Integer CV_Capture__property_pos_msec = CV_CAP_PROP_POS_MSEC;
 Integer CV_Capture__property_frames = CV_CAP_PROP_POS_FRAMES;
 Integer CV_Capture__property_avi_ratio = CV_CAP_PROP_POS_AVI_RATIO;
@@ -69,11 +45,21 @@ Integer CV__tyzx_color = CV_TYZX_COLOR;
 Integer CV__capture_tyzx_z = CV_TYZX_Z;
 Integer CV__capture_qt = CV_CAP_QT;
 
-CV_Capture
-CV__create_file_capture(
-  String capture_file_name)
-{
+CV_Image CV_Capture__query_frame(CV_Capture capture) {
+    return cvQueryFrame(capture);
+}
+
+CV_Capture CV_Capture__create_camera(Integer camera_number) {
+    return cvCreateCameraCapture(camera_number);
+}
+
+CV_Capture CV_Capture__create_file(String capture_file_name) {
     return cvCreateFileCapture(capture_file_name);
+}
+
+Integer CV_Capture__set_property(
+  CV_Capture capture, Integer property_id, Double value) {
+    return cvSetCaptureProperty(capture, property_id, value);
 }
 
 CV_Video_Writer
@@ -110,10 +96,7 @@ CV__named_window(
     return cvNamedWindow(window_name, flags);
 }
 
-void
-CV_Capture__release_capture(
-  CV_Capture capture)
-{
+void CV_Capture__release(CV_Capture capture) {
     cvReleaseCapture(&capture);
 }
 
@@ -124,11 +107,7 @@ CV_Video_Writer__release_video_writer(
     cvReleaseVideoWriter(&writer);
 }
 
-void
-CV__show_image(
-  String window_name,
-  CV_Image image)
-{
+void CV_Image__show(CV_Image image, String window_name) {
     cvShowImage(window_name, image);
 }
 
