@@ -49,7 +49,16 @@ COMMON_O_FILES := \
 DEMO_O_FILES := \
     CV.o \
     Demo.o \
+    Map.o \
+    Neighbor.o \
+    Tag.o \
     High_GUI2.o \
+
+MAP_TEST_O_FILES := \
+    Map.o \
+    Map_Test.o \
+    Neighbor.o \
+    Tag.o \
 
 TAGS_O_FILES := \
     Tags.o \
@@ -78,6 +87,7 @@ OPENCV_LIBRARIES := \
 
 PROGRAMS := \
     Demo \
+    Map_Test \
     Tags \
     Video_Capture \
 
@@ -88,6 +98,9 @@ Tags: ${COMMON_O_FILES} ${TAGS_O_FILES}
 
 Demo: ${COMMON_O_FILES} ${DEMO_O_FILES}
 	$(CC) -o $@ ${DEMO_O_FILES} ${COMMON_O_FILES} ${OPENCV_LIBRARIES}
+
+Map_Test: ${COMMON_O_FILES} ${MAP_TEST_O_FILES}
+	$(CC) -o $@ ${COMMON_O_FILES} ${MAP_TEST_O_FILES}
 
 Video_Capture: ${COMMON_O_FILES} ${VIDEO_CAPTURE_O_FILES}
 	$(CC) -o $@ ${VIDEO_CAPTURE_O_FILES} \

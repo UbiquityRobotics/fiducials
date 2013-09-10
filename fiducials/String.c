@@ -52,7 +52,22 @@ void String__free(String string) {
     Memory__free((Memory)string);
 }
 
-/// @brief will convert from decimal string into a number and return it.
+/// @brief Returns the size of *string*.
+/// @param string to get size of.
+/// @returns size of string.
+///
+/// *String__size*() will return the size size of *string*.
+
+Unsigned String__size(String string) {
+    Unsigned size = 0;
+    while (*string++ != '\0') {
+	size += 1;
+    }
+    return size;
+}
+
+
+/// @brief Converts from decimal string into a number and return it.
 /// @param string to convert.
 ///
 /// *String__to_unsigned*() will convert from decimal string into a

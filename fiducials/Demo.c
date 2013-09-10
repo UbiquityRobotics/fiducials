@@ -1,8 +1,6 @@
 // Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
 typedef struct Fiducials__Struct *Fiducials;
-typedef struct Neighbor__Struct *Neighbor;
-typedef struct Tag__Struct *Tag;
 
 #include "Character.h"
 #include "CRC.h"
@@ -16,6 +14,7 @@ typedef struct Tag__Struct *Tag;
 #include "List.h"
 #include "Logical.h"
 #include "String.h"
+#include "Tag.h"
 #include "Unsigned.h"
 
 typedef Logical Mapping[64];
@@ -43,46 +42,6 @@ struct Fiducials__Struct {
     CV_Memory_Storage storage;
     Logical tag_bits[64];	// FIXME: Make this Logical *tag_bits;
     CV_Term_Criteria term_criteria;
-};
-
-/// @brief A *Tag_Struct* represents one fiducial tag.
-struct Tag__Struct {
-    /// @brief The angle from the X axis to the tag bottom edge.
-    Float floor_angle;
-
-    /// @brief Absolute X coordinate.
-    Float floor_x;
-
-    /// @brief Absolute Y coordinate.
-    Float floor_y;
-
-    /// @brief Tag identifier.
-    Unsigned id;
-
-    /// @brief List *Neighbor* arcs.
-    List neighbors;
-};
-
-/// @brief A *Neighbor_Struct* represents arc from an *origin* *Tag* to a
-/// *target* *Tag*.
-struct Neighbor__Struct {
-    /// @brief The distance between the origin and the target.
-    Float distance;
-
-    /// @brief Distance between camera center and line connecting both tags.
-    Float goodness;
-
-    /// @brief The origin *Tag*.
-    Tag origin;
-
-    /// @brief The target *Tag*.
-    Tag target;
-
-    /// @brief The angle from the origin bottom edge to the target center.
-    Float target_angle;
-
-    /// @brief The angle from the origin bottom edge to the target bottom edge.
-    Float target_twist;
 };
 
 void Fiducials__sample_points_compute(
@@ -1182,68 +1141,3 @@ void Fiducials__tag_record(Unsigned direction, CV_Point2D32F_Vector vector) {
        //call d@(form@("%p%<=record@Tag(T%d%, *)\n\") % f@(indent) / f@(tag.id))
 }
 		  
-// *Neighbor* routines:
-
-Neighbor Neighbor__create(Tag origin, Tag target, Float distance,
-  Float target_angle, Float target_twist, Float goodness) {
-    Neighbor neighbor = Memory__new(Neighbor);
-    neighbor->distance = distance;
-    neighbor->goodness = goodness;
-    neighbor->target = target;
-    neighbor->origin = origin;
-    neighbor->target_angle = target_angle;
-    neighbor->target_twist = target_twist;
-    return neighbor;
-}
-
-void Neighbor__write(Neighbor neighbor, File out_file) {
-    Float pi = (Float)3.14159265;
-    Float radians_to_degrees = 180.0 / pi;
-
-    File__format(out_file, "  <Neighbor");
-    File__format(out_file, " Origin=\"%d\"", neighbor->origin);
-    File__format(out_file, " Target=\"%d\"", neighbor->target);
-    File__format(out_file, " Distance=\"%f\"", neighbor->distance);
-    File__format(out_file,
-      " Target_Angle=\"%f\"", neighbor->target_angle * radians_to_degrees);
-    File__format(out_file,
-      " Target_Twist=\"%f\"", neighbor->target_angle * radians_to_degrees);
-    File__format(out_file, " Goodness=\"%f\"", neighbor->goodness);
-    File__format(out_file, " />\n");
-}
-
-// *Tag* routines:
-
-Tag Tag__create(Unsigned id) {
-    Tag tag =  Memory__new(Tag);
-    tag->floor_angle = (Float)0.0;
-    tag->floor_x = (Float)0.0;
-    tag->floor_y = (Float)0.0;
-    tag->id = id;
-    tag->neighbors = List__new();
-    return tag;
-}
-
-void Tag__Write(Tag tag, File out_file) {
-    Float pi = (Float)3.14159265;
-    Float radians_to_degrees = 180.0 / pi;
-
-    List neighbors = tag->neighbors;
-    Unsigned size = List__size(neighbors);
-
-    File__format(out_file, " <Tag");
-    File__format(out_file, " Id=\"%d\"", tag->id);
-    File__format(out_file,
-      "Floor_Angle=\"%f\"", tag->floor_angle * radians_to_degrees);
-    File__format(out_file, " Floor_X=\"%f\"", tag->floor_x);
-    File__format(out_file, " Floor_Y=\"%f\"", tag->floor_y);
-    File__format(out_file, " Neighbors_Count=\"%d\"", size);
-    File__format(out_file, ">\n");
-
-    for (Unsigned index = 0; index < size; index++) {
-	Neighbor neighbor = (Neighbor)List__fetch(neighbors, index);
-	Neighbor__write(neighbor, out_file);
-    }
-
-    File__format(out_file, " </Tag>\n");
-}
