@@ -61,4 +61,17 @@ Unsigned Unsigned__minimum(Unsigned unsigned1, Unsigned unsigned2) {
     return result;
 }
 
+/// @brief Return *unsigned1* as a *Memory* pointer.
+/// @param unsigned1 is the value to be treated as *Memory*
+/// @returns *unsigned1* as a *Memory* pointer.
+///
+/// *Unsigned__to_memory*() returns *unsigned1* as a *Memory* pointer.
 
+Memory Unsigned__to_memory(Unsigned unsigned1) {
+    union {
+        Unsigned unsigned1;
+        Memory memory;
+    } convert;
+    convert.unsigned1 = unsigned1;
+    return convert.memory;
+}

@@ -17,6 +17,7 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include "List.h"
 #include "Map.h"
 #include "Tag.h"
+#include "Table.h"
 #include "Unsigned.h"
 
 // *Map* routines:
@@ -111,10 +112,11 @@ Map Map__new(void) {
 
 Tag Map__tag_lookup(Map map, Unsigned tag_id) {
     Table tags_table /* <Unsigned, Tag> */= map->tags_table;
-    Tag tag = (Tag)Table__lookup(tags_table, (Memory)tag_id);
+    Memory memory_tag_id = Unsigned__to_memory(tag_id);
+    Tag tag = (Tag)Table__lookup(tags_table, memory_tag_id);
     if (tag == (Tag)0) {
 	tag = Tag__create(tag_id, map);
-	Table__insert(tags_table, (Memory)tag_id, (Memory)tag);
+	Table__insert(tags_table, memory_tag_id, (Memory)tag);
 	List__append(map->all_tags, tag);
 	map->is_changed = (Logical)1;
     }
