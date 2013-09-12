@@ -14,7 +14,6 @@ C_WARNING_OPTIONS := \
     -Wstrict-prototypes \
     -Winline \
     -Wundef \
-    -Wcast-qual \
     -Wshadow \
     -Wunreachable-code \
     -Wlogical-op \
@@ -22,6 +21,9 @@ C_WARNING_OPTIONS := \
     -Wstrict-aliasing=2 \
     -Wold-style-definition \
     -Werror \
+
+NO_WORKING := \
+    -Wcast-qual \
 
 C_OPTIONS := \
     -std=c11 \
@@ -37,6 +39,7 @@ COMMON_O_FILES := \
     Double.o \
     FEC.o \
     File.o \
+    Float.o \
     Integer.o \
     List.o \
     Logical.o \
@@ -47,17 +50,17 @@ COMMON_O_FILES := \
     Unsigned.o \
 
 DEMO_O_FILES := \
+    Arc.o \
     CV.o \
     Demo.o \
     Map.o \
-    Neighbor.o \
     Tag.o \
     High_GUI2.o \
 
 MAP_TEST_O_FILES := \
+    Arc.o \
     Map.o \
     Map_Test.o \
-    Neighbor.o \
     Tag.o \
 
 TAGS_O_FILES := \
@@ -71,8 +74,9 @@ VIDEO_CAPTURE_O_FILES := \
 ALL_O_FILES := \
     ${COMMON_O_FILES} \
     ${DEMO_O_FILES} \
+    ${MAP_TEST_O_FILES} \
     ${TAGS_O_FILES} \
-    ${VIDOE_CAPTURE_O_FILES} \
+    ${VIDEO_CAPTURE_O_FILES} \
 
 ALL_C_BACKUPS := ${ALL_O_FILES:%.o=%.c~}
 ALL_D_FILES := ${ALL_O_FILES:%.o=%.d}
@@ -94,17 +98,17 @@ PROGRAMS := \
 all: ${PROGRAMS}
 
 Tags: ${COMMON_O_FILES} ${TAGS_O_FILES}
-	$(CC) -o $@ ${TAGS_O_FILES} ${COMMON_O_FILES}
+	$(CC) -o $@ ${TAGS_O_FILES} ${COMMON_O_FILES} -lm
 
 Demo: ${COMMON_O_FILES} ${DEMO_O_FILES}
-	$(CC) -o $@ ${DEMO_O_FILES} ${COMMON_O_FILES} ${OPENCV_LIBRARIES}
+	$(CC) -o $@ ${DEMO_O_FILES} ${COMMON_O_FILES} ${OPENCV_LIBRARIES} -lm
 
 Map_Test: ${COMMON_O_FILES} ${MAP_TEST_O_FILES}
-	$(CC) -o $@ ${COMMON_O_FILES} ${MAP_TEST_O_FILES}
+	$(CC) -o $@ ${COMMON_O_FILES} ${MAP_TEST_O_FILES} -lm
 
 Video_Capture: ${COMMON_O_FILES} ${VIDEO_CAPTURE_O_FILES}
 	$(CC) -o $@ ${VIDEO_CAPTURE_O_FILES} \
-	    ${COMMON_O_FILES} ${OPENCV_LIBRARIES}
+	    ${COMMON_O_FILES} ${OPENCV_LIBRARIES} -lm
 
 clean:
 	rm -f ${ALL_C_BACKUPS}

@@ -1,12 +1,26 @@
 // Copyright (c) by Wayne C. Gramlich.  All rights reserved.
 
+#include <assert.h>
+
+#include "Arc.h"
 #include "Float.h"
 #include "List.h"
-#include "Neighbor.h"
 #include "Tag.h"
 #include "Unsigned.h"
 
 // *Tag* routines:
+
+/// @brief Appends *arc* to *tag*.
+/// @param tag to append to.
+/// @param arc to append.
+///
+/// *Tag__arc_append*() will append *arc* to *tag*.
+
+void Tag__arc_append(Tag tag, Arc arc) {
+    assert(arc->origin == tag || arc->target == tag);
+    List__append(tag->arcs, (Memory)arc);
+}
+
 
 /// @brief Returns the sort order of *tag1* to *tag2*.
 /// @param tag1 is the first *Tag* to compare.
@@ -20,27 +34,8 @@ Integer Tag__compare(Tag tag1, Tag tag2) {
     Unsigned id1 = tag1->id;
     Unsigned id2 = tag2->id;
     Integer result = Unsigned__compare(id1, id2);
-    if (result == 0) {
-	List neighbors1 = tag1->neighbors;
-	List neighbors2 = tag2->neighbors;
-	Unsigned neighbors1_size = List__size(neighbors1);
-	Unsigned neighbors2_size = List__size(neighbors2);
-	result = Unsigned__compare(neighbors1_size, neighbors2_size);
-	if (result == 0) {
-	    for (Unsigned index = 0; index < neighbors1_size; index++) {
-		Neighbor neighbor1 = (Neighbor)List__fetch(neighbors1, index);
-		Neighbor neighbor2 = (Neighbor)List__fetch(neighbors2, index);
-		result = Neighbor__compare(neighbor1, neighbor2);
-		if (result != 0) {
-		    break;
-		}
-	    }
-	}
-    }
-
     return result;
 }
-
 
 /// @brief Create and return a new *Tag*.
 /// @param id is the tag identifier.
@@ -50,15 +45,39 @@ Integer Tag__compare(Tag tag1, Tag tag2) {
 /// of *id*.  This returned *Tag* is not *initialized* until *Tag__initialize*()
 /// is called.
 
-Tag Tag__create(Unsigned id) {
+Tag Tag__create(Unsigned id, Map map) {
     Tag tag =  Memory__new(Tag);
-    tag->initialized = (Logical)0;
+    tag->arcs = List__new();
     tag->floor_angle = (Float)0.0;
     tag->floor_x = (Float)0.0;
     tag->floor_y = (Float)0.0;
+    tag->initialized = (Logical)0;
     tag->id = id;
-    tag->neighbors = List__new();
+    tag->map = map;
+    tag->visit = map->visit;
     return tag;
+}
+
+/// @brief Return true if *tag1* is equal to *tag2*.
+/// @param tag1 is the first *Tag* to compare.
+/// @param tag2 is the second *Tag* to compare.
+/// @returns true if *tag1* equals *tag2*.
+///
+/// *Tag__equal*() will return true if *tag1* is equal to *tag2* and false
+/// otherwise.
+
+Logical Tag__equal(Tag tag1, Tag tag2) {
+    return (Logical)(tag1->id == tag2->id);
+}
+
+/// @brief Return a hash for *tag*.
+/// @param *tag* to hash.
+/// @returns hash of *tag*.
+///
+/// *Tag__hash*() will return a hash of *tag*.
+
+Unsigned Tag__hash(Tag tag) {
+    return Unsigned__hash(tag->id);
 }
 
 /// @brief Initialize *tag* contents.
@@ -73,11 +92,13 @@ Tag Tag__create(Unsigned id) {
 /// *floor_x* and *floor_y* are measured in any consistent set of units
 /// (millimeters, centimeters, meters, inches, light seconds, etc.)
 
-void Tag__initialize(Tag tag, Float floor_angle, Float floor_x, Float floor_y) {
+void Tag__initialize(
+  Tag tag, Float floor_angle, Float floor_x, Float floor_y, Unsigned visit) {
     tag->initialized = (Logical)1;
     tag->floor_angle = floor_angle;
     tag->floor_x = floor_x;
     tag->floor_y = floor_y;
+    tag->visit = visit;
 }
 
 /// @brief Read in an XML <Tag ...> from *in_file* using *map*.
@@ -93,30 +114,22 @@ Tag Tag__read(File in_file, Map map) {
     Float pi = (Float)3.14159265;
     Float degrees_to_radians = pi / 180.0;
     
-    // Read in "<Tag ...>":
+    // Read in "<Tag .../>":
     File__tag_match(in_file, "Tag");
     Unsigned tag_id = (Unsigned)File__integer_attribute_read(in_file, "Id");
     Float floor_angle = File__float_attribute_read(in_file, "Floor_Angle");
     Float floor_x = File__float_attribute_read(in_file, "Floor_X");
     Float floor_y = File__float_attribute_read(in_file, "Floor_Y");
-    Unsigned neighbors_size =
-      File__integer_attribute_read(in_file, "Neighbors_Count");
-    File__string_match(in_file, ">\n");
+    Unsigned hop_count =
+      (Unsigned)File__integer_attribute_read(in_file, "Hop_Count");
+    File__string_match(in_file, "/>\n");
 
     // Load up *tag*:
     Tag tag = Map__tag_lookup(map, tag_id);
-    Tag__initialize(tag, floor_angle * degrees_to_radians, floor_x, floor_y);
+    Tag__initialize(tag,
+      floor_angle * degrees_to_radians, floor_x, floor_y, map->visit);
+    tag->hop_count = hop_count;
 
-    // Read in the neighbors:
-    List neighbors = tag->neighbors;
-    for (Unsigned index = 0; index < neighbors_size; index++) {
-	Neighbor neighbor = Neighbor__read(in_file, map);
-	List__append(neighbors, neighbor);
-    }
-
-    // Read in "</Tag>":
-    File__tag_match(in_file, "/Tag");
-    File__string_match(in_file, ">\n");
     return tag;
 }
 
@@ -126,7 +139,7 @@ Tag Tag__read(File in_file, Map map) {
 /// *Tag__sort*() will cause the contents of *tag*.
 
 void Tag__sort(Tag tag) {
-    List__sort(tag->neighbors, (List__Compare__Routine)Neighbor__compare);
+    List__sort(tag->arcs, (List__Compare__Routine)Arc__compare);
 }
 
 /// @brief Writes *tag* out ot *out_file* in XML format.
@@ -140,10 +153,6 @@ void Tag__write(Tag tag, File out_file) {
     Float pi = (Float)3.14159265;
     Float radians_to_degrees = 180.0 / pi;
 
-    // Get the *size* of *neighbors*:
-    List neighbors = tag->neighbors;
-    Unsigned size = List__size(neighbors);
-
     // Write out "<Tag ... >":
     File__format(out_file, " <Tag");
     File__format(out_file, " Id=\"%d\"", tag->id);
@@ -151,17 +160,62 @@ void Tag__write(Tag tag, File out_file) {
       " Floor_Angle=\"%f\"", tag->floor_angle * radians_to_degrees);
     File__format(out_file, " Floor_X=\"%f\"", tag->floor_x);
     File__format(out_file, " Floor_Y=\"%f\"", tag->floor_y);
-    File__format(out_file, " Neighbors_Count=\"%d\"", size);
-    File__format(out_file, ">\n");
-
-    // Write out each *neighbor*:
-    for (Unsigned index = 0; index < size; index++) {
-	Neighbor neighbor = (Neighbor)List__fetch(neighbors, index);
-	Neighbor__write(neighbor, out_file);
-    }
-
-    // Write out the closing "</Tag>":
-    File__format(out_file, " </Tag>\n");
+    File__format(out_file, " Hop_Count=\"%d\"", tag->hop_count);
+    File__format(out_file, "/>\n");
 }
 
+
+//void Tag__map_update(Tag tag, Float floor_x, Float floor_y,
+//  Float floor_angle, Unsigned visit, Map map) {
+//
+//    // This routine will update {tag} to have a position of ({x},{y}) and
+//    // a {bearing} angle relative to the floor coordinate X axis.
+//    // This only happens if {tag.visit} is less than {visit}.  In addition,
+//    // all arcs of {tag} are visited to update position and bearing.
+//
+//    Float pi = (Float)3.14159265;
+//
+//    // Do we need to update {tag}?:
+//    if (tag->visit < visit) {
+//	// Yes, we do.  Update the map fields:
+//	Tag__initialize(tag, floor_angle, floor_x, floor_y, visit);
+//
+//	// Make sure that *arcs* is sorted:
+//	List arcs = tag->arcs;
+//	if (!tag->arcs_are_sorted) {
+//	    // Sort *arcs* and remember that we did so:
+//	    List__sort(arcs, (List__Compare__Routine)Arc__compare);
+//	    tag->arcs_are_sorted = (Logical)1;
+//	}
+//
+//	// Now visit each {Tag_Arc} in {arcs}:
+//	Unsigned size = List__size(arcs);
+//	for (Unsigned index = 0; index < size; index++) {
+//	    Arc arc = (Arc)List__fetch(arcs, index);
+//
+//	    // {target_bearing} is the absolute direction of the bottom
+//	    // edge of the target in floor coordinates:
+//	    Float target_bearing =
+//	      Float__angle_normalize(floor_angle + arc->target_twist);
+//
+//	    // We are at ({x}, {y}) and the new target is placed
+//	    // at ({target_x}, {target_y}).
+//	    Float target_angle =
+//	      Float__angle_normalize(arc->target_angle + target_bearing);
+//
+//	    // Now we can compute ({target_x}, {target_y}):
+//	    Float distance = arc->distance;
+//	    Float target_x = floor_x + distance * Float__cosine(target_angle);
+//	    Float target_y = floor_y + distance * Float__sine(target_angle);
+//
+//	    // Make sure ({target_x},{target_y}) is reasonable:
+//	    if (target_x > 10000.0 || target_y > 10000.0) {
+//		assert(0);
+//	    } else {
+//		Tag__map_update(arc->target, target_x, target_y,
+//		  target_bearing, visit, map);
+//	    }
+//	}
+//    }
+//}
 

@@ -12,6 +12,7 @@ typedef unsigned int Unsigned;
 // *Unsigned* routines:
 
 extern Integer Unsigned__compare(Unsigned unsigned1, Unsigned unsigned2);
+extern Unsigned Unsigned__minimum(Unsigned unsigned1, Unsigned unsigned2);
 extern Logical Unsigned__equal(Unsigned unsigned1, Unsigned unsigned2);
 extern Unsigned Unsigned__hash(Unsigned unsigned1);
 

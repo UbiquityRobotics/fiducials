@@ -186,22 +186,22 @@ Double CV_Sequence__arc_length(
     return cvArcLength(contour, *slice, is_closed);
 }    
 
-void
-CV__calibrate_camera2(
-  CV_Matrix object_points,
-  CV_Matrix image_points,
-  CV_Matrix point_counts,
-  CV_Size image_size,
-  CV_Matrix camera_matrix,
-  CV_Matrix distortion_coefficients, 
-  CV_Matrix rotation_vectors,
-  CV_Matrix translation_vectors,
-  Integer flags)
-{
-    cvCalibrateCamera2(object_points, image_points, point_counts,
-      *image_size, camera_matrix, distortion_coefficients, rotation_vectors,
-      translation_vectors, flags);
-}
+//void
+//CV__calibrate_camera2(
+//  CV_Matrix object_points,
+//  CV_Matrix image_points,
+//  CV_Matrix point_counts,
+//  CV_Size image_size,
+//  CV_Matrix camera_matrix,
+//  CV_Matrix distortion_coefficients, 
+//  CV_Matrix rotation_vectors,
+//  CV_Matrix translation_vectors,
+//  Integer flags)
+//{
+//    cvCalibrateCamera2(object_points, image_points, point_counts,
+//      *image_size, camera_matrix, distortion_coefficients, rotation_vectors,
+//      translation_vectors, flags);
+//}
 
 Logical CV_Sequence__check_contour_convexity(CV_Sequence contour) {
     return (Logical)(cvCheckContourConvexity(contour) ? 1 : 0);

@@ -45,4 +45,20 @@ Unsigned Unsigned__hash(Unsigned unsigned1) {
     return unsigned1;
 }
 
+/// @brief Return the minumum of *unsigned1* and *unsigned2*.
+/// @param unsigned1 is the first *Unsigned* to compare.
+/// @param unsigned2 is the second *Unsigned* to compare.
+/// @returns the minumum of *unsigned1* and *unsigned2*.
+///
+/// *Unsigned__minimum*() will return the minimum of *unsigned1*
+/// and *unsigned2*.
+
+Unsigned Unsigned__minimum(Unsigned unsigned1, Unsigned unsigned2) {
+    Unsigned result = unsigned1;
+    if (unsigned2 < result) {
+	result = unsigned2;
+    }
+    return result;
+}
+
 

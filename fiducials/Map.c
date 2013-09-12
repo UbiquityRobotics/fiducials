@@ -11,6 +11,7 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 
 #include <assert.h>
 
+#include "Arc.h"
 #include "Integer.h"
 #include "File.h"
 #include "List.h"
@@ -19,6 +20,17 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include "Unsigned.h"
 
 // *Map* routines:
+
+/// @brief Appends *arc* to *map*.
+/// @param map to append to.
+/// @param arc to append
+///
+/// *Map__arc_append*() will append *arc* to *map*.
+
+void Map__arc_append(Map map, Arc arc) {
+    List__append(map->all_arcs, arc);
+    map->is_changed = (Logical)1;
+}
 
 /// @brief Returns -1, 0, 1 depending upon the sort order of *map1* and *map2*.
 /// @param map1 is the first *Map* to compare.
@@ -32,21 +44,43 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 
 Integer Map__compare(Map map1, Map map2) {
     Integer result = 0;
-    List tags1 = map1->tags;
-    List tags2 = map2->tags;
-    Unsigned tags1_size = List__size(tags1);
-    Unsigned tags2_size = List__size(tags2);
-    result = Unsigned__compare(tags1_size, tags2_size);
+
+    // First make sure all of the *Tag*'s match up:
+    List /* <Tag> */ all_tags1 = map1->all_tags;
+    List /* <Tag> */ all_tags2 = map2->all_tags;
+    Unsigned all_tags1_size = List__size(all_tags1);
+    Unsigned all_tags2_size = List__size(all_tags2);
+    result = Unsigned__compare(all_tags1_size, all_tags2_size);
     if (result == 0) {
-	for (Unsigned index = 0; index < tags1_size; index++) {
-	    Tag tag1 = (Tag)List__fetch(tags1, index);
-	    Tag tag2 = (Tag)List__fetch(tags2, index);
+	// Visit each *Tag*:
+	for (Unsigned index = 0; index < all_tags1_size; index++) {
+	    Tag tag1 = (Tag)List__fetch(all_tags1, index);
+	    Tag tag2 = (Tag)List__fetch(all_tags2, index);
 	    result = Tag__compare(tag1, tag2);
 	    if (result != 0) {
 		break;
 	    }
 	}
     }
+
+    // Second make sure all of the *Arc*'s match up:
+    List /* <Tag> */ all_arcs1 = map1->all_arcs;
+    List /* <Tag> */ all_arcs2 = map2->all_arcs;
+    Unsigned all_arcs1_size = List__size(all_arcs1);
+    Unsigned all_arcs2_size = List__size(all_arcs2);
+    result = Unsigned__compare(all_arcs1_size, all_arcs2_size);
+    if (result == 0) {
+	// Visit each *Arc*:
+	for (Unsigned index = 0; index < all_arcs1_size; index++) {
+	    Arc arc1 = (Arc)List__fetch(all_arcs1, index);
+	    Arc arc2 = (Arc)List__fetch(all_arcs2, index);
+	    result = Arc__compare(arc1, arc2);
+	    if (result != 0) {
+		break;
+	    }
+	}
+    }
+
     return result;
 }
 
@@ -57,9 +91,12 @@ Integer Map__compare(Map map1, Map map2) {
 
 Map Map__new(void) {
     Map map = Memory__new(Map);
-    map->tags = List__new();
+    map->all_arcs = List__new(); // <Tag>
+    map->all_tags = List__new(); // <Tag>
+    map->is_changed = (Logical)0;
     map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
-      (Table_Hash_Routine)Unsigned__hash, (Memory)0);
+      (Table_Hash_Routine)Unsigned__hash, (Memory)0); // <Unsigned, Tag>
+    map->visit = 0;
     return map;
 }
 
@@ -73,12 +110,13 @@ Map Map__new(void) {
 /// encountered, a new *Tag* is created and add to the association in *map*.
 
 Tag Map__tag_lookup(Map map, Unsigned tag_id) {
-    Table tags_table = map->tags_table;
+    Table tags_table /* <Unsigned, Tag> */= map->tags_table;
     Tag tag = (Tag)Table__lookup(tags_table, (Memory)tag_id);
     if (tag == (Tag)0) {
-	tag = Tag__create(tag_id);
+	tag = Tag__create(tag_id, map);
 	Table__insert(tags_table, (Memory)tag_id, (Memory)tag);
-	List__append(map->tags, tag);
+	List__append(map->all_tags, tag);
+	map->is_changed = (Logical)1;
     }
     return tag;
 }
@@ -93,22 +131,33 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
 Map Map__read(File in_file) {
     // Create *map* and get *tags* list:
     Map map = Map__new();
-    List tags = map->tags;
 
-    // Read in Map XML tag '<Map Tags_Count="xx">' :
+    // Read in Map XML tag '<Map Tags_Count="xx" Arcs_Count="xx">' :
     File__tag_match(in_file, "Map");
-    Unsigned size =
+    Unsigned all_tags_size =
       (Unsigned)File__integer_attribute_read(in_file, "Tags_Count");
+    Unsigned all_arcs_size =
+      (Unsigned)File__integer_attribute_read(in_file, "Arcs_Count");
     File__string_match(in_file, ">\n");
 
-    // Read in the *size* *Tag* objects:
-    for (Unsigned index = 0; index < size; index++) {
+    // Read in the *all_tags_size* *Tag* objects:
+    for (Unsigned index = 0; index < all_tags_size; index++) {
 	Tag tag = Tag__read(in_file, map);
+    }
+
+    // Read in the *all_arcs_size* *Arc* objects:
+    for (Unsigned index = 0; index < all_arcs_size; index++) {
+	Arc arc = Arc__read(in_file, map);
     }
 
     // Process the final Map XML tag "</MAP>":
     File__tag_match(in_file, "/Map");
     File__string_match(in_file, ">\n");
+
+    // Do some final checks:
+    assert (List__size(map->all_arcs) == all_arcs_size);
+    assert (List__size(map->all_tags) == all_tags_size);
+
     return map;
 }
 
@@ -147,13 +196,8 @@ void Map__save(Map map, String file_name) {
 /// to be in a consitent order.
 
 void Map__sort(Map map) {
-    List tags = map->tags;
-    List__sort(tags, (List__Compare__Routine)Tag__compare);
-    Unsigned size = List__size(tags);
-    for (Unsigned index = 0; index < size; index++) {
-	Tag tag = (Tag)List__fetch(tags, index);
-	Tag__sort(tag);
-    }
+    List__sort(map->all_tags, (List__Compare__Routine)Tag__compare);
+    List__sort(map->all_arcs, (List__Compare__Routine)Arc__compare);
 }
 
 /// @brief Writes *map* out to *out_file*.
@@ -163,21 +207,157 @@ void Map__sort(Map map) {
 /// *Map__write*() will write *map* to *out_file* in XML format.
 
 void Map__write(Map map, File out_file) {
+    // Figure out how many *Arc*'s and *Tag*'s we have:
+    List all_arcs = map->all_arcs;
+    List all_tags = map->all_tags;
+    Unsigned all_tags_size = List__size(all_tags);
+    Unsigned all_arcs_size = List__size(all_arcs);
+
     // Output <Map ...> tag:
-    List tags = map->tags;
-    Unsigned tags_size = List__size(tags);
-    File__format(out_file, "<Map Tags_Count=\"%d\">\n", tags_size);
+    File__format(out_file, "<Map");
+    File__format(out_file, " Tags_Count=\"%d\"", all_tags_size);
+    File__format(out_file, " Arcs_Count=\"%d\"", all_arcs_size);
+    File__format(out_file, ">\n");
 
     // Put the tags out in sorted order:
     Map__sort(map);
 
-    // Output each *tag in *tags*:
-    for (Unsigned index = 0; index < tags_size; index++) {
-	Tag tag = (Tag)List__fetch(tags, index);
+    // Output each *tag in *all_tags*:
+    for (Unsigned index = 0; index < all_tags_size; index++) {
+	Tag tag = (Tag)List__fetch(all_tags, index);
 	Tag__write(tag, out_file);
+    }
+
+    // Output each *tag in *all_tags*:
+    for (Unsigned index = 0; index < all_arcs_size; index++) {
+	Arc arc = (Arc)List__fetch(all_arcs, index);
+	Arc__write(arc, out_file);
     }
 
     // Output the closing </Map> tag:
     File__format(out_file, "</Map>\n");
+}
+
+// This routine will update the map coordinates for each *tag*
+// in *map*.  The tag with the lowest id number is used as the
+// origin and bearing of zero.
+
+void Map__update(Map map) {
+    if (map->is_changed != 0) {
+	// Increment *visit* to the next value to use for updating:
+	Unsigned visit = map->visit + 1;
+	map->visit = visit;
+
+	// We want the tag with the lowest id number to be the origin.
+	// Sort *tags* from lowest tag id to greatest:
+	List /* <Tag> */ all_tags = map->all_tags;
+	List__sort(all_tags, (List__Compare__Routine)Tag__compare);
+
+	// The first tag in {tags} has the lowest id and is forced to be the
+	// map origin:
+	Tag origin_tag = (Tag)List__fetch(all_tags, 0);
+	origin_tag->visit = visit;
+	origin_tag->hop_count = 0;
+	
+	// The first step is to identify all of the *Arc*'s that make a
+	// spanning tree of the *map* *Tags*'s.
+
+	// Initializd *pending_arcs* with the *Arc*'s from *orgin_tag*:
+	List /* <Arc> */ pending_arcs = List__new();
+	List__all_append(pending_arcs, origin_tag->arcs);
+
+	// We always want to keep *pending_arcs* sorted from longest to
+	// shortest at the end.  *Arc__distance_compare*() sorts longest first:
+	List__sort(pending_arcs, (List__Compare__Routine)Arc__distance_compare);
+
+	// We keep iterating across *pending_arcs* until it goes empty.
+	// since we keep it sorted from longest to shortest (and we always
+	// look at the end), we are building a spanning tree using the shortest
+	// possible *Arc*'s:
+	while (List__size(pending_arcs) != 0) {
+	    // Pop the shortest *arc* off the end of *pending_arcs*:
+	    Arc arc = (Arc)List__pop(pending_arcs);
+
+	    // For debugging only:
+	    //File__format(stderr, "----------\n");
+	    //Unsigned size = List__size(pending_arcs);
+	    //for (Unsigned index = 0; index < size; index++) {
+	    //    Arc arc = (Arc)List__fetch(pending_arcs, index);
+	    //    File__format(stderr,
+	    //      "pending_arcs[%d]: Arc[%d,%d] dist=%f\n",
+	    //      index, arc->origin->id, arc->target->id, arc->distance);
+	    //}
+
+	    // If we already visited *arc*, just ignore it:
+	    if (arc->visit != visit) {
+		// We have not visited this *arc* in this cycle, so now we
+		// mark it as being *visit*'ed:
+		arc->visit = visit;
+
+		// Figure out if *origin* or *target* have been added to the
+		// spanning tree yet:
+		Tag origin = arc->origin;
+		Tag target = arc->target;
+		Logical origin_is_new = (Logical)(arc->origin->visit != visit);
+		Logical target_is_new = (Logical)(arc->target->visit != visit);
+
+		if (origin_is_new || target_is_new) {
+		    if (origin_is_new) {
+			// Add *origin* to spanning tree:
+			assert (!target_is_new);
+			origin->hop_count = target->hop_count + 1;
+			List__all_append(pending_arcs, origin->arcs);
+			origin->visit = visit;
+		    } else {
+			// Add *target* to spanning tree:
+			assert (!origin_is_new);
+			target->hop_count = origin->hop_count + 1;
+			List__all_append(pending_arcs, target->arcs);
+			target->visit = visit;
+		    }
+
+		    // Mark that *arc* is part of the spanning tree:
+		    arc->in_tree = (Logical)1;
+
+		    // Resort *pending_arcs* to that the shortest distance
+		    // sorts to the end:
+		    List__sort(pending_arcs,
+		      (List__Compare__Routine)Arc__distance_compare);
+		} else {
+		    // *arc* connects across two nodes of spanning tree:
+		    arc->in_tree = (Logical)0;
+		}
+	    }
+	}
+
+//	// Now we can force a map update starting from {origin_tag}:
+//	Tag__initialize(origin_tag, 0.0, 0.0, 0.0, visit_counter);
+//
+//	// Make sure all new tags get the update routine called on them:
+//	List changed_tags = map->changed_tags;
+//	List__sort(changed_tags, (List__Compare__Routine)Tag__compare);
+//	List__unique(changed_tags, (List__Equal__Routine)Tag__equal);
+//	Unsigned size = List__size(changed_tags);
+//	for (Unsigned index = 0; index < size; index++) {
+//	    Tag tag = (Tag)List__fetch(changed_tags, index);
+//	    //Tag__updated(tag);
+//	}
+//	List__trim(changed_tags, 0);
+//
+//	// Make sure all new neighbors get the update routine called on them:
+//	List changed_neighbors = map->changed_neighbors;
+//	List__sort(changed_neighbors,
+//	  (List__Compare__Routine)Neighbor__compare);
+//	List__unique(changed_neighbors, (List__Equal__Routine)Neighbor__equal);
+//	size = List__size(changed_neighbors);
+//	for (Unsigned index = 0; index < size; index++) {
+//	    Neighbor neighbor = (Neighbor)List__fetch(changed_neighbors, index);
+//	    //Neighbor__updated(neighbor);
+//	}
+//	List__trim(changed_neighbors, 0);
+
+	// Mark that *map* is fully updated:
+        map->is_changed = (Logical)0;
+    }
 }
 
