@@ -25,6 +25,9 @@ struct Map__Struct {
     /// @brief True if map has changed since last update.
     Logical is_changed;
 
+    /// @brief List of pending *Arc*'s for map tree extraction.
+    List /* <Arc> */ pending_arcs;
+
     /// @brief Table of all *tags* indexed by *Tag* *id*.
     Table /* <Unsigned, Tag>*/ tags_table;
 

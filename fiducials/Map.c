@@ -95,6 +95,7 @@ Map Map__new(void) {
     map->all_arcs = List__new(); // <Tag>
     map->all_tags = List__new(); // <Tag>
     map->is_changed = (Logical)0;
+    map->pending_arcs = List__new(); // <Tag>
     map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
       (Table_Hash_Routine)Unsigned__hash, (Memory)0); // <Unsigned, Tag>
     map->visit = 0;
@@ -265,7 +266,7 @@ void Map__update(Map map) {
 	// spanning tree of the *map* *Tags*'s.
 
 	// Initializd *pending_arcs* with the *Arc*'s from *orgin_tag*:
-	List /* <Arc> */ pending_arcs = List__new();
+	List /* <Arc> */ pending_arcs = map->pending_arcs;
 	List__all_append(pending_arcs, origin_tag->arcs);
 
 	// We always want to keep *pending_arcs* sorted from longest to
@@ -298,24 +299,26 @@ void Map__update(Map map) {
 
 		// Figure out if *origin* or *target* have been added to the
 		// spanning tree yet:
-		Tag origin = arc->origin;
-		Tag target = arc->target;
-		Logical origin_is_new = (Logical)(arc->origin->visit != visit);
-		Logical target_is_new = (Logical)(arc->target->visit != visit);
+		Tag from = arc->from;
+		Tag to = arc->to;
+		Logical from_is_new = (Logical)(from->visit != visit);
+		Logical to_is_new = (Logical)(to->visit != visit);
 
-		if (origin_is_new || target_is_new) {
-		    if (origin_is_new) {
-			// Add *origin* to spanning tree:
-			assert (!target_is_new);
-			origin->hop_count = target->hop_count + 1;
-			List__all_append(pending_arcs, origin->arcs);
-			origin->visit = visit;
+		if (from_is_new || to_is_new) {
+		    if (from_is_new) {
+			// Add *to* to spanning tree:
+			assert (!to_is_new);
+			from->hop_count = to->hop_count + 1;
+			List__all_append(pending_arcs, from->arcs);
+			from->visit = visit;
+			Tag__update_via_arc(from, arc);
 		    } else {
-			// Add *target* to spanning tree:
-			assert (!origin_is_new);
-			target->hop_count = origin->hop_count + 1;
-			List__all_append(pending_arcs, target->arcs);
-			target->visit = visit;
+			// Add *from* to spanning tree:
+			assert (!from_is_new);
+			to->hop_count = from->hop_count + 1;
+			List__all_append(pending_arcs, to->arcs);
+			to->visit = visit;
+			Tag__update_via_arc(to, arc);
 		    }
 
 		    // Mark that *arc* is part of the spanning tree:

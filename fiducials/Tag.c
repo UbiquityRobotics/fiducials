@@ -17,10 +17,9 @@
 /// *Tag__arc_append*() will append *arc* to *tag*.
 
 void Tag__arc_append(Tag tag, Arc arc) {
-    assert(arc->origin == tag || arc->target == tag);
+    assert(arc->from == tag || arc->to == tag);
     List__append(tag->arcs, (Memory)arc);
 }
-
 
 /// @brief Returns the sort order of *tag1* to *tag2*.
 /// @param tag1 is the first *Tag* to compare.
@@ -47,14 +46,14 @@ Integer Tag__compare(Tag tag1, Tag tag2) {
 
 Tag Tag__create(Unsigned id, Map map) {
     Tag tag =  Memory__new(Tag);
-    tag->arcs = List__new();
-    tag->floor_angle = (Float)0.0;
-    tag->floor_x = (Float)0.0;
-    tag->floor_y = (Float)0.0;
+    tag->twist = (Float)0.0;
+    tag->arcs = List__new(); // <Arc>
     tag->initialized = (Logical)0;
     tag->id = id;
     tag->map = map;
     tag->visit = map->visit;
+    tag->x = (Float)0.0;
+    tag->y = (Float)0.0;
     return tag;
 }
 
@@ -82,22 +81,20 @@ Unsigned Tag__hash(Tag tag) {
 
 /// @brief Initialize *tag* contents.
 /// @param tag to intialize.
-/// @param
-/// @param floor_x is the X coordinate of the fiducial center.
-/// @param floor_y is the Y corrdinate of the fiducial center.
+/// @param twist is the fidicial twist relative to the floor X axis.
+/// @param x is the floor X coordinate of the fiducial center.
+/// @param y is the floor Y corrdinate of the fiducial center.
 ///
-/// *Tag__initialize*() will initialize *tag* to contain *floor_angle*,
-/// *floor_x*, and *floor_y*.  *floor_angle* is the angle from the
-/// floor X axis to the bottom/// fiducial edge measured in radians.
-/// *floor_x* and *floor_y* are measured in any consistent set of units
-/// (millimeters, centimeters, meters, inches, light seconds, etc.)
+/// *Tag__initialize*() will initialize *tag* to contain *twist*, *x*,
+/// and *y*.  *twist* is the fiducial twist relative to the floor X axis
+/// measured in radians.  *x* and *y* are measured in any consistent set
+/// of units (millimeters, centimeters, meters, inches, light seconds, etc.)
 
-void Tag__initialize(
-  Tag tag, Float floor_angle, Float floor_x, Float floor_y, Unsigned visit) {
+void Tag__initialize(Tag tag, Float twist, Float x, Float y, Unsigned visit) {
     tag->initialized = (Logical)1;
-    tag->floor_angle = floor_angle;
-    tag->floor_x = floor_x;
-    tag->floor_y = floor_y;
+    tag->twist = twist;
+    tag->x = x;
+    tag->y = y;
     tag->visit = visit;
 }
 
@@ -110,24 +107,24 @@ void Tag__initialize(
 /// for *Tag* assoiciations.  The resulting *Tag* is returned.
 
 Tag Tag__read(File in_file, Map map) {
-    // We store angles in degress and convert to/from radians.
-    Float pi = (Float)3.14159265;
-    Float degrees_to_radians = pi / 180.0;
-    
     // Read in "<Tag .../>":
     File__tag_match(in_file, "Tag");
     Unsigned tag_id = (Unsigned)File__integer_attribute_read(in_file, "Id");
-    Float floor_angle = File__float_attribute_read(in_file, "Floor_Angle");
-    Float floor_x = File__float_attribute_read(in_file, "Floor_X");
-    Float floor_y = File__float_attribute_read(in_file, "Floor_Y");
+    Float twist = File__float_attribute_read(in_file, "Twist");
+    Float x = File__float_attribute_read(in_file, "X");
+    Float y = File__float_attribute_read(in_file, "Y");
     Unsigned hop_count =
       (Unsigned)File__integer_attribute_read(in_file, "Hop_Count");
     File__string_match(in_file, "/>\n");
 
+    // Convert *twist* from *degrees_to_radians*:
+    Float pi = (Float)3.14159265;
+    Float degrees_to_radians = pi / 180.0;
+    twist *= degrees_to_radians;
+
     // Load up *tag*:
     Tag tag = Map__tag_lookup(map, tag_id);
-    Tag__initialize(tag,
-      floor_angle * degrees_to_radians, floor_x, floor_y, map->visit);
+    Tag__initialize(tag, twist * degrees_to_radians, x, y, map->visit);
     tag->hop_count = hop_count;
 
     return tag;
@@ -140,6 +137,76 @@ Tag Tag__read(File in_file, Map map) {
 
 void Tag__sort(Tag tag) {
     List__sort(tag->arcs, (List__Compare__Routine)Arc__compare);
+}
+
+/// @brief Updates the position and orientation of *tag* using *arc*.
+/// @param tag to update.
+/// @param arc to use to find the arc to update from.
+///
+/// *Tag__update_via_arc*() will use the contents of *arc* to update
+/// the position and oritation of *tag*.  The position is computed using
+/// the "other" end of *arc*.
+
+void Tag__update_via_arc(Tag tag, Arc arc) {
+    // Some values to use for radian/degree conversion:
+    Float pi = (Float)3.14159265;
+    Float r2d = 180.0 / pi;
+
+    // Read out *arc* contents:
+    Tag arc_from = arc->from;
+    Tag arc_to = arc->to;
+    Float arc_distance = arc->distance;
+    Float arc_angle = arc->angle;
+    Float arc_twist = arc->twist;
+
+    // For debugging:
+    //File__format(stderr, "Arc[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
+    //  arc_from->id, arc_to->id,
+    //  arc_distance, arc_angle * r2d, arc_twist * r2d);
+
+    // Figure out whether *tag* is the *from* or *to* and adjust
+    // angles accordingly:
+    if (tag == arc_from) {
+	// Compute the conjugate of *Arc* (see Arc.h for conjugate discussion):
+	Tag temporary = arc_from;
+	arc_from = arc_to;
+	arc_to = temporary;
+	arc_angle = Float__angle_normalize(pi + arc_angle - arc_twist);
+	arc_twist = -arc_twist;
+
+	// For debugging show the conjucate:
+	//File__format(stderr, "Arc'[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
+	//  arc_from->id, arc->to->id,
+	//  arc_distance, arc_angle * r2d, arc_twist * r2d);
+    }
+    assert (tag == arc_to);
+    assert (tag != arc_from);
+
+    // Grab the starting values from *arc_from*:
+    Float arc_from_twist = arc_from->twist;
+    Float arc_from_x = arc_from->x;
+    Float arc_from_y = arc_from->y;
+
+    // For debugging:
+    //File__format(stderr, "Arc_From[%d]:(t=%.1f, x=%.1f, y=%.1f)\n",
+    //  arc_from->id, arc_from_twist * r2d, arc_from_x, arc_from_y);
+
+    // Compute the new *Tab* values:
+    Float tag_twist = arc_from_twist + arc_twist;
+    Float angle = Float__angle_normalize(arc_from_twist + arc_angle);
+    Float tag_x = arc_from_x + arc_distance * Float__cosine(angle);
+    Float tag_y = arc_from_y + arc_distance * Float__sine(angle);
+
+    // For debugging:
+    //File__format(stderr, "aa=%.1f aft=%.1f angle=%.1f\n",
+    //  arc_angle * r2d, arc_from_twist * r2d, angle * r2d);
+    //File__format(stderr, "Tag[%d]:(t=%.1f, x=%.1f, y=%.1f)\n\n",
+    //  tag->id, tag_twist * r2d, tag_x, tag_y);
+
+    // Load new values into *tag*:
+    tag->twist = tag_twist;
+    tag->x = tag_x;
+    tag->y = tag_y;
 }
 
 /// @brief Writes *tag* out ot *out_file* in XML format.
@@ -157,13 +224,12 @@ void Tag__write(Tag tag, File out_file) {
     File__format(out_file, " <Tag");
     File__format(out_file, " Id=\"%d\"", tag->id);
     File__format(out_file,
-      " Floor_Angle=\"%f\"", tag->floor_angle * radians_to_degrees);
-    File__format(out_file, " Floor_X=\"%f\"", tag->floor_x);
-    File__format(out_file, " Floor_Y=\"%f\"", tag->floor_y);
+      " Twist=\"%f\"", tag->twist * radians_to_degrees);
+    File__format(out_file, " X=\"%f\"", tag->x);
+    File__format(out_file, " Y=\"%f\"", tag->y);
     File__format(out_file, " Hop_Count=\"%d\"", tag->hop_count);
     File__format(out_file, "/>\n");
 }
-
 
 //void Tag__map_update(Tag tag, Float floor_x, Float floor_y,
 //  Float floor_angle, Unsigned visit, Map map) {

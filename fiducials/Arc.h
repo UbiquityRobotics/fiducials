@@ -12,13 +12,79 @@ typedef struct Arc__Struct *Arc;
 #include "Map.h"
 #include "Tag.h"
 
-/// @brief A *Arc_Struct* represents arc from an *origin* *Tag* to a
-/// *target* *Tag*.
+/// @brief A *Arc_Struct* represents arc from the *from* *Tag* to the
+/// *to* *Tag*.
 ///
-/// It is constrained so that the *origin* id is less than the *target* id.
+/// Ultimately an *Arc* specifies an ordered 5-tuple:
+///
+///        (from, to, distance, angle, twist)
+///
+/// where
+///
+/// * *from* is the from *Tag*,
+///
+/// * *to* is the to *Tag*,
+///
+/// * *distance* is the distance between the center of *from* to the
+///    center of *to*.
+///
+/// * *angle* measures the angle from the *from* "X axis" to the distance line.
+///
+/// * *twist* is the change in twist between the *from* coordinate system
+///   to the *to* coordinate system.
+///
+/// A conjugate *Arc* is one where the *from* and *to* tags have been swapped.
+/// For an *Arc*:
+///
+///        (from, to, distance, angle, twist)
+///
+/// the conjugate *Arc* is:
+///
+///        (to, from, distance, 180 + angle - twist, -twist)
+///
+/// I wish I could draw some crude ASCII art to show this geometry,
+/// but it would be illegible.  Please have fun drawing the geometry
+/// to verify the formulas.
+///
+/// For fun, we can conjegate the same arc twice:
+///
+/// The original conjugate:
+///
+///        angle' = 180 + angle - twist
+///        twist' = -twist
+///
+/// The double conjugate algebra follows:
+///
+///        angle'' = 180 + angle' - twist'
+///        twist'' = -twist'
+///
+///        angle'' = 180 + (180 + angle - twist) - (-twist)
+///        twist'' = -(-twist)
+///
+///        angle'' = 180 + 180 + angle - twist + twist
+///        twist'' = twist
+///
+///        angle'' = 360 + angle
+///        twist'' = twist
+///
+///        angle'' = angle
+///        twist'' = twist
+///
+/// In order to avoid have a bunch *Arc* and conjugate pairs, we arbitrarily
+/// constrain each *Arc* object such that the *from* identifier is less than
+/// the *to* identifier.  The *Map* and *Arc* code can trivially compute the
+/// conjugate if needed.
+
 struct Arc__Struct {
-    /// @brief The distance between the origin and the target.
+    /// @brief The angle in radians from the *origin* center parallel to the
+    /// bottom edge to the line that connects the *origin* and *target* centers.
+    Float angle;
+
+    /// @brief The distance between the *from* and *to*.
     Float distance;
+
+    /// @brief The from *Tag* (has smaller id than *to*).
+    Tag from;
 
     /// @brief Distance between camera center and line connecting both tags.
     Float goodness;
@@ -26,19 +92,12 @@ struct Arc__Struct {
     /// @brief Set to true if this *Arc* is part of the map tree.
     Logical in_tree;
 
-    /// @brief The origin *Tag* (has smaller id than *target*).
-    Tag origin;
+    /// @brief The to *Tag* (has larger id than *from*).
+    Tag to;
 
-    /// @brief The target *Tag* (has larger id than *origin*).
-    Tag target;
-
-    /// @brief The angle in radians from the *origin* center parallel to the
-    /// bottom edge to the line that connects the *origin* and *target* centers.
-    Float target_angle;
-
-    /// @brief The angle in radians from the origin bottom edge to the
-    /// target bottom edge.
-    Float target_twist;
+    /// @brief The releative change in tag twist angle from *from* coordinates
+    /// to *to* coordinates.
+    Float twist;
 
     /// @brief The visit number for the arc.
     Unsigned visit;
