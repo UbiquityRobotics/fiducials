@@ -6,7 +6,7 @@
 typedef struct Arc__Struct *Arc;
 
 #include "File.h"
-#include "Float.h"
+#include "Double.h"
 #include "Logical.h"
 #include "Integer.h"
 #include "Map.h"
@@ -78,16 +78,16 @@ typedef struct Arc__Struct *Arc;
 struct Arc__Struct {
     /// @brief The angle in radians from the *origin* center parallel to the
     /// bottom edge to the line that connects the *origin* and *target* centers.
-    Float angle;
+    Double angle;
 
     /// @brief The distance between the *from* and *to*.
-    Float distance;
+    Double distance;
 
     /// @brief The from *Tag* (has smaller id than *to*).
     Tag from;
 
     /// @brief Distance between camera center and line connecting both tags.
-    Float goodness;
+    Double goodness;
 
     /// @brief Set to true if this *Arc* is part of the map tree.
     Logical in_tree;
@@ -97,7 +97,7 @@ struct Arc__Struct {
 
     /// @brief The releative change in tag twist angle from *from* coordinates
     /// to *to* coordinates.
-    Float twist;
+    Double twist;
 
     /// @brief The visit number for the arc.
     Unsigned visit;
@@ -108,10 +108,13 @@ struct Arc__Struct {
 extern Integer Arc__compare(Arc arc1, Arc arc2);
 extern Integer Arc__distance_compare(Arc arc1, Arc arc2);
 extern Logical Arc__equal(Arc arc1, Arc arc2);
-extern Arc Arc__create(Tag origin, Tag target, Float distance,
-  Float target_angle, Float target_twist, Float goodness);
+extern Arc Arc__create(Tag from, Tag to,
+  Double distance, Double angle, Double twist, Double goodness);
+extern Arc Arc__new(void);
 extern Unsigned Arc__hash(Arc arc);
 extern Arc Arc__read(File out_file, Map map);
+extern void Arc__update(
+  Arc arc, Double distance, Double angle, Double twist, Double goodness);
 extern void Arc__write(Arc arc, File out_file);
 
 #endif // !defined(ARC_H_INCLUDED)

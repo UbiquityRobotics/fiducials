@@ -4,7 +4,7 @@
 
 #include "Arc.h"
 #include "File.h"
-#include "Float.h"
+#include "Double.h"
 #include "Integer.h"
 #include "List.h"
 #include "Logical.h"
@@ -20,22 +20,22 @@ Integer main(Unsigned arguments_size, String arguments[]) {
     Map map1 = Map__new();
     Unsigned visit = map1->visit;
 
-    Float pi = (Float)3.14159265;
-    Float degrees_to_radians = pi / (Float)180.0;
+    Double pi = 3.14159265358979323846264;
+    Double degrees_to_radians = pi / 180.0;
 
     // Some angles (in radians) to use:
-    Float angle0   =   0.0 * degrees_to_radians;
-    Float angle10  =  10.0 * degrees_to_radians;
-    Float angle20  =  20.0 * degrees_to_radians;
-    Float angle30  =  30.0 * degrees_to_radians;
-    Float angle40  =  40.0 * degrees_to_radians;
-    Float angle45  =  45.0 * degrees_to_radians;
-    Float angle90  =  90.0 * degrees_to_radians;
-    Float angle135 = 135.0 * degrees_to_radians;
-    Float angle180 = 180.0 * degrees_to_radians;
+    Double angle0   =   0.0 * degrees_to_radians;
+    Double angle10  =  10.0 * degrees_to_radians;
+    Double angle20  =  20.0 * degrees_to_radians;
+    Double angle30  =  30.0 * degrees_to_radians;
+    Double angle40  =  40.0 * degrees_to_radians;
+    Double angle45  =  45.0 * degrees_to_radians;
+    Double angle90  =  90.0 * degrees_to_radians;
+    Double angle135 = 135.0 * degrees_to_radians;
+    Double angle180 = 180.0 * degrees_to_radians;
 
-    Float square_root_200 = Float__square_root(10.0 * 10.0 + 10.0 * 10.0);
-    Float square_root_50 = Float__square_root(5.0 * 5.0 + 5.0 * 5.0);
+    Double square_root_200 = Double__square_root(10.0 * 10.0 + 10.0 * 10.0);
+    Double square_root_50 = Double__square_root(5.0 * 5.0 + 5.0 * 5.0);
 
     // The test map looks as follows:
     //

@@ -12,6 +12,8 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include <assert.h>
 
 #include "Arc.h"
+#include "CV.h"
+#include "Camera_Tag.h"
 #include "Integer.h"
 #include "File.h"
 #include "List.h"
@@ -31,6 +33,30 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 void Map__arc_append(Map map, Arc arc) {
     List__append(map->all_arcs, arc);
     map->is_changed = (Logical)1;
+}
+
+Arc Map__arc_lookup(Map map, Tag from, Tag to) {
+    if (from->id > to->id) {
+	Tag temporary = from;
+	from = to;
+	to = temporary;
+    }
+
+    Arc temporary_arc = map->temporary_arc;
+    temporary_arc->from = from;
+    temporary_arc->to = to;
+    Table /* <Arc, Arc> */ arcs_table = map->arcs_table;
+    Arc arc = Table__lookup(arcs_table, (Memory)temporary_arc);
+    if (arc == (Arc)0) {
+ 	arc = Arc__new();
+	arc->from = from;
+	arc->to = to;
+	Table__insert(arcs_table, (Memory)arc, (Memory)arc);
+	Map__arc_append(map, arc);
+	Tag__arc_append(from, arc);
+	Tag__arc_append(to, arc);
+    }
+    return arc;
 }
 
 /// @brief Returns -1, 0, 1 depending upon the sort order of *map1* and *map2*.
@@ -81,7 +107,6 @@ Integer Map__compare(Map map1, Map map2) {
 	    }
 	}
     }
-
     return result;
 }
 
@@ -94,10 +119,13 @@ Map Map__new(void) {
     Map map = Memory__new(Map);
     map->all_arcs = List__new(); // <Tag>
     map->all_tags = List__new(); // <Tag>
+    map->arcs_table = Table__create((Table_Equal_Routine)Arc__equal,
+      (Table_Hash_Routine)Arc__hash, (Memory)0); // <Arc, Arc>
     map->is_changed = (Logical)0;
     map->pending_arcs = List__new(); // <Tag>
     map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
       (Table_Hash_Routine)Unsigned__hash, (Memory)0); // <Unsigned, Tag>
+    map->temporary_arc = Arc__new();
     map->visit = 0;
     return map;
 }
@@ -112,7 +140,7 @@ Map Map__new(void) {
 /// encountered, a new *Tag* is created and add to the association in *map*.
 
 Tag Map__tag_lookup(Map map, Unsigned tag_id) {
-    Table tags_table /* <Unsigned, Tag> */= map->tags_table;
+    Table tags_table /* <Unsigned, Tag> */ = map->tags_table;
     Memory memory_tag_id = Unsigned__to_memory(tag_id);
     Tag tag = (Tag)Table__lookup(tags_table, memory_tag_id);
     if (tag == (Tag)0) {
@@ -365,4 +393,90 @@ void Map__update(Map map) {
         map->is_changed = (Logical)0;
     }
 }
+
+/// @brief Makes sure the *Arc* connecting *from* to *to* is up to date.
+/// @brief map to use for *Arc* updating.
+/// @brief from is the *Camera_Tag* to for one end of the *Arc*.
+/// @brief to is the *Camera_Tag* to the other end of the *Arc*.
+/// @brief image is the image that the *Camera_Tag*'s came from.
+/// @returns the number of *Arc*'s updated (1 or 0).
+///
+/// *Map__arc_update*() will create or update the *Arc* in *map* associated
+/// with *from* and *to*.  *image* used to determine the frame size.
+
+Unsigned Map__arc_update(
+  Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image) {
+    // Get the *width* and *height*:
+    Integer rows = CV_Image__height_get(image);
+    Integer columns = CV_Image__width_get(image);
+    Double height = (Double)rows;
+    Double width = (Double)columns;
+
+    // Compute some constants:
+    Double half_width = width / 2.0;
+    Double half_height = height / 2.0;
+    Double pi = 3.14159265358979323846264;
+
+    // Extract some field values from *from* and *to*:
+    Double from_center_x = camera_from->x;
+    Double from_center_y = camera_from->y;
+    Tag from_tag = camera_from->tag;
+    Double to_center_x = camera_to->x;
+    Double to_center_y = camera_to->y;
+    Tag to_tag = camera_to->tag;
+
+    // Compute the X and Y distance between the center of the image and the
+    // center of *from* and *to*:
+    Double fdx = half_width - from_center_x;
+    Double fdy = half_height - from_center_y;
+    Double tdx = half_width - to_center_x;
+    Double tdy = half_height - to_center_y;
+
+    // Compute diagonal pixel distance between image center and tag centers:
+    Double from_distance = Double__square_root(fdx * fdx + fdy * fdy);
+    Double to_distance = Double__square_root(tdx * tdx + tdy * tdy);
+
+    // To minimize camera distortion, we want to use images where *from*
+    // and *to* are about equidistant from the image center.  This
+    // we want to minimum the absolute value of the distance difference:
+    Double goodness = Double__absolute(from_distance - to_distance);
+
+    // Find associated *Arc*:
+    Arc arc = Map__arc_lookup(map, from_tag, to_tag);
+
+    // Now see if the new {goodness_metric} is better than the previous one:
+    Unsigned changed = 0;
+    if (goodness < arc->goodness) {
+	// We have a better *goodness* metric, record new values into *arc*:
+
+	// Grab some additional values from *from* and *to*:
+
+	// {neighbor_twist} is normalized angle change in fiducial orientation
+	// from {from} to {to}.
+	Double from_twist = from_tag->twist;
+	Double to_twist = to_tag->twist;
+	Double arc_twist = Double__angle_normalize(to_twist - from_twist);
+
+	// Compute *inches_per_pixel*:
+	//Double inches_across_frame = constants.inches_across_frame;
+	Double distance_per_pixel = from_tag->distance_per_pixel;
+
+	// Compute the distance between *origin* and *to*.
+	Double dx = to_center_x - from_center_x;
+	Double dy = to_center_y - from_center_y;
+	Double distance_pixels = Double__square_root(dx * dx + dy * dy);
+	Double distance = distance_pixels * distance_per_pixel;
+
+	// {neighbor_angle} is the angle from bottom edge of {from}
+	// to the center of {to}:
+ 	Double spin = Double__arc_tangent2(dy, dx);
+	Double angle = Double__angle_normalize(spin - from_twist);
+
+	Arc__update(arc, distance, angle, spin, goodness);
+
+	changed = 1;
+    }
+    return changed;
+}
+
 

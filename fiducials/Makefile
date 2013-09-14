@@ -51,6 +51,7 @@ COMMON_O_FILES := \
 
 DEMO_O_FILES := \
     Arc.o \
+    Camera_Tag.o \
     CV.o \
     Demo.o \
     Map.o \
@@ -59,6 +60,8 @@ DEMO_O_FILES := \
 
 MAP_TEST_O_FILES := \
     Arc.o \
+    CV.o \
+    Camera_Tag.o \
     Map.o \
     Map_Test.o \
     Tag.o \
@@ -104,7 +107,8 @@ Demo: ${COMMON_O_FILES} ${DEMO_O_FILES}
 	$(CC) -o $@ ${DEMO_O_FILES} ${COMMON_O_FILES} ${OPENCV_LIBRARIES} -lm
 
 Map_Test: ${COMMON_O_FILES} ${MAP_TEST_O_FILES}
-	$(CC) -o $@ ${COMMON_O_FILES} ${MAP_TEST_O_FILES} -lm
+	$(CC) -o $@ ${MAP_TEST_O_FILES} \
+	    ${COMMON_O_FILES} ${OPENCV_LIBRARIES} -lm
 
 Video_Capture: ${COMMON_O_FILES} ${VIDEO_CAPTURE_O_FILES}
 	$(CC) -o $@ ${VIDEO_CAPTURE_O_FILES} \

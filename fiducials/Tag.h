@@ -45,7 +45,7 @@
 typedef struct Tag__Struct *Tag;
 
 #include "Arc.h"
-#include "Float.h"
+#include "Double.h"
 #include "File.h"
 #include "Integer.h"
 #include "List.h"
@@ -57,6 +57,9 @@ typedef struct Tag__Struct *Tag;
 struct Tag__Struct {
     /// @brief List *Arc*'s connected to this *Tag*.
     List /* <Arc>*/ arcs;
+
+    /// @brief Distance per camera pixel.
+    Double distance_per_pixel;
 
     ///@brief True if rest of *Tag* is initialized.
     Logical initialized;
@@ -71,16 +74,16 @@ struct Tag__Struct {
     Map map;
 
     /// @brief The twist from the floor X axis to the tag bottom edge.
-    Float twist;
+    Double twist;
 
     /// @brief Visit counter.
     Unsigned visit;
 
     /// @brief Absolute X floor coordinate.
-    Float x;
+    Double x;
 
     /// @brief Absolute Y floor coordinate.
-    Float y;
+    Double y;
 };
 
 // *Tag* routines;
@@ -91,8 +94,7 @@ extern Integer Tag__compare(Tag tag1, Tag tag2);
 extern Logical Tag__equal(Tag tag1, Tag tag2);
 extern Unsigned Tag__hash(Tag tag);
 extern void Tag__initialize(
-
-  Tag tag, Float angle, Float x, Float y, Unsigned visit);
+  Tag tag, Double angle, Double x, Double y, Unsigned visit);
 extern void Tag__sort(Tag tag);
 extern Tag Tag__read(File in_file, Map map);
 extern void Tag__write(Tag tag, File out_file);

@@ -6,5 +6,18 @@
 /// @brief *Double* is a double precision (64-bits) floating point number.
 typedef double Double;
 
+#include "Integer.h"
+
+// *Double* routines:
+
+extern Double Double__absolute(Double value);
+extern Double Double__angle_between(Double from_angle, Double to_angle);
+extern Double Double__angle_normalize(Double angle);
+extern Double Double__arc_tangent2(Double y, Double x);
+extern Integer Double__compare(Double double1, Double double2);
+extern Double Double__cosine(Double angle);
+extern Double Double__sine(Double angle);
+extern Double Double__square_root(Double square);
+
 #endif // !defined(DOUBLE_H_INCLUDED)
 

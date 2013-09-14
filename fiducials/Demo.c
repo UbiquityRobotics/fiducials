@@ -2,6 +2,7 @@
 
 typedef struct Fiducials__Struct *Fiducials;
 
+#include "Camera_Tag.h"
 #include "Character.h"
 #include "CRC.h"
 #include "CV.h"
@@ -13,6 +14,7 @@ typedef struct Fiducials__Struct *Fiducials;
 #include "Integer.h"
 #include "List.h"
 #include "Logical.h"
+#include "Map.h"
 #include "String.h"
 #include "Tag.h"
 #include "Unsigned.h"
@@ -22,7 +24,9 @@ typedef Logical Mapping[64];
 struct Fiducials__Struct {
     CV_Scalar blue;
     Logical blur;
-    CV_Point2D32F_Vector corners_vector;
+    List /* <Camera_Tag> */ camera_tags;
+    List /* <Camera_Tag> */ camera_tags_pool;
+    CV_Point2D32F_Vector corners;
     CV_Scalar cyan;
     CV_Image debug_image;
     Unsigned debug_index;
@@ -30,6 +34,7 @@ struct Fiducials__Struct {
     FEC fec;
     CV_Image gray_image;
     CV_Scalar green;
+    Map map;
     CV_Point origin;
     CV_Image original_image;
     Logical **mappings;
@@ -68,8 +73,7 @@ Integer main(Unsigned arguments_size, String arguments[]) {
     return 0;
 }
 
-
-// This routinew will show {original_image} on the screen along
+// This routine will show {original_image} on the screen along
 // with a primitive debugging interface to showing how the debugging
 // is going.
 
@@ -242,7 +246,9 @@ Fiducials Fiducials__create(CV_Image original_image) {
     Fiducials fiducials = Memory__new(Fiducials);
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
     fiducials->blur = (Logical)1;
-    fiducials->corners_vector = CV_Point2D32F_Vector__create(4);
+    fiducials->camera_tags = List__new(); // <Camera_Tag>
+    fiducials->camera_tags_pool = List__new(); // <Camera_Tag>
+    fiducials->corners = CV_Point2D32F_Vector__create(4);
     fiducials->cyan = CV_Scalar__rgb(0.0, 1.0, 1.0);
     fiducials->debug_image = CV_Image__create(image_size, CV__depth_8u, 3);
     fiducials->debug_index = 0;
@@ -250,6 +256,7 @@ Fiducials Fiducials__create(CV_Image original_image) {
     fiducials->fec = FEC__create(8, 4, 4);
     fiducials->gray_image = CV_Image__create(image_size, CV__depth_8u, 1);
     fiducials->green = CV_Scalar__rgb(0.0, 255.0, 0.0);
+    fiducials->map = Map__new();
     fiducials->mappings = &mappings[0];
     fiducials->origin = CV_Point__create(0, 0);
     fiducials->original_image = original_image;
@@ -356,8 +363,9 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
     }
 
-    // Iterate over all of the countours:
-    //big :@= map.big
+    // Iterate over all of the *contours*:
+    List /* <Camera_Tag> */ camera_tags = fiducials->camera_tags;
+    Map map = fiducials->map;
     Unsigned contours_count = 0;
     for (CV_Sequence contour = contours; contour != (CV_Sequence)0;
       contour = CV_Sequence__next_get(contour)) {
@@ -398,11 +406,11 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		  polygon_contour, red, red, 2, 2, 1, origin);
 	    }
 
-	    // Copy the 4 corners from {poly_contour} to {corners_vector}:
-	    CV_Point2D32F_Vector corners_vector = fiducials->corners_vector;
+	    // Copy the 4 corners from {poly_contour} to {corners}:
+	    CV_Point2D32F_Vector corners = fiducials->corners;
 	    for (Unsigned index = 0; index < 4; index++) {
 		CV_Point2D32F corner =
-		  CV_Point2D32F_Vector__fetch1(corners_vector, index);
+		  CV_Point2D32F_Vector__fetch1(corners, index);
 		CV_Point point =
 		  CV_Sequence__point_fetch1(polygon_contour, index);
 		CV_Point2D32F__point_set(corner, point);
@@ -413,13 +421,13 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		}
 	    }
 
-	    // Now find the sub pixel corners of {corners_vector}:
-	    CV_Image__find_corner_sub_pix(gray_image, corners_vector, 4,
+	    // Now find the sub pixel corners of {corners}:
+	    CV_Image__find_corner_sub_pix(gray_image, corners, 4,
 	      fiducials->size_5x5, fiducials->size_m1xm1,
 	      fiducials->term_criteria);
 
 	    // Ensure that the corners are in a counter_clockwise direction:
-	    CV_Point2D32F_Vector__corners_normalize(corners_vector);
+	    CV_Point2D32F_Vector__corners_normalize(corners);
 
 	    // For debugging show the 4 corners of the possible tag where
 	    //corner0=red, corner1=green, corner2=blue, corner3=purple:
@@ -460,7 +468,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	    // Compute the 8 reference points for deciding whether the
 	    // polygon is "tag like" in its borders:
 	    CV_Point2D32F_Vector references =
-	      Fiducials__references_compute(fiducials, corners_vector);
+	      Fiducials__references_compute(fiducials, corners);
 
 	    // Now sample the periphery of the tag and looking for the
 	    // darkest white value (i.e. minimum) and the lightest black
@@ -503,7 +511,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		CV_Point2D32F_Vector sample_points = fiducials->sample_points;
 
 		// Now compute the locations to sample for tag bits:
-		Fiducials__sample_points_compute(corners_vector, sample_points);
+		Fiducials__sample_points_compute(corners, sample_points);
 
 		// Extract all 64 tag bit values:
 		Logical *tag_bits = &fiducials->tag_bits[0];
@@ -608,44 +616,174 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 				  "CRC correct, Tag=%d\n", tag_id);
 			    }
 
-			    // Lookup {tag} from {tag_id}:
-			    // tag :@= null@Tag
-			    // if tag_exists@(map, tag_id)
-			    //    tag :=
-			    //      tag_lookup@(map, tag_id,"Extract@Extractor")
-			    // else
-				// This actually needs a little discussion.
-				// The actual x, y, and angle for this tag
-				// is not known until after {map_update@Map}()
-				// is called at the end of this routine.
-				// We set {tag.x} to {big} to remember that
-				// this tag is essentially uninitialized.
-				// After the call to {map_update@Map}(), we
-				// quickly verify that each {Tag} in {tags}
-				// has had its x, y, and angle initialized.
-				//tag := tag_create@(map,
-				//  tag_id, 0.0, 0.0, 0.0, 7.8125, "Extractor")
-				//tag.xx := big
-
-			    // Load {direction_index} and {corners_vector}
-			    // into {tag}:
-			    //call record@(tag,
-			    //  direction_index, corners_vector, indent1)
-			    //call append@(tags, tag)
-
-			    if (debug_index == 10) {
-			        //call d@(form@("%t%\n\") / f@(tag))
-				//Integer xx :@= CV__round(tag.center_x)
-				//yy :@= round@CV(tag.center_y)
-				///ncyan :@= extractor.cyan
-				//call cross_draw@(debug_image, xx, yy, cyan)
+			    // Allocate a *camera_tag*:
+			    List /* <Camera_Tag> */ camera_tags_pool =
+			      fiducials->camera_tags_pool;
+			    Camera_Tag camera_tag = (Camera_Tag)0;
+			    if (List__size(camera_tags_pool) == 0) {
+			 	// *camera_tags_pool* is empty;
+				// allocate a new one:
+				camera_tag = Camera_Tag__new();
+			    } else {
+				camera_tag =
+				  (Camera_Tag)List__pop(camera_tags_pool);
 			    }
+
+			    // Load up *camera_tag* to get center, twist, etc.:
+			    Tag tag = Map__tag_lookup(map, tag_id);
+			    Camera_Tag__initialize(camera_tag,
+			      tag, direction_index, corners);
+
+			    // Append *camera_tag* to *camera_tags*:
+			    List__append(camera_tags, (Memory)camera_tag);
 			}
 		    }
 		}
 	    }
 	}
     }
+
+    // Just for consistency sort *camera_tags*:
+    List__sort(camera_tags, (List__Compare__Routine)Camera_Tag__compare);
+
+    // Sweep through all *camera_tag* pairs to generat associated *Arc*'s:
+    Unsigned camera_tags_size = List__size(camera_tags);
+    if (camera_tags_size >= 2) {
+	// Iterate through all pairs, using a "triangle" scan:
+	for (Unsigned tag1_index = 0;
+	  tag1_index < camera_tags_size - 1; tag1_index++) {
+	    Camera_Tag camera_tag1 =
+	      (Camera_Tag)List__fetch(camera_tags, tag1_index);
+	
+	    for (Unsigned tag2_index = tag1_index + 1;
+	      tag2_index < camera_tags_size; tag2_index++) {
+		Camera_Tag camera_tag2 =
+		  (Camera_Tag)List__fetch(camera_tags, tag2_index);
+		assert (camera_tag1->tag->id != camera_tag2->tag->id);
+		Map__arc_update(map, camera_tag1, camera_tag2, gray_image);
+	    }
+	}
+    }
+
+//    # As we scan through {tags} we want to keep track of which one
+//    # is closest to the image center:
+//    bogus_index :@= 0xffffffff
+//    closest_tag_distance :@= big
+//    closest_tag_index :@= bogus_index
+//    next_closest_tag_distance :@= big
+//    next_closest_tag_index :@= bogus_index
+//
+//    # Compute the row and column for the image center:
+//    half_width :@= double@(extractor.width) / 2.0
+//    half_height :@= double@(extractor.height) / 2.0
+//
+//    # Iterate through {tags}:
+//    mapping_names :@= extractor.mapping_names
+//    index :@= 0
+//    while index < tags_size
+//	# Grab the {index}'th {tag}:
+//	tag :@= tags[index]
+//
+//	# Figure out the distance between {tag} and image center:
+//	tag_id :@= tag.id
+//	center_x :@= tag.center_x
+//	center_y :@= tag.center_y
+//	dx :@= half_width - center_x
+//	dy :@= half_height - center_y
+//	center_distance :@= square_root@(dx * dx + dy * dy)
+//
+//	# Remember if this {tag} is the closest.  Sometimes {tag} is
+//	# brand new, but has not auto mapped to a position on the
+//	# map yet.  We do not treat such a tag has valid yet
+//	# We mark the tag as unmapped with {tag.x = big}:
+//	if center_distance < closest_tag_distance && tag.x < big
+//	    closest_tag_distance := center_distance
+//	    closest_tag_index := index
+//
+//	# For debugging keep track of 
+//	if debug_index >= 10
+//	    # Keep track of direction:
+//	    direction :@= tag.direction
+//	    mapping_name :@= mapping_names[direction]
+//	    call d@(form@("Tag:%d% direction=%d% mapping=%s%\n\") %
+//	      f@(tag_id) % f@(direction) / f@(mapping_name))
+//
+//	    # For debugging draw crosses on all 4 corners (0=>red, 1=>green,
+//	    # 2=>blue, 3=>purple):
+//	    tag_corners :@= tag.corners
+//	    corner_index :@= 0
+//	    while corner_index < 4
+//		tag_corner :@= tag_corners[index]
+//		x :@= round@CV(tag_corner.x)
+//		y :@= round@CV(tag_corner.y)
+//		color :@= extractor.red
+//		text :@= ""
+//		switch corner_index
+//		  case 0
+//		    color := extractor.red
+//		    text := "red"
+//		  case 1
+//		    color := extractor.green
+//		    text := "green"
+//		  case 2
+//		    color := extractor.blue
+//		    text := "blue"
+//		  case 3
+//		    color := extractor.purple
+//		    text := "purple"
+//
+//		call cross_draw@(debug_image, x, y, color)
+//		call d@(form@("Tag[%d%]: corner[%d%]=(%d%:%d%) %s%\n\") %
+//		  f@(tag.id) % f@(corner_index) % f@(x) % f@(y) / f@(text))
+//		corner_index := corner_index + 1
+//
+//	# Compute the robot location using the {tag}:
+//	call robot_location_compute@(extractor, tag, indent1)
+//
+//	index := index + 1
+//
+//    # If we had a closest tag, compute where image center is relative to tag:
+//    if closest_tag_index = bogus_index
+//	# Mark that we did not get anything this time:
+//	extractor.last_tag := null@Tag
+//    else
+//	# Grab the closest {tag}:
+//	tag :@= tags[closest_tag_index]
+//
+//	# Load up {extractor}:
+//	dx :@= tag.camera_x - tag.x
+//	dy :@= tag.camera_y - tag.y
+//	camera_center_distance :@= square_root@(dx * dx + dy * dy)
+//
+//	# Step 1: Remember the previous values of {extractor}:
+//	extractor.previous_x := extractor.last_x
+//	extractor.previous_y := extractor.last_y
+//	extractor.previous_bearing := extractor.last_bearing
+//
+//	# Step 2: Stuff new values into {extractor}:
+//	extractor.last_bearing := tag.robot_bearing
+//	extractor.last_distance := camera_center_distance
+//	extractor.last_tag := tag
+//	extractor.last_x := tag.robot_x
+//	extractor.last_y := tag.robot_y
+//
+//    #call d@(form@("Coutours count=%d%\n\") / f@(contours_count))
+//    #call d@("Extractor 4\n\")
+//
+//    if debug_index >= 10
+//	size :@= tags.size
+//	index := 0
+//	while index < size
+//	    tag :@= tags[index]
+//	    call show@(tag)
+//	    index := index + 1
+
+    // Clean out *camera_tags*:
+    List__all_append(fiducials->camera_tags_pool, camera_tags);
+    List__trim(camera_tags, 0);
+
+    Map__update(map);
+    Map__save(map, "Demo.xml");
 
     return 0;
 }
@@ -978,7 +1116,7 @@ void Fiducials__tag_record(Unsigned direction, CV_Point2D32F_Vector vector) {
     // quadralateral in the counter-clockwise direction.  This routine will
     // compute the diagonal and twist values for {tag} as well.
 
-    // Load up the contents of {tag.corners} from {corners_vector} depending
+    // Load up the contents of {tag.corners} from {corners} depending
     // upon {direction}:
     Unsigned offset = 0;
     switch (direction) {

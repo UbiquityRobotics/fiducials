@@ -3,7 +3,7 @@
 #include <assert.h>
 
 #include "Arc.h"
-#include "Float.h"
+#include "Double.h"
 #include "List.h"
 #include "Tag.h"
 #include "Unsigned.h"
@@ -46,14 +46,16 @@ Integer Tag__compare(Tag tag1, Tag tag2) {
 
 Tag Tag__create(Unsigned id, Map map) {
     Tag tag =  Memory__new(Tag);
-    tag->twist = (Float)0.0;
+    tag->twist = (Double)0.0;
     tag->arcs = List__new(); // <Arc>
-    tag->initialized = (Logical)0;
+    tag->hop_count = 0;
     tag->id = id;
+    tag->initialized = (Logical)0;
     tag->map = map;
+    tag->distance_per_pixel = 0.2;	//FIXME: Should be looked up!!!
     tag->visit = map->visit;
-    tag->x = (Float)0.0;
-    tag->y = (Float)0.0;
+    tag->x = (Double)0.0;
+    tag->y = (Double)0.0;
     return tag;
 }
 
@@ -90,7 +92,7 @@ Unsigned Tag__hash(Tag tag) {
 /// measured in radians.  *x* and *y* are measured in any consistent set
 /// of units (millimeters, centimeters, meters, inches, light seconds, etc.)
 
-void Tag__initialize(Tag tag, Float twist, Float x, Float y, Unsigned visit) {
+void Tag__initialize(Tag tag, Double twist, Double x, Double y, Unsigned visit) {
     tag->initialized = (Logical)1;
     tag->twist = twist;
     tag->x = x;
@@ -110,16 +112,16 @@ Tag Tag__read(File in_file, Map map) {
     // Read in "<Tag .../>":
     File__tag_match(in_file, "Tag");
     Unsigned tag_id = (Unsigned)File__integer_attribute_read(in_file, "Id");
-    Float twist = File__float_attribute_read(in_file, "Twist");
-    Float x = File__float_attribute_read(in_file, "X");
-    Float y = File__float_attribute_read(in_file, "Y");
+    Double twist = File__float_attribute_read(in_file, "Twist");
+    Double x = File__float_attribute_read(in_file, "X");
+    Double y = File__float_attribute_read(in_file, "Y");
     Unsigned hop_count =
       (Unsigned)File__integer_attribute_read(in_file, "Hop_Count");
     File__string_match(in_file, "/>\n");
 
     // Convert *twist* from *degrees_to_radians*:
-    Float pi = (Float)3.14159265;
-    Float degrees_to_radians = pi / 180.0;
+    Double pi = (Double)3.14159265358979323846264;
+    Double degrees_to_radians = pi / 180.0;
     twist *= degrees_to_radians;
 
     // Load up *tag*:
@@ -149,15 +151,15 @@ void Tag__sort(Tag tag) {
 
 void Tag__update_via_arc(Tag tag, Arc arc) {
     // Some values to use for radian/degree conversion:
-    Float pi = (Float)3.14159265;
-    Float r2d = 180.0 / pi;
+    Double pi = (Double)3.14159265358979323846264;
+    Double r2d = 180.0 / pi;
 
     // Read out *arc* contents:
     Tag arc_from = arc->from;
     Tag arc_to = arc->to;
-    Float arc_distance = arc->distance;
-    Float arc_angle = arc->angle;
-    Float arc_twist = arc->twist;
+    Double arc_distance = arc->distance;
+    Double arc_angle = arc->angle;
+    Double arc_twist = arc->twist;
 
     // For debugging:
     //File__format(stderr, "Arc[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
@@ -171,7 +173,7 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
 	Tag temporary = arc_from;
 	arc_from = arc_to;
 	arc_to = temporary;
-	arc_angle = Float__angle_normalize(pi + arc_angle - arc_twist);
+	arc_angle = Double__angle_normalize(pi + arc_angle - arc_twist);
 	arc_twist = -arc_twist;
 
 	// For debugging show the conjucate:
@@ -183,19 +185,19 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
     assert (tag != arc_from);
 
     // Grab the starting values from *arc_from*:
-    Float arc_from_twist = arc_from->twist;
-    Float arc_from_x = arc_from->x;
-    Float arc_from_y = arc_from->y;
+    Double arc_from_twist = arc_from->twist;
+    Double arc_from_x = arc_from->x;
+    Double arc_from_y = arc_from->y;
 
     // For debugging:
     //File__format(stderr, "Arc_From[%d]:(t=%.1f, x=%.1f, y=%.1f)\n",
     //  arc_from->id, arc_from_twist * r2d, arc_from_x, arc_from_y);
 
     // Compute the new *Tab* values:
-    Float tag_twist = arc_from_twist + arc_twist;
-    Float angle = Float__angle_normalize(arc_from_twist + arc_angle);
-    Float tag_x = arc_from_x + arc_distance * Float__cosine(angle);
-    Float tag_y = arc_from_y + arc_distance * Float__sine(angle);
+    Double tag_twist = arc_from_twist + arc_twist;
+    Double angle = Double__angle_normalize(arc_from_twist + arc_angle);
+    Double tag_x = arc_from_x + arc_distance * Double__cosine(angle);
+    Double tag_y = arc_from_y + arc_distance * Double__sine(angle);
 
     // For debugging:
     //File__format(stderr, "aa=%.1f aft=%.1f angle=%.1f\n",
@@ -217,8 +219,8 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
 
 void Tag__write(Tag tag, File out_file) {
     // We store angles in degress and convert to/from radians.
-    Float pi = (Float)3.14159265;
-    Float radians_to_degrees = 180.0 / pi;
+    Double pi = (Double)3.14159265358979323846264;
+    Double radians_to_degrees = 180.0 / pi;
 
     // Write out "<Tag ... >":
     File__format(out_file, " <Tag");
@@ -231,15 +233,15 @@ void Tag__write(Tag tag, File out_file) {
     File__format(out_file, "/>\n");
 }
 
-//void Tag__map_update(Tag tag, Float floor_x, Float floor_y,
-//  Float floor_angle, Unsigned visit, Map map) {
+//void Tag__map_update(Tag tag, Double floor_x, Double floor_y,
+//  Double floor_angle, Unsigned visit, Map map) {
 //
 //    // This routine will update {tag} to have a position of ({x},{y}) and
 //    // a {bearing} angle relative to the floor coordinate X axis.
 //    // This only happens if {tag.visit} is less than {visit}.  In addition,
 //    // all arcs of {tag} are visited to update position and bearing.
 //
-//    Float pi = (Float)3.14159265;
+//    Double pi = (Double)3.14159265358979323846264;
 //
 //    // Do we need to update {tag}?:
 //    if (tag->visit < visit) {
@@ -261,18 +263,18 @@ void Tag__write(Tag tag, File out_file) {
 //
 //	    // {target_bearing} is the absolute direction of the bottom
 //	    // edge of the target in floor coordinates:
-//	    Float target_bearing =
-//	      Float__angle_normalize(floor_angle + arc->target_twist);
+//	    Double target_bearing =
+//	      Double__angle_normalize(floor_angle + arc->target_twist);
 //
 //	    // We are at ({x}, {y}) and the new target is placed
 //	    // at ({target_x}, {target_y}).
-//	    Float target_angle =
-//	      Float__angle_normalize(arc->target_angle + target_bearing);
+//	    Double target_angle =
+//	      Double__angle_normalize(arc->target_angle + target_bearing);
 //
 //	    // Now we can compute ({target_x}, {target_y}):
-//	    Float distance = arc->distance;
-//	    Float target_x = floor_x + distance * Float__cosine(target_angle);
-//	    Float target_y = floor_y + distance * Float__sine(target_angle);
+//	    Double distance = arc->distance;
+//	    Double target_x = floor_x + distance * Double__cosine(target_angle);
+//	    Double target_y = floor_y + distance * Double___sine(target_angle);
 //
 //	    // Make sure ({target_x},{target_y}) is reasonable:
 //	    if (target_x > 10000.0 || target_y > 10000.0) {
