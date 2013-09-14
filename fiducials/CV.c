@@ -374,21 +374,21 @@ CV__init_undistort_map(
     cvInitUndistortMap(camera_matrix, distortion_coefficients, mapx, mapy);
 }
 
-CV_Matrix
-CV__load(
-  String file_name,
-  CV_Memory_Storage storage,
-  String name,
-  String real_name)
-{
-    char *simple_file_name;
-    char *simple_name;
-    const char *simple_real_name;
-
-    simple_name = (char *)0;
-    simple_real_name = (const char *)0;
-    return cvLoad(file_name, storage, simple_name, &simple_real_name);
-}
+//CV_Matrix
+//CV__load(
+//  String file_name,
+//  CV_Memory_Storage storage,
+//  String name,
+//  String real_name)
+//{
+//    char *simple_file_name;
+//    char *simple_name;
+//    const char *simple_real_name;
+//
+//    simple_name = (char *)0;
+//    simple_real_name = (const char *)0;
+//    return cvLoad(file_name, storage, simple_name, &simple_real_name);
+//}
 
 void
 CV__release_image(
@@ -817,15 +817,22 @@ CV_Image CV__tga_read(CV_Image image, String tga_file_name) {
 	for (Unsigned column = 0; column < width; column++) {
 	    Unsigned i = column;
 	    if (gray_mode) {
-		Unsigned gray = File__byte_read(tga_in_file);
+		Unsigned gray = fgetc(tga_in_file);
 		CV_Image__store3(image, column, row, 0, gray);
 	    } else {
-		Unsigned red = File__byte_read(tga_in_file);
-		Unsigned green = File__byte_read(tga_in_file);
-		Unsigned blue = File__byte_read(tga_in_file);
-		CV_Image__store3(image, i, j, 0, red);
-		CV_Image__store3(image, i, j, 1, green);
-		CV_Image__store3(image, i, j, 2, blue);
+	        //Unsigned red = File__byte_read(tga_in_file);
+		//Unsigned green = File__byte_read(tga_in_file);
+		//Unsigned blue = File__byte_read(tga_in_file);
+		Unsigned red = fgetc(tga_in_file);
+		Unsigned green = fgetc(tga_in_file);
+		Unsigned blue = fgetc(tga_in_file);
+		unsigned char *pointer = cvPtr2D(image, row, column, (int *)0);
+		pointer[0] = red;
+		pointer[1] = green;
+		pointer[2] = blue;
+		//CV_Image__store3(image, i, j, 0, red);
+		//CV_Image__store3(image, i, j, 1, green);
+		//CV_Image__store3(image, i, j, 2, blue);
 	    }
 	}
     }

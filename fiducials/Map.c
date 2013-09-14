@@ -46,7 +46,7 @@ Arc Map__arc_lookup(Map map, Tag from, Tag to) {
     temporary_arc->from = from;
     temporary_arc->to = to;
     Table /* <Arc, Arc> */ arcs_table = map->arcs_table;
-    Arc arc = Table__lookup(arcs_table, (Memory)temporary_arc);
+    Arc arc = (Arc)Table__lookup(arcs_table, (Memory)temporary_arc);
     if (arc == (Arc)0) {
  	arc = Arc__new();
 	arc->from = from;

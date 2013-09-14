@@ -1,5 +1,11 @@
 # Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
+NOT_C_PLUS_PLUS := \
+    -Wbad-function-cast \
+    -Wstrict-prototypes \
+    -Wold-style-definition \
+    -Werror \
+
 C_WARNING_OPTIONS := \
     -Wreturn-type \
     -Wno-missing-braces \
@@ -9,9 +15,6 @@ C_WARNING_OPTIONS := \
     -Wswitch-default \
     -Wcast-align \
     -Wpointer-arith \
-    -Wbad-function-cast \
-    -Wstrict-overflow=5 \
-    -Wstrict-prototypes \
     -Winline \
     -Wundef \
     -Wshadow \
@@ -19,17 +22,21 @@ C_WARNING_OPTIONS := \
     -Wlogical-op \
     -Wfloat-equal \
     -Wstrict-aliasing=2 \
-    -Wold-style-definition \
-    -Werror \
+    ${NOT_C_PLUS_PLUS}
 
 NO_WORKING := \
     -Wcast-qual \
+    -Wstrict-overflow=5 \
 
 C_OPTIONS := \
     -std=c11 \
     -g \
     -MMD \
     ${C_WARNING_OPTIONS} \
+
+OLD_C_OPTIONS := \
+    -O3 \
+    -pg \
 
 CC := gcc ${C_OPTIONS}
 
@@ -86,11 +93,11 @@ ALL_D_FILES := ${ALL_O_FILES:%.o=%.d}
 ALL_H_BACKUPS := ${ALL_O_FILES:%.o=%.h~}
 
 OPENCV_LIBRARIES := \
-    -lm \
     -lopencv_core \
     -lopencv_imgproc \
     -lopencv_calib3d \
     -lopencv_highgui \
+    -lm \
 
 PROGRAMS := \
     Demo \
