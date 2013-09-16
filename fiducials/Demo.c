@@ -584,14 +584,14 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			}
 
 			//Show where bit 0 and 7 are:
-			if (index == 0) {
-			    // Bit 0 is {cyan}:
-			    color = cyan;
-			}
-			if (index == 7) {
-			    // Bit 7 is {blue}:
-			    color = blue;
-			}
+			//if (index == 0) {
+			//    // Bit 0 is {cyan}:
+			//    color = cyan;
+			//}
+			//if (index == 7) {
+			//    // Bit 7 is {blue}:
+			//    color = blue;
+			//}
 
 			// Now splat a cross of {color} at ({x},{y}):
 			Integer x =
@@ -629,13 +629,14 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			Unsigned byte = 0;
 			for (Unsigned j = 0; j < 8; j++) {
 			    if (mapped_bits[(i<<3) + j]) {
-				byte |= 1 << j;
+				//byte |= 1 << j;
+				byte |= 1 << (7 - j);
 			    }
 			}
 			tag_bytes[i] = byte;
 		    }
 		    if (debug_index == 10) {
-			File__format(stderr, "dir=%d Tag[0]=%d Tag[1]=%d\n",
+			File__format(stderr, "dir=%d Tag[0]=0x%x Tag[1]=0x%x\n",
 			  direction_index, tag_bytes[0], tag_bytes[1]);
 		    }
 
@@ -680,8 +681,16 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			    Camera_Tag__initialize(camera_tag,
 			      tag, direction_index, corners);
 
+			    // Record the maximum *camera_diagonal*:
+			    Double camera_diagonal = camera_tag->diagonal;
+			    if (camera_diagonal > tag->diagonal) {
+				tag->diagonal = camera_diagonal;
+			    }
+
 			    // Append *camera_tag* to *camera_tags*:
 			    List__append(camera_tags, (Memory)camera_tag);
+			    File__format(stderr,
+			      "Found %d\n", camera_tag->tag->id);
 			}
 		    }
 		}

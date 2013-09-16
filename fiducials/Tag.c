@@ -112,6 +112,7 @@ Tag Tag__read(File in_file, Map map) {
     // Read in "<Tag .../>":
     File__tag_match(in_file, "Tag");
     Unsigned tag_id = (Unsigned)File__integer_attribute_read(in_file, "Id");
+    Unsigned diagonal = File__float_attribute_read(in_file, "Diagonal");
     Double twist = File__float_attribute_read(in_file, "Twist");
     Double x = File__float_attribute_read(in_file, "X");
     Double y = File__float_attribute_read(in_file, "Y");
@@ -127,6 +128,7 @@ Tag Tag__read(File in_file, Map map) {
     // Load up *tag*:
     Tag tag = Map__tag_lookup(map, tag_id);
     Tag__initialize(tag, twist * degrees_to_radians, x, y, map->visit);
+    tag->diagonal = diagonal;
     tag->hop_count = hop_count;
 
     return tag;
@@ -225,6 +227,7 @@ void Tag__write(Tag tag, File out_file) {
     // Write out "<Tag ... >":
     File__format(out_file, " <Tag");
     File__format(out_file, " Id=\"%d\"", tag->id);
+    File__format(out_file, " Diagonal=\"%f\"", tag->diagonal);
     File__format(out_file,
       " Twist=\"%f\"", tag->twist * radians_to_degrees);
     File__format(out_file, " X=\"%f\"", tag->x);

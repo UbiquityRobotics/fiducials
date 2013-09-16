@@ -58,6 +58,9 @@ struct Tag__Struct {
     /// @brief List *Arc*'s connected to this *Tag*.
     List /* <Arc>*/ arcs;
 
+    /// @brief Fiducial tag diagnal distance in camera pixels.
+    Double diagonal;
+
     /// @brief Distance per camera pixel.
     Double distance_per_pixel;
 

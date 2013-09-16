@@ -3,6 +3,8 @@
 #if !defined(ARC_H_INCLUDED)
 #define ARC_H_INCLUDED 1
 
+/// @brief *Arc* is just a pointer to *Arc__Struct*.
+
 typedef struct Arc__Struct *Arc;
 
 #include "File.h"
@@ -12,7 +14,7 @@ typedef struct Arc__Struct *Arc;
 #include "Map.h"
 #include "Tag.h"
 
-/// @brief A *Arc_Struct* represents arc from the *from* *Tag* to the
+/// @brief An *Arc_Struct* represents arc from the *from* *Tag* to the
 /// *to* *Tag*.
 ///
 /// Ultimately an *Arc* specifies an ordered 5-tuple:
@@ -74,6 +76,21 @@ typedef struct Arc__Struct *Arc;
 /// constrain each *Arc* object such that the *from* identifier is less than
 /// the *to* identifier.  The *Map* and *Arc* code can trivially compute the
 /// conjugate if needed.
+///
+/// Note: The more I think about this data structure it should be changed to:
+///
+///        (from, to, distance, from_twist, to_twist)
+///
+/// where the twist angles are measured using the line between *from* and *to*
+/// as the X axis starting from fiducial center in question.  Thus, the
+/// for *from* starts at *from* and points directly at *to*.  Likewise,
+/// the "X axis" for *to* starts at the center of *to* and points directly
+/// at the centero of *from*.  Using these definitions, the complex conjegate
+/// would be:
+///
+///        (to, from, distance, to_twist, from_twist)
+///
+/// This is pretty simple to understand.
 
 struct Arc__Struct {
     /// @brief The angle in radians from the *origin* center parallel to the

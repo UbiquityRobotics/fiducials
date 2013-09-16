@@ -1,5 +1,12 @@
 # Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
+# ROS_ROOT needs to be a defined environment variable.
+# Currently, mine is set to /opt/ros/groovy.
+# See http://ros.org/ to see what it takes to get ROS installed.
+
+ROS_INCLUDE_DIR := $(ROS_ROOT)/include
+ROS_LIB_DIR := $(ROS_ROOT)/lib
+
 NOT_C_PLUS_PLUS := \
     -Wbad-function-cast \
     -Wstrict-prototypes \
@@ -22,13 +29,15 @@ C_WARNING_OPTIONS := \
     -Wlogical-op \
     -Wfloat-equal \
     -Wstrict-aliasing=2 \
+    -Wstrict-overflow=5 \
     ${NOT_C_PLUS_PLUS}
 
 NO_WORKING := \
     -Wcast-qual \
-    -Wstrict-overflow=5 \
 
 C_OPTIONS := \
+    -I$(ROS_INCLUDE_DIR) \
+    -L $(ROS_LIB_DIR) \
     -std=c11 \
     -g \
     -MMD \

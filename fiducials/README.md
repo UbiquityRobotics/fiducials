@@ -6,18 +6,35 @@ are located on the ceiling.
 
 ## Compilation
 
-Clone this repository and type "make".  I only test on Linux
+Clone this repository and type "make".  I only test on Linux/Ubuntu
 so you are on your own for other platforms.
 
 The following are known dependencies:
 
-* GCC (sudo apt-get install build-essential)
-* OpenCV (sudo apt-get install libopencv-dev)
+* GCC 4.7 or higher (sudo apt-get install build-essential)
 * InkScape (sudo apt-get install inkscape)
 * doxygen (sudo apt-get install doxygen)
+* ROS (groovy) ( [ROS Install](http://wiki.ros.org/groovy/Installation/Ubuntu) )
+
+OpenCV shows up with the ROS install.  Your .bashrc must get
+the ROS_ROOT environment variable set, or the Makefiles will
+not work.
 
 If you run across any additional dependencies, update this file
 with your copy of the repository, and send me a pull request.
+
+### Compiler upgrade
+
+Danny upgraded his compiler as follows:
+
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt-get update
+    sudo apt-get upgrade -y
+    sudo apt-get dist-upgrade -y
+    sudo apt-get install -y build-essential libopencv-dev \
+      inkscape doxygen
+
+This may be more upgrading than you really want.
 
 ## Tags
 
