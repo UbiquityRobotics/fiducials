@@ -56,7 +56,8 @@ you need.  If it says 4.6.x or less, you need to get a newer GCC compiler.
         sudo apt-get update
         sudo apt-get upgrade -y
         sudo apt-get dist-upgrade -y
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y gcc-4.8
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 30
 
 ### Install InkScape and Doxygen
 
@@ -133,9 +134,9 @@ input focus to Video capture.  To capture an image, type the
 ### Demo
 
 The Demo program is used to debug and show what is going
-on under the covers.
+on under the covers with the Fiducials code:
 
-    Demo image-05.tga
+    Demo ../../src/fiducials/image-05.tga
 
 will load the image-05.tga file and do fiducial recognition
 on it.  Move the cursor over the window that pops up and
@@ -146,13 +147,13 @@ and '-' to decrement one step through processing.
 The steps are:
 
 * Color to Gray
-* Gaussian blur
+* Gaussian blur ['b' toggles the blur]
 * Gray to Black and White
 * Edge detect
 * Edge simplify to polygons
 * Select reasonable size quadralaterals
-* Find corners
+* Find corners to sub-pixel resolution
 * Sample fiducial edges
 * Sample fiducial bits
-* Recognize fiducial id's
+* Recognize fiducial id's (nothing visible yet)
 
