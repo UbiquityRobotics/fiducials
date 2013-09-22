@@ -4,6 +4,8 @@
 # Currently, mine is set to /opt/ros/groovy.
 # See http://ros.org/ to see what it takes to get ROS installed.
 
+$(warning This should now be built with catkin_make)
+
 ROS_INCLUDE_DIR := $(ROS_ROOT)/include
 ROS_LIB_DIR := $(ROS_ROOT)/lib
 

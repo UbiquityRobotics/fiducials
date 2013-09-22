@@ -6,8 +6,13 @@ are located on the ceiling.
 
 ## Compilation
 
-Clone this repository and type "make".  I only test on Linux/Ubuntu
-so you are on your own for other platforms.
+Deprecated: Clone this repository and type "make".
+
+This is now a catkin_package. Clone this repository into a directory under
+the src directory in your catkin workspace and build by typing "catkin_make"
+in the root of the workspace.
+
+I only test on Linux/Ubuntu so you are on your own for other platforms.
 
 The following are known dependencies:
 
