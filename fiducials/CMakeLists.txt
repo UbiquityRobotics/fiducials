@@ -1,8 +1,11 @@
+cmake_minimum_required(VERSION 2.8)
+
 project(fiducials)
 
 find_package(OpenCV)
 
 add_definitions(-std=c11)
+add_definitions(-g)
 
 add_executable(Demo 
     Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c List.c 

@@ -5,6 +5,8 @@
 *.pdf
 *.svg
 *.tar
+CMakeCache.txt
+CMakeFiles
 Demo
 Fiducials_Photos
 Fly_Capture

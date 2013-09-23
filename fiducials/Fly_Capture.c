@@ -100,7 +100,6 @@ Integer main(Integer arguments_size, String arguments[]) {
 	// Create the window to display the video into:
 	String window_name = "Video_Capture";
 	CV__named_window(window_name, CV__window_auto_size);
-	cvResizeWindow(window_name, 1000, 800);
 
 	// Do a video loop:
 	CV_Image display_image = (CV_Image)0;
@@ -143,13 +142,18 @@ Integer main(Integer arguments_size, String arguments[]) {
 		break;
 	    } else if (character == ' ') {
 		// Write out image out to file system as a .tga file:
-		String file_name = String__format("%s-%02d.tga",
+		File__format(stderr, "base=%s, number=%d\n",
+		  capture_base_name, capture_number);
+		//String file_name = String__format("%s-%02d.tga",
+		//  capture_base_name, capture_number);
+		char file_name[100];
+		(void)sprintf(file_name, "%s-%02d.tga",
 		  capture_base_name, capture_number);
 		CV__tga_write(display_image, file_name);
 		File__format(stderr,
 		  "Wrote display_image out to file '%s'\n", file_name);
 		capture_number += 1;
-		String__free(file_name);
+		//String__free(file_name);
 	    }
 	}
 
