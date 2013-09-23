@@ -48,6 +48,8 @@ extern void CV_Image__copy(
   CV_Image source_image, CV_Image destination_image, CV_Image mask);
 extern CV_Image CV_Image__create(
   CV_Size size, Unsigned depth, Unsigned channels);
+extern CV_Image CV_Image__header_create(
+  CV_Size size, Unsigned depth, Unsigned channels);
 extern void CV_Image__cross_draw(
   CV_Image image, Integer x, Integer y, CV_Scalar color);
 extern void CV_Image__draw_contours(CV_Image image, CV_Sequence contour,

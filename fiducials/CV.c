@@ -231,6 +231,11 @@ CV_Image CV_Image__create(CV_Size size, Unsigned depth, Unsigned channels) {
     return cvCreateImage(*size, depth, channels);
 }
 
+CV_Image CV_Image__header_create(
+  CV_Size size, Unsigned depth, Unsigned channels) {
+    return cvCreateImageHeader(*size, depth, channels);
+}
+
 void CV_Image__convert_color(
  CV_Image source_image, CV_Image destination_image, Integer conversion_code) {
     cvCvtColor(source_image, destination_image, conversion_code);
