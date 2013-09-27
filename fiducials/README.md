@@ -72,6 +72,59 @@ source files an prints more readable documenation.  To install Doxygen:
 
         sudo apt-get install -y doxygen
 
+### Install Pt. Grey SDK
+
+There are a bunch of Pt. Gray Flycapture-MV cameras kicking
+around.  These are 648 x 480 USB monochrome cameras with a
+global shutter.  The global shutter makes them much less immune
+to motion blur.  For now, we are standardizing on this camera
+for testing the fiducial software.
+
+Evenutally, we will make the software build optionally with
+or without the Pt. Grey device drivers.  However, until then,
+it is necessary to download the Pt. Grey Software Develoment Kit.
+Please follow the following steps:
+
+* to go to the [Point Grey Web Site](www.ptgrey.com)
+
+* go to [Support] => [Downloads] and click.  The following
+  [downloads link](http://www.ptgrey.com/support/downloads/downloads_admin/Index.aspx)
+  will work until the site gets reorganized.
+
+* You can not have the software until you create an account.
+  Their passwords must consist of letters and digits only.
+
+* If you are lucky you should get to the
+  [Product Support: Downloads](http://www.ptgrey.com/support/downloads/downloads_admin/Download.aspx)
+  page.  As usual, the link will break when the web site is
+  reorganized.
+
+* Currently it brings you to a selection panel.  Just click the
+  on [Software (24)] item.  It will expand into 24 possibilities.
+
+* Scroll down until you get [FlyCapure 2.5 Release 4 - Linux].
+  The are four options --
+  1) [32-bit x86](http://www.ptgrey.com/support/downloads/downloads_admin/dlhelper.aspx?vp=flycapture2-2.5.3.4-i386-pkg.tgz&dld=180),
+  2) [64-bit x86](http://www.ptgrey.com/support/downloads/downloads_admin/dlhelper.aspx?vp=flycapture2-2.5.3.4-amd64-pkg.tgz&dld=180),
+  3) [ARM Hard Float](http://www.ptgrey.com/support/downloads/downloads_admin/dlhelper.aspx?vp=flycapture.2.5.3.4_armhf.tar.gz&dld=180), and
+  4) [ARM Soft Float](http://www.ptgrey.com/support/downloads/downloads_admin/dlhelper.aspx?vp=flycapture.2.5.3.4_arm.tar.gz&dld=180).
+  Download the correct one for your platform.
+
+* Untar the tarball:
+
+	cd {somwhere}
+        gunzip -c {name_of_tar.gz} | tar xvf -
+
+* Read the "readme.txt" file and install as much as you can.
+  These instructions only go up to Ubuntu 10.04, which is getting
+  pretty old.
+
+* Finally run the install script:
+
+        sudo sh install_flycapture.sh
+
+Now it should be possible to download and build the fiducials package.
+
 ### Install and Build the Fiducials Code
 
 We assume that you called your catkin workspace "catkin_ws" in the
@@ -121,6 +174,23 @@ a video camera and capture a sequence of images from the video
 stream.  To use:
 
     Video_Capture camera_number [capture_base_name]
+
+If the image does not come up, try again.  If comes up with
+the image rotated horizontally.  If it keeps coming up screwy,
+unplug the camera and try again.  Honest, it is unclear what
+the issue is.
+
+To use image capture, first click on the image to shift the
+input focus to Video capture.  To capture an image, type the
+[space] key.  To exit, type the [Esc] key.
+
+### Fly_Capture
+
+The Fly_Capture program capture is used to display video from
+a Pt. Grey video camera and capture a sequence of images from
+video stream.  To use:
+
+    Fly_Capture camera_number [capture_base_name]
 
 If the image does not come up, try again.  If comes up with
 the image rotated horizontally.  If it keeps coming up screwy,
