@@ -199,9 +199,11 @@ void Tag__svg_write(Tag tag, SVG svg) {
     SVG__line(svg, x4, y4, x1, y1, bottom_edge);
 
     // Plot the id number:
-    String id_text = String__format("%d", id);
+    //String id_text = String__format("%d", id);
+    char id_text[20];
+    (void)sprintf(id_text, "%d", id);
     SVG__text(svg, id_text, x, y, "ariel", 20);
-    String__free(id_text);
+    //String__free(id_text);
 }
 
 

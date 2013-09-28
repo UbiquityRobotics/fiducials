@@ -133,7 +133,8 @@ SVG SVG__open(String base_name,
 
     // Get *svg_stream* opened:
     SVG svg = (SVG)0;
-    String file_name = String__format("%s.svg", base_name);
+    char file_name[100];
+    (void)sprintf(file_name, "%s.svg", base_name);
     File svg_stream = File__open(file_name, "w");
     if (svg_stream == (File)0) {
 	File__format(stderr, "Unable to open %s.svg\n", base_name);
@@ -166,7 +167,7 @@ SVG SVG__open(String base_name,
     }
 
     // Clean up and return:
-    String__free(file_name);
+    //String__free(file_name);
     return svg;
 }
 
