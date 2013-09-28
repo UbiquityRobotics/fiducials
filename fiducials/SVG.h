@@ -8,6 +8,7 @@
 /// @brief *SVG* is a Scalable Vector Graphics object.
 typedef struct SVG__Struct *SVG;
 
+#include "Bounding_Box.h"
 #include "Double.h"
 #include "File.h"
 #include "Integer.h"
@@ -46,6 +47,8 @@ struct SVG__Struct {
 
 // External declarations:
 
+extern void SVG__cartesian_scale(
+  SVG svg, Double x_width, Double y_height, Bounding_Box bounding_box);
 extern void SVG__close(SVG svg);
 extern void SVG__line(SVG svg,
   Double x1, Double y1, Double x2, Double y2, String stroke);

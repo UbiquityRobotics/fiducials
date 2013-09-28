@@ -743,6 +743,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 
     Map__update(map);
     Map__save(map, "Demo.xml");
+    Map__svg_write(map, "Demo");
 
     return 0;
 }

@@ -6,6 +6,7 @@
 #include "Double.h"
 #include "File.h"
 #include "Map.h"
+#include "SVG.h"
 #include "Tag.h"
 #include "Unsigned.h"
 
@@ -167,6 +168,12 @@ Arc Arc__read(File in_file, Map map) {
     Arc arc = Arc__create(from, to, distance, angle, twist, goodness);
     arc->in_tree = in_tree;
     return arc;
+}
+
+void Arc__svg_write(Arc arc, SVG svg) {
+    Tag from_tag = arc->from;
+    Tag to_tag = arc->to;
+    SVG__line(svg, from_tag->x, from_tag->y, to_tag->x, to_tag->y, "black");
 }
 
 /// @brief Updates the contenst of *arc*.

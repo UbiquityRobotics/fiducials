@@ -7,9 +7,11 @@
 typedef char *String;
 
 #include "Unsigned.h"
+#include "Logical.h"
 
 // External declarations:
 
+extern Logical String__equal(String string1, String string2);
 extern String String__allocate(Unsigned size);
 extern String String__format(String format, ...);
 extern void String__free(String string);

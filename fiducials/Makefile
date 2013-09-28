@@ -66,6 +66,7 @@ CC_MIXED :=  $(CC) ${CC_OPTIONS} ${MIXED_WARNING_OPTIONS}
 CC_C_ONLY := $(CC) ${CC_OPTIONS} ${C_ONLY_WARNING_OPTIONS}
 
 COMMON_O_FILES := \
+    Bounding_Box.o \
     Character.o \
     CRC.o \
     Double.o \

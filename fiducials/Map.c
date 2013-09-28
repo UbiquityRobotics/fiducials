@@ -231,6 +231,49 @@ void Map__sort(Map map) {
     List__sort(map->all_arcs, (List__Compare__Routine)Arc__compare);
 }
 
+/// @brief S
+
+void Map__svg_write(Map map, String svg_base_name) {
+    // Figure out how many *Arc*'s and *Tag*'s we have:
+    List all_arcs = map->all_arcs;
+    List all_tags = map->all_tags;
+    Unsigned all_tags_size = List__size(all_tags);
+    Unsigned all_arcs_size = List__size(all_arcs);
+
+    Bounding_Box bounding_box = Bounding_Box__new();
+    for (Unsigned index = 0; index < all_tags_size; index++) {
+	Tag tag = (Tag)List__fetch(all_tags, index);
+	Tag__bounding_box_update(tag, bounding_box);
+    }
+
+    // Open the Scalable Vector Graphics file:
+    SVG svg = SVG__open(svg_base_name, 8.0, 10.5, 1.0, 1.0, "in");
+
+    SVG__cartesian_scale(svg, 8.0, 10.5, bounding_box);
+
+    // Draw the X/Y axes:
+    String color = "cyan";
+    SVG__line(svg,
+      bounding_box->minimum_x, 0.0, bounding_box->maximum_x, 0.0, color);
+    SVG__line(svg,
+      0.0, bounding_box->minimum_y, 0.0, bounding_box->maximum_y, color);
+
+    // Output each *tag in *all_tags*:
+    for (Unsigned index = 0; index < all_tags_size; index++) {
+	Tag tag = (Tag)List__fetch(all_tags, index);
+	Tag__svg_write(tag, svg);
+    }
+
+    // Output each *tag in *all_tags*:
+    for (Unsigned index = 0; index < all_arcs_size; index++) {
+	Arc arc = (Arc)List__fetch(all_arcs, index);
+	Arc__svg_write(arc, svg);
+    }
+
+    // Close *svg*:
+    SVG__close(svg);
+}
+
 /// @brief Writes *map* out to *out_file*.
 /// @param map to write out.
 /// @param out_file to write to.

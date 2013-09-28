@@ -84,6 +84,28 @@ Double Double__cosine(Double angle) {
     return cos(angle);
 }
 
+/// @brief Return the maximum of *a* and *b*.
+/// @param a is the first *Double* to maximize.
+/// @param b is the first *Double* to maximize.
+/// @returns the maximum of *a* and *b*.
+///
+/// *Double__maximum*() returns the maximum of *a* and *b*.
+
+Double Double__maximum(Double a, Double b) {
+    return fmax(a, b);
+}
+
+/// @brief Return the minimum of *a* and *b*.
+/// @param a is the first *Double* to minimize.
+/// @param b is the first *Double* to minimize.
+/// @returns the minimum of *a* and *b*.
+///
+/// *Double__minimum*() returns the minimum of *a* and *b*.
+
+Double Double__minimum(Double a, Double b) {
+    return fmin(a, b);
+}
+
 /// @brief Return the sine of *angle*
 /// @param angle in radians.
 /// @returns sine of *angle*.

@@ -3,8 +3,10 @@
 #include <assert.h>
 
 #include "Arc.h"
+#include "Bounding_Box.h"
 #include "Double.h"
 #include "List.h"
+#include "SVG.h"
 #include "Tag.h"
 #include "Unsigned.h"
 
@@ -19,6 +21,22 @@
 void Tag__arc_append(Tag tag, Arc arc) {
     assert(arc->from == tag || arc->to == tag);
     List__append(tag->arcs, (Memory)arc);
+}
+
+/// @brief Updates *bounding_box* to include the 4 corners of tag.
+/// @param tag is the tag to use to update *bounding_box*.
+/// @param bounding_box is the *Bounding_Box* to update.
+///
+/// *Tab__bounding_box_update*() will ensure that the 4 corners of
+/// *tag* will be enclosed by *bounding_box* when it comes time to
+/// graph *tag*.
+
+void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box) {
+    Double x = tag->x;
+    Double y = tag->y;
+    Double half_diagonal = tag->diagonal / 2.0;
+    Bounding_Box__update(bounding_box, x - half_diagonal , y - half_diagonal);
+    Bounding_Box__update(bounding_box, x + half_diagonal , y + half_diagonal);
 }
 
 /// @brief Returns the sort order of *tag1* to *tag2*.
@@ -48,6 +66,7 @@ Tag Tag__create(Unsigned id, Map map) {
     Tag tag =  Memory__new(Tag);
     tag->twist = (Double)0.0;
     tag->arcs = List__new(); // <Arc>
+    tag->diagonal = 0.0;
     tag->hop_count = 0;
     tag->id = id;
     tag->initialized = (Logical)0;
@@ -86,13 +105,18 @@ Unsigned Tag__hash(Tag tag) {
 /// @param twist is the fidicial twist relative to the floor X axis.
 /// @param x is the floor X coordinate of the fiducial center.
 /// @param y is the floor Y corrdinate of the fiducial center.
+/// @param diagonal is diagonal distance across the *tag*.
+/// @param visit is the visit number for the tree walker.
 ///
 /// *Tag__initialize*() will initialize *tag* to contain *twist*, *x*,
 /// and *y*.  *twist* is the fiducial twist relative to the floor X axis
-/// measured in radians.  *x* and *y* are measured in any consistent set
-/// of units (millimeters, centimeters, meters, inches, light seconds, etc.)
+/// measured in radians.  *x*, *y*, and *diagonal*  are measured in any
+/// consistent set of units (millimeters, centimeters, meters, inches,
+/// light years, etc.)  *visit* is used for the tree walker.
 
-void Tag__initialize(Tag tag, Double twist, Double x, Double y, Unsigned visit) {
+void Tag__initialize(
+  Tag tag, Double twist, Double x, Double y, Double diagonal, Unsigned visit) {
+    tag->diagonal = diagonal;
     tag->initialized = (Logical)1;
     tag->twist = twist;
     tag->x = x;
@@ -127,8 +151,8 @@ Tag Tag__read(File in_file, Map map) {
 
     // Load up *tag*:
     Tag tag = Map__tag_lookup(map, tag_id);
-    Tag__initialize(tag, twist * degrees_to_radians, x, y, map->visit);
-    tag->diagonal = diagonal;
+    Tag__initialize(
+      tag, twist * degrees_to_radians, x, y, diagonal, map->visit);
     tag->hop_count = hop_count;
 
     return tag;
@@ -142,6 +166,44 @@ Tag Tag__read(File in_file, Map map) {
 void Tag__sort(Tag tag) {
     List__sort(tag->arcs, (List__Compare__Routine)Arc__compare);
 }
+
+void Tag__svg_write(Tag tag, SVG svg) {
+  // Some constants:
+    Double pi = (Double)3.14159265358979323846264;
+    Double half_pi = pi / 2.0;
+    Double quarter_pi = half_pi / 2.0;
+
+    // Grab some values from *tag*:
+    Unsigned id = tag->id;
+    Double half_diagonal = tag->diagonal / 2.0;
+    Double x = tag->x;
+    Double y = tag->y;
+    Double twist = tag->twist - quarter_pi;
+
+    // Compute the 4 corners:
+    double x1 = x + half_diagonal * Double__cosine(twist);
+    double y1 = y + half_diagonal * Double__sine(twist);
+    double x2 = x + half_diagonal * Double__cosine(twist + half_pi);
+    double y2 = y + half_diagonal * Double__sine(twist + half_pi);
+    double x3 = x + half_diagonal * Double__cosine(twist + pi);
+    double y3 = y + half_diagonal * Double__sine(twist + pi);
+    double x4 = x + half_diagonal * Double__cosine(twist - half_pi);
+    double y4 = y + half_diagonal * Double__sine(twist - half_pi);
+
+    // Plot the 4 sides:
+    String other_edge = "black";
+    String bottom_edge = "purple";
+    SVG__line(svg, x1, y1, x2, y2, other_edge);
+    SVG__line(svg, x2, y2, x3, y3, other_edge);
+    SVG__line(svg, x3, y3, x4, y4, other_edge);
+    SVG__line(svg, x4, y4, x1, y1, bottom_edge);
+
+    // Plot the id number:
+    String id_text = String__format("%d", id);
+    SVG__text(svg, id_text, x, y, "ariel", 20);
+    String__free(id_text);
+}
+
 
 /// @brief Updates the position and orientation of *tag* using *arc*.
 /// @param tag to update.

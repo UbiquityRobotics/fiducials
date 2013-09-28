@@ -1,6 +1,71 @@
 // Copyright (c) by Wayne C. Gramlich.  All rights reserved.
 
+#include <assert.h>
+
+#include "Bounding_Box.h"
+#include "Double.h"
+#include "Integer.h"
+#include "String.h"
 #include "SVG.h"
+#include "Unsigned.h"
+
+/// @brief Turns *svg* into a cartesian graphing canvas bounded by
+/// *bounding_box*.
+/// @param svg is the *SVG* object to modify.
+/// @param x_width is the available width graph on.
+/// @param y_height is the available height graph on.
+/// @param bounding_box specifies the *Bounding_Box* of the values
+/// to be graphed.
+///
+/// *SVG__cartesian_scale*() will modifiy *svg* so that it can graph
+/// lines, rectangles, etc, in an area bounded by *bounding_box*.
+/// The available graphing area is *x_width* by *y_height*.
+
+void SVG__cartesian_scale(
+  SVG svg, Double x_width, Double y_height, Bounding_Box bounding_box) {
+    // Grab the minimum/maximum values from *bounding_box*.
+    Double maximum_x = bounding_box->maximum_x;
+    Double minimum_x = bounding_box->minimum_x;
+    Double maximum_y = bounding_box->maximum_y;
+    Double minimum_y = bounding_box->minimum_y;
+
+    // Compute the span in x and y:
+    Double x_span = maximum_x - minimum_x;
+    Double y_span = maximum_y - minimum_y;
+    //File__format(stderr, "X/Y span=(%.2f, %.2f)\n", x_span, y_span);
+
+    // COmpute the axis independent scale in X and Y:
+    Double x_scale = x_width / x_span;
+    Double y_scale = y_height / y_span;
+    //File__format(stderr, "X/Y scale=(%.6f, %.6f)\n", x_scale, y_scale);
+
+    // Take the smaller of the two so that the X and Y scales are equal:
+    x_scale = Double__minimum(x_scale, y_scale);
+    y_scale = x_scale;
+    //File__format(stderr, "X/Y scale=(%.6f, %.6f)\n", x_scale, y_scale);
+
+    // Compute X/Y spans adjusted by the aspect ratio:
+    Double scaled_x_span = x_span;
+    Double scaled_y_span = y_span;
+    //File__format(stderr,
+    //  "Scaled X/Y span=(%.2f, %.2f)\n", scaled_x_span, scaled_y_span);
+    
+    // Now compute the X and Y offsets:
+    Double x_offset = (minimum_x + maximum_x) / 2.0 - scaled_x_span / 2.0;
+    // Swap Y axis direction by adding *scaled_y_span* instead of subtracting:
+    Double y_offset = (minimum_y + maximum_y) / 2.0 + scaled_y_span / 2.0;
+    //File__format(stderr, "X/Y offset=(%.2f, %.2f)\n", x_offset, y_offset);
+    
+    // Load up *svg*:
+    svg->width = x_width * x_scale;
+    svg->height = y_height * y_scale;
+    svg->x_scale = x_scale;
+    // Swap Y axis direction by negating *y_scale*:
+    svg->y_scale = -y_scale;
+    svg->x_offset = -x_offset;
+    svg->y_offset = -y_offset;
+}
+
 
 /// @brief Close SVG object.
 /// @param svg object to close
@@ -61,6 +126,11 @@ void SVG__line(SVG svg,
 
 SVG SVG__open(String base_name,
   Double width, Double height, Double x_scale, Double y_scale, String units) {
+    // Verify that units are OK:
+    assert (String__equal(units, "cm") ||
+      String__equal(units, "mm") ||
+      String__equal(units, "in"));
+
     // Get *svg_stream* opened:
     SVG svg = (SVG)0;
     String file_name = String__format("%s.svg", base_name);

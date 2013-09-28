@@ -12,6 +12,7 @@ typedef struct Arc__Struct *Arc;
 #include "Logical.h"
 #include "Integer.h"
 #include "Map.h"
+#include "SVG.h"
 #include "Tag.h"
 
 /// @brief An *Arc_Struct* represents arc from the *from* *Tag* to the
@@ -130,6 +131,7 @@ extern Arc Arc__create(Tag from, Tag to,
 extern Arc Arc__new(void);
 extern Unsigned Arc__hash(Arc arc);
 extern Arc Arc__read(File out_file, Map map);
+extern void Arc__svg_write(Arc arc, SVG svg);
 extern void Arc__update(
   Arc arc, Double distance, Double angle, Double twist, Double goodness);
 extern void Arc__write(Arc arc, File out_file);

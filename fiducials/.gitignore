@@ -5,10 +5,10 @@
 *.pdf
 *.svg
 *.tar
+*.xml
 CMakeCache.txt
 CMakeFiles
 Demo
-Demo.xml
 Fiducials_Photos
 Fly_Capture
 FlyCapture2Test

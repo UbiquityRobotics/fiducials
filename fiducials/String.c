@@ -1,10 +1,12 @@
 // Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "Character.h"
+#include "Logical.h"
 #include "String.h"
 #include "Memory.h"
 #include "Unsigned.h"
@@ -18,6 +20,18 @@
 
 String String__allocate(Unsigned size) {
     return (String)Memory__allocate(size + 1);
+}
+
+/// @brief Returns true if *string1* equals *string2*.
+/// @param string1 is the first *String* to compare.
+/// @param string2 is the second *String* to compare.
+/// @returns true if *string1* is equal to *string2*.
+///
+/// *String__equal*() will return true if *string1* is equal to *string2*
+/// and false otherwise.
+
+Logical String__equal(String string1, String string2) {
+    return (Logical)(strcmp(string1, string2) == 0);
 }
 
 /// @brief Return a formatted version of *format*.

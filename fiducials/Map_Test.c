@@ -46,15 +46,15 @@ Integer main(Unsigned arguments_size, String arguments[]) {
     //  0---1
 
     Tag tag0 = Map__tag_lookup(map1, 0);
-    Tag__initialize(tag0, 0.0, 0.0, 0.0, visit);
+    Tag__initialize(tag0, 0.0, 0.0, 0.0, 3.0, visit);
     Tag tag1 = Map__tag_lookup(map1, 1);
-    Tag__initialize(tag1, 0.0, 0.0, 0.0, visit);
+    Tag__initialize(tag1, 0.0, 0.0, 0.0, 3.0, visit);
     Tag tag2 = Map__tag_lookup(map1, 2);
-    Tag__initialize(tag2, 0.0, 0.0, 0.0, visit);
+    Tag__initialize(tag2, 0.0, 0.0, 0.0, 3.0, visit);
     Tag tag3 = Map__tag_lookup(map1, 3);
-    Tag__initialize(tag3, 0.0, 0.0, 0.0, visit);
+    Tag__initialize(tag3, 0.0, 0.0, 0.0, 3.0, visit);
     Tag tag4 = Map__tag_lookup(map1, 4);
-    Tag__initialize(tag4, 0.0, 0.0, 0.0, visit);
+    Tag__initialize(tag4, 0.0, 0.0, 0.0, 3.0, visit);
 
     // Sides:
     Arc__create(tag0, tag1, 10.0, angle0   -     0.0,  angle10, 0.0);
@@ -79,6 +79,8 @@ Integer main(Unsigned arguments_size, String arguments[]) {
     Map map2 = Map__restore(xml_file_name);
 
     assert (Map__compare(map1, map2) == 0);
+
+    Map__svg_write(map1, "Map_Test");
 
     return 0;
 }

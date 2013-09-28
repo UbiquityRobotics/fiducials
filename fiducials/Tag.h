@@ -45,11 +45,13 @@
 typedef struct Tag__Struct *Tag;
 
 #include "Arc.h"
+#include "Bounding_Box.h"
 #include "Double.h"
 #include "File.h"
 #include "Integer.h"
 #include "List.h"
 #include "Map.h"
+#include "SVG.h"
 #include "Unsigned.h"
 
 /// @brief A *Tag_Struct* represents the location and orientation of one 
@@ -92,14 +94,16 @@ struct Tag__Struct {
 // *Tag* routines;
 
 extern void Tag__arc_append(Tag tag, Arc arc);
+extern void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box);
 extern Tag Tag__create(Unsigned id, Map map);
 extern Integer Tag__compare(Tag tag1, Tag tag2);
 extern Logical Tag__equal(Tag tag1, Tag tag2);
 extern Unsigned Tag__hash(Tag tag);
 extern void Tag__initialize(
-  Tag tag, Double angle, Double x, Double y, Unsigned visit);
+  Tag tag, Double angle, Double x, Double y, Double diagonal, Unsigned visit);
 extern void Tag__sort(Tag tag);
 extern Tag Tag__read(File in_file, Map map);
+extern void Tag__svg_write(Tag tag, SVG svg);
 extern void Tag__write(Tag tag, File out_file);
 extern void Tag__update_via_arc(Tag tag, Arc arc);
 
