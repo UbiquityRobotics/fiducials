@@ -86,6 +86,7 @@ DEMO_O_FILES := \
     Camera_Tag.o \
     CV.o \
     Demo.o \
+    Fiducials.o \
     Map.o \
     Tag.o \
     High_GUI2.o \
