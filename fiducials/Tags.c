@@ -28,6 +28,9 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 	Unsigned tag_size = 160;
 	for (Unsigned index = 1; index < arguments_size; index++) {
 	    String tag_name = arguments[index];
+	    if (String__equal(tag_name, "-L")) {
+	      tag_size = (Unsigned)(160.0 * 11.0 / 8.5);
+	    }
 	    Unsigned tag_number = String__to_unsigned(tag_name);
 	    //File__format(stdout,
 	    //  "[%d]: '%s' %d\n", index, tag_name, tag_number);
