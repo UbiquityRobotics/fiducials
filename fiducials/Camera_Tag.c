@@ -32,7 +32,7 @@ Integer Camera_Tag__compare(Camera_Tag camera_tag1, Camera_Tag camera_tag2) {
 /// from this routine.
 
 void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
-  Unsigned direction, CV_Point2D32F_Vector corners) {
+  Unsigned direction, CV_Point2D32F_Vector corners, CV_Image debug_image) {
     // We need to remap the 4 corners in *corners* to be oriented as
     // in the crude ASCII art shown below:
     //
@@ -90,10 +90,46 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
     Double x3 = x_corners[3];
     Double y3 = y_corners[3];
 
+    // For debugging plot the for colors
+    if (debug_image != (CV_Image)0) {
+	for (Unsigned index = 0; index < 4; index++) {
+	    Integer x = (Integer)x_corners[index];
+	    Integer y = (Integer)y_corners[index];
+	    CV_Scalar color = (CV_Scalar)0;
+	    String text = (String)0;
+	    switch (index) {
+	      case 0:
+		color = CV_Scalar__rgb(255.0, 0.0, 0.0);
+		text = "red";
+		break;
+	      case 1:
+		color = CV_Scalar__rgb(0.0, 255.0, 0.0);
+		text = "green";
+		break;
+	      case 2:
+		color = CV_Scalar__rgb(0.0, 0.0, 255.0);
+		text = "blue";
+		break;
+	      case 3:
+		color = CV_Scalar__rgb(0.0, 255.0, 255.0);
+		text = "cyan";
+		break;
+	      default:
+		assert(0);
+	    }
+	    CV_Image__blob_draw(debug_image, x, y, color);
+	    File__format(stderr,
+	      "Corner[%d]=(%d:%d) %s\n", index, x, y, text);
+	}
+    }
+
     // Compute the angle of the tag bottom edge relative to the camera X axis:
     Double dx01 = x0 - x1;
     Double dy01 = y0 - y1;
     Double twist01 = Double__arc_tangent2(dy01, dx01);
+    File__format(stderr,
+      "CamTag_init:id=%d x0:%.2f x1:%.2f dx01:%.2f y0:%.2f y1:%.2f dy01:%.2f\n",
+      tag->id, x0, x1, dx01, y0, y1, dy01);
 
     // Compute the angle of the tag top edge relative to the camera X axis:
     Double dx32 = x3 - x2;
@@ -105,6 +141,11 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
     // change and add in half of that to get the average angle:
     Double twist_change = Double__angle_between(twist01, twist32);
     Double twist = Double__angle_normalize(twist01 + twist_change / 2.0);
+
+    Double pi = (Double)3.14159265358979323846264;
+    Double r2d = 180.0 / pi;
+    File__format(stderr, "CamTag_init:id:%d tw01:%.4f tw32:%.4f tw:%.4f\n",
+      tag->id, twist01 * r2d , twist32 * r2d, twist * r2d);
 
     // Compute the average of the two diagonals:
     Double dx02 = x0 - x2;

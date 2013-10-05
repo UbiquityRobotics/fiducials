@@ -35,26 +35,24 @@ void Map__arc_append(Map map, Arc arc) {
     map->is_changed = (Logical)1;
 }
 
-Arc Map__arc_lookup(Map map, Tag from, Tag to) {
-    if (from->id > to->id) {
-	Tag temporary = from;
-	from = to;
-	to = temporary;
+Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
+    // Make sure that *from_tag* has the lower id:
+    if (from_tag->id > to_tag->id) {
+	Tag temporary_tag = from_tag;
+	from_tag = to_tag;
+	to_tag = temporary_tag;
     }
 
+    // See whether or not an *Arc* with these two tags preexists:
     Arc temporary_arc = map->temporary_arc;
-    temporary_arc->from = from;
-    temporary_arc->to = to;
+    temporary_arc->from_tag = from_tag;
+    temporary_arc->to_tag = to_tag;
     Table /* <Arc, Arc> */ arcs_table = map->arcs_table;
     Arc arc = (Arc)Table__lookup(arcs_table, (Memory)temporary_arc);
     if (arc == (Arc)0) {
- 	arc = Arc__new();
-	arc->from = from;
-	arc->to = to;
+	// No preexisting *Arc*; create one:
+        arc = Arc__create(from_tag, 0.0, 0.0, to_tag, 0.0, 123456789.0);
 	Table__insert(arcs_table, (Memory)arc, (Memory)arc);
-	Map__arc_append(map, arc);
-	Tag__arc_append(from, arc);
-	Tag__arc_append(to, arc);
     }
     return arc;
 }
@@ -370,26 +368,26 @@ void Map__update(Map map) {
 
 		// Figure out if *origin* or *target* have been added to the
 		// spanning tree yet:
-		Tag from = arc->from;
-		Tag to = arc->to;
-		Logical from_is_new = (Logical)(from->visit != visit);
-		Logical to_is_new = (Logical)(to->visit != visit);
+		Tag from_tag = arc->from_tag;
+		Tag to_tag = arc->to_tag;
+		Logical from_is_new = (Logical)(from_tag->visit != visit);
+		Logical to_is_new = (Logical)(to_tag->visit != visit);
 
 		if (from_is_new || to_is_new) {
 		    if (from_is_new) {
 			// Add *to* to spanning tree:
 			assert (!to_is_new);
-			from->hop_count = to->hop_count + 1;
-			List__all_append(pending_arcs, from->arcs);
-			from->visit = visit;
-			Tag__update_via_arc(from, arc);
+			from_tag->hop_count = to_tag->hop_count + 1;
+			List__all_append(pending_arcs, from_tag->arcs);
+			from_tag->visit = visit;
+			Tag__update_via_arc(from_tag, arc);
 		    } else {
 			// Add *from* to spanning tree:
 			assert (!from_is_new);
-			to->hop_count = from->hop_count + 1;
-			List__all_append(pending_arcs, to->arcs);
-			to->visit = visit;
-			Tag__update_via_arc(to, arc);
+			to_tag->hop_count = from_tag->hop_count + 1;
+			List__all_append(pending_arcs, to_tag->arcs);
+			to_tag->visit = visit;
+			Tag__update_via_arc(to_tag, arc);
 		    }
 
 		    // Mark that *arc* is part of the spanning tree:
@@ -459,63 +457,75 @@ Unsigned Map__arc_update(
     Double half_width = width / 2.0;
     Double half_height = height / 2.0;
     Double pi = 3.14159265358979323846264;
+    Double r2d = 180.0 / pi;
 
-    // Extract some field values from *from* and *to*:
-    Double from_center_x = camera_from->x;
-    Double from_center_y = camera_from->y;
+    // Extract some field values from *camera_from* and *camera_to*:
+    Double camera_from_twist = camera_from->twist;
+    Double camera_from_center_x = camera_from->x;
+    Double camera_from_center_y = camera_from->y;
     Tag from_tag = camera_from->tag;
-    Double to_center_x = camera_to->x;
-    Double to_center_y = camera_to->y;
+    Double camera_to_twist = camera_to->twist;
+    Double camera_to_center_x = camera_to->x;
+    Double camera_to_center_y = camera_to->y;
     Tag to_tag = camera_to->tag;
 
     // Compute the X and Y distance between the center of the image and the
-    // center of *from* and *to*:
-    Double fdx = half_width - from_center_x;
-    Double fdy = half_height - from_center_y;
-    Double tdx = half_width - to_center_x;
-    Double tdy = half_height - to_center_y;
+    // center of *camera_from* and *camera_to*:
+    Double center_from_dx = half_width - camera_from_center_x;
+    Double center_from_dy = half_height - camera_from_center_y;
+    Double center_to_dx = half_width - camera_to_center_x;
+    Double center_to_dy = half_height - camera_to_center_y;
 
     // Compute diagonal pixel distance between image center and tag centers:
-    Double from_distance = Double__square_root(fdx * fdx + fdy * fdy);
-    Double to_distance = Double__square_root(tdx * tdx + tdy * tdy);
+    Double center_from_distance = Double__square_root(
+      center_from_dx * center_from_dx + center_from_dy * center_from_dy);
+    Double center_to_distance = Double__square_root(
+      center_to_dx * center_to_dx + center_to_dy * center_to_dy);
 
     // To minimize camera distortion, we want to use images where *from*
     // and *to* are about equidistant from the image center.  This
     // we want to minimum the absolute value of the distance difference:
-    Double goodness = Double__absolute(from_distance - to_distance);
+    Double goodness =
+      Double__absolute(center_from_distance - center_to_distance);
 
     // Find associated *Arc*:
     Arc arc = Map__arc_lookup(map, from_tag, to_tag);
 
     // Now see if the new {goodness_metric} is better than the previous one:
+    File__format(stderr,
+      "goodness=%.4f arc_goodness=%.4f\n", goodness, arc->goodness);
     Unsigned changed = 0;
     if (goodness < arc->goodness) {
 	// We have a better *goodness* metric, record new values into *arc*:
 
-	// Grab some additional values from *from* and *to*:
-
-	// {neighbor_twist} is normalized angle change in fiducial orientation
-	// from {from} to {to}.
-	Double from_twist = from_tag->twist;
-	Double to_twist = to_tag->twist;
-	Double arc_twist = Double__angle_normalize(to_twist - from_twist);
-
 	// Compute *inches_per_pixel*:
 	//Double inches_across_frame = constants.inches_across_frame;
-	Double distance_per_pixel = from_tag->distance_per_pixel;
+
+	//FIXME: Deal with different ceiling heights:
 
 	// Compute the distance between *origin* and *to*.
-	Double dx = to_center_x - from_center_x;
-	Double dy = to_center_y - from_center_y;
-	Double distance_pixels = Double__square_root(dx * dx + dy * dy);
-	Double distance = distance_pixels * distance_per_pixel;
+	Double distance_per_pixel = from_tag->distance_per_pixel;
+	Double camera_dx = camera_to_center_x - camera_from_center_x;
+	Double camera_dy = camera_to_center_y - camera_from_center_y;
+	Double camera_distance =
+	  Double__square_root(camera_dx * camera_dx + camera_dy * camera_dy);
+	Double distance = camera_distance * distance_per_pixel;
 
-	// {neighbor_angle} is the angle from bottom edge of {from}
-	// to the center of {to}:
- 	Double spin = Double__arc_tangent2(dy, dx);
-	Double angle = Double__angle_normalize(spin - from_twist);
+	// Compute *angle* to line segment connecting both tags:
+ 	Double arc_angle = Double__arc_tangent2(camera_dy, camera_dx);
+	Double from_twist =
+	  Double__angle_normalize(camera_from_twist - arc_angle);
+	Double to_twist =
+	  Double__angle_normalize(camera_to_twist + pi - arc_angle);
 
-	Arc__update(arc, distance, angle, spin, goodness);
+	File__format(stderr,
+	  "Map__arc_update: camera_from_twist=%.2f camera_to_twist=%.2f\n",
+ 	  camera_from_twist * r2d, camera_to_twist * r2d);
+	File__format(stderr,
+	  "Map__arc_update: arc_angle=%.2f from_twist=%.2f to_twist=%.2f\n",
+	  arc_angle * r2d, from_twist * r2d, to_twist * r2d);
+
+	Arc__update(arc, from_twist, distance, to_twist, goodness);
 
 	changed = 1;
     }

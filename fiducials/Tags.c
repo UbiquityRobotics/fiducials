@@ -30,11 +30,12 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 	    String tag_name = arguments[index];
 	    if (String__equal(tag_name, "-L")) {
 	      tag_size = (Unsigned)(160.0 * 11.0 / 8.5);
+	    } else {
+		Unsigned tag_number = String__to_unsigned(tag_name);
+		//File__format(stdout,
+		//  "[%d]: '%s' %d\n", index, tag_name, tag_number);
+	        SVG__tag_write(tag_number, tag_size, border);
 	    }
-	    Unsigned tag_number = String__to_unsigned(tag_name);
-	    //File__format(stdout,
-	    //  "[%d]: '%s' %d\n", index, tag_name, tag_number);
-	    SVG__tag_write(tag_number, tag_size, border);
 	}
     }
     return 0;

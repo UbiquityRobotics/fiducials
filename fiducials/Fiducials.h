@@ -54,6 +54,7 @@ struct Fiducials__Struct {
     CV_Memory_Storage storage;
     Logical tag_bits[64];	// FIXME: Make this Logical *tag_bits;
     CV_Term_Criteria term_criteria;
+    Logical y_flip;
 };
 
 void Fiducials__sample_points_compute(
@@ -61,6 +62,7 @@ void Fiducials__sample_points_compute(
 extern CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners);
 extern Fiducials Fiducials__create(CV_Image original_image);
+extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, Logical show);
 extern Unsigned Fiducials__process(Fiducials fiducials);
 extern void Fiducials__sample_points_helper(

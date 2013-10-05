@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+#include <string.h>
 
 #include "Character.h"
 #include "CV.h"
@@ -161,30 +162,25 @@ Integer CV__f64c2 = CV_64FC2;
 Integer CV__f64c3 = CV_64FC3;
 Integer CV__f64c4 = CV_64FC4;
 
-Integer Cv__auto_step = CV_AUTO_STEP;
+Integer CV__auto_step = CV_AUTO_STEP;
 
-void CV_Image__adaptive_threshold(CV_Image source_image,
-  CV_Image destination_image, Double maximum_value, Integer adaptive_method,
-  Integer threshold_type, Integer block_size, Double parameter1) {
-    cvAdaptiveThreshold(source_image, destination_image, maximum_value,
-      adaptive_method, threshold_type, block_size, parameter1);
+Integer CV__blur_no_scale = CV_BLUR_NO_SCALE;
+Integer CV__blur = CV_BLUR;
+Integer CV__gaussian = CV_GAUSSIAN;
+Integer CV__median = CV_MEDIAN;
+Integer CV__bilateral = CV_BILATERAL;
+
+// *CV* routines:
+
+void CV__draw_chessboard_corners(CV_Image image, CV_Size pattern_size,
+  CV_Point2D32F_Vector corners, Integer count, Logical pattern_was_found) {
+    cvDrawChessboardCorners(image,
+      *pattern_size, corners, count, pattern_was_found);
 }
 
-Integer CV__poly_approx_dp = CV_POLY_APPROX_DP;
-
-CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
-  Integer header_size, CV_Memory_Storage storage, Integer method,
-  Integer parameter1, Double parameter2) {
-    //(void)printf("sizeof=%d method=%d param1=%d\n",
-    //  sizeof(CvContour), method, parameter1);
-    return cvApproxPoly(contour,
-      sizeof(CvContour), storage, method, parameter1, parameter2);
+CV_Image CV__clone_image(CV_Image image) {
+    return cvCloneImage(image);
 }
-
-Double CV_Sequence__arc_length(
-  CV_Sequence contour, CV_Slice slice, Integer is_closed) {
-    return cvArcLength(contour, *slice, is_closed);
-}    
 
 //void
 //CV__calibrate_camera2(
@@ -203,93 +199,8 @@ Double CV_Sequence__arc_length(
 //      translation_vectors, flags);
 //}
 
-Logical CV_Sequence__check_contour_convexity(CV_Sequence contour) {
-    return (Logical)(cvCheckContourConvexity(contour) ? 1 : 0);
-}
-
-void CV_Memory_Storage__clear(CV_Memory_Storage storage) {
-    cvClearMemStorage(storage);
-}
-
-CV_Image
-CV__clone_image(
-  CV_Image image)
-{
-    return cvCloneImage(image);
-}
-
-Double CV_Sequence__contour_area(
-  CV_Sequence contour, CV_Slice slice, Integer oriented) {
-    return cvContourArea(contour, *slice, oriented);
-}
-
-CV_Memory_Storage CV_Memory_Storage__create(Integer block_size) {
-    return cvCreateMemStorage(block_size);
-}
-
-CV_Image CV_Image__create(CV_Size size, Unsigned depth, Unsigned channels) {
-    return cvCreateImage(*size, depth, channels);
-}
-
-CV_Image CV_Image__header_create(
-  CV_Size size, Unsigned depth, Unsigned channels) {
-    return cvCreateImageHeader(*size, depth, channels);
-}
-
-void CV_Image__convert_color(
- CV_Image source_image, CV_Image destination_image, Integer conversion_code) {
-    cvCvtColor(source_image, destination_image, conversion_code);
-}
-
-void CV_Image__copy(
-  CV_Image source_image, CV_Image destination_image, CV_Image mask) {
-    cvCopy(source_image, destination_image, mask);
-}
-
-void
-CV__draw_chessboard_corners(
-  CV_Image image,
-  CV_Size pattern_size,
-  CV_Point2D32F_Vector corners,
-  Integer count,
-  Logical pattern_was_found)
-{
-    cvDrawChessboardCorners(image,
-      *pattern_size, corners, count, pattern_was_found);
-}
-
-void CV_Image__draw_contours(CV_Image image, CV_Sequence contour,
-  CV_Scalar external_color, CV_Scalar hole_color, Integer maximal_level,
-  Integer thickness, Integer line_type, CV_Point offset) {
-  cvDrawContours(image, contour, *external_color,
-    *hole_color, maximal_level, thickness, line_type, *offset);
-}
-
-// {mode} constants:
-Integer CV__retr_external = CV_RETR_EXTERNAL;
-Integer CV__retr_list = CV_RETR_LIST;
-Integer CV__retr_ccomp = CV_RETR_CCOMP;
-Integer CV__retr_tree = CV_RETR_TREE;
-
-// {method} constants:
-Integer CV__chain_code = CV_CHAIN_CODE;
-Integer CV__chain_approx_none = CV_CHAIN_APPROX_NONE;
-Integer CV__chain_approx_simple = CV_CHAIN_APPROX_SIMPLE;
-Integer CV__chain_approx_tc89_l1 = CV_CHAIN_APPROX_TC89_L1;
-Integer CV__chain_approx_tc89_kcos = CV_CHAIN_APPROX_TC89_KCOS;
-Integer CV__chain_link_runs = CV_LINK_RUNS;
-
-Integer CV__calib_cb_adaptive_thresh = CV_CALIB_CB_ADAPTIVE_THRESH;
-Integer CV__calib_cb_normalize_image = CV_CALIB_CB_NORMALIZE_IMAGE;
-Integer CV__calib_cb_filter_quads = CV_CALIB_CB_FILTER_QUADS;
-
-Integer
-CV__find_chessboard_corners(
-  CV_Image image,
-  CV_Size pattern_size,
-  CV_Point2D32F_Vector corners,
-  Integer flags)
-{
+Integer CV__find_chessboard_corners(CV_Image image, CV_Size pattern_size,
+  CV_Point2D32F_Vector corners, Integer flags) {
     Integer corner_count;
     Integer result;
 
@@ -301,24 +212,7 @@ CV__find_chessboard_corners(
     return result;
 }
 
-CV_Sequence CV_Image__find_contours(CV_Image image, CV_Memory_Storage storage,
-  Integer header_size, Integer mode, Integer method, CV_Point point) {
-    Integer result;
-    CV_Sequence contours;
-
-    contours = (CV_Sequence)0;
-    result = cvFindContours(image,
-      storage, &contours, sizeof(CvContour), mode, method, *point);
-    return contours;
-}  
-
-void CV_Image__find_corner_sub_pix(CV_Image image, CV_Point2D32F_Vector corners,
-  Integer count, CV_Size window, CV_Size zero_zone, CV_Term_Criteria criteria) {
-    cvFindCornerSubPix(image, corners, count, *window, *zero_zone, *criteria);
-}
-
-void
-CV__find_extrinsic_camera_params2(
+void CV__find_extrinsic_camera_params2(
   CV_Matrix object_points,
   CV_Matrix image_points,
   CV_Matrix camera,
@@ -332,13 +226,8 @@ CV__find_extrinsic_camera_params2(
     use_extrinsic_guess);
 }
 
-Integer
-CV__fourcc(
-  Character character1,
-  Character character2,
-  Character character3,
-  Character character4)
-{
+Integer CV__fourcc(Character character1, Character character2,
+  Character character3, Character character4) {
     return CV_FOURCC(character1, character2, character3, character4);
 }
 
@@ -346,36 +235,18 @@ Integer CV__gemm_a_t = CV_GEMM_A_T;
 Integer CV__gemm_b_t = CV_GEMM_B_T;
 Integer CV__gemm_c_t = CV_GEMM_C_T;
 
-void
-CV__gemm(
-  CV_Matrix a,
-  CV_Matrix b,
-  double alpha,
-  CV_Matrix c,
-  double beta,
-  CV_Matrix d,
-  int transpose_a_b_c)
-{
+void CV__gemm(CV_Matrix a, CV_Matrix b, double alpha, CV_Matrix c, double beta,
+  CV_Matrix d,int transpose_a_b_c) {
     return cvGEMM(a, b, alpha, c, beta, d, transpose_a_b_c);
 }
 
 
-Double
-CV__get_real_2d(
-  CV_Matrix matrix,
-  Integer row,
-  Integer column)
-{
+Double CV__get_real_2d(CV_Matrix matrix, Integer row, Integer column) {
     return cvGetReal2D(matrix, row, column);
 }
 
-void
-CV__init_undistort_map(
-  CV_Matrix camera_matrix,
-  CV_Matrix distortion_coefficients,
-  CV_Matrix mapx,
-  CV_Matrix mapy)
-{
+void CV__init_undistort_map(CV_Matrix camera_matrix, 
+  CV_Matrix distortion_coefficients, CV_Matrix mapx, CV_Matrix mapy) {
     cvInitUndistortMap(camera_matrix, distortion_coefficients, mapx, mapy);
 }
 
@@ -395,78 +266,89 @@ CV__init_undistort_map(
 //    return cvLoad(file_name, storage, simple_name, &simple_real_name);
 //}
 
-void
-CV__release_image(
-  CV_Image image)
-{
+void CV__release_image(CV_Image image) {
     cvReleaseImage(&image);
 }
 
 Integer CV__inter_linear = CV_INTER_LINEAR;
 Integer CV__warp_fill_outliers = CV_WARP_FILL_OUTLIERS;
 
-void
-CV__remap(
-  CV_Image source_image,
-  CV_Image destination_image,
-  CV_Matrix mapx,
-  CV_Matrix mapy,
-  Integer flags,
-  CV_Scalar fill_value)
-{
+void CV__remap(CV_Image source_image, CV_Image destination_image,
+  CV_Matrix mapx, CV_Matrix mapy, Integer flags, CV_Scalar fill_value) {
     cvRemap(source_image,
       destination_image, mapx, mapy, flags, *fill_value);
 }
 
-void
-CV__rodrigues2(
-  CV_Matrix rotation_vector,
-  CV_Matrix rotation_matrix,
-  CV_Matrix jacobian)
-{
+void CV__rodrigues2(
+  CV_Matrix rotation_vector, CV_Matrix rotation_matrix, CV_Matrix jacobian) {
     cvRodrigues2(rotation_vector, rotation_matrix, jacobian);
 }
 
-void
-CV__set_identity(
-  CV_Matrix matrix,
-  CV_Scalar scalar)
-{
+void CV__set_identity(CV_Matrix matrix, CV_Scalar scalar) {
     cvSetIdentity(matrix, *scalar);
 }
 
-void
-CV__set_real_2d(
-  CV_Matrix matrix,
-  Integer row,
-  Integer column,
-  Double value)
-{
+void CV__set_real_2d(
+  CV_Matrix matrix, Integer row, Integer column, Double value) {
     cvSetReal2D(matrix, row, column, value);
 }
 
-void
-CV__set_zero(
-  CV_Matrix matrix)
-{
+void CV__set_zero(CV_Matrix matrix) {
     cvSetZero(matrix);
 }
 
-Integer CV__blur_no_scale = CV_BLUR_NO_SCALE;
-Integer CV__blur = CV_BLUR;
-Integer CV__gaussian = CV_GAUSSIAN;
-Integer CV__median = CV_MEDIAN;
-Integer CV__bilateral = CV_BILATERAL;
+Integer CV__round(Double value) {
+    return cvRound(value);
+}
 
-void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
-  Integer smooth_type, Integer parameter1, Integer parameter2,
-  Double parameter3, Double parameter4) {
-    cvSmooth(source_image, destination_image, smooth_type, parameter1,
-      parameter2, parameter3, parameter4);
+// *CV_Image* routines:
+
+void CV_Image__adaptive_threshold(CV_Image source_image,
+  CV_Image destination_image, Double maximum_value, Integer adaptive_method,
+  Integer threshold_type, Integer block_size, Double parameter1) {
+    cvAdaptiveThreshold(source_image, destination_image, maximum_value,
+      adaptive_method, threshold_type, block_size, parameter1);
+}
+
+void CV_Image__blob_draw(
+  CV_Image image, Integer x, Integer y, CV_Scalar color) {
+    // Draw a small cross at the indicated point.
+    uchar red = cvRound(color->val[0]);
+    uchar green = cvRound(color->val[1]);
+    uchar blue = cvRound(color->val[2]);
+    uchar *data = (uchar *)image->imageData;
+    int width_step = image->widthStep;
+
+    // Sanity check the values.
+    if (x < 2 || y < 2 || x >= (image->width - 2) || y >= (image->height - 2)) {
+	return;
+    }
+
+    // Draw away:
+    for (Integer i = -2; i <= 2; i++) {
+	for (Integer j = -2; j <= 2; j++) {
+	  uchar *pixel = &(data + width_step * (y + j))[(x + i) * 3];
+	  pixel[0] = red; pixel[1] = green; pixel[2] = blue;
+	}
+    }
+}
+
+CV_Image CV_Image__create(CV_Size size, Unsigned depth, Unsigned channels) {
+    return cvCreateImage(*size, depth, channels);
 }
 
 Integer CV_Image__channels_get(CV_Image image) {
     return image->nChannels;
+}
+
+void CV_Image__convert_color(
+ CV_Image source_image, CV_Image destination_image, Integer conversion_code) {
+    cvCvtColor(source_image, destination_image, conversion_code);
+}
+
+void CV_Image__copy(
+  CV_Image source_image, CV_Image destination_image, CV_Image mask) {
+    cvCopy(source_image, destination_image, mask);
 }
 
 void CV_Image__cross_draw(
@@ -503,19 +385,48 @@ void CV_Image__cross_draw(
     pixel_dn[0] = red; pixel_dn[1] = green; pixel_dn[2] = blue;
 }
 
-Unsigned CV_Image__depth_get(
-  CV_Image image)
-{
+void CV_Image__draw_contours(CV_Image image, CV_Sequence contour,
+  CV_Scalar external_color, CV_Scalar hole_color, Integer maximal_level,
+  Integer thickness, Integer line_type, CV_Point offset) {
+  cvDrawContours(image, contour, *external_color,
+    *hole_color, maximal_level, thickness, line_type, *offset);
+}
+
+// {mode} constants:
+Integer CV__retr_external = CV_RETR_EXTERNAL;
+Integer CV__retr_list = CV_RETR_LIST;
+Integer CV__retr_ccomp = CV_RETR_CCOMP;
+Integer CV__retr_tree = CV_RETR_TREE;
+
+// {method} constants:
+Integer CV__chain_code = CV_CHAIN_CODE;
+Integer CV__chain_approx_none = CV_CHAIN_APPROX_NONE;
+Integer CV__chain_approx_simple = CV_CHAIN_APPROX_SIMPLE;
+Integer CV__chain_approx_tc89_l1 = CV_CHAIN_APPROX_TC89_L1;
+Integer CV__chain_approx_tc89_kcos = CV_CHAIN_APPROX_TC89_KCOS;
+Integer CV__chain_link_runs = CV_LINK_RUNS;
+
+Integer CV__calib_cb_adaptive_thresh = CV_CALIB_CB_ADAPTIVE_THRESH;
+Integer CV__calib_cb_normalize_image = CV_CALIB_CB_NORMALIZE_IMAGE;
+Integer CV__calib_cb_filter_quads = CV_CALIB_CB_FILTER_QUADS;
+
+CV_Sequence CV_Image__find_contours(CV_Image image, CV_Memory_Storage storage,
+  Integer header_size, Integer mode, Integer method, CV_Point point) {
+    Integer result;
+    CV_Sequence contours;
+
+    contours = (CV_Sequence)0;
+    result = cvFindContours(image,
+      storage, &contours, sizeof(CvContour), mode, method, *point);
+    return contours;
+}  
+
+Unsigned CV_Image__depth_get(CV_Image image) {
     return image->depth;
 }
 
-Unsigned
-CV_Image__fetch3(
-  CV_Image image,
-  Unsigned x,
-  Unsigned y,
-  Unsigned channel)
-{
+Unsigned CV_Image__fetch3(
+  CV_Image image, Unsigned x, Unsigned y, Unsigned channel) {
     unsigned char *pointer = cvPtr2D(image, y, x, (int *)0);
     return pointer[channel];
 }
@@ -529,229 +440,74 @@ Integer CV_Image__gray_fetch(CV_Image image, Integer x, Integer y) {
     return result;
 }
 
+void CV_Image__find_corner_sub_pix(CV_Image image, CV_Point2D32F_Vector corners,
+  Integer count, CV_Size window, CV_Size zero_zone, CV_Term_Criteria criteria) {
+    cvFindCornerSubPix(image, corners, count, *window, *zero_zone, *criteria);
+}
+
+void CV_Image__flip(CV_Image from_image, CV_Image to_image, Integer flip_code) {
+    cvFlip(from_image, to_image, flip_code);
+}
+
+CV_Image CV_Image__header_create(
+  CV_Size size, Unsigned depth, Unsigned channels) {
+    return cvCreateImageHeader(*size, depth, channels);
+}
+
 Integer CV_Image__height_get(CV_Image image) {
     return image->height;
 }
 
-void
-CV_Image__store3(
-  CV_Image image,
-  Unsigned x,
-  Unsigned y,
-  Unsigned channel,
-  Unsigned value)
-{
+/// @brief Reads in a *CV_Image* in from the .pnm file named *file_name*.
+/// @param file_base_name is the base name (excluding suffix) to write out to.
+/// @returns the *CV_Image* corresponding to the file read in.
+///
+/// *CV_Image__pnm_read*() will reads in and return a *CV_Image* in from
+/// the file .pnm file named *file_name*.
+
+CV_Image CV_Image__pnm_read(String file_name) {
+    Unsigned size = String__size(file_name);
+    assert (String__equal(file_name + size - 4, ".pnm"));
+    CV_Image image = cvLoadImage(file_name, CV_LOAD_IMAGE_UNCHANGED);
+    if (image == (CV_Image)0) {
+	File__format(stderr, "Unable to open file '%s'\n", file_name);
+	assert(0);
+    }
+    return image;
+}
+
+/// @brief Writes *image* out to .pnm file named *file_name*.
+/// @param image to write out.
+/// @param file_name is the *file_name to write out to.
+///
+/// *CV_Image__pnm_write*() will write *image* out to the file named
+/// *file_base_name.pnm.
+
+void CV_Image__pnm_write(CV_Image image, String file_name) {
+    Unsigned size = String__size(file_name);
+    assert (String__equal(file_name + size - 4, ".pnm"));
+    cvSaveImage(file_name, image, (Integer *)0);
+}
+
+void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
+  Integer smooth_type, Integer parameter1, Integer parameter2,
+  Double parameter3, Double parameter4) {
+    cvSmooth(source_image, destination_image, smooth_type, parameter1,
+      parameter2, parameter3, parameter4);
+}
+
+void CV_Image__store3(
+  CV_Image image, Unsigned x, Unsigned y, Unsigned channel, Unsigned value) {
     unsigned char *pointer = cvPtr2D(image, y, x, (int *)0);
     pointer[channel] = (unsigned char)value;
 }
 
-Integer CV_Image__width_get(CV_Image image) {
-    return (Unsigned)image->width;
-}
-
-Integer
-CV_Matrix__columns_get(
-  CV_Matrix matrix)
-{
-    return matrix->cols;
-}
-
-Integer
-CV_Matrix__rows_get(
-  CV_Matrix matrix)
-{
-    return matrix->rows;
-}
-
-void
-CV_Matrix__save(
-  CV_Matrix matrix,
-  String file_name)
-{
-    CvAttrList attributes;
-
-    attributes = cvAttrList((const char **)0, (CvAttrList *)0);
-    cvSave(file_name,
-      matrix, (const char *)0, (const char *)0, attributes);
-}
-
-CV_Point CV_Point__create(Integer x, Integer y) {
-    Unsigned malloc_bytes = sizeof *((CV_Point)0);
-    // (void)printf("CV_Point__create: malloc_bytes=%d\n", malloc_bytes);
-    CV_Point point = (CV_Point) malloc(sizeof *((CV_Point *)0) );
-
-    point->x = x;
-    point->y = y;
-    return point;
-}
-
-Integer CV_Point__x_get(CV_Point point) {
-    return point->x;
-}
-
-void
-CV_Point__x_set(
-  CV_Point point,
-  Integer x)
-{
-    point->x = x;
-}
-
-Integer CV_Point__y_get(CV_Point point) {
-    return point->y;
-}
-
-void
-CV_Point__y_set(
-  CV_Point point,
-  Integer y)
-{
-    point->y = y;
-}
-
-
-
-CV_Point2D32F
-CV_Point2D32F__create(
-  Double x,
-  Double y)
-{
-    Unsigned malloc_bytes = sizeof *((CV_Point2D32F)0);
-    // (void)printf("CV_Point2D32F__create: malloc_bytes=%d\n",
-    //     malloc_bytes);
-    CV_Point2D32F point = (CV_Point2D32F)malloc(malloc_bytes);
-
-    point->x = x;
-    point->y = y;
-    return point;
-}
-
-Double CV_Point2D32F__x_get(CV_Point2D32F point) {
-    return point->x;
-}
-
-void CV_Point2D32F__x_set(CV_Point2D32F point, Double x) {
-    point->x = x;
-}
-
-Double CV_Point2D32F__y_get(CV_Point2D32F point) {
-    return point->y;
-}
-
-void CV_Point2D32F__y_set(CV_Point2D32F point, Double y) {
-    point->y = y;
-}
-
-void CV_Point2D32F__point_set(CV_Point2D32F point2d32f, CV_Point point) {
-    int x = CV_Point__x_get(point);
-    int y = CV_Point__y_get(point);
-    (void)CV_Point2D32F__x_set(point2d32f, (double)x);
-    (void)CV_Point2D32F__y_set(point2d32f, (double)y);
-}
-
-CV_Point2D32F_Vector CV_Point2D32F_Vector__create(Unsigned size) {
-    Unsigned malloc_bytes = size * sizeof *((CV_Point2D32F)0);
-    // (void)printf("CV_Point2D32F_Vector__create: size=%d malloc_bytes=%d\n",
-    //   size, malloc_bytes);
-    CV_Point2D32F vector = (CV_Point2D32F)malloc(malloc_bytes);
-    Unsigned index;
-
-    for (index = 0; index < size; index++) {
-        vector[index].x = 0.0;
-        vector[index].y = 0.0;
-    }
-    return vector;
-}
-
-CV_Point2D32F CV_Point2D32F_Vector__fetch1(
-  CV_Point2D32F_Vector vector,  Unsigned index)
-{
-    return &vector[index];
-}
-
-CV_Scalar CV_Scalar__create(
-  Double value0, Double value1, Double value2, Double value3) {
-    CV_Scalar scalar = Memory__new(CV_Scalar);
-    scalar->val[0] = value0;
-    scalar->val[1] = value1;
-    scalar->val[2] = value2;
-    scalar->val[3] = value3;
-    return scalar;
-}
-
-// This routine will return a {CV_Scalar} that encodes {red}, {green},
-// and {blue} as a color.
-
-CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue) {
-    return CV_Scalar__create(blue, green, red, 0.0);
-}
-
-CV_Sequence CV_Sequence__next_get(CV_Sequence sequence) {
-    return sequence->h_next;
-}
-
-CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, Unsigned index) {
-    return (CV_Point)cvGetSeqElem(sequence, index);
-}
-
-Integer CV_Sequence__total_get(CV_Sequence sequence) {
-    return sequence->total;
-}
-
-CV_Size CV_Size__create(Integer width, Integer height) {
-    CV_Size size = Memory__new(CV_Size);
-    size->width = (Integer)width;
-    size->height = (Integer)height;
-    return size;
-}
-
-CV_Slice
-CV_Slice__create(
-  Integer start_index,
-  Integer end_index)
-{
-    Unsigned malloc_bytes = sizeof *((CV_Slice)0);
-    // (void)printf("CV_Slice__create: malloc_bytes=%d\n", malloc_bytes);
-    CV_Slice slice = (CV_Slice)malloc(malloc_bytes);
-
-    slice->start_index = start_index;
-    slice->end_index = end_index;
-    return slice;
-}
-
-Integer CV__term_criteria_iterations = CV_TERMCRIT_ITER;
-Integer CV__term_criteria_eps = CV_TERMCRIT_EPS;
-
-CV_Term_Criteria CV_Term_Criteria__create(
-  Integer type, Integer maximum_iterations, Double epsilon) {
-    Unsigned malloc_bytes = sizeof *((CV_Term_Criteria)0);
-    // (void)printf("CV_Term_Criteria__create: malloc_bytes=%d\n",
-    //   malloc_bytes);
-    CV_Term_Criteria term_criteria = (CV_Term_Criteria)malloc(malloc_bytes);
-
-    term_criteria->type = type;
-    term_criteria->max_iter = maximum_iterations;
-    term_criteria->epsilon = epsilon;
-    return term_criteria;
-}
-
-/// @brief Read in a .tga file.
-/// @param image to read into (or null).
-/// @param tga_file_name is the file name of the .tga file.
-/// @returns image from .tga file.
-///
-/// *CV__tga_read will read the contents of {tga_file_name} into
-/// {image}.  If the sizes do not match, {image} is released
-/// and new {CV_Image} object of the right size is allocated,
-/// filled and returned.  In either case, the returned {CV_Image}
-/// object containing the read in image data is returned.
-
-CV_Image CV__tga_read(CV_Image image, String tga_file_name) {
+CV_Image CV_Image__xtga_read(CV_Image image, String tga_file_name) {
     // Open *tga_in_file*:
     File tga_in_file = File__open(tga_file_name, "rb");
     if (tga_in_file == (File)0) {
 	File__format(stderr,
-	  "Unable to open '%v' for reading\n", tga_file_name);
+	  "Unable to open '%s' for reading\n", tga_file_name);
 	assert (0);
     }
 
@@ -852,9 +608,10 @@ CV_Image CV__tga_read(CV_Image image, String tga_file_name) {
 /// @param image to write out.
 /// @param file_name to write *image* to.
 ///
-/// *CV__tga_write*() will write *image* out to *file_name* in .tga format.
+/// *CV_Image__tga_write*() will write *image* out to *file_name* in
+/// .tga format.
 
-void CV__tga_write(CV_Image image, String file_name) {
+void CV_Image__xtga_write(CV_Image image, String file_name) {
     Unsigned channels = (Unsigned)image->nChannels;
     Unsigned depth = (Unsigned)image->depth;
     Unsigned height = (Unsigned)image->height;
@@ -923,6 +680,226 @@ void CV__tga_write(CV_Image image, String file_name) {
     File__close(tga_out_file);
 }
 
-Integer CV__round(Double value) {
-    return cvRound(value);
+Integer CV_Image__width_get(CV_Image image) {
+    return (Unsigned)image->width;
 }
+
+// *CV_Matrix* routines:
+
+Integer CV_Matrix__columns_get(CV_Matrix matrix) {
+    return matrix->cols;
+}
+
+Integer CV_Matrix__rows_get(CV_Matrix matrix) {
+    return matrix->rows;
+}
+
+void CV_Matrix__save(CV_Matrix matrix, String file_name) {
+    CvAttrList attributes;
+
+    attributes = cvAttrList((const char **)0, (CvAttrList *)0);
+    cvSave(file_name,
+      matrix, (const char *)0, (const char *)0, attributes);
+}
+
+// *CV_Memory_Storage* routines:
+
+void CV_Memory_Storage__clear(CV_Memory_Storage storage) {
+    cvClearMemStorage(storage);
+}
+
+CV_Memory_Storage CV_Memory_Storage__create(Integer block_size) {
+    return cvCreateMemStorage(block_size);
+}
+
+// *CV_Point* routines:
+
+CV_Point CV_Point__create(Integer x, Integer y) {
+    Unsigned malloc_bytes = sizeof *((CV_Point)0);
+    // (void)printf("CV_Point__create: malloc_bytes=%d\n", malloc_bytes);
+    CV_Point point = (CV_Point) malloc(sizeof *((CV_Point *)0) );
+
+    point->x = x;
+    point->y = y;
+    return point;
+}
+
+Integer CV_Point__x_get(CV_Point point) {
+    return point->x;
+}
+
+void CV_Point__x_set(CV_Point point, Integer x) {
+    point->x = x;
+}
+
+Integer CV_Point__y_get(CV_Point point) {
+    return point->y;
+}
+
+void CV_Point__y_set(CV_Point point, Integer y) {
+    point->y = y;
+}
+
+// *CV_Point2D32F* routines:
+
+CV_Point2D32F CV_Point2D32F__create(Double x, Double y) {
+    Unsigned malloc_bytes = sizeof *((CV_Point2D32F)0);
+    // (void)printf("CV_Point2D32F__create: malloc_bytes=%d\n",
+    //     malloc_bytes);
+    CV_Point2D32F point = (CV_Point2D32F)malloc(malloc_bytes);
+
+    point->x = x;
+    point->y = y;
+    return point;
+}
+
+Double CV_Point2D32F__x_get(CV_Point2D32F point) {
+    return point->x;
+}
+
+void CV_Point2D32F__x_set(CV_Point2D32F point, Double x) {
+    point->x = x;
+}
+
+Double CV_Point2D32F__y_get(CV_Point2D32F point) {
+    return point->y;
+}
+
+void CV_Point2D32F__y_set(CV_Point2D32F point, Double y) {
+    point->y = y;
+}
+
+void CV_Point2D32F__point_set(CV_Point2D32F point2d32f, CV_Point point) {
+    int x = CV_Point__x_get(point);
+    int y = CV_Point__y_get(point);
+    (void)CV_Point2D32F__x_set(point2d32f, (double)x);
+    (void)CV_Point2D32F__y_set(point2d32f, (double)y);
+}
+
+// *CV_Point2D32F_Vector* routines:
+
+CV_Point2D32F_Vector CV_Point2D32F_Vector__create(Unsigned size) {
+    Unsigned malloc_bytes = size * sizeof *((CV_Point2D32F)0);
+    // (void)printf("CV_Point2D32F_Vector__create: size=%d malloc_bytes=%d\n",
+    //   size, malloc_bytes);
+    CV_Point2D32F vector = (CV_Point2D32F)malloc(malloc_bytes);
+    Unsigned index;
+
+    for (index = 0; index < size; index++) {
+        vector[index].x = 0.0;
+        vector[index].y = 0.0;
+    }
+    return vector;
+}
+
+CV_Point2D32F CV_Point2D32F_Vector__fetch1(
+  CV_Point2D32F_Vector vector,  Unsigned index) {
+    return &vector[index];
+}
+
+// CV_Scalar *routines*:
+
+CV_Scalar CV_Scalar__create(
+  Double value0, Double value1, Double value2, Double value3) {
+    CV_Scalar scalar = Memory__new(CV_Scalar);
+    scalar->val[0] = value0;
+    scalar->val[1] = value1;
+    scalar->val[2] = value2;
+    scalar->val[3] = value3;
+    return scalar;
+}
+
+// This routine will return a {CV_Scalar} that encodes {red}, {green},
+// and {blue} as a color.
+
+CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue) {
+    return CV_Scalar__create(blue, green, red, 0.0);
+}
+
+// *CV_Sequence* routines:
+
+Integer CV__poly_approx_dp = CV_POLY_APPROX_DP;
+
+CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
+  Integer header_size, CV_Memory_Storage storage, Integer method,
+  Integer parameter1, Double parameter2) {
+    //(void)printf("sizeof=%d method=%d param1=%d\n",
+    //  sizeof(CvContour), method, parameter1);
+    return cvApproxPoly(contour,
+      sizeof(CvContour), storage, method, parameter1, parameter2);
+}
+
+Double CV_Sequence__arc_length(
+  CV_Sequence contour, CV_Slice slice, Integer is_closed) {
+    return cvArcLength(contour, *slice, is_closed);
+}    
+
+Logical CV_Sequence__check_contour_convexity(CV_Sequence contour) {
+    return (Logical)(cvCheckContourConvexity(contour) ? 1 : 0);
+}
+
+Double CV_Sequence__contour_area(
+  CV_Sequence contour, CV_Slice slice, Integer oriented) {
+    return cvContourArea(contour, *slice, oriented);
+}
+
+CV_Sequence CV_Sequence__next_get(CV_Sequence sequence) {
+    return sequence->h_next;
+}
+
+CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, Unsigned index) {
+    return (CV_Point)cvGetSeqElem(sequence, index);
+}
+
+Integer CV_Sequence__total_get(CV_Sequence sequence) {
+    return sequence->total;
+}
+
+// *CV_Size* routines:
+
+CV_Size CV_Size__create(Integer width, Integer height) {
+    CV_Size size = Memory__new(CV_Size);
+    size->width = (Integer)width;
+    size->height = (Integer)height;
+    return size;
+}
+
+// *CV_Slice* routines:
+CV_Slice CV_Slice__create(Integer start_index, Integer end_index) {
+    Unsigned malloc_bytes = sizeof *((CV_Slice)0);
+    // (void)printf("CV_Slice__create: malloc_bytes=%d\n", malloc_bytes);
+    CV_Slice slice = (CV_Slice)malloc(malloc_bytes);
+
+    slice->start_index = start_index;
+    slice->end_index = end_index;
+    return slice;
+}
+
+// *CV_Term* rouitines:
+Integer CV__term_criteria_iterations = CV_TERMCRIT_ITER;
+Integer CV__term_criteria_eps = CV_TERMCRIT_EPS;
+
+CV_Term_Criteria CV_Term_Criteria__create(
+  Integer type, Integer maximum_iterations, Double epsilon) {
+    Unsigned malloc_bytes = sizeof *((CV_Term_Criteria)0);
+    // (void)printf("CV_Term_Criteria__create: malloc_bytes=%d\n",
+    //   malloc_bytes);
+    CV_Term_Criteria term_criteria = (CV_Term_Criteria)malloc(malloc_bytes);
+
+    term_criteria->type = type;
+    term_criteria->max_iter = maximum_iterations;
+    term_criteria->epsilon = epsilon;
+    return term_criteria;
+}
+
+/// @brief Read in a .tga file.
+/// @param image to read into (or null).
+/// @param tga_file_name is the file name of the .tga file.
+/// @returns image from .tga file.
+///
+/// *CV__tga_read will read the contents of {tga_file_name} into
+/// {image}.  If the sizes do not match, {image} is released
+/// and new {CV_Image} object of the right size is allocated,
+/// filled and returned.  In either case, the returned {CV_Image}
+/// object containing the read in image data is returned.
+

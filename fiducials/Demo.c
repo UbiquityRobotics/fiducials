@@ -1,6 +1,5 @@
 // Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
-
 #include "assert.h"
 #include "sys/time.h"
 
@@ -30,7 +29,7 @@ Integer main(Unsigned argc, String argv[]) {
     List /* <String> */ image_file_names = List__new();
     File__format(stdout, "Hello\n");
     if (argc <= 1) {
-	File__format(stderr, "Usage: Demo *.tga\n");
+	File__format(stderr, "Usage: Demo *.pnm\n");
     } else {
 	for (Unsigned index = 1; index < argc; index++) {
 	    List__append(image_file_names, argv[index]);
@@ -41,14 +40,15 @@ Integer main(Unsigned argc, String argv[]) {
     if (size > 0) {
 	String image_file_name0 = (String)List__fetch(image_file_names, 0);
 	CV_Image image = (CV_Image)0;
-	image = CV__tga_read(image, image_file_name0);
+	image = CV_Image__pnm_read(image_file_name0);
 	assert (image != (CV_Image)0);
 	Fiducials fiducials = Fiducials__create(image);
 
 	for (Unsigned index = 0; index < size; index++) {
 	    String image_file_name = 
 	      (String)List__fetch(image_file_names, index);
-	    (void)CV__tga_read(image, image_file_name);
+	    image = CV_Image__pnm_read(image_file_name);
+	    Fiducials__image_set(fiducials, image);
 	    Fiducials__process(fiducials);
 	}
 

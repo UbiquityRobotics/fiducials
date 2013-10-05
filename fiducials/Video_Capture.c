@@ -90,8 +90,8 @@ Integer main(Integer arguments_size, String arguments[]) {
 	} else if (character == ' ') {
 	    // Write out image out to file system as a .tga file:
 	    String file_name =
-	      String__format("%s-%02d.tga", capture_base_name, capture_number);
-	    CV__tga_write(frame, file_name);
+	      String__format("%s-%02d.pnm", capture_base_name, capture_number);
+	    CV_Image__pnm_write(frame, file_name);
 	    File__format(stderr, "Wrote frame out to file '%s'\n", file_name);
 	    capture_number += 1;
 	    String__free(file_name);

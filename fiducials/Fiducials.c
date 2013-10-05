@@ -23,6 +23,10 @@ typedef struct Fiducials__Struct *Fiducials;
 #include "Tag.h"
 #include "Unsigned.h"
 
+void Fiducials__image_set(Fiducials fiducials, CV_Image image) {
+    fiducials->original_image = image;
+}
+
 // This routine will show {original_image} on the screen along
 // with a primitive debugging interface to showing how the debugging
 // is going.
@@ -88,6 +92,11 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
 	    // Toggle image blur:
 	    fiducials->blur = !fiducials->blur;
 	    File__format(stderr, "blur = %d\n", fiducials->blur);
+	    break;
+	  case 'f':
+	    // Toggle image blur:
+	    fiducials->y_flip = !fiducials->y_flip;
+	    File__format(stderr, "y_flip = %d\n", fiducials->y_flip);
 	    break;
 	  default:
 	    // Deal with unknown {control_character}:
@@ -181,11 +190,118 @@ Fiducials Fiducials__create(CV_Image original_image) {
 	//corner2              corner3
     };
 
+    static Logical north_mapping_flipped[64] = {
+	//corner1              corner0
+	 7,  6,  5,  4,  3,  2,  1,  0,
+	15, 14, 13, 12, 11, 10,  9,  8,
+	23, 22, 21, 20, 19, 18, 17, 16,
+	31, 30, 29, 28, 27, 26, 25, 24,
+	39, 38, 37, 36, 35, 34, 33, 32,
+	47, 46, 45, 44, 43, 42, 41, 40,
+	55, 54, 53, 52, 51, 50, 49, 48,
+	63, 62, 61, 60, 59, 58, 57, 56,
+	 //corner2              corner3
+    };
+
+    static Logical west_mapping_flipped[64] = {
+	//corner1              corner0
+	63, 55, 47, 39, 31, 23, 15, 7,
+	62, 54, 46, 38, 30, 22, 14, 6,
+	61, 53, 45, 37, 29, 21, 13, 5,
+	60, 52, 44, 36, 28, 20, 12, 4,
+	59, 51, 43, 35, 27, 19, 11, 3,
+	58, 50, 42, 34, 26, 18, 10, 2,
+	57, 49, 41, 33, 25, 17,  9, 1,
+	56, 48, 40, 32, 24, 16,  8, 0,
+	//corner2              corner3
+    };
+
+    static Logical south_mapping_flipped[64] = {
+	//corner1              corner0
+	56, 57, 58, 59, 60, 61, 62, 63, 
+	48, 49, 50, 51, 52, 53, 54, 55,
+	40, 41, 42, 43, 44, 45, 46, 47,
+	32, 33, 34, 35, 36, 37, 38, 39,
+	24, 25, 26, 27, 28, 29, 30, 31,
+	16, 17, 18, 19, 20, 21, 22, 23,
+	 8,  9, 10, 11, 12, 13, 14, 15, 
+	 0,  1,  2,  3,  4,  5,  6,  7,
+	//corner2              corner3
+    };
+
+    static Logical east_mapping_flipped[64] = {
+	//corner1              corner0
+	 0,  8, 16, 24, 32, 40, 48, 56,
+	 1,  9, 17, 25, 33, 41, 49, 57,
+	 2, 10, 18, 26, 34, 42, 50, 58,
+	 3, 11, 19, 27, 35, 43, 51, 59,
+	 4, 13, 20, 28, 36, 44, 52, 60,
+	 5, 13, 21, 29, 37, 45, 53, 61,
+	 6, 14, 22, 30, 38, 46, 54, 62,
+	 7, 15, 23, 31, 39, 47, 55, 63,
+	 //corner2              corner3
+    };
+
+//    static Logical north_mapping_flipped[64] = {
+//        //corner1              corner0
+//	56, 57, 58, 59, 60, 61, 62, 63,
+//	48, 49, 50, 51, 52, 53, 54, 55,
+//	40, 41, 42, 43, 44, 45, 46, 47,
+//	32, 33, 34, 35, 36, 37, 38, 39,
+//	24, 25, 26, 27, 28, 29, 30, 31,
+//	16, 17, 18, 19, 20, 21, 22, 23,
+//	 8,  9, 10, 11, 12, 13, 14, 15,
+//	 0,  1,  2,  3,  4,  5,  6,  7,
+//	//corner2              corner3
+//    };
+//
+//    static Logical west_mapping_flipped[64] = {
+//	//corner1              corner0
+//	 0,  8, 16, 24, 32, 40, 48, 56,
+//	 1,  9, 17, 25, 33, 41, 49, 57,
+//	 2, 10, 18, 26, 34, 42, 50, 58,
+//	 3, 11, 19, 27, 35, 43, 51, 59,
+//	 4, 12, 20, 28, 36, 44, 52, 60,
+//	 5, 13, 21, 29, 37, 45, 53, 61,
+//	 6, 14, 22, 30, 38, 46, 54, 62,
+//	 7, 15, 23, 31, 39, 47, 55, 63,
+//	//corner2              corner3
+//    };
+//
+//    static Logical south_mapping_flipped[64] = {
+//	//corner1              corner0
+//	 7,  6,  5,  4,  3,  2,  1,  0,
+//	15, 14, 13, 12, 11, 10,  9,  8,
+//	23, 22, 21, 20, 19, 18, 17, 16,
+//	31, 30, 29, 28, 27, 26, 25, 24,
+//	39, 38, 37, 36, 35, 34, 33, 32,
+//	47, 46, 45, 44, 43, 42, 41, 40,
+//	55, 54, 53, 52, 51, 50, 49, 48,
+//	63, 62, 61, 60, 59, 58, 57, 56,
+//	//corner2              corner3
+//    };
+//
+//    static Logical east_mapping_flipped[64] = {
+//	//corner1              corner0
+//	63, 55, 47, 39, 31, 23, 15,  7,
+//	62, 54, 46, 38, 30, 22, 14,  6,
+//	61, 53, 45, 37, 29, 21, 13,  5,
+//	60, 52, 44, 36, 28, 20, 12,  4,
+//	59, 51, 43, 35, 27, 19, 11,  3,
+//	58, 50, 42, 34, 26, 18, 10,  2,
+//	57, 49, 41, 33, 25, 17,  9,  1,
+//	56, 48, 40, 32, 24, 16,  8,  0,
+//	//corner2              corner3
+//    };
+
+    // The north/west/south/east mappings must reside in static
+    // memory rather than on the stack:
+
     static Logical *mappings[4] = {
-	&north_mapping[0],
-	&west_mapping[0],
-	&south_mapping[0],
-	&east_mapping[0],
+	&north_mapping_flipped[0],
+	&west_mapping_flipped[0],
+	&south_mapping_flipped[0],
+	&east_mapping_flipped[0],
     };
 
     //for (Unsigned index = 0; index < 4; index++) {
@@ -219,6 +335,7 @@ Fiducials Fiducials__create(CV_Image original_image) {
     fiducials->storage = storage;
     fiducials->term_criteria = 
       CV_Term_Criteria__create(term_criteria_type, 5, 0.2);
+    fiducials->y_flip = (Logical)0;
 
     return fiducials;
 }
@@ -487,7 +604,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			    color = green;
 			}
 
-			//Show where bit 0 and 7 are:
+			// Show where bit 0 and 7 are:
 			//if (index == 0) {
 			//    // Bit 0 is {cyan}:
 			//    color = cyan;
@@ -582,8 +699,13 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 
 			    // Load up *camera_tag* to get center, twist, etc.:
 			    Tag tag = Map__tag_lookup(map, tag_id);
-			    Camera_Tag__initialize(camera_tag,
-			      tag, direction_index, corners);
+			    if (debug_index == 10) {
+			        Camera_Tag__initialize(camera_tag, tag,
+				  direction_index, corners, debug_image);
+			    } else {
+			        Camera_Tag__initialize(camera_tag, tag,
+				  direction_index, corners, (CV_Image)0);
+			    }
 
 			    // Record the maximum *camera_diagonal*:
 			    Double camera_diagonal = camera_tag->diagonal;
@@ -740,6 +862,11 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     // Clean out *camera_tags*:
     List__all_append(fiducials->camera_tags_pool, camera_tags);
     List__trim(camera_tags, 0);
+
+    // Flip the debug image:
+    if (fiducials->y_flip) {
+	CV_Image__flip(debug_image, debug_image, 0);
+    }
 
     Map__update(map);
     Map__save(map, "Demo.xml");

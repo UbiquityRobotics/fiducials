@@ -151,16 +151,14 @@ Integer main(Integer arguments_size, String arguments[]) {
 		    // [Esc] key causes program to escape:
 		    break;
 		} else if (character == ' ') {
-		    // Write out image out to file system as a .tga file:
+		    // Write out image out to file system as a .pnm file:
 
 		    // For some reason String__format() does not work
 		    // on CygWin running on Windows 7 right now:
 		    char file_name[200];
-		    //String file_name = String__format("%s-%02d.tga",
-		    //  capture_base_name, capture_number);
-		    (void)sprintf(file_name, "%s-%02d.tga",
+		    (void)sprintf(file_name, "%s-%02d.pnm",
 		      capture_base_name, capture_number);
-		    CV__tga_write(display_image, file_name);
+		    CV_Image__pnm_write(display_image, file_name);
 		    File__format(stderr,
 		      "Wrote display_image out to file '%s'\n", file_name);
 		    capture_number += 1;

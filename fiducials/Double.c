@@ -35,10 +35,12 @@ Double Double__angle_between(Double from_angle, Double to_angle) {
 
 Double Double__angle_normalize(Double angle) {
     Double pi = (Double)3.14159265358979323846264;
-    if (angle > pi) {
-	angle -= pi + pi;
-    } else if (angle < -pi) {
-	angle += pi + pi;
+    Double double_pi = (Double)(2.0 * 3.14159265358979323846264);
+    while (angle > pi) {
+	angle -= double_pi;
+    }
+    while (angle < -pi) {
+	angle += double_pi;
     }
     return angle;
 }

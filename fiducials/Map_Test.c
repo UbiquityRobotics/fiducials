@@ -39,38 +39,46 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 
     // The test map looks as follows:
     //
+
     //  3---2
     //  |\ /|
     //  | 4 |
     //  |/ \|
     //  0---1
 
+    Unsigned tag_size = 1.0;
     Tag tag0 = Map__tag_lookup(map1, 0);
-    Tag__initialize(tag0, 0.0, 0.0, 0.0, 3.0, visit);
+    Tag__initialize(tag0, 0.0, 0.0, 0.0, tag_size, visit);
     Tag tag1 = Map__tag_lookup(map1, 1);
-    Tag__initialize(tag1, 0.0, 0.0, 0.0, 3.0, visit);
+    Tag__initialize(tag1, 0.0, 0.0, 0.0, tag_size, visit);
     Tag tag2 = Map__tag_lookup(map1, 2);
-    Tag__initialize(tag2, 0.0, 0.0, 0.0, 3.0, visit);
+    Tag__initialize(tag2, 0.0, 0.0, 0.0, tag_size, visit);
     Tag tag3 = Map__tag_lookup(map1, 3);
-    Tag__initialize(tag3, 0.0, 0.0, 0.0, 3.0, visit);
+    Tag__initialize(tag3, 0.0, 0.0, 0.0, tag_size, visit);
     Tag tag4 = Map__tag_lookup(map1, 4);
-    Tag__initialize(tag4, 0.0, 0.0, 0.0, 3.0, visit);
+    Tag__initialize(tag4, 0.0, 0.0, 0.0, tag_size, visit);
+
+    // The tags are twisted by the tag id x 10 degerees.  Thus, tag
+    // 0 has no twist, tag 1 is 10 degerees, ..., and tag 4 is 40 degrees.
 
     // Sides:
-    Arc__create(tag0, tag1, 10.0, angle0   -     0.0,  angle10, 0.0);
-    Arc__create(tag0, tag3, 10.0, angle90  -     0.0,  angle30, 0.0);
-    Arc__create(tag1, tag2, 10.0, angle90  - angle10,  angle10, 0.0);
-    Arc__create(tag2, tag3, 10.0, angle180 - angle20,  angle10, 0.0);
+    Double d = 10.0;
+    Arc__create(tag0, 0.0 + 0.0,           d, tag1, -angle180 + angle10, 0.0);
+    Arc__create(tag1, -angle90 + angle10,  d, tag2,  angle90  + angle20, 0.0);
+    Arc__create(tag0, -angle90,            d, tag3,  angle90  + angle30, 0.0);
+    Arc__create(tag2, -angle180 + angle20, d, tag3,  0.0      + angle30, 0.0);
 
     // Arcs to center:
-    Arc__create(tag0, tag4, square_root_50,   angle45 - angle0,  angle40, 0.0);
-    Arc__create(tag1, tag4, square_root_50,  angle135 - angle10, angle30, 0.0);
-    Arc__create(tag2, tag4, square_root_50, -angle135 - angle20, angle20, 0.0);
-    Arc__create(tag3, tag4, square_root_50,  -angle45 - angle30, angle10, 0.0);
+    d = square_root_50;
+    Arc__create(tag0, -angle45,            d, tag4,  angle135 + angle40, 0.0);
+    Arc__create(tag1, -angle135 + angle10, d, tag4,  angle135 + angle40, 0.0);
+    Arc__create(tag2, -angle45  + angle20, d, tag4,  -angle45 + angle40, 0.0);
+    Arc__create(tag3,  angle45  + angle30, d, tag4, -angle135 + angle40, 0.0);
 
     // Large diagonals:
-    Arc__create(tag0, tag2, square_root_200,  angle45 -     0.0, angle20, 0.0);
-    Arc__create(tag1, tag3, square_root_200, angle135 - angle10, angle20, 0.0);
+    d = square_root_200;
+    //Arc__create(tag0, ??, square_root_200, tag2, ??, 0.0);
+    //Arc__create(tag1, ??, square_root_200, tag3, ??, 0.0);
 
     Map__update(map1);
 

@@ -3,6 +3,8 @@
 *.ezc
 *.o
 *.pdf
+*.tga
+*.pnm
 *.svg
 *.tar
 *.xml

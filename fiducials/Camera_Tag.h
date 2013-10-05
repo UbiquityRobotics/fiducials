@@ -39,7 +39,7 @@ struct Camera_Tag__Struct {
 extern Integer Camera_Tag__compare(
   Camera_Tag camera_tag1, Camera_Tag camera_tag2);
 extern Camera_Tag Camera_Tag__new(void);
-extern void Camera_Tag__initialize(Camera_Tag camera_tag,
-  Tag tag, Unsigned direction, CV_Point2D32F_Vector corners);
+extern void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
+  Unsigned direction, CV_Point2D32F_Vector corners, CV_Image debug_image);
 
 #endif // !defined(CAMERA_TAG_H_INCLUDED)

@@ -21,30 +21,9 @@
 /// 0 if they are equal, and 1 if *arc1* sorts after *arc2*.
 
 Integer Arc__compare(Arc arc1, Arc arc2) {
-    Integer result = Tag__compare(arc1->from, arc2->from);
+    Integer result = Tag__compare(arc1->from_tag, arc2->from_tag);
     if (result == 0) {
-	result = Tag__compare(arc1->to, arc2->to);
-    }
-    return result;
-}
-
-/// @brief Return the distance sort order of *arc1* vs. *arc2*.
-/// @param arc1 is the first *Arc* object.
-/// @param arc2 is the second *Arc* object.
-/// @returns -1, 0, or 1 depending upon distance sort order.
-///
-/// *Arc__distance_compare*() will return -1 if the *arc1* distance is larger
-/// than the *arc2* distance, 0 if they are equal, and 1 otherwize.
-
-Integer Arc__distance_compare(Arc arc1, Arc arc2) {
-    Integer result = -Double__compare(arc1->distance, arc2->distance);
-    if (result == 0) {
-	Unsigned arc1_lowest_hop_count =
-	  Unsigned__minimum(arc1->from->hop_count, arc1->to->hop_count);
-	Unsigned arc2_lowest_hop_count =
-	  Unsigned__minimum(arc2->from->hop_count, arc2->to->hop_count);
-	result =
-	  -Unsigned__compare(arc1_lowest_hop_count, arc2_lowest_hop_count);
+	result = Tag__compare(arc1->to_tag, arc2->to_tag);
     }
     return result;
 }
@@ -66,34 +45,56 @@ Integer Arc__distance_compare(Arc arc1, Arc arc2) {
 /// line that connects *to* to *frm*.  *twist* is the angle measures
 /// amount that *to* is twisted relative to *from*.
 
-Arc Arc__create(Tag from, Tag to,
-  Double distance, Double angle, Double twist, Double goodness) {
+Arc Arc__create(Tag from_tag, Double from_twist,
+  Double distance, Tag to_tag, Double to_twist, Double goodness) {
     // Make sure *from* id is less that *to* id:
-    if (from->id > to->id) {
+    if (from_tag->id > to_tag->id) {
         // Compute the conjugate *Arc* (see Arc.h):
-	Tag temporary = from;
-	from = to;
-	to = temporary;
-	Double pi = (Double)3.14159265358979323846264;
-	angle = Double__angle_normalize(pi + angle - twist);
-	twist = -twist;
+	Tag temporary_tag = from_tag;
+	from_tag = to_tag;
+	to_tag = temporary_tag;
+
+	Double temporary_twist = from_twist;
+	from_twist = to_twist;
+	to_twist = temporary_twist;
     }
 
     // Create and load *arc*:
     Arc arc = Arc__new();
-    arc->angle = angle;
     arc->distance = distance;
-    arc->from = from;
+    arc->from_tag = from_tag;
+    arc->from_twist = from_twist;
     arc->goodness = goodness;
-    arc->to = to;
-    arc->twist = twist;
+    arc->to_tag = to_tag;
+    arc->to_twist = to_twist;
 
     // Append *arc* to *from*, *to*, and *map*:
-    Tag__arc_append(from, arc);
-    Tag__arc_append(to, arc);
-    Map__arc_append(from->map, arc);
+    Tag__arc_append(from_tag, arc);
+    Tag__arc_append(to_tag, arc);
+    Map__arc_append(from_tag->map, arc);
 
     return arc;
+}
+
+/// @brief Return the distance sort order of *arc1* vs. *arc2*.
+/// @param arc1 is the first *Arc* object.
+/// @param arc2 is the second *Arc* object.
+/// @returns -1, 0, or 1 depending upon distance sort order.
+///
+/// *Arc__distance_compare*() will return -1 if the *arc1* distance is larger
+/// than the *arc2* distance, 0 if they are equal, and 1 otherwize.
+
+Integer Arc__distance_compare(Arc arc1, Arc arc2) {
+    Integer result = -Double__compare(arc1->distance, arc2->distance);
+    if (result == 0) {
+	Unsigned arc1_lowest_hop_count =
+	  Unsigned__minimum(arc1->from_tag->hop_count, arc1->to_tag->hop_count);
+	Unsigned arc2_lowest_hop_count =
+	  Unsigned__minimum(arc2->from_tag->hop_count, arc2->to_tag->hop_count);
+	result =
+	  -Unsigned__compare(arc1_lowest_hop_count, arc2_lowest_hop_count);
+    }
+    return result;
 }
 
 /// @brief Return true if *arc1* equals *arc2*.
@@ -114,7 +115,7 @@ Logical Arc__equal(Arc arc1, Arc arc2) {
 /// *Arc__hash*() will return a hash value for *arc*.
 
 Unsigned Arc__hash(Arc arc) {
-    return Tag__hash(arc->from) + Tag__hash(arc->to);
+    return Tag__hash(arc->from_tag) + Tag__hash(arc->to_tag);
 }
 
 /// @brief Returns a new *Arc* object.
@@ -124,13 +125,13 @@ Unsigned Arc__hash(Arc arc) {
 
 Arc Arc__new(void) {
     Arc arc = Memory__new(Arc);
-    arc->angle = 0.0;
     arc->distance = 0.0;
-    arc->from = (Tag)0;
+    arc->from_tag = (Tag)0;
+    arc->from_twist = 0.0;
     arc->goodness = 123456789.0;
     arc->in_tree = (Logical)0;
-    arc->to = (Tag)0;
-    arc->twist = 0.0;
+    arc->to_tag = (Tag)0;
+    arc->to_twist = 0.0;
     arc->visit = 0;
     return arc;
 }
@@ -147,11 +148,13 @@ Arc Arc__new(void) {
 Arc Arc__read(File in_file, Map map) {
     // Read <Arc ... /> tag:
     File__tag_match(in_file, "Arc");
-    Unsigned from_id = (Unsigned)File__integer_attribute_read(in_file, "From");
-    Unsigned to_id = (Unsigned)File__integer_attribute_read(in_file, "To");
+    Unsigned from_tag_id =
+      (Unsigned)File__integer_attribute_read(in_file, "From_Tag_Id");
+    Double from_twist = File__float_attribute_read(in_file, "From_Twist");
     Double distance = File__float_attribute_read(in_file, "Distance");
-    Double angle = File__float_attribute_read(in_file, "Angle");
-    Double twist = File__float_attribute_read(in_file, "Twist");
+    Unsigned to_tag_id =
+       (Unsigned)File__integer_attribute_read(in_file, "To_Tag_Id");
+    Double to_twist = File__float_attribute_read(in_file, "To_Twist");
     Double goodness = File__float_attribute_read(in_file, "Goodness");
     Logical in_tree = (Logical)File__integer_attribute_read(in_file, "In_Tree");
     File__string_match(in_file, "/>\n");
@@ -159,20 +162,21 @@ Arc Arc__read(File in_file, Map map) {
     // Convert from degrees to radians:
     Double pi = (Double)3.14159265358979323846264;
     Double radians_to_degrees =  pi / 180.0;
-    angle *= radians_to_degrees;
-    twist *= radians_to_degrees;
+    from_twist *= radians_to_degrees;
+    to_twist *= radians_to_degrees;
 
     // Create and load *arc*:
-    Tag from = Map__tag_lookup(map, from_id);
-    Tag to = Map__tag_lookup(map, to_id);
-    Arc arc = Arc__create(from, to, distance, angle, twist, goodness);
+    Tag from_tag = Map__tag_lookup(map, from_tag_id);
+    Tag to_tag = Map__tag_lookup(map, to_tag_id);
+    Arc arc =
+      Arc__create(from_tag, from_twist, distance, to_tag, to_twist, goodness);
     arc->in_tree = in_tree;
     return arc;
 }
 
 void Arc__svg_write(Arc arc, SVG svg) {
-    Tag from_tag = arc->from;
-    Tag to_tag = arc->to;
+    Tag from_tag = arc->from_tag;
+    Tag to_tag = arc->to_tag;
     SVG__line(svg, from_tag->x, from_tag->y, to_tag->x, to_tag->y, "black");
 }
 
@@ -187,13 +191,13 @@ void Arc__svg_write(Arc arc, SVG svg) {
 /// into *arc*.
 
 void Arc__update(Arc arc,
-  Double distance, Double angle, Double twist, Double goodness) {
+ Double from_twist, Double distance, Double to_twist, Double goodness) {
     // Create and load *arc*:
-    assert (arc->from->id < arc->to->id);
-    arc->angle = angle;
+    assert (arc->from_tag->id < arc->to_tag->id);
+    arc->from_twist = from_twist;
     arc->distance = distance;
     arc->goodness = goodness;
-    arc->twist = twist;
+    arc->to_twist = to_twist;
 }
 
 /// @brief Write *arc* out to *out_file* in XML format.
@@ -207,14 +211,16 @@ void Arc__write(Arc arc, File out_file) {
     // We need to convert from radians to degrees:
     Double pi = (Double)3.14159265358979323846264;
     Double radians_to_degrees = 180.0 / pi;
+    Double from_twist_degrees = arc->from_twist * radians_to_degrees;
+    Double to_twist_degrees = arc->to_twist * radians_to_degrees;
 
     // Output <Arc ... /> tag to *out_file*:
     File__format(out_file, " <Arc");
-    File__format(out_file, " From=\"%d\"", arc->from->id);
-    File__format(out_file, " To=\"%d\"", arc->to->id);
+    File__format(out_file, " From_Tag_Id=\"%d\"", arc->from_tag->id);
+    File__format(out_file, " From_Twist=\"%f\"", from_twist_degrees);
     File__format(out_file, " Distance=\"%f\"", arc->distance);
-    File__format(out_file, " Angle=\"%f\"", arc->angle * radians_to_degrees);
-    File__format(out_file, " Twist=\"%f\"", arc->twist * radians_to_degrees);
+    File__format(out_file, " To_Tag_Id=\"%d\"", arc->to_tag->id);
+    File__format(out_file, " To_Twist=\"%f\"", to_twist_degrees);
     File__format(out_file, " Goodness=\"%f\"", arc->goodness);
     File__format(out_file, " In_Tree=\"%d\"", arc->in_tree);
     File__format(out_file, "/>\n");

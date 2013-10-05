@@ -41,6 +41,8 @@ extern Integer CV__round(Double value);
 extern void CV_Image__adaptive_threshold(CV_Image source_image,
   CV_Image destination_image, Double maximum_value, Integer adaptive_method,
   Integer threshold_type, Integer block_size, Double parameter1);
+extern void CV_Image__blob_draw(
+  CV_Image image, Integer x, Integer y, CV_Scalar color);
 extern Integer CV_Image__channels_get(CV_Image image);
 extern void CV_Image__convert_color(
   CV_Image source_image, CV_Image destination_image, Integer conversion_code);
@@ -61,6 +63,8 @@ extern CV_Sequence CV_Image__find_contours(CV_Image image,
 extern void CV_Image__find_corner_sub_pix(CV_Image image,
   CV_Point2D32F_Vector corners, Integer count, CV_Size window,
   CV_Size zero_zone, CV_Term_Criteria criteria);
+extern void CV_Image__flip(
+  CV_Image from_image, CV_Image to_image, Integer flip_code);
 extern Integer CV_Image__gray_fetch(CV_Image image, Integer x, Integer y);
 extern Integer CV_Image__height_get(CV_Image image);
 extern Integer CV_Image__points_maximum(CV_Image image,
@@ -68,9 +72,15 @@ extern Integer CV_Image__points_maximum(CV_Image image,
 extern Integer CV_Image__points_minimum(CV_Image image,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 extern Integer CV_Image__point_sample(CV_Image image, CV_Point2D32F point);
+extern Integer CV_Image__save(
+  CV_Image image, String file_name, Integer *parameters);
 extern void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
   Integer smooth_type, Integer parameter1, Integer parameter2,
   Double parameter3, Double parameter4);
+extern CV_Image CV_Image__pnm_read(String file_base_name);
+extern void CV_Image__pnm_write(CV_Image image, String file_base_name);
+extern CV_Image CV_Image__tga_read(CV_Image image, String file_name);
+extern void CV_Image__tga_write(CV_Image image, String file_name);
 extern Integer CV_Image__width_get(CV_Image image);
 
 extern Integer CV__term_criteria_iterations;
@@ -102,11 +112,11 @@ extern CV_Scalar CV_Scalar__create(
   Double value0, Double value1, Double value2, Double value3);
 extern CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue);
 
-extern Double CV_Sequence__arc_length(
- CV_Sequence contour, CV_Slice slice, Integer is_closed);
 extern CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
   Integer header_size, CV_Memory_Storage storage, Integer method,
   Integer parameter1, Double parameter2);
+extern Double CV_Sequence__arc_length(
+ CV_Sequence contour, CV_Slice slice, Integer is_closed);
 extern Logical CV_Sequence__check_contour_convexity(CV_Sequence contour);
 extern Double CV_Sequence__contour_area(
   CV_Sequence contour, CV_Slice slice, Integer oriented);
@@ -117,7 +127,5 @@ extern Integer CV_Sequence__total_get(CV_Sequence sequence);
 extern CV_Size CV_Size__create(Integer width, Integer height);
 
 extern void CV__release_image(CV_Image image);
-extern CV_Image CV__tga_read(CV_Image image, String file_name);
-extern void CV__tga_write(CV_Image image, String file_name);
 
 #endif // !defined(CV_C_H_INCLUDED)

@@ -19,7 +19,7 @@
 /// *Tag__arc_append*() will append *arc* to *tag*.
 
 void Tag__arc_append(Tag tag, Arc arc) {
-    assert(arc->from == tag || arc->to == tag);
+    assert(arc->from_tag == tag || arc->to_tag == tag);
     List__append(tag->arcs, (Memory)arc);
 }
 
@@ -221,60 +221,58 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
     Double r2d = 180.0 / pi;
 
     // Read out *arc* contents:
-    Tag arc_from = arc->from;
-    Tag arc_to = arc->to;
-    Double arc_distance = arc->distance;
-    Double arc_angle = arc->angle;
-    Double arc_twist = arc->twist;
+    Tag from_tag = arc->from_tag;
+    Double arc_from_twist = arc->from_twist;
+    Double distance = arc->distance;
+    Tag to_tag = arc->to_tag;
+    Double arc_to_twist = arc->to_twist;
 
     // For debugging:
-    //File__format(stderr, "Arc[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
-    //  arc_from->id, arc_to->id,
-    //  arc_distance, arc_angle * r2d, arc_twist * r2d);
+    File__format(stderr,
+      "Tag__update_via_arc: Arc[%d, %d]: d=%.4f, ft=%.1f, tt=%.1f)\n",
+      from_tag->id, to_tag->id,
+      distance, arc_from_twist * r2d, arc_to_twist * r2d);
 
-    // Figure out whether *tag* is the *from* or *to* and adjust
-    // angles accordingly:
-    if (tag == arc_from) {
+    // Figure out whether *tag* is the *from* or *to* and conjugate if needed:
+    if (tag == from_tag) {
 	// Compute the conjugate of *Arc* (see Arc.h for conjugate discussion):
-	Tag temporary = arc_from;
-	arc_from = arc_to;
-	arc_to = temporary;
-	arc_angle = Double__angle_normalize(pi + arc_angle - arc_twist);
-	arc_twist = -arc_twist;
+	Tag temporary_tag = from_tag;
+	from_tag = to_tag;
+	to_tag = temporary_tag;
+	Double temporary_twist = arc_from_twist;
+	arc_from_twist = arc_to_twist;
+	arc_to_twist = temporary_twist;
 
 	// For debugging show the conjucate:
-	//File__format(stderr, "Arc'[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
-	//  arc_from->id, arc->to->id,
-	//  arc_distance, arc_angle * r2d, arc_twist * r2d);
+	File__format(stderr,
+	  "Tag__update_via_arc: Arc'[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
+	  from_tag->id, from_tag->id,
+	  distance, arc_from_twist * r2d, arc_to_twist * r2d);
     }
-    assert (tag == arc_to);
-    assert (tag != arc_from);
+    assert (tag == to_tag);
+    assert (tag != from_tag);
 
-    // Grab the starting values from *arc_from*:
-    Double arc_from_twist = arc_from->twist;
-    Double arc_from_x = arc_from->x;
-    Double arc_from_y = arc_from->y;
+    // Grab the starting values from *from_tag*:
+    Double from_tag_twist = from_tag->twist;
+    Double from_tag_x = from_tag->x;
+    Double from_tag_y = from_tag->y;
+    File__format(stderr,
+      "Tag__update_via_arc: From: id=%d x=%.2f y=%.2f twist=%.4f\n",
+      from_tag->id, from_tag_x, from_tag_y, from_tag_twist * r2d);
 
-    // For debugging:
-    //File__format(stderr, "Arc_From[%d]:(t=%.1f, x=%.1f, y=%.1f)\n",
-    //  arc_from->id, arc_from_twist * r2d, arc_from_x, arc_from_y);
+    // Compute the new *Tag* values:
+    Double angle = Double__angle_normalize(-arc_from_twist + from_tag_twist);
+    Double to_tag_x = from_tag_x + distance * Double__cosine(angle);
+    Double to_tag_y = from_tag_y + distance * Double__sine(angle);
+    Double to_tag_twist = Double__angle_normalize(angle - pi + arc_to_twist);
 
-    // Compute the new *Tab* values:
-    Double tag_twist = arc_from_twist + arc_twist;
-    Double angle = Double__angle_normalize(arc_from_twist + arc_angle);
-    Double tag_x = arc_from_x + arc_distance * Double__cosine(angle);
-    Double tag_y = arc_from_y + arc_distance * Double__sine(angle);
+    // Load new values into *to_tag*:
+    to_tag->twist = to_tag_twist;
+    to_tag->x = to_tag_x;
+    to_tag->y = to_tag_y;
 
-    // For debugging:
-    //File__format(stderr, "aa=%.1f aft=%.1f angle=%.1f\n",
-    //  arc_angle * r2d, arc_from_twist * r2d, angle * r2d);
-    //File__format(stderr, "Tag[%d]:(t=%.1f, x=%.1f, y=%.1f)\n\n",
-    //  tag->id, tag_twist * r2d, tag_x, tag_y);
-
-    // Load new values into *tag*:
-    tag->twist = tag_twist;
-    tag->x = tag_x;
-    tag->y = tag_y;
+    File__format(stderr, "To_Tag[id:%d x:%.2f y:%.2f tw:%.4f] angle=%.4f\n",
+      to_tag->id, to_tag->x, to_tag->y, to_tag->twist * r2d, angle * r2d);
 }
 
 /// @brief Writes *tag* out ot *out_file* in XML format.
