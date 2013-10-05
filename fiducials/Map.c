@@ -492,8 +492,8 @@ Unsigned Map__arc_update(
     Arc arc = Map__arc_lookup(map, from_tag, to_tag);
 
     // Now see if the new {goodness_metric} is better than the previous one:
-    File__format(stderr,
-      "goodness=%.4f arc_goodness=%.4f\n", goodness, arc->goodness);
+    //File__format(stderr,
+    //  "goodness=%.4f arc_goodness=%.4f\n", goodness, arc->goodness);
     Unsigned changed = 0;
     if (goodness < arc->goodness) {
 	// We have a better *goodness* metric, record new values into *arc*:
@@ -518,12 +518,12 @@ Unsigned Map__arc_update(
 	Double to_twist =
 	  Double__angle_normalize(camera_to_twist + pi - arc_angle);
 
-	File__format(stderr,
-	  "Map__arc_update: camera_from_twist=%.2f camera_to_twist=%.2f\n",
- 	  camera_from_twist * r2d, camera_to_twist * r2d);
-	File__format(stderr,
-	  "Map__arc_update: arc_angle=%.2f from_twist=%.2f to_twist=%.2f\n",
-	  arc_angle * r2d, from_twist * r2d, to_twist * r2d);
+	//File__format(stderr,
+	//  "Map__arc_update: camera_from_twist=%.2f camera_to_twist=%.2f\n",
+ 	//  camera_from_twist * r2d, camera_to_twist * r2d);
+	//File__format(stderr,
+	//  "Map__arc_update: arc_angle=%.2f from_twist=%.2f to_twist=%.2f\n",
+	//  arc_angle * r2d, from_twist * r2d, to_twist * r2d);
 
 	Arc__update(arc, from_twist, distance, to_twist, goodness);
 

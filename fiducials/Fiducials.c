@@ -709,14 +709,16 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 
 			    // Record the maximum *camera_diagonal*:
 			    Double camera_diagonal = camera_tag->diagonal;
-			    if (camera_diagonal > tag->diagonal) {
-				tag->diagonal = camera_diagonal;
+			    Double diagonal =
+			       camera_diagonal * tag->distance_per_pixel;
+			    if (diagonal  > tag->diagonal) {
+				tag->diagonal = diagonal;
 			    }
 
 			    // Append *camera_tag* to *camera_tags*:
 			    List__append(camera_tags, (Memory)camera_tag);
-			    File__format(stderr,
-			      "Found %d\n", camera_tag->tag->id);
+			    //File__format(stderr,
+			    //  "Found %d\n", camera_tag->tag->id);
 			}
 		    }
 		}
@@ -1060,18 +1062,45 @@ Integer CV_Image__points_minimum(CV_Image image,
 }
 
 Integer CV_Image__point_sample(CV_Image image, CV_Point2D32F point) {
-    // This routine will return a sample ...
+    // This routine will return a sample *image* at *point*.
 
+    // Get the (*x*, *y*) coordinates of *point*:
     Integer x = CV__round(CV_Point2D32F__x_get(point));
     Integer y = CV__round(CV_Point2D32F__y_get(point));
+
+    // Sample the locations in a cross:
     Integer center = CV_Image__gray_fetch(image, x, y);
     Integer left = CV_Image__gray_fetch(image, x - 1, y);
     Integer right = CV_Image__gray_fetch(image, x + 1, y);
     Integer lower = CV_Image__gray_fetch(image, x, y - 1);
     Integer upper = CV_Image__gray_fetch(image, x, y + 1);
-    Integer result = -1;
-    if (center >= 0 && left >= 0 && right >= 0 && lower >= 0 && upper >= 0) {
-	result = (center + left + right + lower + upper) / 5;
+
+    Integer denominator = 0;
+    Integer numerator = 0;
+    if (center >= 0) {
+	numerator += center * 40;
+	denominator += 100;
+    }
+    if (left >= 0) {
+	numerator += left * 20;
+	denominator += 100;
+    }
+    if (right >= 0) {
+	numerator += right * 20;
+	denominator += 100;
+    }	
+    if (lower >= 0) {
+	numerator += lower * 20;
+	denominator += 100;
+    }
+    if (upper >= 0) {
+	numerator += upper * 20;
+	denominator += 100;
+    }
+
+    Integer result = 0;
+    if (denominator > 0) {
+	result = numerator / denominator;
     }
     return result;
 }

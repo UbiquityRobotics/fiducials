@@ -116,7 +116,7 @@ Unsigned Tag__hash(Tag tag) {
 
 void Tag__initialize(
   Tag tag, Double twist, Double x, Double y, Double diagonal, Unsigned visit) {
-    tag->diagonal = diagonal;
+    tag->diagonal = diagonal * tag->distance_per_pixel;
     tag->initialized = (Logical)1;
     tag->twist = twist;
     tag->x = x;
@@ -228,10 +228,10 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
     Double arc_to_twist = arc->to_twist;
 
     // For debugging:
-    File__format(stderr,
-      "Tag__update_via_arc: Arc[%d, %d]: d=%.4f, ft=%.1f, tt=%.1f)\n",
-      from_tag->id, to_tag->id,
-      distance, arc_from_twist * r2d, arc_to_twist * r2d);
+    //File__format(stderr,
+    //  "Tag__update_via_arc: Arc[%d, %d]: d=%.4f, ft=%.1f, tt=%.1f)\n",
+    //  from_tag->id, to_tag->id,
+    //  distance, arc_from_twist * r2d, arc_to_twist * r2d);
 
     // Figure out whether *tag* is the *from* or *to* and conjugate if needed:
     if (tag == from_tag) {
@@ -244,10 +244,10 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
 	arc_to_twist = temporary_twist;
 
 	// For debugging show the conjucate:
-	File__format(stderr,
-	  "Tag__update_via_arc: Arc'[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
-	  from_tag->id, from_tag->id,
-	  distance, arc_from_twist * r2d, arc_to_twist * r2d);
+	//File__format(stderr,
+	//  "Tag__update_via_arc: Arc'[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
+	//  from_tag->id, from_tag->id,
+	//  distance, arc_from_twist * r2d, arc_to_twist * r2d);
     }
     assert (tag == to_tag);
     assert (tag != from_tag);
@@ -256,9 +256,9 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
     Double from_tag_twist = from_tag->twist;
     Double from_tag_x = from_tag->x;
     Double from_tag_y = from_tag->y;
-    File__format(stderr,
-      "Tag__update_via_arc: From: id=%d x=%.2f y=%.2f twist=%.4f\n",
-      from_tag->id, from_tag_x, from_tag_y, from_tag_twist * r2d);
+    //File__format(stderr,
+    //  "Tag__update_via_arc: From: id=%d x=%.2f y=%.2f twist=%.4f\n",
+    //  from_tag->id, from_tag_x, from_tag_y, from_tag_twist * r2d);
 
     // Compute the new *Tag* values:
     Double angle = Double__angle_normalize(-arc_from_twist + from_tag_twist);
@@ -271,8 +271,8 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
     to_tag->x = to_tag_x;
     to_tag->y = to_tag_y;
 
-    File__format(stderr, "To_Tag[id:%d x:%.2f y:%.2f tw:%.4f] angle=%.4f\n",
-      to_tag->id, to_tag->x, to_tag->y, to_tag->twist * r2d, angle * r2d);
+    //File__format(stderr, "To_Tag[id:%d x:%.2f y:%.2f tw:%.4f] angle=%.4f\n",
+    //  to_tag->id, to_tag->x, to_tag->y, to_tag->twist * r2d, angle * r2d);
 }
 
 /// @brief Writes *tag* out ot *out_file* in XML format.
