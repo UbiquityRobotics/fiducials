@@ -38,6 +38,8 @@ add_executable(Fly_Capture
     CV.c High_GUI2.c
 )
 
+add_executable(undistort undistort.c)
+
 include_directories(/usr/include/flycapture)
 
 target_link_libraries(FlyCapture2Test flycapture-c flycapture)
@@ -48,6 +50,8 @@ target_link_libraries(Tags m ${OpenCV_LIBS})
 target_link_libraries(Map_Test m ${OpenCV_LIBS})
 target_link_libraries(Video_Capture m ${OpenCV_LIBS})
 target_link_libraries(Fly_Capture flycapture-c flycapture m ${OpenCV_LIBS})
+
+target_link_libraries(undistort ${OpenCV_LIBS})
 
 catkin_package(
     CATKIN_DEPENDS geometry_msgs tf
