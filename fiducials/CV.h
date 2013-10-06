@@ -37,6 +37,8 @@ extern Integer CV__thresh_binary;
 extern Integer CV__window_auto_size;
 
 extern Integer CV__round(Double value);
+extern Integer CV__undistortion_setup(String calibrate_file_name,
+  Integer width, Integer height, CV_Image *mapx, CV_Image *mapy);
 
 extern void CV_Image__adaptive_threshold(CV_Image source_image,
   CV_Image destination_image, Double maximum_value, Integer adaptive_method,
@@ -72,6 +74,8 @@ extern Integer CV_Image__points_maximum(CV_Image image,
 extern Integer CV_Image__points_minimum(CV_Image image,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 extern Integer CV_Image__point_sample(CV_Image image, CV_Point2D32F point);
+extern void CV_Image__remap(CV_Image source_image, CV_Image destination_image,
+  CV_Image map_x, CV_Image map_y, Integer flags, CV_Scalar fill_value);
 extern Integer CV_Image__save(
   CV_Image image, String file_name, Integer *parameters);
 extern void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,

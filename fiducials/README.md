@@ -206,13 +206,14 @@ input focus to Video capture.  To capture an image, type the
 The Demo program is used to debug and show what is going
 on under the covers with the Fiducials code:
 
-    Demo ../../src/fiducials/image-05.tga
+    Demo dojo_3.6mm_6Oct2013/pg_3_6mm.txt dojo_3.6mm_6Oct2013/dojo_3.6mm-15.pnm
 
-will load the image-05.tga file and do fiducial recognition
-on it.  Move the cursor over the window that pops up and
-click on the image.  This moves the input focus to the Demo
-program.  Click on '+' to increment one step through processing
-and '-' to decrement one step through processing.
+will load the dojo_3.6mm-15.pnm file and do fiducial recognition 
+on it.  pg_3_6.txt is the lens correction coeeficients.  Move the
+cursor over the window that pops up and click on the image.  This
+moves the input focus to the Demo program.  Click on '+' to
+increment one step through processing and '-' to decrement one
+step through processing.
 
 The steps are:
 

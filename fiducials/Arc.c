@@ -177,7 +177,11 @@ Arc Arc__read(File in_file, Map map) {
 void Arc__svg_write(Arc arc, SVG svg) {
     Tag from_tag = arc->from_tag;
     Tag to_tag = arc->to_tag;
-    SVG__line(svg, from_tag->x, from_tag->y, to_tag->x, to_tag->y, "black");
+    String color = "green";
+    if (arc->in_tree) {
+	color = "red";
+    }
+    SVG__line(svg, from_tag->x, from_tag->y, to_tag->x, to_tag->y, color);
 }
 
 /// @brief Updates the contenst of *arc*.

@@ -29,6 +29,7 @@ typedef Logical Mapping[64];
 typedef struct timeval *Time_Value;
 
 struct Fiducials__Struct {
+    CV_Scalar black;
     CV_Scalar blue;
     Logical blur;
     List /* <Camera_Tag> */ camera_tags;
@@ -45,6 +46,8 @@ struct Fiducials__Struct {
     CV_Point origin;
     CV_Image original_image;
     Logical **mappings;
+    CV_Image map_x;
+    CV_Image map_y;
     CV_Scalar purple;
     CV_Scalar red;
     CV_Point2D32F_Vector references;
@@ -53,6 +56,7 @@ struct Fiducials__Struct {
     CV_Size size_m1xm1;
     CV_Memory_Storage storage;
     Logical tag_bits[64];	// FIXME: Make this Logical *tag_bits;
+    CV_Image temporary_gray_image;
     CV_Term_Criteria term_criteria;
     Logical y_flip;
 };
@@ -61,7 +65,8 @@ void Fiducials__sample_points_compute(
   CV_Point2D32F_Vector corners, CV_Point2D32F_Vector sample_points);
 extern CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners);
-extern Fiducials Fiducials__create(CV_Image original_image);
+extern Fiducials Fiducials__create(
+  CV_Image original_image, String lens_calibrate_file_name);
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, Logical show);
 extern Unsigned Fiducials__process(Fiducials fiducials);

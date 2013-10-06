@@ -16,7 +16,7 @@
 #include "String.h"
 #include "Unsigned.h"
 
-Integer main(Unsigned argc, String argv[]) {
+Integer main(Unsigned arguments_size, String arguments[]) {
     struct timeval start_time_value_struct;    
     struct timeval end_time_value_struct;    
     struct timeval difference_time_value_struct;    
@@ -27,12 +27,21 @@ Integer main(Unsigned argc, String argv[]) {
     assert (gettimeofday(start_time_value, (struct timezone *)0) == 0);
 
     List /* <String> */ image_file_names = List__new();
-    File__format(stdout, "Hello\n");
-    if (argc <= 1) {
-	File__format(stderr, "Usage: Demo *.pnm\n");
+    String lens_calibrate_file_name = (String)0;
+    //File__format(stdout, "Hello\n");
+    if (arguments_size <= 1) {
+	File__format(stderr, "Usage: Demo lens.txt *.pnm\n");
     } else {
-	for (Unsigned index = 1; index < argc; index++) {
-	    List__append(image_file_names, argv[index]);
+	for (Unsigned index = 1; index < arguments_size; index++) {
+	    String argument = arguments[index];
+	    Unsigned size = String__size(argument);
+	    if (size > 4 && String__equal(argument + size - 4, ".txt")) {
+		lens_calibrate_file_name = argument;
+	    } else if (size > 4 && String__equal(argument + size - 4, ".pnm")) {
+		List__append(image_file_names, argument);
+	    } else {
+		File__format(stderr, "Unrecoginized file '%s'\n", argument);
+	    }
 	}
     }
 
@@ -42,7 +51,8 @@ Integer main(Unsigned argc, String argv[]) {
 	CV_Image image = (CV_Image)0;
 	image = CV_Image__pnm_read(image_file_name0);
 	assert (image != (CV_Image)0);
-	Fiducials fiducials = Fiducials__create(image);
+	Fiducials fiducials =
+	  Fiducials__create(image, lens_calibrate_file_name);
 
 	for (Unsigned index = 0; index < size; index++) {
 	    String image_file_name = 

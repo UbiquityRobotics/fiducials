@@ -125,7 +125,8 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
     }
 }
 
-Fiducials Fiducials__create(CV_Image original_image) {
+Fiducials Fiducials__create(
+  CV_Image original_image, String lens_calibrate_file_name) {
     // Create *image_size*:
     Unsigned width = CV_Image__width_get(original_image);
     Unsigned height = CV_Image__height_get(original_image);
@@ -308,6 +309,13 @@ Fiducials Fiducials__create(CV_Image original_image) {
     //	File__format(stderr, "mappings[%d]=0x%x\n", index, mappings[index]);
     //}
 
+    CV_Image map_x = (CV_Image)0;
+    CV_Image map_y = (CV_Image)0;
+    if (lens_calibrate_file_name != (String)0) {
+	assert (CV__undistortion_setup(
+	  lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
+    }
+
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials);
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
@@ -323,6 +331,8 @@ Fiducials Fiducials__create(CV_Image original_image) {
     fiducials->gray_image = CV_Image__create(image_size, CV__depth_8u, 1);
     fiducials->green = CV_Scalar__rgb(0.0, 255.0, 0.0);
     fiducials->map = Map__new();
+    fiducials->map_x = map_x;
+    fiducials->map_y = map_y;
     fiducials->mappings = &mappings[0];
     fiducials->origin = CV_Point__create(0, 0);
     fiducials->original_image = original_image;
@@ -333,6 +343,8 @@ Fiducials Fiducials__create(CV_Image original_image) {
     fiducials->size_5x5 = CV_Size__create(5, 5);
     fiducials->size_m1xm1 = CV_Size__create(-1, -1);
     fiducials->storage = storage;
+    fiducials->temporary_gray_image =
+      CV_Image__create(image_size, CV__depth_8u, 1);
     fiducials->term_criteria = 
       CV_Term_Criteria__create(term_criteria_type, 5, 0.2);
     fiducials->y_flip = (Logical)0;
@@ -350,6 +362,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     Unsigned debug_index = fiducials->debug_index;
     CV_Image edge_image = fiducials->edge_image;
     CV_Image gray_image = fiducials->gray_image;
+    CV_Image temporary_gray_image = fiducials->temporary_gray_image;
     CV_Image original_image = fiducials->original_image;
 
     // For *debug_level* 0, we show the original image in color:
@@ -388,13 +401,26 @@ Unsigned Fiducials__process(Fiducials fiducials) {
         CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
     }
     
+    // Preform undistort if available:
+    if (fiducials->map_x != (CV_Image)0) {
+	Integer flags = CV_INTER_NN | CV_WARP_FILL_OUTLIERS;
+	CV_Image__copy(gray_image, temporary_gray_image, (CV_Image)0);
+	CV_Image__remap(temporary_gray_image, gray_image,
+	  fiducials->map_x, fiducials->map_y, flags, fiducials->black);
+    }
+
+    // Show results of undistort:
+    if (debug_index == 2) {
+	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
+    }
+
     // Perform Gaussian blur if requested:
     if (fiducials->blur) {
 	CV_Image__smooth(gray_image, gray_image, CV__gaussian, 3, 0, 0.0, 0.0);
     }
 
     // Show results of Gaussian blur for *debug_index* 2:
-    if (debug_index == 2) {
+    if (debug_index == 3) {
         CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
     }
 
@@ -403,7 +429,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
       CV__adaptive_thresh_gaussian_c, CV__thresh_binary, 45, 5.0);
 
     // Show results of adaptive threshold for *debug_index* 3:
-    if (debug_index == 3) {
+    if (debug_index == 4) {
         CV_Image__convert_color(edge_image, debug_image, CV__gray_to_rgb);
     }
 
@@ -417,7 +443,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     }
 
     // For *debug_index* 4, show the *edge_image* *contours*:
-    if (debug_index == 4) {
+    if (debug_index == 5) {
 	//File__format(stderr, "Draw red contours\n");
 	CV_Scalar red = fiducials->red;
 	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
@@ -450,7 +476,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	CV_Sequence polygon_contour =
 	  CV_Sequence__approximate_polygon(contour,
 	  header_size, storage, CV__poly_approx_dp, arc_length, 0.0);
-	if (debug_index == 5) {
+	if (debug_index == 6) {
 	    //File__format(stderr, "Draw green contours\n");
 	    CV_Scalar green = fiducials->green;
 	    CV_Image__draw_contours(debug_image,
@@ -467,7 +493,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	    //File__format(stderr, "Have 4 sides > 500i\n");
 
 	    // Just show the fiducial outlines for *debug_index* of 6:
-	    if (debug_index == 6) {
+	    if (debug_index == 7) {
 		CV_Scalar red = fiducials->red;
 		CV_Image__draw_contours(debug_image,
 		  polygon_contour, red, red, 2, 2, 1, origin);
@@ -482,7 +508,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		  CV_Sequence__point_fetch1(polygon_contour, index);
 		CV_Point2D32F__point_set(corner, point);
 
-		if (debug_index == 6) {
+		if (debug_index == 7) {
 		    //File__format(stderr,
 		    //  "point[%d] x:%f y:%f\n", index, point->x, point->y);
 		}
@@ -498,7 +524,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 
 	    // For debugging show the 4 corners of the possible tag where
 	    //corner0=red, corner1=green, corner2=blue, corner3=purple:
-	    if (debug_index == 7) {
+	    if (debug_index == 8) {
 		for (Unsigned index = 0; index < 4; index++) {
 		    CV_Point point =
 		      CV_Sequence__point_fetch1(polygon_contour, index);
@@ -551,7 +577,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	    // For debugging, show the 8 points that are sampled around the
 	    // the tag periphery to even decide whether to do further testing.
 	    // Show "black" as green crosses, and "white" as green crosses:
-	    if (debug_index == 8) {
+	    if (debug_index == 9) {
 		CV_Scalar red = fiducials->red;
 		CV_Scalar green = fiducials->green;
 		for (Unsigned index = 0; index < 8; index++) {
@@ -592,7 +618,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		    tag_bits[index] = bit;
 
 		    // For debugging:
-		    if (debug_index == 9) {
+		    if (debug_index == 10) {
 			CV_Scalar red = fiducials->red;
 			CV_Scalar green = fiducials->green;
 			CV_Scalar cyan = fiducials->cyan;
@@ -656,7 +682,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			}
 			tag_bytes[i] = byte;
 		    }
-		    if (debug_index == 10) {
+		    if (debug_index == 11) {
 			File__format(stderr, "dir=%d Tag[0]=0x%x Tag[1]=0x%x\n",
 			  direction_index, tag_bytes[0], tag_bytes[1]);
 		    }
@@ -665,7 +691,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		    FEC fec = fiducials->fec;
 		    if (FEC__correct(fec, tag_bytes, 8)) {
 			// We passed FEC:
-			if (debug_index == 10) {
+			if (debug_index == 11) {
 			    File__format(stderr, "FEC correct\n");
 			}
 
@@ -679,7 +705,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			    Unsigned tag_id =
 			      (tag_bytes[1] << 8) | tag_bytes[0];
 
-			    if (debug_index == 10) {
+			    if (debug_index == 11) {
 				File__format(stderr,
 				  "CRC correct, Tag=%d\n", tag_id);
 			    }
@@ -699,7 +725,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 
 			    // Load up *camera_tag* to get center, twist, etc.:
 			    Tag tag = Map__tag_lookup(map, tag_id);
-			    if (debug_index == 10) {
+			    if (debug_index == 11) {
 			        Camera_Tag__initialize(camera_tag, tag,
 				  direction_index, corners, debug_image);
 			    } else {

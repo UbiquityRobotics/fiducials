@@ -273,12 +273,6 @@ void CV__release_image(CV_Image image) {
 Integer CV__inter_linear = CV_INTER_LINEAR;
 Integer CV__warp_fill_outliers = CV_WARP_FILL_OUTLIERS;
 
-void CV__remap(CV_Image source_image, CV_Image destination_image,
-  CV_Matrix mapx, CV_Matrix mapy, Integer flags, CV_Scalar fill_value) {
-    cvRemap(source_image,
-      destination_image, mapx, mapy, flags, *fill_value);
-}
-
 void CV__rodrigues2(
   CV_Matrix rotation_vector, CV_Matrix rotation_matrix, CV_Matrix jacobian) {
     cvRodrigues2(rotation_vector, rotation_matrix, jacobian);
@@ -299,6 +293,57 @@ void CV__set_zero(CV_Matrix matrix) {
 
 Integer CV__round(Double value) {
     return cvRound(value);
+}
+
+// Read the calibration file and generate the undistortion maps
+// in:
+//   calibrate_file_name   -  camera calibration file
+//   w h                   -  width and height of images to undistort
+// out:
+//   mapx, mapy,           - undistortion maps
+
+Integer CV__undistortion_setup(String calibrate_file_name,
+ Integer width, Integer height, CV_Image *mapx, CV_Image *mapy) {
+    Double fcx, fcy, ccx, ccy;
+    Double kc[4];
+  
+    // Open *calibrate_file_name*:
+    File file = File__open(calibrate_file_name, "r");
+    if (file == (File)0) {
+        File__format(stderr, "Could not open \"%s\"\n", calibrate_file_name);
+        return -1;
+    }
+
+    // Scan in the calibration values:
+    //  format is fc - focal length, cc, principal point, kc distortion vector
+    int x = fscanf(file, "fc %lf %lf cc %lf %lf kc %lf %lf %lf %lf", 
+       &fcx, &fcy, &ccx, &ccy, &kc[0], &kc[1], &kc[2], &kc[3]);
+    if (x != 8) {
+        File__format(stderr, "Expected 8 parameters got %d\n", x);
+        return -1;
+    }
+    File__close(file);
+    
+    // Create *intrisic* matrix:
+    double intrinsic_vector[9] = {
+        fcx,   0, ccx,
+          0, fcy, ccy,
+          0,   0,   1
+    }; 
+    CvMat intrinsic = cvMat(3, 3, CV_64FC1, intrinsic_vector);
+    //printf("intrinsic matrix\n");
+    //dumpMat(&intrinsic);
+
+    // Create *distortion* matrix*:
+    CvMat distortion = cvMat(1, 4, CV_64FC1, kc);
+    //printf("distortion matrix\n");
+    //dumpMat(&distortion);
+
+    *mapx = cvCreateImage(cvSize(width, height), IPL_DEPTH_32F, 1);
+    *mapy = cvCreateImage(cvSize(width, height), IPL_DEPTH_32F, 1);
+    cvInitUndistortMap(&intrinsic, &distortion, *mapx, *mapy);
+
+    return 0;
 }
 
 // *CV_Image* routines:
@@ -489,6 +534,12 @@ void CV_Image__pnm_write(CV_Image image, String file_name) {
     cvSaveImage(file_name, image, (Integer *)0);
 }
 
+void CV_Image__remap(CV_Image source_image, CV_Image destination_image,
+  CV_Image map_x, CV_Image map_y, Integer flags, CV_Scalar fill_value) {
+    cvRemap(source_image,
+      destination_image, map_x, map_y, flags, *fill_value);
+}
+
 void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
   Integer smooth_type, Integer parameter1, Integer parameter2,
   Double parameter3, Double parameter4) {
@@ -502,7 +553,18 @@ void CV_Image__store3(
     pointer[channel] = (unsigned char)value;
 }
 
-CV_Image CV_Image__xtga_read(CV_Image image, String tga_file_name) {
+/// @brief Read in a .tga file.
+/// @param image to read into (or null).
+/// @param tga_file_name is the file name of the .tga file.
+/// @returns image from .tga file.
+///
+/// *CV__tga_read will read the contents of {tga_file_name} into
+/// {image}.  If the sizes do not match, {image} is released
+/// and new {CV_Image} object of the right size is allocated,
+/// filled and returned.  In either case, the returned {CV_Image}
+/// object containing the read in image data is returned.
+
+CV_Image CV_Image__tga_read(CV_Image image, String tga_file_name) {
     // Open *tga_in_file*:
     File tga_in_file = File__open(tga_file_name, "rb");
     if (tga_in_file == (File)0) {
@@ -611,7 +673,7 @@ CV_Image CV_Image__xtga_read(CV_Image image, String tga_file_name) {
 /// *CV_Image__tga_write*() will write *image* out to *file_name* in
 /// .tga format.
 
-void CV_Image__xtga_write(CV_Image image, String file_name) {
+void CV_Image__tga_write(CV_Image image, String file_name) {
     Unsigned channels = (Unsigned)image->nChannels;
     Unsigned depth = (Unsigned)image->depth;
     Unsigned height = (Unsigned)image->height;
@@ -891,15 +953,4 @@ CV_Term_Criteria CV_Term_Criteria__create(
     term_criteria->epsilon = epsilon;
     return term_criteria;
 }
-
-/// @brief Read in a .tga file.
-/// @param image to read into (or null).
-/// @param tga_file_name is the file name of the .tga file.
-/// @returns image from .tga file.
-///
-/// *CV__tga_read will read the contents of {tga_file_name} into
-/// {image}.  If the sizes do not match, {image} is released
-/// and new {CV_Image} object of the right size is allocated,
-/// filled and returned.  In either case, the returned {CV_Image}
-/// object containing the read in image data is returned.
 
