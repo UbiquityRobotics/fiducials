@@ -1421,3 +1421,15 @@ void Fiducials__tag_record(Unsigned direction, CV_Point2D32F_Vector vector) {
        //call d@(form@("%p%<=record@Tag(T%d%, *)\n\") % f@(indent) / f@(tag.id))
 }
 		  
+void Fiducials__tag_heights_xml_read(
+  Fiducials fiducials, String xml_file_name) {
+    File xml_in_file = File__open(xml_file_name, "r");
+    if (xml_in_file == (File)0) {
+	File__format(stderr, "Could not open '%s'\n", xml_file_name);
+	assert(0);
+    }
+    Map map = fiducials->map;
+    assert(map != (Map)0);
+    Map__tag_heights_xml_read(map, xml_in_file);
+    File__close(xml_in_file);
+}

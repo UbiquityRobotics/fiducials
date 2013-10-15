@@ -42,7 +42,11 @@
 ///
 /// Internally, *twist* is represented in radians.
 
+/// @brief A *Tag* is a pointer to a *Tag_Struct* object.
 typedef struct Tag__Struct *Tag;
+
+/// @brief A *Tag_Height* is a point to a *Tag_Height__Struct* object.
+typedef struct Tag_Height__Struct *Tag_Height;
 
 #include "Arc.h"
 #include "Bounding_Box.h"
@@ -91,6 +95,19 @@ struct Tag__Struct {
     Double y;
 };
 
+/// @brief A *Tag_Height__Struct* represents a span of tags a the same
+/// ceiling height.
+struct Tag_Height__Struct {
+    /// @brief The distance (in consistent units) per pixel at the tag height.
+    Double distance_per_pixel;
+
+    /// @brief The first tag identifier in the span.
+    Unsigned first_id;
+
+    /// @breif The last tag identifier in the span.
+    Unsigned last_id;
+};
+
 // *Tag* routines;
 
 extern void Tag__arc_append(Tag tag, Arc arc);
@@ -106,5 +123,10 @@ extern Tag Tag__read(File in_file, Map map);
 extern void Tag__svg_write(Tag tag, SVG svg);
 extern void Tag__write(Tag tag, File out_file);
 extern void Tag__update_via_arc(Tag tag, Arc arc);
+
+// *Tag_Height* routines:
+extern Integer Tag_Height__compare(
+  Tag_Height tag_height1, Tag_Height tag_height2);
+extern Tag_Height Tag_Height__xml_read(File in_file);
 
 #endif // !defined(TAG_H_INCLUDED)

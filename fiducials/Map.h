@@ -32,6 +32,9 @@ struct Map__Struct {
     /// @brief List of pending *Arc*'s for map tree extraction.
     List /* <Arc> */ pending_arcs;
 
+    /// @brief List of all known tag heights:
+    List /* <Tag_Height> */ tag_heights;
+
     /// @brief Table of all *tags* indexed by *Tag* *id*.
     Table /* <Unsigned, Tag>*/ tags_table;
 
@@ -49,12 +52,14 @@ extern Arc Map__arc_lookup(Map map, Tag from, Tag to);
 extern Unsigned Map__arc_update(
   Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image);
 extern Integer Map__compare(Map map1, Map map2);
+extern Double Map__distance_per_pixel(Map map, Unsigned id);
 extern Map Map__new(void);
 extern Map Map__read(File in_file);
 extern Map Map__restore(String file_name);
 extern void Map__save(Map map, String file_name);
 extern void Map__sort(Map map);
 extern void Map__svg_write(Map map, String svg_base_name);
+extern void Map__tag_heights_xml_read(Map map, File xml_in_file);
 extern Tag Map__tag_lookup(Map map, Unsigned tag_id);
 extern void Map__update(Map map);
 extern void Map__write(Map map, File out_file);

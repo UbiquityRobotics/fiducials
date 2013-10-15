@@ -53,6 +53,7 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 	assert (image != (CV_Image)0);
 	Fiducials fiducials =
 	  Fiducials__create(image, lens_calibrate_file_name);
+	Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
 
 	for (Unsigned index = 0; index < size; index++) {
 	    String image_file_name = 

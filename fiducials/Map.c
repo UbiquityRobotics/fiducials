@@ -35,6 +35,15 @@ void Map__arc_append(Map map, Arc arc) {
     map->is_changed = (Logical)1;
 }
 
+/// @brief Returns the *Arc* that contains *from_tag* and *to_tag*.
+/// @param map that has the *Arc* table.
+/// @param from_tag is the from *Tag*.
+/// @param to_tag is the to *Tag*.
+/// @returns the corresponding *Arc* object.
+///
+/// *Map__arc_lookup*() will return the *Arc* that contains *from_tag*
+/// and *to_tag*.  If no such *Arc* exists yet, it is created.
+
 Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
     // Make sure that *from_tag* has the lower id:
     if (from_tag->id > to_tag->id) {
@@ -55,6 +64,133 @@ Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
 	Table__insert(arcs_table, (Memory)arc, (Memory)arc);
     }
     return arc;
+}
+
+/// @brief Makes sure the *Arc* connecting *from* to *to* is up to date.
+/// @brief map to use for *Arc* updating.
+/// @brief from is the *Camera_Tag* to for one end of the *Arc*.
+/// @brief to is the *Camera_Tag* to the other end of the *Arc*.
+/// @brief image is the image that the *Camera_Tag*'s came from.
+/// @returns the number of *Arc*'s updated (1 or 0).
+///
+/// *Map__arc_update*() will create or update the *Arc* in *map* associated
+/// with *from* and *to*.  *image* used to determine the frame size.
+
+Unsigned Map__arc_update(
+  Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image) {
+    // Get the *width* and *height*:
+    Integer rows = CV_Image__height_get(image);
+    Integer columns = CV_Image__width_get(image);
+    Double height = (Double)rows;
+    Double width = (Double)columns;
+
+    // Compute some constants:
+    Double half_width = width / 2.0;
+    Double half_height = height / 2.0;
+    Double pi = 3.14159265358979323846264;
+    Double r2d = 180.0 / pi;
+
+    // Extract some field values from *camera_from*:
+    Tag from_tag = camera_from->tag;
+    Double camera_from_twist = camera_from->twist;
+    Double camera_from_x = camera_from->x;
+    Double camera_from_y = camera_from->y;
+
+    // Extract some values from *from_tag*:
+    Tag to_tag = camera_to->tag;
+    Double camera_to_twist = camera_to->twist;
+    Double camera_to_x = camera_to->x;
+    Double camera_to_y = camera_to->y;
+
+    // Find associated *Arc* that contains *from_tag* and *to_tag*:
+    Arc arc = Map__arc_lookup(map, from_tag, to_tag);
+
+    // Compute the polar distance (in pixels) and angle from the camera
+    // center to the *from_tag* center:
+    Double camera_from_dx = camera_from->x - half_width;
+    Double camera_from_dy = camera_from->y - half_height;
+    Double camera_from_polar_distance = Double__square_root(
+      camera_from_dx * camera_from_dx + camera_from_dy * camera_from_dy);
+    Double camera_from_polar_angle =
+      Double__arc_tangent2(camera_from_dy, camera_from_dx);
+
+    // Compute the polar_distance (in pixels) and angle from the camera
+    // center to the *to_tag* center:
+    Double camera_to_dx = camera_to_x - half_width;
+    Double camera_to_dy = camera_to_y - half_height;
+    Double camera_to_polar_distance = Double__square_root(
+     camera_to_dx * camera_to_dx + camera_to_dy * camera_to_dy);
+    Double camera_to_polar_angle =
+      Double__arc_tangent2(camera_to_dy, camera_to_dx);
+
+    // To minimize camera distortion effects, we want to use images where
+    // *from* and *to* are about equidistant from the image center.  Thus,
+    // we want to minimum the absolute value of the distance difference:
+    Double goodness =
+      Double__absolute(camera_from_polar_distance - camera_to_polar_distance);
+
+    // Now see if the new *goodness* is better than the previous one:
+    //File__format(stderr,
+    //  "goodness=%.4f arc_goodness=%.4f\n", goodness, arc->goodness);
+    Unsigned changed = 0;
+    if (goodness < arc->goodness) {
+	// We have a better *goodness* metric, compute the new values to
+	// load into *arc*:
+
+	// Get the two *distance_from_pixel* values which may not be
+	// the same because the fiducials are at different heights:
+        Double from_distance_per_pixel = from_tag->distance_per_pixel;
+        Double to_distance_per_pixel = to_tag->distance_per_pixel;
+
+	// Now compute floor to/from X/Y's that coorrespond to the (X,Y)
+	// projection of each tag center onto the floor as if the camera
+	// is located at the floor origin:
+	Double from_floor_x = from_distance_per_pixel *
+	  camera_from_polar_distance * Double__cosine(camera_from_polar_angle);
+	Double from_floor_y = from_distance_per_pixel *
+	  camera_from_polar_distance * Double__sine(camera_from_polar_angle);
+	Double to_floor_x = to_distance_per_pixel *
+	  camera_to_polar_distance * Double__cosine(camera_to_polar_angle);
+	Double to_floor_y = to_distance_per_pixel *
+	  camera_to_polar_distance * Double__sine(camera_to_polar_angle);
+
+	// Now we can compute the floor distance between the two two
+	// projected points:
+	Double floor_dx = from_floor_x - to_floor_x;
+	Double floor_dy = from_floor_y - to_floor_y;
+	Double floor_distance =
+	  Double__square_root(floor_dx * floor_dx + floor_dy * floor_dy);
+
+	// Compute *angle* to line segment connecting both tags:
+	Double camera_dx = camera_to_x - camera_from_x;
+	Double camera_dy = camera_to_y - camera_from_y;
+ 	Double arc_angle = Double__arc_tangent2(camera_dy, camera_dx);
+	Double from_twist =
+	  Double__angle_normalize(camera_from_twist - arc_angle);
+	Double to_twist =
+	  Double__angle_normalize(camera_to_twist + pi - arc_angle);
+
+	// OLD: Compute the distance between *origin* and *to*:
+	//Double distance_per_pixel = from_tag->distance_per_pixel;
+	//Double camera_distance =
+	//  Double__square_root(camera_dx * camera_dx + camera_dy * camera_dy);
+	//Double old_floor_distance = camera_distance * distance_per_pixel;
+	//File__format(stderr, "floor_distance=%.2f old_floor_distance=%.2f\n",
+	//  floor_distance, old_floor_distance);
+
+	//File__format(stderr,
+	//  "Map__arc_update: camera_from_twist=%.2f camera_to_twist=%.2f\n",
+ 	//  camera_from_twist * r2d, camera_to_twist * r2d);
+	//File__format(stderr,
+	//  "Map__arc_update: arc_angle=%.2f from_twist=%.2f to_twist=%.2f\n",
+	//  arc_angle * r2d, from_twist * r2d, to_twist * r2d);
+
+	// Finally, upate *arc*:
+	Arc__update(arc, from_twist, floor_distance, to_twist, goodness);
+
+	changed = 1;
+    }
+    return changed;
 }
 
 /// @brief Returns -1, 0, 1 depending upon the sort order of *map1* and *map2*.
@@ -108,6 +244,31 @@ Integer Map__compare(Map map1, Map map2) {
     return result;
 }
 
+/// @brief Returns the distance per pixel for *id*.
+/// @param map is the *Map* object that contains the distance per pixel table.
+/// @param id is the *Tag* identifier to look up.
+/// @returns the distance per pixel for *Tag* id.
+///
+/// *Map__distance_per_pixel*() will return the distance per pixel for
+/// *Tag* *id*.  The distance can be in any consistent distance (e.g.
+/// (millimeters, centimeters, meters, kilometers, inches, feet, miles,
+/// light seconds, etc.)
+
+Double Map__distance_per_pixel(Map map, Unsigned id) {
+    Double distance_per_pixel = 0.0;
+    List /* Tag_Height */ tag_heights = map->tag_heights;
+    assert (tag_heights != (List)0);
+    Unsigned size = List__size(tag_heights);
+    for (Unsigned index = 0; index < size; index++) {
+	Tag_Height tag_height = (Tag_Height)List__fetch(tag_heights, index);
+	if (tag_height->first_id <= id && id <= tag_height->last_id) {
+	    distance_per_pixel = tag_height->distance_per_pixel;
+	    break;
+	}
+    }
+    return distance_per_pixel;
+}
+
 /// @brief Returns a new *Map*.
 /// @returns a new *Map*.
 ///
@@ -121,6 +282,7 @@ Map Map__new(void) {
       (Table_Hash_Routine)Arc__hash, (Memory)0); // <Arc, Arc>
     map->is_changed = (Logical)0;
     map->pending_arcs = List__new(); // <Tag>
+    map->tag_heights = List__new(); // <Tag_Height>
     map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
       (Table_Hash_Routine)Unsigned__hash, (Memory)0); // <Unsigned, Tag>
     map->temporary_arc = Arc__new();
@@ -229,7 +391,11 @@ void Map__sort(Map map) {
     List__sort(map->all_arcs, (List__Compare__Routine)Arc__compare);
 }
 
-/// @brief S
+/// @brief Writes *map* out to a file called *svg_base_name*.svg.
+/// @param map is the *Map* to write out.
+/// @param svg_base_name is the base name of the .svg file to write out.
+///
+/// *Map__svg_write*() will write out *map* out *svg_base_name*.svg.
 
 void Map__svg_write(Map map, String svg_base_name) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
@@ -238,6 +404,7 @@ void Map__svg_write(Map map, String svg_base_name) {
     Unsigned all_tags_size = List__size(all_tags);
     Unsigned all_arcs_size = List__size(all_arcs);
 
+    // Compute the *bounding_box*:
     Bounding_Box bounding_box = Bounding_Box__new();
     for (Unsigned index = 0; index < all_tags_size; index++) {
 	Tag tag = (Tag)List__fetch(all_tags, index);
@@ -310,9 +477,10 @@ void Map__write(Map map, File out_file) {
     File__format(out_file, "</Map>\n");
 }
 
-// This routine will update the map coordinates for each *tag*
-// in *map*.  The tag with the lowest id number is used as the
-// origin and bearing of zero.
+/// @brief Updates the location of each *tag* in *map*.
+/// @param map to update
+///
+/// *Map__update*() will update the location of all the *Tag*'s in *map*.
 
 void Map__update(Map map) {
     if (map->is_changed != 0) {
@@ -404,132 +572,39 @@ void Map__update(Map map) {
 	    }
 	}
 
-//	// Now we can force a map update starting from {origin_tag}:
-//	Tag__initialize(origin_tag, 0.0, 0.0, 0.0, visit_counter);
-//
-//	// Make sure all new tags get the update routine called on them:
-//	List changed_tags = map->changed_tags;
-//	List__sort(changed_tags, (List__Compare__Routine)Tag__compare);
-//	List__unique(changed_tags, (List__Equal__Routine)Tag__equal);
-//	Unsigned size = List__size(changed_tags);
-//	for (Unsigned index = 0; index < size; index++) {
-//	    Tag tag = (Tag)List__fetch(changed_tags, index);
-//	    //Tag__updated(tag);
-//	}
-//	List__trim(changed_tags, 0);
-//
-//	// Make sure all new neighbors get the update routine called on them:
-//	List changed_neighbors = map->changed_neighbors;
-//	List__sort(changed_neighbors,
-//	  (List__Compare__Routine)Neighbor__compare);
-//	List__unique(changed_neighbors, (List__Equal__Routine)Neighbor__equal);
-//	size = List__size(changed_neighbors);
-//	for (Unsigned index = 0; index < size; index++) {
-//	    Neighbor neighbor = (Neighbor)List__fetch(changed_neighbors, index);
-//	    //Neighbor__updated(neighbor);
-//	}
-//	List__trim(changed_neighbors, 0);
-
 	// Mark that *map* is fully updated:
         map->is_changed = (Logical)0;
     }
 }
 
-/// @brief Makes sure the *Arc* connecting *from* to *to* is up to date.
-/// @brief map to use for *Arc* updating.
-/// @brief from is the *Camera_Tag* to for one end of the *Arc*.
-/// @brief to is the *Camera_Tag* to the other end of the *Arc*.
-/// @brief image is the image that the *Camera_Tag*'s came from.
-/// @returns the number of *Arc*'s updated (1 or 0).
+/// @brief Writes *map* out to *xml_in_file*.
+/// @param map to write out.
+/// @param xml_in_file is the *File* to write *map* out to.
 ///
-/// *Map__arc_update*() will create or update the *Arc* in *map* associated
-/// with *from* and *to*.  *image* used to determine the frame size.
+/// *Map__tag_heights_xml_read*() will write *map* out to *File* in
+/// XML file.
 
-Unsigned Map__arc_update(
-  Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image) {
-    // Get the *width* and *height*:
-    Integer rows = CV_Image__height_get(image);
-    Integer columns = CV_Image__width_get(image);
-    Double height = (Double)rows;
-    Double width = (Double)columns;
+void Map__tag_heights_xml_read(Map map, File xml_in_file) {
+    // Read in Map XML tag '<Map_Tag_Heights Count="xx">' :
+    File__tag_match(xml_in_file, "Map_Tag_Heights");
+    Unsigned count =
+      (Unsigned)File__integer_attribute_read(xml_in_file, "Count");
+    File__string_match(xml_in_file, ">\n");
 
-    // Compute some constants:
-    Double half_width = width / 2.0;
-    Double half_height = height / 2.0;
-    Double pi = 3.14159265358979323846264;
-    Double r2d = 180.0 / pi;
+    List tag_heights = map->tag_heights;
+    assert (tag_heights != (List)0);
 
-    // Extract some field values from *camera_from* and *camera_to*:
-    Double camera_from_twist = camera_from->twist;
-    Double camera_from_center_x = camera_from->x;
-    Double camera_from_center_y = camera_from->y;
-    Tag from_tag = camera_from->tag;
-    Double camera_to_twist = camera_to->twist;
-    Double camera_to_center_x = camera_to->x;
-    Double camera_to_center_y = camera_to->y;
-    Tag to_tag = camera_to->tag;
-
-    // Compute the X and Y distance between the center of the image and the
-    // center of *camera_from* and *camera_to*:
-    Double center_from_dx = half_width - camera_from_center_x;
-    Double center_from_dy = half_height - camera_from_center_y;
-    Double center_to_dx = half_width - camera_to_center_x;
-    Double center_to_dy = half_height - camera_to_center_y;
-
-    // Compute diagonal pixel distance between image center and tag centers:
-    Double center_from_distance = Double__square_root(
-      center_from_dx * center_from_dx + center_from_dy * center_from_dy);
-    Double center_to_distance = Double__square_root(
-      center_to_dx * center_to_dx + center_to_dy * center_to_dy);
-
-    // To minimize camera distortion, we want to use images where *from*
-    // and *to* are about equidistant from the image center.  This
-    // we want to minimum the absolute value of the distance difference:
-    Double goodness =
-      Double__absolute(center_from_distance - center_to_distance);
-
-    // Find associated *Arc*:
-    Arc arc = Map__arc_lookup(map, from_tag, to_tag);
-
-    // Now see if the new {goodness_metric} is better than the previous one:
-    //File__format(stderr,
-    //  "goodness=%.4f arc_goodness=%.4f\n", goodness, arc->goodness);
-    Unsigned changed = 0;
-    if (goodness < arc->goodness) {
-	// We have a better *goodness* metric, record new values into *arc*:
-
-	// Compute *inches_per_pixel*:
-	//Double inches_across_frame = constants.inches_across_frame;
-
-	//FIXME: Deal with different ceiling heights:
-
-	// Compute the distance between *origin* and *to*.
-	Double distance_per_pixel = from_tag->distance_per_pixel;
-	Double camera_dx = camera_to_center_x - camera_from_center_x;
-	Double camera_dy = camera_to_center_y - camera_from_center_y;
-	Double camera_distance =
-	  Double__square_root(camera_dx * camera_dx + camera_dy * camera_dy);
-	Double distance = camera_distance * distance_per_pixel;
-
-	// Compute *angle* to line segment connecting both tags:
- 	Double arc_angle = Double__arc_tangent2(camera_dy, camera_dx);
-	Double from_twist =
-	  Double__angle_normalize(camera_from_twist - arc_angle);
-	Double to_twist =
-	  Double__angle_normalize(camera_to_twist + pi - arc_angle);
-
-	//File__format(stderr,
-	//  "Map__arc_update: camera_from_twist=%.2f camera_to_twist=%.2f\n",
- 	//  camera_from_twist * r2d, camera_to_twist * r2d);
-	//File__format(stderr,
-	//  "Map__arc_update: arc_angle=%.2f from_twist=%.2f to_twist=%.2f\n",
-	//  arc_angle * r2d, from_twist * r2d, to_twist * r2d);
-
-	Arc__update(arc, from_twist, distance, to_twist, goodness);
-
-	changed = 1;
+    // Read in the *count* *Tag_Height* objects:
+    for (Unsigned index = 0; index < count; index++) {
+	Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
+	List__append(tag_heights, (Memory)tag_height);
     }
-    return changed;
-}
 
+    // Process the final Map XML tag "</Map_Tag_Heights>":
+    File__tag_match(xml_in_file, "/Map_Tag_Heights");
+    File__string_match(xml_in_file, ">\n");
+
+    // Sort *tag_heights*:
+    List__sort(tag_heights, (List__Compare__Routine)Tag_Height__compare);
+}
 

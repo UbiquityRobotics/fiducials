@@ -71,7 +71,7 @@ Tag Tag__create(Unsigned id, Map map) {
     tag->id = id;
     tag->initialized = (Logical)0;
     tag->map = map;
-    tag->distance_per_pixel = 0.2;	//FIXME: Should be looked up!!!
+    tag->distance_per_pixel = Map__distance_per_pixel(map, id);
     tag->visit = map->visit;
     tag->x = (Double)0.0;
     tag->y = (Double)0.0;
@@ -166,6 +166,13 @@ Tag Tag__read(File in_file, Map map) {
 void Tag__sort(Tag tag) {
     List__sort(tag->arcs, (List__Compare__Routine)Arc__compare);
 }
+
+/// @brief Writes *tag* out to *svg*.
+/// @param tag to write out.
+/// @param svg is the *SVG* object to use to write *tag* out to.
+///
+/// *Tag__svg_write*() will write *tag* out to *svg* in scalable vector
+/// graphics format.
 
 void Tag__svg_write(Tag tag, SVG svg) {
   // Some constants:
@@ -298,57 +305,49 @@ void Tag__write(Tag tag, File out_file) {
     File__format(out_file, "/>\n");
 }
 
-//void Tag__map_update(Tag tag, Double floor_x, Double floor_y,
-//  Double floor_angle, Unsigned visit, Map map) {
-//
-//    // This routine will update {tag} to have a position of ({x},{y}) and
-//    // a {bearing} angle relative to the floor coordinate X axis.
-//    // This only happens if {tag.visit} is less than {visit}.  In addition,
-//    // all arcs of {tag} are visited to update position and bearing.
-//
-//    Double pi = (Double)3.14159265358979323846264;
-//
-//    // Do we need to update {tag}?:
-//    if (tag->visit < visit) {
-//	// Yes, we do.  Update the map fields:
-//	Tag__initialize(tag, floor_angle, floor_x, floor_y, visit);
-//
-//	// Make sure that *arcs* is sorted:
-//	List arcs = tag->arcs;
-//	if (!tag->arcs_are_sorted) {
-//	    // Sort *arcs* and remember that we did so:
-//	    List__sort(arcs, (List__Compare__Routine)Arc__compare);
-//	    tag->arcs_are_sorted = (Logical)1;
-//	}
-//
-//	// Now visit each {Tag_Arc} in {arcs}:
-//	Unsigned size = List__size(arcs);
-//	for (Unsigned index = 0; index < size; index++) {
-//	    Arc arc = (Arc)List__fetch(arcs, index);
-//
-//	    // {target_bearing} is the absolute direction of the bottom
-//	    // edge of the target in floor coordinates:
-//	    Double target_bearing =
-//	      Double__angle_normalize(floor_angle + arc->target_twist);
-//
-//	    // We are at ({x}, {y}) and the new target is placed
-//	    // at ({target_x}, {target_y}).
-//	    Double target_angle =
-//	      Double__angle_normalize(arc->target_angle + target_bearing);
-//
-//	    // Now we can compute ({target_x}, {target_y}):
-//	    Double distance = arc->distance;
-//	    Double target_x = floor_x + distance * Double__cosine(target_angle);
-//	    Double target_y = floor_y + distance * Double___sine(target_angle);
-//
-//	    // Make sure ({target_x},{target_y}) is reasonable:
-//	    if (target_x > 10000.0 || target_y > 10000.0) {
-//		assert(0);
-//	    } else {
-//		Tag__map_update(arc->target, target_x, target_y,
-//		  target_bearing, visit, map);
-//	    }
-//	}
-//    }
-//}
+// *Tag_Height* routines:
 
+/// @brief Compares *tag_height1* with *tag_height2*.
+/// @param tag_height1 is the first *Tag_Height* object to compare.
+/// @param tag_height2 is the second *Tag_Height* object to compare.
+/// @returns -1, 0, or 1 depending upon the comparison.
+///
+/// *Tag_Height__compare*() will return -1 if *tag_height1* sorts before
+/// *tag_height2*, 0 if they are equal, and 1 otherwise.
+
+Integer Tag_Height__compare(Tag_Height tag_height1, Tag_Height tag_height2)
+{
+    Integer result =
+      Unsigned__compare(tag_height1->first_id, tag_height2->last_id);
+    assert (result != 0);
+    return result;
+}
+
+/// @brief Reads in an a <Tag_Height .../> from *xml_in_file*.
+/// @param xml_in_file is the file to read from.
+/// @returns the resulting *Tag_Height* object.
+///
+/// *Tag_Height__xml_read*() will read in the a <Tag_Height .../> from
+/// *xml_in_file* and return the resulting *Tag_Height* object.
+
+Tag_Height 
+Tag_Height__xml_read(File xml_in_file)
+{
+    // Read in "<Tag_Height .../>":
+    File__tag_match(xml_in_file, "Tag_Height");
+    Unsigned first_id =
+      (Unsigned)File__integer_attribute_read(xml_in_file, "First_Id");
+    Unsigned last_id =
+      (Unsigned)File__integer_attribute_read(xml_in_file, "Last_Id");
+    Double distance_per_pixel =
+       File__float_attribute_read(xml_in_file, "Distance_Per_Pixel");
+    File__string_match(xml_in_file, "/>\n");
+
+    // Load up *tag_height*:
+    Tag_Height tag_height = Memory__new(Tag_Height);
+    tag_height->distance_per_pixel = distance_per_pixel;
+    tag_height->first_id = first_id;
+    tag_height->last_id = last_id;
+
+    return tag_height;
+}

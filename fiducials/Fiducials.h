@@ -61,7 +61,7 @@ struct Fiducials__Struct {
     Logical y_flip;
 };
 
-void Fiducials__sample_points_compute(
+extern void Fiducials__sample_points_compute(
   CV_Point2D32F_Vector corners, CV_Point2D32F_Vector sample_points);
 extern CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners);
@@ -72,5 +72,7 @@ extern void Fiducials__image_show(Fiducials fiducials, Logical show);
 extern Unsigned Fiducials__process(Fiducials fiducials);
 extern void Fiducials__sample_points_helper(
   String label, CV_Point2D32F corner, CV_Point2D32F sample_point);
+extern void Fiducials__tag_heights_xml_read(
+  Fiducials fiducials, String xml_file_name);
 
 #endif // !defined(FIDUCIALS_H_INCLUDED)
