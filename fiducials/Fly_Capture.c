@@ -154,10 +154,26 @@ Integer main(Integer arguments_size, String arguments[]) {
 		CV_Image__show(fiducials->debug_image, window_name);
 
 		// Deal with character input key stroke:
-		Character character = CV__wait_key(1);
+		Character character = CV__wait_key(1) & 0xff;
 		if (character == '\033') {
 		    // [Esc] key causes program to escape:
 		    break;
+		} else if (character == '+') {
+		    fiducials->debug_index += 1;
+		    File__format(stderr,
+		      "debug_index=%d\n", fiducials->debug_index);
+		} else if (character == '-') {
+		    fiducials->debug_index -= 1;
+		    File__format(stderr,
+		      "debug_index=%d\n", fiducials->debug_index);
+		} else if (character == '>') {
+		    fiducials->weights_index += 1;
+		    File__format(stderr,
+		      "weights_index=%d\n", fiducials->weights_index);
+		} else if (character == '<') {
+		    fiducials->weights_index -= 1;
+		    File__format(stderr,
+		      "weights_index=%d\n", fiducials->weights_index);
 		} else if (character == ' ') {
 		    // Write out image out to file system as a .pnm file:
 

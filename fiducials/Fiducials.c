@@ -345,6 +345,7 @@ Fiducials Fiducials__create(
     fiducials->storage = storage;
     fiducials->temporary_gray_image =
       CV_Image__create(image_size, CV__depth_8u, 1);
+    fiducials->weights_index = 0;
     fiducials->term_criteria = 
       CV_Term_Criteria__create(term_criteria_type, 5, 0.2);
     fiducials->y_flip = (Logical)0;
@@ -566,10 +567,14 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	    // Now sample the periphery of the tag and looking for the
 	    // darkest white value (i.e. minimum) and the lightest black
 	    // value (i.e. maximum):
+	    //Integer white_darkest =
+	    //  CV_Image__points_minimum(gray_image, references, 0, 3);
+	    //Integer black_lightest =
+	    //  CV_Image__points_maximum(gray_image, references, 4, 7);
 	    Integer white_darkest =
-	      CV_Image__points_minimum(gray_image, references, 0, 3);
+	      Fiducials__points_minimum(fiducials, references, 0, 3);
 	    Integer black_lightest =
-	      CV_Image__points_maximum(gray_image, references, 4, 7);
+	      Fiducials__points_maximum(fiducials, references, 4, 7);
 
 	    // {threshold} should be smack between the two:
 	    Integer threshold = (white_darkest + black_lightest) / 2;
@@ -585,8 +590,10 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		      CV_Point2D32F_Vector__fetch1(references, index);
 		    Integer x = CV__round(CV_Point2D32F__x_get(reference));
 		    Integer y = CV__round(CV_Point2D32F__y_get(reference));
+		    //Integer value =
+		    //  CV_Image__point_sample(gray_image, reference);
 		    Integer value =
-		      CV_Image__point_sample(gray_image, reference);
+		      Fiducials__point_sample(fiducials, reference);
 		    CV_Scalar color = red;
 		    if (value < threshold) {
 		        color = green;
@@ -612,8 +619,10 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		    // Grab the pixel value and convert into a {bit}:
 		    CV_Point2D32F sample_point =
 		      CV_Point2D32F_Vector__fetch1(sample_points, index);
+		    //Integer value =
+		    //  CV_Image__point_sample(gray_image, sample_point);
 		    Integer value =
-		      CV_Image__point_sample(gray_image, sample_point);
+		      Fiducials__point_sample(fiducials, sample_point);
 		    Logical bit = (value < threshold);
 		    tag_bits[index] = bit;
 
@@ -903,6 +912,74 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     return 0;
 }
 
+Integer Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
+    // This routine will return a sample *fiducials* at *point*.
+
+    // Get the (*x*, *y*) coordinates of *point*:
+    Integer x = CV__round(CV_Point2D32F__x_get(point));
+    Integer y = CV__round(CV_Point2D32F__y_get(point));
+    CV_Image image = fiducials->gray_image;
+
+    static Integer weights0[9] = {
+      0,   0,  0,
+      0, 100,  0,
+      0,  0,   0};
+
+    static Integer weights1[9] = {
+       0,  15,  0,
+      15,  40,  15,
+       0,  15,  0};
+
+    static Integer weights2[9] = {
+       5,  10,  5,
+      10,  40, 10,
+       5,  10,  5};
+
+    // Sample *image*:
+    static Integer x_offsets[9] = {
+      -1,  0,  1,
+      -1,  0,  1,
+      -1,  0,  1};
+    static Integer y_offsets[9] = {
+      -1, -1, -1,
+       0,  0,  0,
+       1,  1,  1};
+
+    // Select sample *weights*:
+    Integer *weights = (Integer *)0;
+    switch (fiducials->weights_index) {
+      case 1:
+	weights = weights1;
+	break;
+      case 2:
+	weights = weights2;
+	break;
+      default:
+	weights = weights0;
+	break;
+    }
+
+    // Interate across sample point;
+    Integer numerator = 0;
+    Integer denominator = 0;
+    for (Integer index = 0; index < 9; index++) {
+	Integer sample = CV_Image__gray_fetch(image,
+	  x + x_offsets[index], y + y_offsets[index]);
+	if (sample >= 0) {
+	    Integer weight = weights[index];
+	    numerator += sample * weight;
+	    denominator += weight;
+	}
+    }
+
+    // Compute *result* checking for divide by zero:
+    Integer result = 0;
+    if (denominator > 0) {
+	result = numerator / denominator;
+    }
+    return result;
+}
+
 void CV_Point2D32F_Vector__corners_normalize(CV_Point2D32F_Vector corners) {
     // This routine will ensure that {corners} are ordered
     // in the counter-clockwise direction.
@@ -1038,9 +1115,8 @@ CV_Point2D32F_Vector Fiducials__references_compute(
     return references;
 }
 
-Integer CV_Image__points_maximum(CV_Image image,
+Integer Fiducials__points_maximum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index) {
-
     // This routine will sweep from {start_index} to {end_index} through
     // {points}.  Using each selected point in {points}, the corresponding
     // value in {image} is sampled.  The minimum of the sampled point is
@@ -1052,7 +1128,7 @@ Integer CV_Image__points_maximum(CV_Image image,
     // Iterate across the {points} from {start_index} to {end_index}:
     for (Unsigned index = start_index; index <= end_index; index++) {
 	CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
-	Integer value = CV_Image__point_sample(image, point);
+	Integer value = Fiducials__point_sample(fiducials, point);
 	//call d@(form@("max[%f%:%f%]:%d%\n\") %
 	//  f@(point.x) % f@(point.y) / f@(value))
 	if (value > result) {
@@ -1063,8 +1139,7 @@ Integer CV_Image__points_maximum(CV_Image image,
     return result;
 }
 
-
-Integer CV_Image__points_minimum(CV_Image image,
+Integer Fiducials__points_minimum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index) {
 
     // This routine will sweep from {start_index} to {end_index} through
@@ -1078,55 +1153,11 @@ Integer CV_Image__points_minimum(CV_Image image,
     // Iterate across the {points} from {start_index} to {end_index}:
     for (Unsigned index = start_index; index <= end_index; index++) {
 	CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
-	Integer value = CV_Image__point_sample(image, point);
+	Integer value = Fiducials__point_sample(fiducials, point);
 	if (value < result) {
 	    // New minimum value:
 	    result = value;
 	}
-    }
-    return result;
-}
-
-Integer CV_Image__point_sample(CV_Image image, CV_Point2D32F point) {
-    // This routine will return a sample *image* at *point*.
-
-    // Get the (*x*, *y*) coordinates of *point*:
-    Integer x = CV__round(CV_Point2D32F__x_get(point));
-    Integer y = CV__round(CV_Point2D32F__y_get(point));
-
-    // Sample the locations in a cross:
-    Integer center = CV_Image__gray_fetch(image, x, y);
-    Integer left = CV_Image__gray_fetch(image, x - 1, y);
-    Integer right = CV_Image__gray_fetch(image, x + 1, y);
-    Integer lower = CV_Image__gray_fetch(image, x, y - 1);
-    Integer upper = CV_Image__gray_fetch(image, x, y + 1);
-
-    Integer denominator = 0;
-    Integer numerator = 0;
-    if (center >= 0) {
-	numerator += center * 40;
-	denominator += 100;
-    }
-    if (left >= 0) {
-	numerator += left * 20;
-	denominator += 100;
-    }
-    if (right >= 0) {
-	numerator += right * 20;
-	denominator += 100;
-    }	
-    if (lower >= 0) {
-	numerator += lower * 20;
-	denominator += 100;
-    }
-    if (upper >= 0) {
-	numerator += upper * 20;
-	denominator += 100;
-    }
-
-    Integer result = 0;
-    if (denominator > 0) {
-	result = numerator / denominator;
     }
     return result;
 }

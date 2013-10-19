@@ -58,6 +58,7 @@ struct Fiducials__Struct {
     Logical tag_bits[64];	// FIXME: Make this Logical *tag_bits;
     CV_Image temporary_gray_image;
     CV_Term_Criteria term_criteria;
+    Unsigned weights_index;
     Logical y_flip;
 };
 
@@ -70,9 +71,15 @@ extern Fiducials Fiducials__create(
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, Logical show);
 extern Unsigned Fiducials__process(Fiducials fiducials);
+extern Integer Fiducials__point_sample(
+  Fiducials fiducials, CV_Point2D32F point);
 extern void Fiducials__sample_points_helper(
   String label, CV_Point2D32F corner, CV_Point2D32F sample_point);
 extern void Fiducials__tag_heights_xml_read(
   Fiducials fiducials, String xml_file_name);
+extern Integer Fiducials__points_maximum(Fiducials fiducials,
+  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+extern Integer Fiducials__points_minimum(Fiducials fiducials,
+  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 
 #endif // !defined(FIDUCIALS_H_INCLUDED)
