@@ -93,10 +93,15 @@ DEMO_O_FILES := \
     High_GUI2.o \
 
 FLY_CAPTURE_O_FILES := \
+    Arc.o \
+    Camera_Tag.o \
     CV.o \
     FC2.o \
+    Fiducials.o \
     Fly_Capture.o \
     High_GUI2.o \
+    Map.o \
+    Tag.o \
 
 FLYCAPTURE2TEST_O_FILES := \
     FC2.o \

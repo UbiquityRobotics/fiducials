@@ -18,6 +18,7 @@
 #include "CV.h"
 #include "FC2.h"
 #include "File.h"
+#include "Fiducials.h"
 #include "High_GUI2.h"
 #include "Integer.h"
 #include "Memory.h"
@@ -102,7 +103,9 @@ Integer main(Integer arguments_size, String arguments[]) {
 	    // Create the window to display the video into:
 	    String window_name = "Video_Capture";
 	    CV__named_window(window_name, CV__window_auto_size);
-	    cvResizeWindow(window_name, 1000, 800);
+	    //cvResizeWindow(window_name, 1000, 800);
+
+	    Fiducials fiducials = (Fiducials)0;
 
 	    // Do a video loop:
 	    CV_Image display_image = (CV_Image)0;
@@ -140,10 +143,15 @@ Integer main(Integer arguments_size, String arguments[]) {
 		      CV_Image__header_create(display_image_size,
 		      IPL_DEPTH_8U, 3);
 		    display_image->imageData = image_data;
+
+		    fiducials = Fiducials__create(display_image, (String)0);
+		    fiducials->debug_index = 11;
 		}
 
 		// Show the image:
-		CV_Image__show(display_image, window_name);
+		//CV_Image__show(display_image, window_name);
+		Fiducials__process(fiducials);
+		CV_Image__show(fiducials->debug_image, window_name);
 
 		// Deal with character input key stroke:
 		Character character = CV__wait_key(1);
