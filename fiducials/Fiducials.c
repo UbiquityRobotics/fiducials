@@ -133,6 +133,8 @@ Fiducials Fiducials__create(
     CV_Size image_size = CV_Size__create(width, height);
     CV_Memory_Storage storage = CV_Memory_Storage__create(0);
 
+    File__format(stderr, "CV width=%d CV height = %d\n", width, height);
+
     Integer term_criteria_type =
       CV__term_criteria_iterations | CV__term_criteria_eps;
 
@@ -330,6 +332,7 @@ Fiducials Fiducials__create(
     fiducials->fec = FEC__create(8, 4, 4);
     fiducials->gray_image = CV_Image__create(image_size, CV__depth_8u, 1);
     fiducials->green = CV_Scalar__rgb(0.0, 255.0, 0.0);
+    fiducials->locations = List__new();
     fiducials->map = Map__new();
     fiducials->map_x = map_x;
     fiducials->map_y = map_y;
@@ -365,6 +368,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     CV_Image gray_image = fiducials->gray_image;
     CV_Image temporary_gray_image = fiducials->temporary_gray_image;
     CV_Image original_image = fiducials->original_image;
+    List /*<Location>*/ locations = fiducials->locations;
 
     // For *debug_level* 0, we show the original image in color:
     if (debug_index == 0) {
@@ -783,118 +787,63 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	}
     }
 
-//    # As we scan through {tags} we want to keep track of which one
-//    # is closest to the image center:
-//    bogus_index :@= 0xffffffff
-//    closest_tag_distance :@= big
-//    closest_tag_index :@= bogus_index
-//    next_closest_tag_distance :@= big
-//    next_closest_tag_index :@= bogus_index
-//
-//    # Compute the row and column for the image center:
-//    half_width :@= double@(extractor.width) / 2.0
-//    half_height :@= double@(extractor.height) / 2.0
-//
-//    # Iterate through {tags}:
-//    mapping_names :@= extractor.mapping_names
-//    index :@= 0
-//    while index < tags_size
-//	# Grab the {index}'th {tag}:
-//	tag :@= tags[index]
-//
-//	# Figure out the distance between {tag} and image center:
-//	tag_id :@= tag.id
-//	center_x :@= tag.center_x
-//	center_y :@= tag.center_y
-//	dx :@= half_width - center_x
-//	dy :@= half_height - center_y
-//	center_distance :@= square_root@(dx * dx + dy * dy)
-//
-//	# Remember if this {tag} is the closest.  Sometimes {tag} is
-//	# brand new, but has not auto mapped to a position on the
-//	# map yet.  We do not treat such a tag has valid yet
-//	# We mark the tag as unmapped with {tag.x = big}:
-//	if center_distance < closest_tag_distance && tag.x < big
-//	    closest_tag_distance := center_distance
-//	    closest_tag_index := index
-//
-//	# For debugging keep track of 
-//	if debug_index >= 10
-//	    # Keep track of direction:
-//	    direction :@= tag.direction
-//	    mapping_name :@= mapping_names[direction]
-//	    call d@(form@("Tag:%d% direction=%d% mapping=%s%\n\") %
-//	      f@(tag_id) % f@(direction) / f@(mapping_name))
-//
-//	    # For debugging draw crosses on all 4 corners (0=>red, 1=>green,
-//	    # 2=>blue, 3=>purple):
-//	    tag_corners :@= tag.corners
-//	    corner_index :@= 0
-//	    while corner_index < 4
-//		tag_corner :@= tag_corners[index]
-//		x :@= round@CV(tag_corner.x)
-//		y :@= round@CV(tag_corner.y)
-//		color :@= extractor.red
-//		text :@= ""
-//		switch corner_index
-//		  case 0
-//		    color := extractor.red
-//		    text := "red"
-//		  case 1
-//		    color := extractor.green
-//		    text := "green"
-//		  case 2
-//		    color := extractor.blue
-//		    text := "blue"
-//		  case 3
-//		    color := extractor.purple
-//		    text := "purple"
-//
-//		call cross_draw@(debug_image, x, y, color)
-//		call d@(form@("Tag[%d%]: corner[%d%]=(%d%:%d%) %s%\n\") %
-//		  f@(tag.id) % f@(corner_index) % f@(x) % f@(y) / f@(text))
-//		corner_index := corner_index + 1
-//
-//	# Compute the robot location using the {tag}:
-//	call robot_location_compute@(extractor, tag, indent1)
-//
-//	index := index + 1
-//
-//    # If we had a closest tag, compute where image center is relative to tag:
-//    if closest_tag_index = bogus_index
-//	# Mark that we did not get anything this time:
-//	extractor.last_tag := null@Tag
-//    else
-//	# Grab the closest {tag}:
-//	tag :@= tags[closest_tag_index]
-//
-//	# Load up {extractor}:
-//	dx :@= tag.camera_x - tag.x
-//	dy :@= tag.camera_y - tag.y
-//	camera_center_distance :@= square_root@(dx * dx + dy * dy)
-//
-//	# Step 1: Remember the previous values of {extractor}:
-//	extractor.previous_x := extractor.last_x
-//	extractor.previous_y := extractor.last_y
-//	extractor.previous_bearing := extractor.last_bearing
-//
-//	# Step 2: Stuff new values into {extractor}:
-//	extractor.last_bearing := tag.robot_bearing
-//	extractor.last_distance := camera_center_distance
-//	extractor.last_tag := tag
-//	extractor.last_x := tag.robot_x
-//	extractor.last_y := tag.robot_y
-//
-//    #call d@(form@("Coutours count=%d%\n\") / f@(contours_count))
-//    #call d@("Extractor 4\n\")
-//
-//    if debug_index >= 10
-//	size :@= tags.size
-//	index := 0
-//	while index < size
-//	    tag :@= tags[index]
-//	    call show@(tag)
-//	    index := index + 1
+    if (camera_tags_size > 0) {
+	Double pi = 3.14159265358979323846264;
+	Unsigned half_width = CV_Image__width_get(gray_image) >> 1;
+	Unsigned half_height = CV_Image__height_get(gray_image) >> 1;
+	File__format(stderr,
+	  "half_width=d half_height=%d\n", half_width, half_height);
+	Location closest_location = (Location)0;
+	for (Unsigned index = 0; index < camera_tags_size; index++) {
+	    Camera_Tag camera_tag = (Camera_Tag)List__fetch(camera_tags, index);
+	    Tag tag = camera_tag->tag;
+	    //File__format(stderr,
+	    //  "[%d]:tag_id=%d tag_x=%f tag_y=%f tag_twist=%f\n",
+	    //  index, tag->id, tag->x, tag->y, tag->twist * 180.0 / pi);
+	    Double camera_dx = camera_tag->x - half_width;
+	    Double camera_dy = camera_tag->y - half_height;
+	    //File__format(stderr,
+	    //  "[%d]:camera_dx=%f camera_dy=%f camera_twist=%f\n",
+	    //  index, camera_dx, camera_dy, camera_tag->twist * 180.0 / pi);
+	    Double polar_distance = Double__square_root(
+	      camera_dx * camera_dx + camera_dy * camera_dy);
+	    Double polar_angle = Double__arc_tangent2(camera_dy, camera_dx);
+	    //File__format(stderr,
+	    //  "[%d]:polar_distance=%f polar_angle=%f\n", index,
+	    //  polar_distance, polar_angle * 180.0 / pi);
+	    Double floor_distance = polar_distance * tag->distance_per_pixel;
+	    Double angle =
+	      Double__angle_normalize(polar_angle + pi - camera_tag->twist);
+	    //File__format(stderr,
+	    //  "[%d]:floor_distance=%f angle=%f\n",
+	    //  index, floor_distance, angle * 180.0 / pi);
+	    Double x = tag->x + floor_distance * Double__cosine(angle);
+	    Double y = tag->y + floor_distance * Double__sine(angle);
+	    Double bearing =
+	      Double__angle_normalize(camera_tag->twist + tag->twist);
+	    File__format(stderr,
+	      "[%d]:x=%f:y=%f:bearing=%f\n", index, x, y, bearing * 180.0 / pi);
+	    Unsigned location_index = List__size(locations);
+	    Location location =
+	      Location__create(x, y, bearing, floor_distance, location_index);
+	    if (closest_location == (Location)0) {
+		closest_location = location;
+	    } else {
+		if (location->goodness < closest_location->goodness) {
+		    closest_location = location;
+		}
+	    }
+	}
+	if (closest_location != (Location)0) {
+	    List__append(locations, (Memory)closest_location);
+	    File__format(stderr,
+	      "Location: x=%f y=%f bearing=%f goodness=%f index=%d\n",
+	      closest_location->x, closest_location->y,
+	      closest_location->bearing * 180.0 / pi,
+	      closest_location->goodness, closest_location->index);
+	}
+	File__format(stderr, "\n");
+    }
 
     // Clean out *camera_tags*:
     List__all_append(fiducials->camera_tags_pool, camera_tags);
@@ -905,9 +854,8 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	CV_Image__flip(debug_image, debug_image, 0);
     }
 
+    // Update the map:
     Map__update(map);
-    Map__save(map, "Demo.xml");
-    Map__svg_write(map, "Demo");
 
     return 0;
 }

@@ -10,6 +10,7 @@ typedef struct Map__Struct *Map;
 #include "Camera_Tag.h"
 #include "File.h"
 #include "List.h"
+#include "Location.h"
 #include "Map.h"
 #include "Table.h"
 #include "Tag.h"
@@ -58,7 +59,8 @@ extern Map Map__read(File in_file);
 extern Map Map__restore(String file_name);
 extern void Map__save(Map map, String file_name);
 extern void Map__sort(Map map);
-extern void Map__svg_write(Map map, String svg_base_name);
+extern void Map__svg_write(
+  Map map, String svg_base_name, List /*<Location>*/ locations);
 extern void Map__tag_heights_xml_read(Map map, File xml_in_file);
 extern Tag Map__tag_lookup(Map map, Unsigned tag_id);
 extern void Map__update(Map map);

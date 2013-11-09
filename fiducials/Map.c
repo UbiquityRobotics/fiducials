@@ -17,6 +17,7 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include "Integer.h"
 #include "File.h"
 #include "List.h"
+#include "Location.h"
 #include "Map.h"
 #include "Tag.h"
 #include "Table.h"
@@ -137,7 +138,7 @@ Unsigned Map__arc_update(
 	// We have a better *goodness* metric, compute the new values to
 	// load into *arc*:
 
-	// Get the two *distance_from_pixel* values which may not be
+	// Get two *distance_from_pixel* values which may not be
 	// the same because the fiducials are at different heights:
         Double from_distance_per_pixel = from_tag->distance_per_pixel;
         Double to_distance_per_pixel = to_tag->distance_per_pixel;
@@ -397,7 +398,7 @@ void Map__sort(Map map) {
 ///
 /// *Map__svg_write*() will write out *map* out *svg_base_name*.svg.
 
-void Map__svg_write(Map map, String svg_base_name) {
+void Map__svg_write(Map map, String svg_base_name, List locations) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
     List all_arcs = map->all_arcs;
     List all_tags = map->all_tags;
@@ -433,6 +434,37 @@ void Map__svg_write(Map map, String svg_base_name) {
     for (Unsigned index = 0; index < all_arcs_size; index++) {
 	Arc arc = (Arc)List__fetch(all_arcs, index);
 	Arc__svg_write(arc, svg);
+    }
+
+    Unsigned locations_size = List__size(locations);
+    Double last_x = 0.0;
+    Double last_y = 0.0;
+    for (Unsigned index = 0; index < locations_size; index++) {
+	Location location = (Location)List__fetch(locations, index);
+        Double x = location->x;
+	Double y = location->y;
+	Double bearing = location->bearing;
+
+	// Draw a triangle that shows the bearing:
+	Double k1 = 40.0;
+	Double k2 = k1 / 2.0;
+	Double angle = 3.14159 * 0.75;
+	Double x0 = x + k1 * Double__cosine(bearing);
+	Double y0 = y + k1 * Double__sine(bearing);
+	Double x1 = x + k2 * Double__cosine(bearing + angle);
+	Double y1 = y + k2 * Double__sine(bearing + angle);
+	Double x2 = x + k2 * Double__cosine(bearing - angle);
+	Double y2 = y + k2 * Double__sine(bearing - angle);
+	SVG__line(svg, x0, y0, x1, y1, "black");
+	SVG__line(svg, x1, y1, x2, y2, "black");
+	SVG__line(svg, x2, y2, x0, y0, "black");
+
+	// Draw a line that connects the centers of the triangles:
+	if (index > 0) {
+	    SVG__line(svg, last_x, last_y, x, y, "purple");
+	}
+	last_x = x;
+	last_y = y;
     }
 
     // Close *svg*:

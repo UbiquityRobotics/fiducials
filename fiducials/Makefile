@@ -88,6 +88,7 @@ DEMO_O_FILES := \
     CV.o \
     Demo.o \
     Fiducials.o \
+    Location.o \
     Map.o \
     Tag.o \
     High_GUI2.o \
@@ -100,6 +101,7 @@ FLY_CAPTURE_O_FILES := \
     Fiducials.o \
     Fly_Capture.o \
     High_GUI2.o \
+    Location.o \
     Map.o \
     Tag.o \
 

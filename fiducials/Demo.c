@@ -77,6 +77,13 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 
 	if (size == 1) {
 	    Fiducials__image_show(fiducials, (Logical)1);
+	} else {
+	    Map map = fiducials->map;
+	    Map__save(map, "Demo.xml");
+	    List /*<Location>*/ locations = fiducials->locations;
+	    File__format(stderr,
+	      "Outputing %d locations\n", List__size(locations));
+	    Map__svg_write(map, "Demo", locations);
 	}
     }
 

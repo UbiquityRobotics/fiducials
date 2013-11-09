@@ -88,7 +88,8 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 
     assert (Map__compare(map1, map2) == 0);
 
-    Map__svg_write(map1, "Map_Test");
+    List /*<Location>*/ locations = List__new();
+    Map__svg_write(map1, "Map_Test", locations);
 
     return 0;
 }

@@ -42,6 +42,7 @@ struct Fiducials__Struct {
     FEC fec;
     CV_Image gray_image;
     CV_Scalar green;
+    List /*<Location>*/ locations;
     Map map;
     CV_Point origin;
     CV_Image original_image;

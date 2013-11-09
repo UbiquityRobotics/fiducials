@@ -8,9 +8,9 @@ add_definitions(-std=c11)
 add_definitions(-g)
 
 add_executable(Demo 
-    Bounding_Box.c Character.c CRC.c Double.c FEC.c Fiducials.c File.c Float.c Integer.c
-    List.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c 
-    Arc.c Camera_Tag.c CV.c Demo.c High_GUI2.c Map.c Tag.c 
+    Bounding_Box.c Character.c CRC.c Double.c FEC.c Fiducials.c File.c Float.c
+    Integer.c List.c Location.c Logical.c Memory.c String.c SVG.c Table.c
+    Unsigned.c Arc.c Camera_Tag.c CV.c Demo.c High_GUI2.c Map.c Tag.c 
 )
 add_executable(Tags 
     Bounding_Box.c Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c
@@ -19,7 +19,7 @@ add_executable(Tags
 )
 add_executable(Map_Test
     Bounding_Box.c Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c
-    List.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c 
+    List.c Location.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c 
     Arc.c CV.c Camera_Tag.c Map.c Map_Test.c Tag.c
 )
 add_executable(Video_Capture
@@ -34,7 +34,7 @@ add_executable(FlyCapture2Test
 
 add_executable(Fly_Capture
     Bounding_Box.c Character.c CRC.c Double.c FEC.c Fiducials.c
-    Fly_Capture.c FC2.c File.c Float.c Integer.c List.c Logical.c
+    Fly_Capture.c FC2.c File.c Float.c Integer.c List.c Location.c Logical.c
     Memory.c String.c SVG.c Table.c Unsigned.c 
     Arc.c Camera_Tag.c CV.c High_GUI2.c Map.c Tag.c
 )
