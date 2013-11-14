@@ -434,6 +434,8 @@ void Map__svg_write(Map map, String svg_base_name, List locations) {
     for (Unsigned index = 0; index < all_arcs_size; index++) {
 	Arc arc = (Arc)List__fetch(all_arcs, index);
 	Arc__svg_write(arc, svg);
+	// publish rviz marker here
+
     }
 
     Unsigned locations_size = List__size(locations);

@@ -841,6 +841,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	      closest_location->x, closest_location->y,
 	      closest_location->bearing * 180.0 / pi,
 	      closest_location->goodness, closest_location->index);
+	      // send rviz marker message here
 	}
 	File__format(stderr, "\n");
     }
