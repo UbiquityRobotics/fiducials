@@ -1,0 +1,127 @@
+These are some RVIZ notes.
+
+===================================================
+
+
+Create the catkin workspace using:
+
+  http://wiki.ros.org/catkin/Tutorials/create_a_workspace
+
+On my machine, the workspace is in:
+
+  ~/public_html/projects/catkin_ws
+
+I have already put "source /opt/ros/groovy/setup.sh" at the
+end of ~/.bashrc.
+
+From .../catkin_ws, remember to source "devel/setup.bash".
+
+--------------------
+
+The RViz tutorial is at:
+
+  http://wiki.ros.org/rviz/Tutorials/Markers:%20Basic%20Shapes
+
+Before running "catkin_create_pkg" change to .../catkin_ws/src:
+Now run:
+
+  catkin_create_pkg using_markers roscpp visualization_msgs
+
+Now change to .../catkin_ws/src/using_markers/src/ and retreive
+the following file:
+
+  wget https://code.ros.org/svn/ros-pkg/stacks/visualization_tutorials/trunk/visualization_marker_tutorials/src/basic_shapes.cpp
+
+Now change to .../catkin_ws/src/using_markers and add the following
+lines to the end of CMakeLists.txt:
+
+================================================
+
+
+I have already put "source /opt/ros/groovy/setup.sh" at the
+end of ~/.bashrc.
+
+In a separate window run:
+
+  roscore
+
+It will print out some logging information.  Leave this window
+alone.
+
+---------
+
+Go to another window.
+
+Create the catkin workspace by reading the tutorial at:
+
+  http://wiki.ros.org/catkin/Tutorials/create_a_workspace
+
+There is not much to it.
+
+On my machine, the workspace is in:
+
+  ~/public_html/projects/catkin_ws
+
+From .../catkin_ws, remember to
+
+  source "devel/setup.bash".
+
+--------------------
+
+Now bring up the RViz tutorial at:
+
+  http://wiki.ros.org/rviz/Tutorials/Markers:%20Basic%20Shapes
+
+Before running "catkin_create_pkg" change to .../catkin_ws/src:
+Now run:
+
+  catkin_create_pkg using_markers roscpp visualization_msgs
+
+Now change to .../catkin_ws/src/using_markers/src/ and retreive
+the following file:
+
+  wget https://code.ros.org/svn/ros-pkg/stacks/visualization_tutorials/trunk/visualization_marker_tutorials/src/basic_shapes.cpp
+
+Now change to .../catkin_ws/src/using_markers and add the following
+lines to the end of CMakeLists.txt:
+
+  add_executable(basic_shapes src/basic_shapes.cpp)
+  target_link_libraries(basic_shapes ${catkin_LIBRARIES})
+
+Now change to  .../catkin_ws and type:
+
+  catkin_make
+
+Just in case:
+
+  source devel/setup.bash
+
+Now run everything:
+
+  rosrun using_markers basic_shapes    # using_markers = package;
+                                        # basic shapes = program?
+
+---------------
+
+In a third window run the following:
+
+  rosmake rviz
+
+It printed out a whole bunch of missing Makefiles, but it seemed not
+to matter that much.
+
+Now run rviz using:
+
+  rosrun rviz rviz
+
+Now edit the line at the time from "/something_I_do_not_remember" to
+"/my_frame".
+
+Click on [Add] and select "Markers"
+
+If your graphics accelerator is working (my toshiba is not working,
+but my ATI is), intersting shapes should come up.
+
+
+===========================
+
