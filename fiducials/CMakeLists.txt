@@ -13,6 +13,11 @@ add_executable(Demo
     Integer.c List.c Location.c Logical.c Memory.c String.c SVG.c Table.c
     Unsigned.c Arc.c Camera_Tag.c CV.c Demo.c High_GUI2.c Map.c Tag.c 
 )
+add_executable(Rviz_Demo 
+    Bounding_Box.c Character.c CRC.c Double.c FEC.c Fiducials.c File.c Float.c
+    Integer.c List.c Location.c Logical.c Memory.c String.c SVG.c Table.c
+    Unsigned.c Arc.c Camera_Tag.c CV.c Rviz_Demo.c High_GUI2.c Map.c Tag.c 
+)
 add_executable(Tags 
     Bounding_Box.c Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c
     List.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c
@@ -50,6 +55,8 @@ target_link_libraries(FlyCapture2Test flycapture-c flycapture)
 target_link_libraries(Fly_Capture flycapture-c flycapture)
 
 target_link_libraries(Demo m ${OpenCV_LIBS})
+target_link_libraries(Rviz_Demo m 
+  ${OpenCV_LIBS} ${fiducials_rviz_LIBRARIES} ${catkin_LIBRARIES})
 target_link_libraries(Tags m ${OpenCV_LIBS})
 target_link_libraries(Map_Test m ${OpenCV_LIBS})
 target_link_libraries(Video_Capture m ${OpenCV_LIBS})
