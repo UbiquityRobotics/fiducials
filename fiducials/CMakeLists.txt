@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(fiducials)
 
-find_package(OpenCV)
+find_package(catkin REQUIRED COMPONENTS
+  OpenCV roscpp visualization_msgs fiducials_rviz)
 
 add_definitions(-std=c11)
 add_definitions(-g)
@@ -41,7 +42,9 @@ add_executable(Fly_Capture
 
 add_executable(undistort undistort.c)
 
-include_directories(/usr/include/flycapture)
+add_executable(Rviz_Test Rviz_Test.c)
+
+include_directories(/usr/include/flycapture ../fiducials_rviz/include)
 
 target_link_libraries(FlyCapture2Test flycapture-c flycapture)
 target_link_libraries(Fly_Capture flycapture-c flycapture)
@@ -53,6 +56,8 @@ target_link_libraries(Video_Capture m ${OpenCV_LIBS})
 target_link_libraries(Fly_Capture flycapture-c flycapture m ${OpenCV_LIBS})
 
 target_link_libraries(undistort ${OpenCV_LIBS})
+
+target_link_libraries(Rviz_Test ${fiducials_rviz_LIBRARIES} ${catkin_LIBRARIES})
 
 catkin_package(
     CATKIN_DEPENDS geometry_msgs tf
