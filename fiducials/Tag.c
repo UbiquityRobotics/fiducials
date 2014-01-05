@@ -273,10 +273,20 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
     Double to_tag_y = from_tag_y + distance * Double__sine(angle);
     Double to_tag_twist = Double__angle_normalize(angle - pi + arc_to_twist);
 
-    // Load new values into *to_tag*:
-    to_tag->twist = to_tag_twist;
-    to_tag->x = to_tag_x;
-    to_tag->y = to_tag_y;
+    // If *to_tag* values are to change
+    if (to_tag->twist != to_tag_twist ||
+      to_tag->x != to_tag_x || to_tag->y != to_tag_y) {
+	// Let any interested party know that tag values changed.
+	Map map = to_tag->map;
+	map->tag_announce_routine(map->announce_object,
+	  to_tag->id, to_tag_x, to_tag_y, 0.0, to_tag_twist, 10.0, 10.0, 1.0);
+
+	// Load new values into *to_tag*:
+	to_tag->twist = to_tag_twist;
+	to_tag->x = to_tag_x;
+	to_tag->y = to_tag_y;
+    }
+
 
     //File__format(stderr, "To_Tag[id:%d x:%.2f y:%.2f tw:%.4f] angle=%.4f\n",
     //  to_tag->id, to_tag->x, to_tag->y, to_tag->twist * r2d, angle * r2d);

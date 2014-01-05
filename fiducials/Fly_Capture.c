@@ -144,7 +144,9 @@ Integer main(Integer arguments_size, String arguments[]) {
 		      IPL_DEPTH_8U, 3);
 		    display_image->imageData = image_data;
 
-		    fiducials = Fiducials__create(display_image, (String)0);
+		    fiducials = Fiducials__create(display_image, (String)0,
+		      (void *)0, Fiducials__location_announce,
+		      Map__tag_announce);
 		    fiducials->debug_index = 11;
 		}
 

@@ -13,6 +13,7 @@
 #include "Integer.h"
 #include "List.h"
 #include "Logical.h"
+#include "Map.h"
 #include "String.h"
 #include "Unsigned.h"
 
@@ -52,7 +53,8 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 	image = CV_Image__pnm_read(image_file_name0);
 	assert (image != (CV_Image)0);
 	Fiducials fiducials =
-	  Fiducials__create(image, lens_calibrate_file_name);
+	  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
+	  Fiducials__location_announce, Map__tag_announce);
 	Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
 
 	for (Unsigned index = 0; index < size; index++) {

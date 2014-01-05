@@ -23,6 +23,12 @@ typedef struct Fiducials__Struct *Fiducials;
 #include "Tag.h"
 #include "Unsigned.h"
 
+void Fiducials__location_announce(void *object, Integer id,
+  Double x, Double y, Double z, Double bearing) {
+    File__format(stderr,
+      "Location: id=%d x=%f y=%f bearing=%f\n", id, x, y, bearing);
+}
+
 void Fiducials__image_set(Fiducials fiducials, CV_Image image) {
     fiducials->original_image = image;
 }
@@ -126,7 +132,10 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
 }
 
 Fiducials Fiducials__create(
-  CV_Image original_image, String lens_calibrate_file_name) {
+  CV_Image original_image, String lens_calibrate_file_name,
+  void *announce_object,
+  Fiducials_Location_Announce_Routine location_announce_routine,
+  Fiducials_Tag_Announce_Routine tag_announce_routine) {
     // Create *image_size*:
     Unsigned width = CV_Image__width_get(original_image);
     Unsigned height = CV_Image__height_get(original_image);
@@ -320,6 +329,7 @@ Fiducials Fiducials__create(
 
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials);
+    fiducials->announce_object = announce_object;
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
     fiducials->blur = (Logical)1;
     fiducials->camera_tags = List__new(); // <Camera_Tag>
@@ -332,8 +342,9 @@ Fiducials Fiducials__create(
     fiducials->fec = FEC__create(8, 4, 4);
     fiducials->gray_image = CV_Image__create(image_size, CV__depth_8u, 1);
     fiducials->green = CV_Scalar__rgb(0.0, 255.0, 0.0);
+    fiducials->location_announce_routine = location_announce_routine;
     fiducials->locations = List__new();
-    fiducials->map = Map__new();
+    fiducials->map = Map__new(announce_object, tag_announce_routine);
     fiducials->map_x = map_x;
     fiducials->map_y = map_y;
     fiducials->mappings = &mappings[0];
@@ -836,12 +847,16 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	}
 	if (closest_location != (Location)0) {
 	    List__append(locations, (Memory)closest_location);
-	    File__format(stderr,
-	      "Location: x=%f y=%f bearing=%f goodness=%f index=%d\n",
-	      closest_location->x, closest_location->y,
-	      closest_location->bearing * 180.0 / pi,
-	      closest_location->goodness, closest_location->index);
-	      // send rviz marker message here
+	    //File__format(stderr,
+	    //  "Location: x=%f y=%f bearing=%f goodness=%f index=%d\n",
+	    //  closest_location->x, closest_location->y,
+	    //  closest_location->bearing * 180.0 / pi,
+	    //  closest_location->goodness, closest_location->index);
+
+	    // send rviz marker message here
+	    fiducials->location_announce_routine(fiducials->announce_object, 0,
+	      closest_location->x, closest_location->y, 0.0,
+	      closest_location->bearing);
 	}
 	File__format(stderr, "\n");
     }

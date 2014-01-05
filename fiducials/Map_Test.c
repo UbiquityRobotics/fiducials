@@ -17,7 +17,7 @@ extern void Map__build(Map map);
 
 
 Integer main(Unsigned arguments_size, String arguments[]) {
-    Map map1 = Map__new();
+    Map map1 = Map__new((void *)0, Map__tag_announce);
     Unsigned visit = map1->visit;
 
     Double pi = 3.14159265358979323846264;

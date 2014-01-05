@@ -18,6 +18,30 @@
 
 #include "fiducials_rviz.h"
 
+/// @brief Print out tag update information.
+/// @param anounce_object is an opaque object from *Map*->*announce_object*.
+/// @param id is the tag id.
+/// @param x is the tag X location.
+/// @param y is the tag Y location.
+/// @param z is the tag Z location.
+/// @param twist is the tag twist in radians.
+/// @param dx is the tag size along the X axis (before twist).
+/// @param dy is the tag size along the Y axis (before twist).
+/// @param dz is the tag height in the Z axis.
+///
+/// *Map__tag_announce*() is called each time the map algorithm
+/// updates the location or twist for a *tag*.
+
+void Rviz__tag_announce(void *rviz, Integer id,
+  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz) {
+    File__format(stderr, "id=%d x=%f y=%f twist=%f\n", id, x, y, twist);
+    sendMarker(rviz, "fiducial_frame", id, x, y, z);
+}
+
+void Rviz__location_announce(void *rviz, Integer id,
+  Double x, Double y, Double z, Double bearing) {
+    sendMarker(rviz, "robot_location", id, x, y, z);
+}
 
 Integer main(Unsigned arguments_size, String arguments[]) {
     struct timeval start_time_value_struct;    
@@ -26,9 +50,6 @@ Integer main(Unsigned arguments_size, String arguments[]) {
     Time_Value start_time_value = &start_time_value_struct;
     Time_Value end_time_value = &end_time_value_struct;
     Time_Value difference_time_value = &difference_time_value_struct;
-
-    void *rviz = 0;
-
 
     assert (gettimeofday(start_time_value, (struct timezone *)0) == 0);
 
@@ -57,11 +78,11 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 	CV_Image image = (CV_Image)0;
 	image = CV_Image__pnm_read(image_file_name0);
 	assert (image != (CV_Image)0);
+	void *rviz = initRviz(arguments_size, arguments, "Rviz_Demo");
 	Fiducials fiducials =
-	  Fiducials__create(image, lens_calibrate_file_name);
+	  Fiducials__create(image, lens_calibrate_file_name,
+	  rviz, Fiducials__location_announce, Map__tag_announce);
 	Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
-
-	rviz = initRviz(arguments_size, arguments, "Rviz_Demo");
 
 	for (Unsigned index = 0; index < size; index++) {
 	    String image_file_name = 

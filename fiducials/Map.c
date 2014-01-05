@@ -275,14 +275,17 @@ Double Map__distance_per_pixel(Map map, Unsigned id) {
 ///
 /// *Map__new*() creates and returns an empty initialized *Map* object.
 
-Map Map__new(void) {
+Map Map__new(
+  void *announce_object, Map_Tag_Announce_Routine tag_announce_routine) {
     Map map = Memory__new(Map);
     map->all_arcs = List__new(); // <Tag>
     map->all_tags = List__new(); // <Tag>
+    map->announce_object = announce_object;
     map->arcs_table = Table__create((Table_Equal_Routine)Arc__equal,
       (Table_Hash_Routine)Arc__hash, (Memory)0); // <Arc, Arc>
     map->is_changed = (Logical)0;
     map->pending_arcs = List__new(); // <Tag>
+    map->tag_announce_routine = tag_announce_routine;
     map->tag_heights = List__new(); // <Tag_Height>
     map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
       (Table_Hash_Routine)Unsigned__hash, (Memory)0); // <Unsigned, Tag>
@@ -322,7 +325,7 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
 
 Map Map__read(File in_file) {
     // Create *map* and get *tags* list:
-    Map map = Map__new();
+    Map map = Map__new((void *)0, Map__tag_announce);
 
     // Read in Map XML tag '<Map Tags_Count="xx" Arcs_Count="xx">' :
     File__tag_match(in_file, "Map");
@@ -509,6 +512,25 @@ void Map__write(Map map, File out_file) {
 
     // Output the closing </Map> tag:
     File__format(out_file, "</Map>\n");
+}
+
+/// @brief Print out tag update information.
+/// @param anounce_object is an opaque object from *Map*->*announce_object*.
+/// @param id is the tag id.
+/// @param x is the tag X location.
+/// @param y is the tag Y location.
+/// @param z is the tag Z location.
+/// @param twist is the tag twist in radians.
+/// @param dx is the tag size along the X axis (before twist).
+/// @param dy is the tag size along the Y axis (before twist).
+/// @param dz is the tag height in the Z axis.
+///
+/// *Map__tag_announce*() is called each time the map algorithm
+/// updates the location or twist for a *tag*.
+
+void Map__tag_announce(void *object, Integer id,
+  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz) {
+    File__format(stderr, "id=%d x=%f y=%f twist=%f\n", id, x, y, twist);
 }
 
 /// @brief Updates the location of each *tag* in *map*.

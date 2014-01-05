@@ -25,10 +25,15 @@ typedef struct Fiducials__Struct *Fiducials;
 #include "Tag.h"
 #include "Unsigned.h"
 
+typedef void (*Fiducials_Location_Announce_Routine)(void *object, Integer id,
+  Double x, Double y, Double z, Double bearing);
+typedef void (*Fiducials_Tag_Announce_Routine)(void *object, Integer id,
+  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz);
 typedef Logical Mapping[64];
 typedef struct timeval *Time_Value;
 
 struct Fiducials__Struct {
+    void *announce_object;
     CV_Scalar black;
     CV_Scalar blue;
     Logical blur;
@@ -42,6 +47,7 @@ struct Fiducials__Struct {
     FEC fec;
     CV_Image gray_image;
     CV_Scalar green;
+    Fiducials_Location_Announce_Routine location_announce_routine;
     List /*<Location>*/ locations;
     Map map;
     CV_Point origin;
@@ -56,6 +62,7 @@ struct Fiducials__Struct {
     CV_Size size_5x5;
     CV_Size size_m1xm1;
     CV_Memory_Storage storage;
+    Fiducials_Tag_Announce_Routine tag_announce_routine;
     Logical tag_bits[64];	// FIXME: Make this Logical *tag_bits;
     CV_Image temporary_gray_image;
     CV_Term_Criteria term_criteria;
@@ -63,12 +70,17 @@ struct Fiducials__Struct {
     Logical y_flip;
 };
 
+extern void Fiducials__location_announce(void *object, Integer id,
+  Double x, Double y, Double z, Double bearing);
 extern void Fiducials__sample_points_compute(
   CV_Point2D32F_Vector corners, CV_Point2D32F_Vector sample_points);
 extern CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners);
 extern Fiducials Fiducials__create(
-  CV_Image original_image, String lens_calibrate_file_name);
+  CV_Image original_image, String lens_calibrate_file_name,
+  void *announce_object,
+  Fiducials_Location_Announce_Routine location_announce_routine,
+  Fiducials_Tag_Announce_Routine tag_announce_routine);
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, Logical show);
 extern Unsigned Fiducials__process(Fiducials fiducials);
