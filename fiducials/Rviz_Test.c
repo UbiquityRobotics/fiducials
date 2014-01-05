@@ -14,7 +14,7 @@ int main( int argc, char** argv )
   //while (ros::ok())
   while (1) 
   {
-    sendMarker(rd, "fiducial_frame", 0, 0.0, 0.0, 0.0);
+    sendMarker(rd, "fiducial_frame", 0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.1);
 
     //r.sleep();
   }

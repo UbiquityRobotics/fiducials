@@ -34,13 +34,18 @@
 
 void Rviz__tag_announce(void *rviz, Integer id,
   Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz) {
-    File__format(stderr, "id=%d x=%f y=%f twist=%f\n", id, x, y, twist);
-    sendMarker(rviz, "fiducial_frame", id, x, y, z);
+    File__format(stderr, "Rviz__tag_announce:id=%d x=%f y=%f twist=%f\n",
+      id, x, y, twist);
+    Double scale = 1000.0;
+    sendMarker(rviz, "fiducial_frame", id, x / scale, y / scale, z / scale,
+      0.0, dx / scale, dy / scale, dz / scale);
 }
 
 void Rviz__location_announce(void *rviz, Integer id,
   Double x, Double y, Double z, Double bearing) {
-    sendMarker(rviz, "robot_location", id, x, y, z);
+    File__format(stderr, "Rviz__location_announce:id=%d x=%f y=%f bearing=%f\n",
+      id, x, y, bearing * 180. / 3.1415926);
+    sendMarker(rviz, "fiducial_frame", id, x, y, z, 0.0, .1, .1, .1);
 }
 
 Integer main(Unsigned arguments_size, String arguments[]) {
@@ -81,7 +86,7 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 	void *rviz = initRviz(arguments_size, arguments, "Rviz_Demo");
 	Fiducials fiducials =
 	  Fiducials__create(image, lens_calibrate_file_name,
-	  rviz, Fiducials__location_announce, Map__tag_announce);
+	  rviz, Rviz__location_announce, Rviz__tag_announce);
 	Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
 
 	for (Unsigned index = 0; index < size; index++) {
@@ -91,11 +96,12 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 	    Fiducials__image_set(fiducials, image);
 	    Fiducials__process(fiducials);
 
-	    float xpos = 0.0;
-	    float ypos = 0.0;
-	    float zpos = 0.0;
-	    int id = 0;
-	    sendMarker(rviz, "fiducial_frame", id, xpos, ypos, zpos);
+	    //float xpos = 0.0;
+	    //float ypos = 0.0;
+	    //float zpos = 0.0;
+	    //int id = 0;
+	    //File__format(stderr, "sent a frame\n");
+	    //sendMarker(rviz, "fiducial_frame", id, xpos, ypos, zpos);
 	}
 
 	assert (gettimeofday(end_time_value, (struct timezone *)0) == 0);
@@ -114,7 +120,7 @@ Integer main(Unsigned arguments_size, String arguments[]) {
 	    Fiducials__image_show(fiducials, (Logical)1);
 	} else {
 	    Map map = fiducials->map;
-	    Map__save(map, "Demo.xml");
+	    Map__save(map, "Rviz_Demo.xml");
 	    List /*<Location>*/ locations = fiducials->locations;
 	    File__format(stderr,
 	      "Outputing %d locations\n", List__size(locations));

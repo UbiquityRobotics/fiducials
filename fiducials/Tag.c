@@ -279,7 +279,7 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
 	// Let any interested party know that tag values changed.
 	Map map = to_tag->map;
 	map->tag_announce_routine(map->announce_object,
-	  to_tag->id, to_tag_x, to_tag_y, 0.0, to_tag_twist, 10.0, 10.0, 1.0);
+	  to_tag->id, to_tag_x, to_tag_y, 0.0, to_tag_twist, 100.0, 100.0, 1.0);
 
 	// Load new values into *to_tag*:
 	to_tag->twist = to_tag_twist;
