@@ -12,18 +12,10 @@
 #include <list>
 #include <string>
 
-#include "fiducials/CV.h"
-#include "fiducials/Character.h"
-#include "fiducials/Double.h"
 #include "fiducials/File.h"
 #include "fiducials/Fiducials.h"
-#include "fiducials/Float.h"
-#include "fiducials/High_GUI2.h"
-#include "fiducials/Integer.h"
 #include "fiducials/List.h"
 #include "fiducials/Logical.h"
-#include "fiducials/String.h"
-#include "fiducials/Unsigned.h"
 
 /// @brief Print out tag update information.
 /// @param anounce_object is an opaque object from *Map*->*announce_object*.
@@ -52,8 +44,8 @@ std::string position_namespace;
 std_msgs::ColorRGBA tag_color;
 std_msgs::ColorRGBA position_color;
 
-void Rviz__tag_announce(void *rviz, Integer id,
-  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz) {
+void Rviz__tag_announce(void *rviz, int id,
+  double x, double y, double z, double twist, double dx, double dy, double dz) {
     ROS_INFO("Rviz__tag_announce:id=%d x=%f y=%f twist=%f\n",
       id, x, y, twist);
 
@@ -84,8 +76,8 @@ void Rviz__tag_announce(void *rviz, Integer id,
     marker_pub->publish(marker);
 }
 
-void Rviz__location_announce(void *rviz, Integer id,
-  Double x, Double y, Double z, Double bearing) {
+void Rviz__location_announce(void *rviz, int id,
+  double x, double y, double z, double bearing) {
     ROS_INFO("Rviz__location_announce:id=%d x=%f y=%f bearing=%f\n",
       id, x, y, bearing * 180. / 3.1415926);
 
@@ -192,12 +184,11 @@ int main(int argc, char ** argv) {
 
         assert (gettimeofday(end_time_value, (struct timezone *)0) == 0);
 
-        Double start_time = (Double)start_time_value->tv_usec / 1000000.0;
-        Double end_time =
-          (Double)(end_time_value->tv_sec - start_time_value->tv_sec) +
-          (Double)end_time_value->tv_usec / 1000000.0;
-        Double time = end_time - start_time;
-        Double frames_per_second = (Double)size / time;
+        double start_time = start_time_value->tv_usec / 1000000.0;
+        double end_time =(end_time_value->tv_sec - start_time_value->tv_sec) +
+          end_time_value->tv_usec / 1000000.0;
+        double time = end_time - start_time;
+        double frames_per_second = size / time;
 
         ROS_INFO("%d frames / %f sec = %f Frame/sec\n", size, time,
             frames_per_second);
