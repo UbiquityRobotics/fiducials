@@ -45,7 +45,7 @@ tf::TransformBroadcaster * tf_pub;
 std::string world_frame;
 std::string pose_frame;
 
-const double scale = 100.0;
+const double scale = 1000.0;
 std::string fiducial_namespace;
 std::string position_namespace;
 
@@ -105,9 +105,9 @@ void Rviz__location_announce(void *rviz, Integer id,
 
     marker.pose.orientation = tf::createQuaternionMsgFromYaw(bearing);
 
-    marker.scale.x = 0.5;
-    marker.scale.y = 0.2;
-    marker.scale.z = 0.2;
+    marker.scale.x = 200.0 / scale;
+    marker.scale.y = 50.0 / scale;
+    marker.scale.z = 50.0 / scale;
 
     marker.color = position_color;
 
