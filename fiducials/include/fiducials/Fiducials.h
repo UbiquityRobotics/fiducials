@@ -80,7 +80,7 @@ extern void Fiducials__sample_points_compute(
 extern CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners);
 extern Fiducials Fiducials__create(
-  CV_Image original_image, String lens_calibrate_file_name,
+  CV_Image original_image, const char * lens_calibrate_file_name,
   void *announce_object,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine);
@@ -92,7 +92,7 @@ extern Integer Fiducials__point_sample(
 extern void Fiducials__sample_points_helper(
   String label, CV_Point2D32F corner, CV_Point2D32F sample_point);
 extern void Fiducials__tag_heights_xml_read(
-  Fiducials fiducials, String xml_file_name);
+  Fiducials fiducials, const char * xml_file_name);
 extern Integer Fiducials__points_maximum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 extern Integer Fiducials__points_minimum(Fiducials fiducials,

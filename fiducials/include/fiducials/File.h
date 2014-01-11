@@ -24,7 +24,7 @@ extern void File__byte_write(File file, Unsigned byte);
 extern Character File__character_read(File in_file);
 extern void File__close(File file);
 extern Float File__float_attribute_read(File in_file, String attribute_name);
-extern void File__format(File file, const String format, ...);
+extern void File__format(File file, const char * format, ...);
 extern Integer File__integer_attribute_read(
   File in_file, String attribute_name);
 extern Unsigned File__little_endian_short_read(File);

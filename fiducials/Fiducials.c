@@ -132,7 +132,7 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
 }
 
 Fiducials Fiducials__create(
-  CV_Image original_image, String lens_calibrate_file_name,
+  CV_Image original_image, const char * lens_calibrate_file_name,
   void *announce_object,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine) {
@@ -1418,7 +1418,7 @@ void Fiducials__tag_record(Unsigned direction, CV_Point2D32F_Vector vector) {
 }
                   
 void Fiducials__tag_heights_xml_read(
-  Fiducials fiducials, String xml_file_name) {
+  Fiducials fiducials, const char * xml_file_name) {
     File xml_in_file = File__open(xml_file_name, "r");
     if (xml_in_file == (File)0) {
         File__format(stderr, "Could not open '%s'\n", xml_file_name);

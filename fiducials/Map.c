@@ -363,7 +363,7 @@ Map Map__read(File in_file) {
 /// *Map__restore*() will read in an map XML from *file_name* and return the
 /// resulting *Map* object.
 
-Map Map__restore(String file_name) {
+Map Map__restore(const char * file_name) {
     File in_file = File__open(file_name, "r");
     assert(in_file != (File)0);
     Map map = Map__read(in_file);
@@ -377,7 +377,7 @@ Map Map__restore(String file_name) {
 ///
 /// *Map__save*() will save *map* to the *file_name* file in XML format.
 
-void Map__save(Map map, String file_name) {
+void Map__save(Map map, const char * file_name) {
     File out_file = File__open(file_name, "w");
     assert (out_file != (File)0);
     Map__write(map, out_file);
@@ -401,7 +401,7 @@ void Map__sort(Map map) {
 ///
 /// *Map__svg_write*() will write out *map* out *svg_base_name*.svg.
 
-void Map__svg_write(Map map, String svg_base_name, List locations) {
+void Map__svg_write(Map map, const char * svg_base_name, List locations) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
     List all_arcs = map->all_arcs;
     List all_tags = map->all_tags;

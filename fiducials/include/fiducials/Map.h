@@ -68,11 +68,11 @@ extern Double Map__distance_per_pixel(Map map, Unsigned id);
 extern Map Map__new(
   void *announce_object, Map_Tag_Announce_Routine announce_routine);
 extern Map Map__read(File in_file);
-extern Map Map__restore(String file_name);
-extern void Map__save(Map map, String file_name);
+extern Map Map__restore(const char * file_name);
+extern void Map__save(Map map, const char * file_name);
 extern void Map__sort(Map map);
 extern void Map__svg_write(
-  Map map, String svg_base_name, List /*<Location>*/ locations);
+  Map map, const char * svg_base_name, List /*<Location>*/ locations);
 extern void Map__tag_heights_xml_read(Map map, File xml_in_file);
 extern void Map__tag_announce(void *object, Integer id,
   Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz);
