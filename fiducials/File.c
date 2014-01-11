@@ -62,7 +62,7 @@ void File__close(File file) {
 /// *File__format*() will write *format* out to *file* with all patterns that
 /// start with "%" replaced by formatted versions of its arguments.
 
-void File__format(File file, String format, ...) {
+void File__format(File file, const String format, ...) {
     // Set up *variadic_arguments to start after *format*:
     va_list variadic_arguments;
     va_start(variadic_arguments, format);

@@ -42,21 +42,24 @@
 ///
 /// Internally, *twist* is represented in radians.
 
-/// @brief A *Tag* is a pointer to a *Tag_Struct* object.
-typedef struct Tag__Struct *Tag;
-
-/// @brief A *Tag_Height* is a point to a *Tag_Height__Struct* object.
-typedef struct Tag_Height__Struct *Tag_Height;
-
-#include "Arc.h"
 #include "Bounding_Box.h"
 #include "Double.h"
 #include "File.h"
 #include "Integer.h"
 #include "List.h"
-#include "Map.h"
 #include "SVG.h"
 #include "Unsigned.h"
+
+/// @brief A *Tag* is a pointer to a *Tag_Struct* object.
+typedef struct Tag__Struct *Tag;
+#include "Map.h"
+#include "Arc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+/// @brief A *Tag_Height* is a point to a *Tag_Height__Struct* object.
+typedef struct Tag_Height__Struct *Tag_Height;
 
 /// @brief A *Tag_Struct* represents the location and orientation of one 
 /// ceiling fiducial tag.
@@ -129,4 +132,7 @@ extern Integer Tag_Height__compare(
   Tag_Height tag_height1, Tag_Height tag_height2);
 extern Tag_Height Tag_Height__xml_read(File in_file);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(TAG_H_INCLUDED)

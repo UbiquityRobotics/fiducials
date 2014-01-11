@@ -3,19 +3,21 @@
 #if !defined(MAP_H_INCLUDED)
 #define MAP_H_INCLUDED 1
 
-/// @brief *Map* is the representation of a fiducial marker map.
-typedef struct Map__Struct *Map;
-
-#include "Arc.h"
-#include "Camera_Tag.h"
 #include "File.h"
 #include "List.h"
 #include "Location.h"
-#include "Map.h"
 #include "Table.h"
-#include "Tag.h"
 #include "Unsigned.h"
 
+/// @brief *Map* is the representation of a fiducial marker map.
+typedef struct Map__Struct *Map;
+#include "Tag.h"
+#include "Camera_Tag.h"
+#include "Arc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef void (*Map_Tag_Announce_Routine)(void *object, Integer id,
   Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz);
 
@@ -78,4 +80,7 @@ extern Tag Map__tag_lookup(Map map, Unsigned tag_id);
 extern void Map__update(Map map);
 extern void Map__write(Map map, File out_file);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(MAP_H_INCLUDED)

@@ -12,6 +12,9 @@
 #include "Memory.h"
 #include "String.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef CvContour *CV_Contour;
 typedef IplImage *CV_Image;
 typedef CvMat *CV_Matrix;
@@ -131,5 +134,8 @@ extern Integer CV_Sequence__total_get(CV_Sequence sequence);
 extern CV_Size CV_Size__create(Integer width, Integer height);
 
 extern void CV__release_image(CV_Image image);
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !defined(CV_C_H_INCLUDED)

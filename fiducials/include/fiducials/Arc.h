@@ -53,6 +53,10 @@ typedef struct Arc__Struct *Arc;
 ///      |           |                       |           |
 ///      +-----------+                       +-----------+
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct Arc__Struct {
     /// @brief The angle in radians from the *origin* center parallel to the
     /// bottom edge to the line that connects the *origin* and *target* centers.
@@ -97,6 +101,10 @@ extern void Arc__svg_write(Arc arc, SVG svg);
 extern void Arc__update(
   Arc arc, Double distance, Double angle, Double twist, Double goodness);
 extern void Arc__write(Arc arc, File out_file);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !defined(ARC_H_INCLUDED)
 

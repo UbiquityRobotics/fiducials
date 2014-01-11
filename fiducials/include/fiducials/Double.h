@@ -3,11 +3,14 @@
 #if !defined(DOUBLE_H_INCLUDED)
 #define DOUBLE_H_INCLUDED 1
 
-/// @brief *Double* is a double precision (64-bits) floating point number.
-typedef double Double;
 
 #include "Integer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+/// @brief *Double* is a double precision (64-bits) floating point number.
+typedef double Double;
 // *Double* routines:
 
 extern Double Double__absolute(Double value);
@@ -21,5 +24,8 @@ extern Double Double__cosine(Double angle);
 extern Double Double__sine(Double angle);
 extern Double Double__square_root(Double square);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(DOUBLE_H_INCLUDED)
 

@@ -5,7 +5,13 @@
 
 #include "Unsigned.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern Unsigned CRC__compute(Unsigned *buffer, Unsigned size);
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !defined(CRC_H_INCLUDED)
 

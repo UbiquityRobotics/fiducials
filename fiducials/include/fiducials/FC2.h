@@ -3,6 +3,13 @@
 #if !defined(FC2_H_INCLUDED)
 #define FC2_H_INCLUDED 1
 
+// #include's:
+#include "C/FlyCapture2_C.h"
+#include "Unsigned.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 /// @brief FC2 package overview documenation is here (please click).
 ///
 /// The FC2 package is just a bunch of wrapper routines for the FC2 library.
@@ -28,10 +35,6 @@ typedef struct _fc2Image *FC2_Image;
 
 /// @brief *FC2_Version* contains FC2 library version information.
 typedef struct _fc2Version *FC2_Version;
-
-// #include's:
-#include "C/FlyCapture2_C.h"
-#include "Unsigned.h"
 
 /// @brief *FC2_Error* is an FC2 internal error code.
 typedef fc2Error FC2_Error;
@@ -62,4 +65,7 @@ extern FC2_Image FC2_Image__create(void);
 extern Memory FC2_Image__data_get(FC2_Image image);
 extern void FC2_Image__free(FC2_Image image);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(FC2_H_INCLUDED)

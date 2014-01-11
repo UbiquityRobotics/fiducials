@@ -723,7 +723,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
                         // Now see if the two CRC's match:
                         Unsigned computed_crc = CRC__compute(tag_bytes, 2);
                         Unsigned tag_crc = (tag_bytes[3] << 8) | tag_bytes[2];
-                        if (computed_crc = tag_crc) {
+                        if (computed_crc == tag_crc) {
                             // Yippee!!! We have a tag:
                             // Compute {tag_id} from the the first two bytes
                             // of {tag_bytes}:

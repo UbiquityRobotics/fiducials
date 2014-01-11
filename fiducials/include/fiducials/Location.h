@@ -3,12 +3,15 @@
 #if !defined(LOCATION_H_INCLUDED)
 #define LOCATION_H_INCLUDED 1
 
+#include "Double.h"
+#include "Unsigned.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 /// @brief *Location* represents an X/Y/Bearing location.
 
 typedef struct Location__Struct *Location;
-
-#include "Double.h"
-#include "Unsigned.h"
 
 /// @brief A *Location_Struct* represents an X/Y/Bearing location.
 struct Location__Struct {
@@ -30,4 +33,7 @@ struct Location__Struct {
 extern Location Location__create(
   Double x, Double y, Double bearing, Double goodness, Unsigned index);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(LOCATION_H_INCLUDED)

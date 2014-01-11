@@ -11,6 +11,9 @@ typedef struct Camera_Tag__Struct *Camera_Tag;
 #include "Tag.h"
 #include "Unsigned.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /// @brief *Camera_Tag* represents information about a fiducial tag in
 /// a camera frame.
 struct Camera_Tag__Struct {
@@ -42,4 +45,7 @@ extern Camera_Tag Camera_Tag__new(void);
 extern void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
   Unsigned direction, CV_Point2D32F_Vector corners, CV_Image debug_image);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(CAMERA_TAG_H_INCLUDED)

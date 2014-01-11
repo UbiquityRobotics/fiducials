@@ -3,11 +3,14 @@
 #if !defined(LIST_H_INCLUDED)
 #define LIST_H_INCLUDED 1
 
-/// @brief *List* is a pointer to a list object.
-typedef struct List__Struct *List;
-
 #include "Memory.h"
 #include "Unsigned.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+/// @brief *List* is a pointer to a list object.
+typedef struct List__Struct *List;
 
 /// @brief A procedure variable signature for comparing two *Memory* objects.
 typedef Integer (*List__Compare__Routine)(Memory, Memory);
@@ -40,4 +43,7 @@ extern Unsigned List__size(List list);
 extern void List__trim(List list, Unsigned new_size);
 extern void List__unique(List list, List__Equal__Routine equal_routine);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(LIST_H_INCLUDED)

@@ -5,9 +5,6 @@
 
 #include <assert.h>
 
-/// @brief *SVG* is a Scalable Vector Graphics object.
-typedef struct SVG__Struct *SVG;
-
 #include "Bounding_Box.h"
 #include "Double.h"
 #include "File.h"
@@ -15,6 +12,12 @@ typedef struct SVG__Struct *SVG;
 #include "Logical.h"
 #include "Memory.h"
 #include "Unsigned.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+/// @brief *SVG* is a Scalable Vector Graphics object.
+typedef struct SVG__Struct *SVG;
 
 /// @brief *SVG_Struct* is the data structure for representing Scalable
 /// Vector Graphics.
@@ -60,4 +63,7 @@ extern void SVG__text(SVG svg,
   String message, Double x, Double y, String font_family, Unsigned font_size);
 
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(SVG_H_INCLUDED)

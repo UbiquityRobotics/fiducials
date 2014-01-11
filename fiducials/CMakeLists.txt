@@ -2,12 +2,16 @@ cmake_minimum_required(VERSION 2.8)
 
 project(fiducials)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp visualization_msgs fiducials_rviz)
+find_package(catkin REQUIRED COMPONENTS fiducials_rviz)
 
 find_package(OpenCV REQUIRED)
 
-catkin_package()
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES fiducials
+  DEPENDS OpenCV
+  CATKIN_DEPENDS fiducials_rviz
+)
 
 add_definitions(-std=c11)
 add_definitions(-g)
@@ -18,6 +22,7 @@ if(EXISTS /usr/include/flycapture)
   include_directories(/usr/include/flycapture)
 endif()
 
+include_directories(include/fiducials)
 include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 

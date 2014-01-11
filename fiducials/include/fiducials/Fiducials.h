@@ -25,6 +25,9 @@ typedef struct Fiducials__Struct *Fiducials;
 #include "Tag.h"
 #include "Unsigned.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef void (*Fiducials_Location_Announce_Routine)(void *object, Integer id,
   Double x, Double y, Double z, Double bearing);
 typedef void (*Fiducials_Tag_Announce_Routine)(void *object, Integer id,
@@ -95,4 +98,7 @@ extern Integer Fiducials__points_maximum(Fiducials fiducials,
 extern Integer Fiducials__points_minimum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(FIDUCIALS_H_INCLUDED)

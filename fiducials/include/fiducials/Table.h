@@ -3,15 +3,18 @@
 #ifndef TABLE_H_INCLUDED
 #define TABLE_H_INCLUDED 1
 
-typedef struct Table_Struct *Table;
-typedef struct Table_List_Struct *Table_List;
-typedef struct Table_Triple_Struct *Table_Triple;
-
 #include "File.h"
 #include "Integer.h"
 #include "Logical.h"
 #include "Memory.h"
 #include "Unsigned.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct Table_Struct *Table;
+typedef struct Table_List_Struct *Table_List;
+typedef struct Table_Triple_Struct *Table_Triple;
 
 typedef Logical (*Table_Equal_Routine)(Memory, Memory);
 typedef Integer (*Table_Hash_Routine)(Memory);
@@ -79,4 +82,7 @@ extern void Table_List__show(Table_List table_list, File file,
   Table_Key_Show_Routine key_show_routine,
   Table_Value_Show_Routine value_show_routine);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // TABLE_H_INCLUDED

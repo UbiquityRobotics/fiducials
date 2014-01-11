@@ -8,6 +8,9 @@
 #include "Double.h"
 #include "Integer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef CvCapture *CV_Capture;
 typedef CvVideoWriter *CV_Video_Writer;
 
@@ -37,4 +40,7 @@ extern Integer CV_Video_Writer__write_frame(
   CV_Video_Writer writer, CV_Image frame);
 extern Integer CV__wait_key(Integer delay);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // !defined(HIGH_GUI2_C_H_INCLUDED)
