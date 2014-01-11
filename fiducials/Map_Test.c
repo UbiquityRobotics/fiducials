@@ -16,7 +16,7 @@
 extern void Map__build(Map map);
 
 
-Integer main(Unsigned arguments_size, String arguments[]) {
+int main(int arguments_size, char * arguments[]) {
     Map map1 = Map__new((void *)0, Map__tag_announce);
     Unsigned visit = map1->visit;
 

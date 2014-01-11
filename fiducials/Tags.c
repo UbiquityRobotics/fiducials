@@ -14,13 +14,12 @@
 
 extern void SVG__tag_write(/* Extractor extractor, */
   Unsigned tag_id, Unsigned tag_size, Logical border);
-extern Integer main(Unsigned arguments_size, String arguments[]);
 extern void SVG__tag_bit(SVG svg,
   Double cell_width, Unsigned row, Unsigned column, Logical border);
 extern void SVG__tag_write(/* Extractor extractor, */
   Unsigned tag_id, Unsigned tag_size, Logical border);
 
-Integer main(Unsigned arguments_size, String arguments[]) {
+int main(int arguments_size, char * arguments[]) {
     if (arguments_size <= 1) {
         File__format(stderr, "Usage: tag_id...\n");
     } else {

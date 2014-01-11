@@ -17,7 +17,7 @@
 #include "String.h"
 #include "Unsigned.h"
 
-Integer main(Unsigned arguments_size, String arguments[]) {
+int main(int arguments_size, char * arguments[]) {
     struct timeval start_time_value_struct;    
     struct timeval end_time_value_struct;    
     struct timeval difference_time_value_struct;    

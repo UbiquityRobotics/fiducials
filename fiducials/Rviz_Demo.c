@@ -48,7 +48,7 @@ void Rviz__location_announce(void *rviz, Integer id,
     sendMarker(rviz, "fiducial_frame", id, x, y, z, 0.0, .1, .1, .1);
 }
 
-Integer main(Unsigned arguments_size, String arguments[]) {
+int main(int arguments_size, char * arguments[]) {
     struct timeval start_time_value_struct;    
     struct timeval end_time_value_struct;    
     struct timeval difference_time_value_struct;    

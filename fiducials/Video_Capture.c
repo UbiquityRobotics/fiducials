@@ -18,7 +18,7 @@
 /// *main*() opens a camera (or video file) and allows the user to capture
 /// images by typing the [space] key.
 
-Integer main(Integer arguments_size, String arguments[]) {
+int main(int arguments_size, char * arguments[]) {
     CV_Capture capture = (CV_Capture)0;
     String capture_base_name = "video_capture";
 
