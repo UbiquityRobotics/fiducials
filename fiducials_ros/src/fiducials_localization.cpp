@@ -6,6 +6,7 @@
 
 #include <ros/ros.h>
 #include <tf/tf.h>
+#include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 
 #include <list>
@@ -24,8 +25,6 @@
 #include "fiducials/String.h"
 #include "fiducials/Unsigned.h"
 
-#include "fiducials_rviz.h"
-
 /// @brief Print out tag update information.
 /// @param anounce_object is an opaque object from *Map*->*announce_object*.
 /// @param id is the tag id.
@@ -40,26 +39,91 @@
 /// *Map__tag_announce*() is called each time the map algorithm
 /// updates the location or twist for a *tag*.
 
-ros::Publisher marker_pub;
+ros::Publisher * marker_pub;
+tf::TransformBroadcaster * tf_pub;
+
+std::string world_frame;
+std::string pose_frame;
+
+const double scale = 100.0;
+std::string fiducial_namespace;
+std::string position_namespace;
+
+std_msgs::ColorRGBA tag_color;
+std_msgs::ColorRGBA position_color;
 
 void Rviz__tag_announce(void *rviz, Integer id,
   Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz) {
     ROS_INFO("Rviz__tag_announce:id=%d x=%f y=%f twist=%f\n",
       id, x, y, twist);
-    Double scale = 100.0;
-    // TODO: publish directly to marker_pub
-    sendMarker(rviz, "fiducial_frame", id, x / scale, y / scale, z / scale,
-      0.0, dx / scale, dy / scale, dz / scale);
+
+    visualization_msgs::Marker marker;
+    marker.header.stamp = ros::Time::now();
+    marker.header.frame_id = world_frame;
+
+    marker.ns = fiducial_namespace;
+    marker.id = id;
+    marker.type = visualization_msgs::Marker::CUBE;
+
+    marker.action = visualization_msgs::Marker::ADD;
+
+    marker.pose.position.x = x / scale;
+    marker.pose.position.y = y / scale;
+    marker.pose.position.z = z / scale;
+
+    marker.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+
+    marker.scale.x = dx / scale;
+    marker.scale.y = dy / scale;
+    marker.scale.z = dz / scale;
+
+    marker.color = tag_color;
+
+    marker.lifetime = ros::Duration();
+
+    marker_pub->publish(marker);
 }
 
 void Rviz__location_announce(void *rviz, Integer id,
   Double x, Double y, Double z, Double bearing) {
     ROS_INFO("Rviz__location_announce:id=%d x=%f y=%f bearing=%f\n",
       id, x, y, bearing * 180. / 3.1415926);
-    Double scale = 100.0;
-    // TODO: publish directly to marker_pub
-    sendArrow(rviz, "fiducial_frame", id, x / scale, y / scale, z / scale,
-        0.0, .2, .05, .05, bearing);
+
+    visualization_msgs::Marker marker;
+    marker.header.stamp = ros::Time::now();
+    marker.header.frame_id = world_frame;
+
+    marker.ns = position_namespace;
+    marker.id = id;
+    marker.type = visualization_msgs::Marker::ARROW;
+
+    marker.action = visualization_msgs::Marker::ADD;
+
+    marker.pose.position.x = x / scale;
+    marker.pose.position.y = y / scale;
+    marker.pose.position.z = z / scale;
+
+    marker.pose.orientation = tf::createQuaternionMsgFromYaw(bearing);
+
+    marker.scale.x = 0.5;
+    marker.scale.y = 0.2;
+    marker.scale.z = 0.2;
+
+    marker.color = position_color;
+
+    marker.lifetime = ros::Duration();
+
+    marker_pub->publish(marker);
+    tf::Transform transform;
+    transform.setOrigin( tf::Vector3(marker.pose.position.x, 
+                                     marker.pose.position.y,
+                                     marker.pose.position.z));
+    transform.setRotation( tf::Quaternion(marker.pose.orientation.x,
+                                          marker.pose.orientation.y,
+                                          marker.pose.orientation.z,
+                                          marker.pose.orientation.w));
+    tf_pub->sendTransform(tf::StampedTransform(transform, marker.header.stamp,
+          world_frame, pose_frame));
 }
 
 int main(int argc, char ** argv) {
@@ -70,8 +134,30 @@ int main(int argc, char ** argv) {
     Time_Value end_time_value = &end_time_value_struct;
     Time_Value difference_time_value = &difference_time_value_struct;
 
+    fiducial_namespace = "fiducials";
+    position_namespace = "position";
+    // Define tags to be green
+    tag_color.r = 0.0f;
+    tag_color.g = 1.0f;
+    tag_color.b = 0.0f;
+    tag_color.a = 1.0f;
+
+    // define position ot be blue
+    position_color.r = 0.0f;
+    position_color.g = 0.0f;
+    position_color.b = 1.0f;
+    position_color.a = 1.0f;
+
+    world_frame = "map";
+    pose_frame = "base_link";
+
     ros::init(argc, argv, "fiducials_localization");
     ros::NodeHandle nh("~");
+
+    marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
+
+    tf_pub = new tf::TransformBroadcaster();
+
 
     assert(gettimeofday(start_time_value, (struct timezone *)0) == 0);
 
@@ -80,7 +166,7 @@ int main(int argc, char ** argv) {
 
     nh.getParam("lens_calibration", lens_calibration_file);
 
-    for( int i=0; i<argc; ++i ) {
+    for( int i=1; i<argc; ++i ) {
       image_file_names.push_back(argv[i]);
       ROS_INFO("Image file: %s", argv[i]);
     }
@@ -101,7 +187,7 @@ int main(int argc, char ** argv) {
             image = CV_Image__pnm_read(itr->c_str());
             Fiducials__image_set(fiducials, image);
             Fiducials__process(fiducials);
-            sleep(2);
+            sleep(1);
         }
 
         assert (gettimeofday(end_time_value, (struct timezone *)0) == 0);
