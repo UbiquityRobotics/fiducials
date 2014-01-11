@@ -130,15 +130,16 @@ Now it should be possible to download and build the fiducials package.
 We assume that you called your catkin workspace "catkin_ws" in the
 installation steps below.
 
-First you fetch the fiducials catkin package:
+First you fetch the fiducials and fiducials_rviz catkin package:
 
-        cd .../catkin_ws/src
-	git clone https://github.com/waynegramlich/fiducials.git
+    cd .../catkin_ws/src
+    git clone https://github.com/waynegramlich/fiducials.git
+    git clone https://github.com/waynegramlich/fiducials_rviz.git
 
 Next you build it:
 
-        cd ..
-	catkin_make
+    cd ..
+    catkin_make
 
 Everything is now installed:
 
