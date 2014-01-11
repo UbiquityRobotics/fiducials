@@ -3,72 +3,74 @@ cmake_minimum_required(VERSION 2.8)
 project(fiducials)
 
 find_package(catkin REQUIRED COMPONENTS
-  OpenCV roscpp visualization_msgs fiducials_rviz)
+  roscpp visualization_msgs fiducials_rviz)
+
+find_package(OpenCV REQUIRED)
+
+catkin_package()
 
 add_definitions(-std=c11)
 add_definitions(-g)
 
-add_executable(Demo 
-    Bounding_Box.c Character.c CRC.c Double.c FEC.c Fiducials.c File.c Float.c
-    Integer.c List.c Location.c Logical.c Memory.c String.c SVG.c Table.c
-    Unsigned.c Arc.c Camera_Tag.c CV.c Demo.c High_GUI2.c Map.c Tag.c 
-)
-add_executable(Rviz_Demo 
-    Bounding_Box.c Character.c CRC.c Double.c FEC.c Fiducials.c File.c Float.c
-    Integer.c List.c Location.c Logical.c Memory.c String.c SVG.c Table.c
-    Unsigned.c Arc.c Camera_Tag.c CV.c Rviz_Demo.c High_GUI2.c Map.c Tag.c 
-)
-add_executable(Tags 
-    Bounding_Box.c Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c
-    List.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c
-    Tags.c
-)
-add_executable(Map_Test
-    Bounding_Box.c Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c
-    List.c Location.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c 
-    Arc.c CV.c Camera_Tag.c Map.c Map_Test.c Tag.c
-)
-add_executable(Video_Capture
-    Bounding_Box.c Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c
-    List.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c 
-    CV.c High_GUI2.c Video_Capture.c
-)
+# Really simple, poor-man's find_package for the flycapture library
+if(EXISTS /usr/include/flycapture)
+  set(flycapture_FOUND true)
+  include_directories(/usr/include/flycapture)
+endif()
 
-add_executable(FlyCapture2Test
-    FlyCapture2Test.c
-)
+include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(Fly_Capture
+add_library(fiducials_base
+  Bounding_Box.c Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c
+  List.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c)
+
+add_library(fiducials_cv CV.c High_GUI2.c)
+target_link_libraries(fiducials_cv fiducials_base ${OpenCV_LIBS})
+
+add_library(fiducials Fiducials.c Location.c Arc.c Camera_Tag.c Map.c Tag.c)
+target_link_libraries(fiducials fiducials_base fiducials_cv)
+
+add_executable(Demo Demo.c)
+target_link_libraries(Demo fiducials)
+target_link_libraries(Demo m)
+
+add_executable(Rviz_Demo Rviz_Demo.c)
+target_link_libraries(Rviz_Demo fiducials)
+target_link_libraries(Rviz_Demo m ${catkin_LIBRARIES})
+
+add_executable(Tags Tags.c)
+target_link_libraries(Tags fiducials_base)
+target_link_libraries(Tags m)
+
+add_executable(Map_Test Map_Test.c)
+target_link_libraries(Map_Test fiducials)
+target_link_libraries(Map_Test m)
+
+add_executable(Video_Capture Video_Capture.c)
+target_link_libraries(Video_Capture fiducials_cv)
+target_link_libraries(Video_Capture m)
+
+if(${flycapture_FOUND})
+  add_executable(FlyCapture2Test FlyCapture2Test.c)
+  target_link_libraries(FlyCapture2Test flycapture-c flycapture)
+
+  add_executable(Fly_Capture
     Bounding_Box.c Character.c CRC.c Double.c FEC.c Fiducials.c
     Fly_Capture.c FC2.c File.c Float.c Integer.c List.c Location.c Logical.c
     Memory.c String.c SVG.c Table.c Unsigned.c 
     Arc.c Camera_Tag.c CV.c High_GUI2.c Map.c Tag.c
-)
+  )
+  target_link_libraries(Fly_Capture flycapture-c flycapture)
+  target_link_libraries(Fly_Capture flycapture-c flycapture m)
+
+endif()
 
 add_executable(undistort undistort.c)
-
-add_executable(Rviz_Test Rviz_Test.c)
-
-include_directories(/usr/include/flycapture ../fiducials_rviz/include)
-
-target_link_libraries(FlyCapture2Test flycapture-c flycapture)
-target_link_libraries(Fly_Capture flycapture-c flycapture)
-
-target_link_libraries(Demo m ${OpenCV_LIBS})
-target_link_libraries(Rviz_Demo m 
-  ${OpenCV_LIBS} ${fiducials_rviz_LIBRARIES} ${catkin_LIBRARIES})
-target_link_libraries(Tags m ${OpenCV_LIBS})
-target_link_libraries(Map_Test m ${OpenCV_LIBS})
-target_link_libraries(Video_Capture m ${OpenCV_LIBS})
-target_link_libraries(Fly_Capture flycapture-c flycapture m ${OpenCV_LIBS})
-
 target_link_libraries(undistort ${OpenCV_LIBS})
 
-target_link_libraries(Rviz_Test ${fiducials_rviz_LIBRARIES} ${catkin_LIBRARIES})
-
-catkin_package(
-    CATKIN_DEPENDS geometry_msgs tf
-)
+add_executable(Rviz_Test Rviz_Test.c)
+target_link_libraries(Rviz_Test ${catkin_LIBRARIES})
 
 install(PROGRAMS
 	Demo Tags Map_Test Video_Capture
