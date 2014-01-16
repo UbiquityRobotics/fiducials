@@ -60,15 +60,8 @@ if(${flycapture_FOUND})
   add_executable(FlyCapture2Test FlyCapture2Test.c)
   target_link_libraries(FlyCapture2Test flycapture-c flycapture)
 
-  add_executable(Fly_Capture
-    Bounding_Box.c Character.c CRC.c Double.c FEC.c Fiducials.c
-    Fly_Capture.c FC2.c File.c Float.c Integer.c List.c Location.c Logical.c
-    Memory.c String.c SVG.c Table.c Unsigned.c 
-    Arc.c Camera_Tag.c CV.c High_GUI2.c Map.c Tag.c
-  )
-  target_link_libraries(Fly_Capture flycapture-c flycapture)
-  target_link_libraries(Fly_Capture flycapture-c flycapture m)
-
+  add_executable(Fly_Capture Fly_Capture.c FC2.c)
+  target_link_libraries(Fly_Capture flycapture-c flycapture m fiducials)
 endif()
 
 add_executable(undistort undistort.c)
