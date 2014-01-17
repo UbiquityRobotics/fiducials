@@ -5,6 +5,7 @@
 
 // #include's:
 #include "C/FlyCapture2_C.h"
+#include "Memory.h"
 #include "Unsigned.h"
 
 #ifdef __cplusplus
