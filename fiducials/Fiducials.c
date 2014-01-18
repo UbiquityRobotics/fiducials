@@ -833,6 +833,14 @@ Unsigned Fiducials__process(Fiducials fiducials) {
             Double y = tag->y + floor_distance * Double__sine(angle);
             Double bearing =
               Double__angle_normalize(camera_tag->twist + tag->twist);
+
+	    // FIXME: Kludge,  There is a sign error somewhere in the code
+	    // causes the "sign" on the X axis to be inverted.  We kludge
+	    // around the problem with the following disgusting code:
+	    bearing = Double__angle_normalize(bearing - pi / 2.0);
+	    bearing = -bearing;
+	    bearing = Double__angle_normalize(bearing + pi / 2.0);
+
             File__format(stderr,
               "[%d]:x=%f:y=%f:bearing=%f\n", index, x, y, bearing * 180.0 / pi);
             Unsigned location_index = List__size(locations);
@@ -1418,7 +1426,7 @@ void Fiducials__tag_record(Unsigned direction, CV_Point2D32F_Vector vector) {
 }
                   
 void Fiducials__tag_heights_xml_read(
-  Fiducials fiducials, const char * xml_file_name) {
+  Fiducials fiducials, char * xml_file_name) {
     File xml_in_file = File__open(xml_file_name, "r");
     if (xml_in_file == (File)0) {
         File__format(stderr, "Could not open '%s'\n", xml_file_name);
