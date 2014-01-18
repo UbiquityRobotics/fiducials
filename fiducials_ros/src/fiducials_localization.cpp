@@ -124,11 +124,13 @@ void location_announce(void *rviz, int id,
 }
 
 void imageCallback(const sensor_msgs::ImageConstPtr & msg) {
+    ROS_INFO("Got image");
     try {
         cv_bridge::CvImageConstPtr cv_img;
         cv_img = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8);
         IplImage *image = new IplImage(cv_img->image);
         if(fiducials == NULL) {
+            ROS_INFO("Git first image! Setting up Fiducials library");
             fiducials = Fiducials__create(image, NULL, NULL, location_announce,
               tag_announce);
         }
@@ -172,14 +174,12 @@ int main(int argc, char ** argv) {
     tf_pub = new tf::TransformBroadcaster();
 
     fiducials = NULL;
-    /*
-    fiducials = Fiducials__create(NULL, NULL, NULL, location_announce,
-        tag_announce);
-        */
 
     image_transport::ImageTransport img_transport(nh);
     image_transport::Subscriber img_sub = img_transport.subscribe("camera", 1,
         imageCallback);
+
+    ROS_INFO("Fiducials Localization ready");
 
     ros::spin();
 
