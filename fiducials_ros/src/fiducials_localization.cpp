@@ -48,6 +48,7 @@ std_msgs::ColorRGBA tag_color;
 std_msgs::ColorRGBA position_color;
 
 Fiducials fiducials;
+std::string tag_height_file;
 
 void tag_announce(void *rviz, int id,
   double x, double y, double z, double twist, double dx, double dy, double dz) {
@@ -133,6 +134,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             ROS_INFO("Git first image! Setting up Fiducials library");
             fiducials = Fiducials__create(image, NULL, NULL, location_announce,
               tag_announce);
+            Fiducials__tag_heights_xml_read(fiducials, tag_height_file.c_str());
         }
         Fiducials__image_set(fiducials, image);
         Fiducials__process(fiducials);
@@ -168,6 +170,7 @@ int main(int argc, char ** argv) {
 
     ros::init(argc, argv, "fiducials_localization");
     ros::NodeHandle nh("~");
+    nh.param<std::string>("tag_height", tag_height_file, "Tag_Heights.xml");
 
     marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
 
