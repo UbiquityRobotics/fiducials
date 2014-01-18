@@ -44,9 +44,9 @@ std::string position_namespace;
 std_msgs::ColorRGBA tag_color;
 std_msgs::ColorRGBA position_color;
 
-void Rviz__tag_announce(void *rviz, int id,
+void tag_announce(void *rviz, int id,
   double x, double y, double z, double twist, double dx, double dy, double dz) {
-    ROS_INFO("Rviz__tag_announce:id=%d x=%f y=%f twist=%f\n",
+    ROS_INFO("tag_announce:id=%d x=%f y=%f twist=%f\n",
       id, x, y, twist);
 
     visualization_msgs::Marker marker;
@@ -76,9 +76,9 @@ void Rviz__tag_announce(void *rviz, int id,
     marker_pub->publish(marker);
 }
 
-void Rviz__location_announce(void *rviz, int id,
+void location_announce(void *rviz, int id,
   double x, double y, double z, double bearing) {
-    ROS_INFO("Rviz__location_announce:id=%d x=%f y=%f bearing=%f\n",
+    ROS_INFO("location_announce:id=%d x=%f y=%f bearing=%f\n",
       id, x, y, bearing * 180. / 3.1415926);
 
     visualization_msgs::Marker marker;
@@ -171,7 +171,7 @@ int main(int argc, char ** argv) {
         assert (image != (CV_Image)0);
         Fiducials fiducials =
           Fiducials__create(image, lens_calibration_file.c_str(),
-          NULL, Rviz__location_announce, Rviz__tag_announce);
+          NULL, location_announce, tag_announce);
         Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
 
         for( std::list<std::string>::const_iterator itr = 
