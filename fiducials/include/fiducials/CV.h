@@ -84,10 +84,10 @@ extern Integer CV_Image__save(
 extern void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
   Integer smooth_type, Integer parameter1, Integer parameter2,
   Double parameter3, Double parameter4);
-extern CV_Image CV_Image__pnm_read(const char * file_base_name);
-extern void CV_Image__pnm_write(CV_Image image, const char * file_base_name);
-extern CV_Image CV_Image__tga_read(CV_Image image, const char * file_name);
-extern void CV_Image__tga_write(CV_Image image, const char * file_name);
+extern CV_Image CV_Image__pnm_read(const String file_base_name);
+extern void CV_Image__pnm_write(CV_Image image, const String file_base_name);
+extern CV_Image CV_Image__tga_read(CV_Image image, const String file_name);
+extern void CV_Image__tga_write(CV_Image image, const String file_name);
 extern Integer CV_Image__width_get(CV_Image image);
 
 extern Integer CV__term_criteria_iterations;

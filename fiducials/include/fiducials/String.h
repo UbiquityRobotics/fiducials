@@ -14,12 +14,12 @@ typedef char *String;
 
 // External declarations:
 
-extern Logical String__equal(String string1, String string2);
+extern Logical String__equal(const String string1, const String string2);
 extern String String__allocate(Unsigned size);
-extern String String__format(String format, ...);
+extern String String__format(const String format, ...);
 extern void String__free(String string);
-extern Unsigned String__size(String string);
-extern Unsigned String__to_unsigned(String string);
+extern Unsigned String__size(const String string);
+extern Unsigned String__to_unsigned(const String string);
 
 #ifdef __cplusplus
 }

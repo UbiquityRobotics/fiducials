@@ -61,7 +61,8 @@ if(${flycapture_FOUND})
   target_link_libraries(FlyCapture2Test flycapture-c flycapture)
 
   add_executable(Fly_Capture Fly_Capture.c FC2.c)
-  target_link_libraries(Fly_Capture flycapture-c flycapture m fiducials)
+  target_link_libraries(Fly_Capture flycapture-c flycapture m fiducials
+   ${OpenCV_LIBS})
 endif()
 
 add_executable(undistort undistort.c)

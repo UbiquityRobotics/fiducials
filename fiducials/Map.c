@@ -401,7 +401,7 @@ void Map__sort(Map map) {
 ///
 /// *Map__svg_write*() will write out *map* out *svg_base_name*.svg.
 
-void Map__svg_write(Map map, const char * svg_base_name, List locations) {
+void Map__svg_write(Map map, const String svg_base_name, List locations) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
     List all_arcs = map->all_arcs;
     List all_tags = map->all_tags;

@@ -72,7 +72,7 @@ extern Map Map__restore(const char * file_name);
 extern void Map__save(Map map, const char * file_name);
 extern void Map__sort(Map map);
 extern void Map__svg_write(
-  Map map, const char * svg_base_name, List /*<Location>*/ locations);
+  Map map, const String svg_base_name, List /*<Location>*/ locations);
 extern void Map__tag_heights_xml_read(Map map, File xml_in_file);
 extern void Map__tag_announce(void *object, Integer id,
   Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz);

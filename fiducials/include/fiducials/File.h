@@ -23,15 +23,15 @@ extern Unsigned File__byte_read(File file);
 extern void File__byte_write(File file, Unsigned byte);
 extern Character File__character_read(File in_file);
 extern void File__close(File file);
-extern Float File__float_attribute_read(File in_file, String attribute_name);
-extern void File__format(File file, const char * format, ...);
+extern Float File__float_attribute_read(File in_file, const String attribute_name);
+extern void File__format(File file, const String format, ...);
 extern Integer File__integer_attribute_read(
-  File in_file, String attribute_name);
+  File in_file, const String attribute_name);
 extern Unsigned File__little_endian_short_read(File);
 extern void File__little_endian_short_write(File, Unsigned xshort);
-extern File File__open(String file_name, String flags);
-extern void File__string_match(File in_file, String pattern);
-extern void File__tag_match(File in_file, String tag_name);
+extern File File__open(const String file_name, const String flags);
+extern void File__string_match(File in_file, const String pattern);
+extern void File__tag_match(File in_file, const String tag_name);
 
 
 #ifdef __cplusplus
