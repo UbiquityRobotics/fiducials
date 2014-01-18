@@ -9,6 +9,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf
   visualization_msgs
+  image_transport
+  cv_bridge
+  sensor_msgs
 )
 
 catkin_package()

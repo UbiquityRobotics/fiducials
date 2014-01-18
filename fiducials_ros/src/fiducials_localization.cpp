@@ -8,6 +8,9 @@
 #include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
 
 #include <list>
 #include <string>
@@ -43,6 +46,8 @@ std::string position_namespace;
 
 std_msgs::ColorRGBA tag_color;
 std_msgs::ColorRGBA position_color;
+
+Fiducials fiducials;
 
 void tag_announce(void *rviz, int id,
   double x, double y, double z, double twist, double dx, double dy, double dz) {
@@ -118,6 +123,22 @@ void location_announce(void *rviz, int id,
           world_frame, pose_frame));
 }
 
+void imageCallback(const sensor_msgs::ImageConstPtr & msg) {
+    try {
+        cv_bridge::CvImageConstPtr cv_img;
+        cv_img = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8);
+        IplImage *image = new IplImage(cv_img->image);
+        if(fiducials == NULL) {
+            fiducials = Fiducials__create(image, NULL, NULL, location_announce,
+              tag_announce);
+        }
+        Fiducials__image_set(fiducials, image);
+        Fiducials__process(fiducials);
+    } catch(cv_bridge::Exception & e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+    }
+}
+
 int main(int argc, char ** argv) {
     struct timeval start_time_value_struct;    
     struct timeval end_time_value_struct;    
@@ -150,60 +171,17 @@ int main(int argc, char ** argv) {
 
     tf_pub = new tf::TransformBroadcaster();
 
+    fiducials = NULL;
+    /*
+    fiducials = Fiducials__create(NULL, NULL, NULL, location_announce,
+        tag_announce);
+        */
 
-    assert(gettimeofday(start_time_value, (struct timezone *)0) == 0);
+    image_transport::ImageTransport img_transport(nh);
+    image_transport::Subscriber img_sub = img_transport.subscribe("camera", 1,
+        imageCallback);
 
-    std::list<std::string> image_file_names;
-    std::string lens_calibration_file;
-
-    nh.getParam("lens_calibration", lens_calibration_file);
-
-    for( int i=1; i<argc; ++i ) {
-      image_file_names.push_back(argv[i]);
-      ROS_INFO("Image file: %s", argv[i]);
-    }
-
-    int size = image_file_names.size();
-    if (size > 0) {
-        std::string image_file_name0 = image_file_names.front();
-        CV_Image image = (CV_Image)0;
-        image = CV_Image__pnm_read(image_file_name0.c_str());
-        assert (image != (CV_Image)0);
-        Fiducials fiducials =
-          Fiducials__create(image, lens_calibration_file.c_str(),
-          NULL, location_announce, tag_announce);
-        Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
-
-        for( std::list<std::string>::const_iterator itr = 
-            image_file_names.begin() ; itr != image_file_names.end(); ++itr) {
-            image = CV_Image__pnm_read(itr->c_str());
-            Fiducials__image_set(fiducials, image);
-            Fiducials__process(fiducials);
-            sleep(1);
-        }
-
-        assert (gettimeofday(end_time_value, (struct timezone *)0) == 0);
-
-        double start_time = start_time_value->tv_usec / 1000000.0;
-        double end_time =(end_time_value->tv_sec - start_time_value->tv_sec) +
-          end_time_value->tv_usec / 1000000.0;
-        double time = end_time - start_time;
-        double frames_per_second = size / time;
-
-        ROS_INFO("%d frames / %f sec = %f Frame/sec\n", size, time,
-            frames_per_second);
-
-        if (size == 1) {
-            Fiducials__image_show(fiducials, (Logical)1);
-        } else {
-            Map map = fiducials->map;
-            Map__save(map, "Rviz_Demo.xml");
-            List /*<Location>*/ locations = fiducials->locations;
-            ROS_INFO("Outputing %d locations\n", List__size(locations));
-            Map__svg_write(map, "Demo", locations);
-        }
-    }
-
+    ros::spin();
 
     return 0;
 }
