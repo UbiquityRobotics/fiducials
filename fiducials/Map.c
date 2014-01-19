@@ -363,7 +363,7 @@ Map Map__read(File in_file) {
 /// *Map__restore*() will read in an map XML from *file_name* and return the
 /// resulting *Map* object.
 
-Map Map__restore(const char * file_name) {
+Map Map__restore(const String file_name) {
     File in_file = File__open(file_name, "r");
     assert(in_file != (File)0);
     Map map = Map__read(in_file);
@@ -377,7 +377,7 @@ Map Map__restore(const char * file_name) {
 ///
 /// *Map__save*() will save *map* to the *file_name* file in XML format.
 
-void Map__save(Map map, const char * file_name) {
+void Map__save(Map map, const String file_name) {
     File out_file = File__open(file_name, "w");
     assert (out_file != (File)0);
     Map__write(map, out_file);
