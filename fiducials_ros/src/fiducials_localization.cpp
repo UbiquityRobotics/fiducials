@@ -103,6 +103,11 @@ void tag_announce(void *rviz, int id,
     marker.color.r = 1.0;
     marker.color.g = 1.0;
     marker.color.b = 1.0;
+    marker.id = id + 10000;
+    marker.scale.x = 0.1;
+    marker.scale.y = 0.1;
+    marker.scale.z = 0.1;
+    marker.pose.position.z += 0.05;
     marker.ns = fiducial_namespace + "_text";
     marker_pub->publish(marker);
 }
