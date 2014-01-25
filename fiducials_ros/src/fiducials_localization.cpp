@@ -77,8 +77,33 @@ void tag_announce(void *rviz, int id,
 
     marker.color = tag_color;
 
+    // cycle through tag colors
+    tag_color.r += 0.1;
+    if( tag_color.r > 1.0 ) {
+      tag_color.r = 0.0;
+      tag_color.g += 0.1;
+    }
+    if( tag_color.g > 1.0 ) {
+      tag_color.g = 0.0;
+      tag_color.b += 0.1;
+    }
+    if( tag_color.b > 1.0 ) {
+      tag_color.b = 0.0;
+    }
+
     marker.lifetime = ros::Duration();
 
+    marker_pub->publish(marker);
+
+    // publish text(ID) version of marker
+    char str_id[12];
+    snprintf(str_id, 12, "%d", id);
+    marker.text = str_id;
+    marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+    marker.color.r = 1.0;
+    marker.color.g = 1.0;
+    marker.color.b = 1.0;
+    marker.ns = fiducial_namespace + "_text";
     marker_pub->publish(marker);
 }
 
