@@ -88,6 +88,9 @@ struct Tag__Struct {
     /// @brief The twist from the floor X axis to the tag bottom edge.
     Double twist;
 
+    /// @brief True if tag is currently visible in camera field of view.
+    Logical visible;
+
     /// @brief Visit counter.
     Unsigned visit;
 

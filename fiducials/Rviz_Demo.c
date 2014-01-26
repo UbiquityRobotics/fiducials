@@ -29,12 +29,15 @@
 /// @param dx is the tag size along the X axis (before twist).
 /// @param dy is the tag size along the Y axis (before twist).
 /// @param dz is the tag height in the Z axis.
+/// @param visible is (*Logical*)1 if the current tag is currently in the
+///        camera field of view and (*Logical*)0 otherwise.
 ///
 /// *Map__tag_announce*() is called each time the map algorithm
 /// updates the location or twist for a *tag*.
 
 void Rviz__tag_announce(void *rviz, Integer id,
-  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz) {
+  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz,
+  Logical visible) {
     File__format(stderr, "Rviz__tag_announce:id=%d x=%f y=%f twist=%f\n",
       id, x, y, twist);
     Double scale = 1000.0;

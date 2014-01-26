@@ -276,7 +276,7 @@ Double Map__distance_per_pixel(Map map, Unsigned id) {
 /// *Map__new*() creates and returns an empty initialized *Map* object.
 
 Map Map__new(
-  void *announce_object, Map_Tag_Announce_Routine tag_announce_routine) {
+  void *announce_object, Fiducials_Tag_Announce_Routine tag_announce_routine) {
     Map map = Memory__new(Map);
     map->all_arcs = List__new(); // <Tag>
     map->all_tags = List__new(); // <Tag>
@@ -524,13 +524,21 @@ void Map__write(Map map, File out_file) {
 /// @param dx is the tag size along the X axis (before twist).
 /// @param dy is the tag size along the Y axis (before twist).
 /// @param dz is the tag height in the Z axis.
+/// @param visible is (*Logical*)1 if the tag is currently in camera
+//         field of view, and (*Logical*)0 otherwise.
 ///
 /// *Map__tag_announce*() is called each time the map algorithm
 /// updates the location or twist for a *tag*.
 
 void Map__tag_announce(void *object, Integer id,
-  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz) {
-    File__format(stderr, "id=%d x=%f y=%f twist=%f\n", id, x, y, twist);
+  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz,
+  Logical visible) {
+    String visible_text = "";
+    if (!visible) {
+	visible_text = "*** No longer visible ***";
+    }
+    File__format(stderr, "id=%d x=%f y=%f twist=%f %s\n",
+      id, x, y, twist, visible_text);
 }
 
 /// @brief Updates the location of each *tag* in *map*.

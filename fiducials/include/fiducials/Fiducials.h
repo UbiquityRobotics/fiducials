@@ -8,18 +8,29 @@ typedef struct Fiducials__Struct *Fiducials;
 #include <assert.h>
 #include <sys/time.h>
 
+// #include scalar typedef's first so we can define the announce routine
+// typedef's:
+#include "Double.h"
+#include "Integer.h"
+#include "Logical.h"
+
+// Define the announce routine typedef's:
+typedef void (*Fiducials_Tag_Announce_Routine)(void *object, Integer id,
+  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz,
+  Logical visible);
+typedef void (*Fiducials_Location_Announce_Routine)(void *object, Integer id,
+  Double x, Double y, Double z, Double bearing);
+
+// #include everything else:
 #include "Camera_Tag.h"
 #include "Character.h"
 #include "CRC.h"
 #include "CV.h"
-#include "Double.h"
 #include "File.h"
 #include "FEC.h"
 #include "Float.h"
 #include "High_GUI2.h"
-#include "Integer.h"
 #include "List.h"
-#include "Logical.h"
 #include "Map.h"
 #include "String.h"
 #include "Tag.h"
@@ -28,10 +39,6 @@ typedef struct Fiducials__Struct *Fiducials;
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef void (*Fiducials_Location_Announce_Routine)(void *object, Integer id,
-  Double x, Double y, Double z, Double bearing);
-typedef void (*Fiducials_Tag_Announce_Routine)(void *object, Integer id,
-  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz);
 typedef Logical Mapping[64];
 typedef struct timeval *Time_Value;
 
@@ -43,6 +50,7 @@ struct Fiducials__Struct {
     List /* <Camera_Tag> */ camera_tags;
     List /* <Camera_Tag> */ camera_tags_pool;
     CV_Point2D32F_Vector corners;
+    List /* <Tag> */current_visibles;
     CV_Scalar cyan;
     CV_Image debug_image;
     Unsigned debug_index;
@@ -51,13 +59,14 @@ struct Fiducials__Struct {
     CV_Image gray_image;
     CV_Scalar green;
     Fiducials_Location_Announce_Routine location_announce_routine;
-    List /*<Location>*/ locations;
+    List /* <Location> */ locations;
     Map map;
     CV_Point origin;
     CV_Image original_image;
     Logical **mappings;
     CV_Image map_x;
     CV_Image map_y;
+    List /* <Tag> */ previous_visibles;
     CV_Scalar purple;
     CV_Scalar red;
     CV_Point2D32F_Vector references;

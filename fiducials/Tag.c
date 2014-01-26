@@ -278,15 +278,15 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
       to_tag->x != to_tag_x || to_tag->y != to_tag_y) {
 	// Let any interested party know that tag values changed.
 	Map map = to_tag->map;
-	map->tag_announce_routine(map->announce_object,
-	  to_tag->id, to_tag_x, to_tag_y, 0.0, to_tag_twist, 100.0, 100.0, 1.0);
+	Logical visible = (Logical)1;
+	map->tag_announce_routine(map->announce_object, to_tag->id,
+	  to_tag_x, to_tag_y, 0.0, to_tag_twist, 100.0, 100.0, 1.0, visible);
 
 	// Load new values into *to_tag*:
 	to_tag->twist = to_tag_twist;
 	to_tag->x = to_tag_x;
 	to_tag->y = to_tag_y;
     }
-
 
     //File__format(stderr, "To_Tag[id:%d x:%.2f y:%.2f tw:%.4f] angle=%.4f\n",
     //  to_tag->id, to_tag->x, to_tag->y, to_tag->twist * r2d, angle * r2d);
