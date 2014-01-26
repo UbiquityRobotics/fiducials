@@ -302,7 +302,7 @@ Integer CV__round(Double value) {
 // out:
 //   mapx, mapy,           - undistortion maps
 
-Integer CV__undistortion_setup(const char * calibrate_file_name,
+Integer CV__undistortion_setup(const String calibrate_file_name,
  Integer width, Integer height, CV_Image *mapx, CV_Image *mapy) {
     Double fcx, fcy, ccx, ccy;
     Double kc[4];

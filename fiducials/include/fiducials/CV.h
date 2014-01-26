@@ -40,7 +40,7 @@ extern Integer CV__thresh_binary;
 extern Integer CV__window_auto_size;
 
 extern Integer CV__round(Double value);
-extern Integer CV__undistortion_setup(const char * calibrate_file_name,
+extern Integer CV__undistortion_setup(const String calibrate_file_name,
   Integer width, Integer height, CV_Image *mapx, CV_Image *mapy);
 
 extern void CV_Image__adaptive_threshold(CV_Image source_image,

@@ -132,7 +132,7 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
 }
 
 Fiducials Fiducials__create(
-  CV_Image original_image, const char * lens_calibrate_file_name,
+  CV_Image original_image, const String lens_calibrate_file_name,
   void *announce_object,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine) {

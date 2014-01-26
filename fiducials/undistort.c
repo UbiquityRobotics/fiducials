@@ -3,6 +3,8 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
+#include "Character.h"
+#include "String.h"
 
 /* 
  * dump a matrix to stdout
@@ -25,7 +27,8 @@ void dumpMat(CvMat* M)
  * out:
  *   mapx, mapy, - undistortion maps
  */
-int setupUndistortion(char *calibFile, int w, int h, IplImage** mapx, IplImage** mapy)
+int setupUndistortion(const String calibFile,
+  int w, int h, IplImage** mapx, IplImage** mapy)
 {
     double fcx, fcy, ccx, ccy;
     double kc[4];
