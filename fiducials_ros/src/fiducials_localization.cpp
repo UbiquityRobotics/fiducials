@@ -81,7 +81,8 @@ Fiducials fiducials;
 std::string tag_height_file;
 
 void tag_announce(void *rviz, int id,
-  double x, double y, double z, double twist, double dx, double dy, double dz) {
+  double x, double y, double z, double twist, double dx, double dy, double dz,
+  int visible) {
     ROS_INFO("tag_announce:id=%d x=%f y=%f twist=%f\n",
       id, x, y, twist);
 
