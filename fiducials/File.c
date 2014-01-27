@@ -62,7 +62,7 @@ void File__close(File file) {
 /// *File__format*() will write *format* out to *file* with all patterns that
 /// start with "%" replaced by formatted versions of its arguments.
 
-void File__format(File file, const String format, ...) {
+void File__format(File file, String_Const format, ...) {
     // Set up *variadic_arguments to start after *format*:
     va_list variadic_arguments;
     va_start(variadic_arguments, format);
@@ -83,7 +83,7 @@ void File__format(File file, const String format, ...) {
 /// really not a very robust XML parser.  An assertion failure occurs if
 /// the input does not parse properly.
 
-Float File__float_attribute_read(File in_file, const String attribute_name) {
+Float File__float_attribute_read(File in_file, String_Const attribute_name) {
     File__string_match(in_file, " ");
     File__string_match(in_file, attribute_name);
     File__string_match(in_file, "=\"");
@@ -128,7 +128,8 @@ Float File__float_attribute_read(File in_file, const String attribute_name) {
 /// really not a very robust XML parser.  An assertion failure occurs if
 /// the input does not parse properly.
 
-Integer File__integer_attribute_read(File in_file, const String attribute_name) {
+Integer File__integer_attribute_read(
+  File in_file, String_Const attribute_name) {
     File__string_match(in_file, " ");
     File__string_match(in_file, attribute_name);
     File__string_match(in_file, "=\"");
@@ -187,7 +188,7 @@ void File__little_endian_short_write(File file, Unsigned xshort) {
 /// *File__open*() will open *file_name* using *flags* to read/write options.
 /// An open *File* object is returned or (*File)0 if the open failed.
 
-File File__open(const String file_name, const String flags) {
+File File__open(String_Const file_name, String_Const flags) {
     return fopen(file_name, flags);
 }
 
@@ -199,7 +200,7 @@ File File__open(const String file_name, const String flags) {
 /// exactly match *pattern*.  An assertion failure occurs if *pattern*
 /// does not match exactly.
 
-void File__string_match(File in_file, const String pattern) {
+void File__string_match(File in_file, String_Const pattern) {
     Unsigned size = String__size(pattern);
     for (Unsigned index = 0; index < size; index++) {
         Character character = File__character_read(in_file);
@@ -216,7 +217,7 @@ void File__string_match(File in_file, const String pattern) {
 /// the pattern does not parse properly.  This is not a very robust XML
 /// parser.
 
-void File__tag_match(File in_file, const String tag_name) {
+void File__tag_match(File in_file, String_Const tag_name) {
     while (1) {
         Character character = File__character_read(in_file);
 	if (character == '<') {

@@ -302,7 +302,7 @@ Integer CV__round(Double value) {
 // out:
 //   mapx, mapy,           - undistortion maps
 
-Integer CV__undistortion_setup(const String calibrate_file_name,
+Integer CV__undistortion_setup(String_Const calibrate_file_name,
  Integer width, Integer height, CV_Image *mapx, CV_Image *mapy) {
     Double fcx, fcy, ccx, ccy;
     Double kc[4];
@@ -510,7 +510,7 @@ Integer CV_Image__height_get(CV_Image image) {
 /// *CV_Image__pnm_read*() will reads in and return a *CV_Image* in from
 /// the file .pnm file named *file_name*.
 
-CV_Image CV_Image__pnm_read(const String file_name) {
+CV_Image CV_Image__pnm_read(String_Const file_name) {
     Unsigned size = String__size(file_name);
     assert (String__equal(file_name + size - 4, ".pnm"));
     CV_Image image = cvLoadImage(file_name, CV_LOAD_IMAGE_UNCHANGED);
@@ -528,7 +528,7 @@ CV_Image CV_Image__pnm_read(const String file_name) {
 /// *CV_Image__pnm_write*() will write *image* out to the file named
 /// *file_base_name.pnm.
 
-void CV_Image__pnm_write(CV_Image image, const String file_name) {
+void CV_Image__pnm_write(CV_Image image, String_Const file_name) {
     Unsigned size = String__size(file_name);
     assert (String__equal(file_name + size - 4, ".pnm"));
     cvSaveImage(file_name, image, (Integer *)0);
@@ -564,7 +564,7 @@ void CV_Image__store3(
 /// filled and returned.  In either case, the returned {CV_Image}
 /// object containing the read in image data is returned.
 
-CV_Image CV_Image__tga_read(CV_Image image, const String tga_file_name) {
+CV_Image CV_Image__tga_read(CV_Image image, String_Const tga_file_name) {
     // Open *tga_in_file*:
     File tga_in_file = File__open(tga_file_name, "rb");
     if (tga_in_file == (File)0) {
@@ -673,7 +673,7 @@ CV_Image CV_Image__tga_read(CV_Image image, const String tga_file_name) {
 /// *CV_Image__tga_write*() will write *image* out to *file_name* in
 /// .tga format.
 
-void CV_Image__tga_write(CV_Image image, const String file_name) {
+void CV_Image__tga_write(CV_Image image, String_Const file_name) {
     Unsigned channels = (Unsigned)image->nChannels;
     Unsigned depth = (Unsigned)image->depth;
     Unsigned height = (Unsigned)image->height;

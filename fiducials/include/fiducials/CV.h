@@ -40,7 +40,7 @@ extern Integer CV__thresh_binary;
 extern Integer CV__window_auto_size;
 
 extern Integer CV__round(Double value);
-extern Integer CV__undistortion_setup(const String calibrate_file_name,
+extern Integer CV__undistortion_setup(String_Const calibrate_file_name,
   Integer width, Integer height, CV_Image *mapx, CV_Image *mapy);
 
 extern void CV_Image__adaptive_threshold(CV_Image source_image,
@@ -80,14 +80,14 @@ extern Integer CV_Image__point_sample(CV_Image image, CV_Point2D32F point);
 extern void CV_Image__remap(CV_Image source_image, CV_Image destination_image,
   CV_Image map_x, CV_Image map_y, Integer flags, CV_Scalar fill_value);
 extern Integer CV_Image__save(
-  CV_Image image, const char * file_name, Integer *parameters);
+  CV_Image image, String_Const file_name, Integer *parameters);
 extern void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
   Integer smooth_type, Integer parameter1, Integer parameter2,
   Double parameter3, Double parameter4);
-extern CV_Image CV_Image__pnm_read(const String file_base_name);
-extern void CV_Image__pnm_write(CV_Image image, const String file_base_name);
-extern CV_Image CV_Image__tga_read(CV_Image image, const String file_name);
-extern void CV_Image__tga_write(CV_Image image, const String file_name);
+extern CV_Image CV_Image__pnm_read(String_Const file_base_name);
+extern void CV_Image__pnm_write(CV_Image image, String_Const file_base_name);
+extern CV_Image CV_Image__tga_read(CV_Image image, String_Const file_name);
+extern void CV_Image__tga_write(CV_Image image, String_Const file_name);
 extern Integer CV_Image__width_get(CV_Image image);
 
 extern Integer CV__term_criteria_iterations;

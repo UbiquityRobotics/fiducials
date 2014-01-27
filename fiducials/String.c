@@ -1,4 +1,4 @@
-// Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
 #include <stdarg.h>
@@ -30,7 +30,7 @@ String String__allocate(Unsigned size) {
 /// *String__equal*() will return true if *string1* is equal to *string2*
 /// and false otherwise.
 
-Logical String__equal(String string1, String string2) {
+Logical String__equal(String_Const string1, String_Const string2) {
     return (Logical)(strcmp(string1, string2) == 0);
 }
 
@@ -42,7 +42,7 @@ Logical String__equal(String string1, String string2) {
 /// *String__format*() will a formatted version of *format* using the
 /// additional variadic arguements.
 
-String String__format(String format, ...) {
+String String__format(String_Const format, ...) {
     // Set up *variadic_arguments to start after *format*:
     va_list variadic_arguments;
     va_start(variadic_arguments, format);
@@ -62,7 +62,7 @@ String String__format(String format, ...) {
 /// @brief will free memory assciated with *string*.
 /// @param string to free.
 
-void String__free(String string) {
+void String__free(String_Const string) {
     Memory__free((Memory)string);
 }
 
@@ -72,7 +72,7 @@ void String__free(String string) {
 ///
 /// *String__size*() will return the size size of *string*.
 
-Unsigned String__size(String string) {
+Unsigned String__size(String_Const string) {
     Unsigned size = 0;
     while (*string++ != '\0') {
 	size += 1;
@@ -87,7 +87,7 @@ Unsigned String__size(String string) {
 /// *String__to_unsigned*() will convert from decimal string into a
 /// number and return it.
 
-Unsigned String__to_unsigned(String string) {
+Unsigned String__to_unsigned(String_Const string) {
     Unsigned result  = 0;
     while (1) {
 	Character character = *string++;
