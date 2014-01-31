@@ -15,22 +15,27 @@ typedef struct Location__Struct *Location;
 
 /// @brief A *Location_Struct* represents an X/Y/Bearing location.
 struct Location__Struct {
+    /// @brief Goodness coefficient of location (closer to 0.0 is better.)
+    Double goodness;
+
+    /// @brief Tag identifier.
+    Unsigned id;
+
+    /// @brief Index counter.
+    Unsigned index;
+
+    /// @brief Bearing in radians.
+    Double bearing;
+
     /// @brief X coordinate.
     Double x;
 
     /// @brief Y coordinate.
     Double y;
 
-    /// @brief Bearing in radians.
-    Double bearing;
-
-    /// @brief Index counter;
-    Unsigned index;
-
-    Double goodness;
 };
 
-extern Location Location__create(
+extern Location Location__create(Unsigned id,
   Double x, Double y, Double bearing, Double goodness, Unsigned index);
 
 #ifdef __cplusplus

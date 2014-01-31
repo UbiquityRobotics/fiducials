@@ -29,6 +29,7 @@ int main(int arguments_size, char * arguments[]) {
 
     List /* <String> */ image_file_names = List__new();
     String lens_calibrate_file_name = (String)0;
+    String log_file_name = (String)0;
     //File__format(stdout, "Hello\n");
     if (arguments_size <= 1) {
 	File__format(stderr, "Usage: Demo lens.txt *.pnm\n");
@@ -38,6 +39,8 @@ int main(int arguments_size, char * arguments[]) {
 	    Unsigned size = String__size(argument);
 	    if (size > 4 && String__equal(argument + size - 4, ".txt")) {
 		lens_calibrate_file_name = argument;
+	    } else if (size > 4 && String__equal(argument + size - 4, ".log")) {
+		log_file_name = argument;
 	    } else if (size > 4 && String__equal(argument + size - 4, ".pnm")) {
 		List__append(image_file_names, argument);
 	    } else {
@@ -54,7 +57,7 @@ int main(int arguments_size, char * arguments[]) {
 	assert (image != (CV_Image)0);
 	Fiducials fiducials =
 	  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
-	  Fiducials__location_announce, Map__tag_announce, (String_Const)0);
+	  Fiducials__location_announce, Map__tag_announce, log_file_name);
 	Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
 
 	for (Unsigned index = 0; index < size; index++) {

@@ -2,6 +2,7 @@
 *.bz2
 *.d
 *.ezc
+*.log
 *.o
 *.pdf
 *.tga

@@ -60,6 +60,7 @@ struct Fiducials__Struct {
     CV_Scalar green;
     Fiducials_Location_Announce_Routine location_announce_routine;
     List /* <Location> */ locations;
+    File log_file;
     Map map;
     CV_Point origin;
     CV_Image original_image;

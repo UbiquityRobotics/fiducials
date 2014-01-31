@@ -143,7 +143,12 @@ Fiducials Fiducials__create(
     CV_Size image_size = CV_Size__create(width, height);
     CV_Memory_Storage storage = CV_Memory_Storage__create(0);
 
-    File__format(stderr, "CV width=%d CV height = %d\n", width, height);
+    File log_file = stderr;
+    if (log_file_name != (String_Const)0) {
+	log_file = File__open(log_file_name, "w");
+    }
+
+    File__format(log_file, "CV width=%d CV height = %d\n", width, height);
 
     Integer term_criteria_type =
       CV__term_criteria_iterations | CV__term_criteria_eps;
@@ -318,7 +323,7 @@ Fiducials Fiducials__create(
     };
 
     //for (Unsigned index = 0; index < 4; index++) {
-    //	File__format(stderr, "mappings[%d]=0x%x\n", index, mappings[index]);
+    //	File__format(log_file, "mappings[%d]=0x%x\n", index, mappings[index]);
     //}
 
     CV_Image map_x = (CV_Image)0;
@@ -346,6 +351,7 @@ Fiducials Fiducials__create(
     fiducials->green = CV_Scalar__rgb(0.0, 255.0, 0.0);
     fiducials->location_announce_routine = location_announce_routine;
     fiducials->locations = List__new(); // <Location>
+    fiducials->log_file = log_file;
     fiducials->map = Map__new(announce_object, tag_announce_routine);
     fiducials->map_x = map_x;
     fiducials->map_y = map_y;
@@ -383,9 +389,12 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     CV_Image edge_image = fiducials->edge_image;
     CV_Image gray_image = fiducials->gray_image;
     List /*<Location>*/ locations = fiducials->locations;
+    File log_file = fiducials->log_file;
     CV_Image original_image = fiducials->original_image;
     List /*<Tag>*/ previous_visibles = fiducials->previous_visibles;
     CV_Image temporary_gray_image = fiducials->temporary_gray_image;
+    Fiducials_Location_Announce_Routine location_announce_routine =
+      fiducials->location_announce_routine;
 
     // For *debug_level* 0, we show the original image in color:
     if (debug_index == 0) {
@@ -461,12 +470,12 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     CV_Sequence contours = CV_Image__find_contours(edge_image, storage,
       header_size, CV__retr_list, CV__chain_approx_simple, origin);
     if (contours == (CV_Sequence)0) {
-	File__format(stderr, "no contours found\n");
+	File__format(log_file, "no contours found\n");
     }
 
     // For *debug_index* 4, show the *edge_image* *contours*:
     if (debug_index == 5) {
-	//File__format(stderr, "Draw red contours\n");
+	//File__format(log_file, "Draw red contours\n");
 	CV_Scalar red = fiducials->red;
 	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
 	CV_Image__draw_contours(debug_image,
@@ -486,7 +495,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
       contour = CV_Sequence__next_get(contour)) {
 	// Keep a count of total countours:
 	contours_count += 1;
-	//File__format(stderr, "contours_count=%d\n", contours_count);
+	//File__format(log_file, "contours_count=%d\n", contours_count);
 
 	static CvSlice whole_sequence;
 	CV_Slice CV__whole_seq = &whole_sequence;
@@ -499,7 +508,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	  CV_Sequence__approximate_polygon(contour,
 	  header_size, storage, CV__poly_approx_dp, arc_length, 0.0);
 	if (debug_index == 6) {
-	    //File__format(stderr, "Draw green contours\n");
+	    //File__format(log_file, "Draw green contours\n");
 	    CV_Scalar green = fiducials->green;
 	    CV_Image__draw_contours(debug_image,
 	      polygon_contour, green, green, 2, 2, 1, origin);
@@ -512,7 +521,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	  CV__whole_seq, 0)) > 500.0 &&
 	  CV_Sequence__check_contour_convexity(polygon_contour)) {
 	    // For debugging, display the polygons in red:
-	    //File__format(stderr, "Have 4 sides > 500i\n");
+	    //File__format(log_file, "Have 4 sides > 500i\n");
 
 	    // Just show the fiducial outlines for *debug_index* of 6:
 	    if (debug_index == 7) {
@@ -531,7 +540,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		CV_Point2D32F__point_set(corner, point);
 
 		if (debug_index == 7) {
-		    //File__format(stderr,
+		    //File__format(log_file,
 		    //  "point[%d] x:%f y:%f\n", index, point->x, point->y);
 		}
 	    }
@@ -575,7 +584,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			assert(0);
 		    }
 		    CV_Image__cross_draw(debug_image, x, y, color);
-		    File__format(stderr,
+		    File__format(log_file,
 		      "poly_point[%d]=(%d:%d) %s\n", index, x, y, text);
 		}
 	    }
@@ -620,7 +629,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			color = green;
 		    }
 		    CV_Image__cross_draw(debug_image, x, y, color);
-		    File__format(stderr, "ref[%d:%d]:%d\n", x, y, value);
+		    File__format(log_file, "ref[%d:%d]:%d\n", x, y, value);
 		}
 	    }
 
@@ -691,7 +700,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		  direction_index < mappings_size; direction_index++) {
 		    // Grab the mapping:
 		    Logical *mapping = mappings[direction_index];
-		    //File__format(stderr,
+		    //File__format(log_file,
 		    //  "mappings[%d]:0x%x\n", direction_index, mapping);
 
 
@@ -713,7 +722,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			tag_bytes[i] = byte;
 		    }
 		    if (debug_index == 11) {
-			File__format(stderr, "dir=%d Tag[0]=0x%x Tag[1]=0x%x\n",
+			File__format(log_file, "dir=%d Tag[0]=0x%x Tag[1]=0x%x\n",
 			  direction_index, tag_bytes[0], tag_bytes[1]);
 		    }
 
@@ -722,7 +731,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		    if (FEC__correct(fec, tag_bytes, 8)) {
 			// We passed FEC:
 			if (debug_index == 11) {
-			    File__format(stderr, "FEC correct\n");
+			    File__format(log_file, "FEC correct\n");
 			}
 
 			// Now see if the two CRC's match:
@@ -736,7 +745,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			      (tag_bytes[1] << 8) | tag_bytes[0];
 
 			    if (debug_index == 11) {
-				File__format(stderr,
+				File__format(log_file,
 				  "CRC correct, Tag=%d\n", tag_id);
 			    }
 
@@ -763,6 +772,8 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 				  direction_index, corners, (CV_Image)0);
 			    }
 			    List__append(current_visibles, (Memory)tag);
+			    File__format(log_file, "Tag: %d x=%f y=%f\n",
+			      tag->id, tag->x, tag->y);
 
 			    // Record the maximum *camera_diagonal*:
 			    Double camera_diagonal = camera_tag->diagonal;
@@ -774,7 +785,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 
 			    // Append *camera_tag* to *camera_tags*:
 			    List__append(camera_tags, (Memory)camera_tag);
-			    //File__format(stderr,
+			    //File__format(log_file,
 			    //  "Found %d\n", camera_tag->tag->id);
 			}
 		    }
@@ -786,7 +797,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     // Just for consistency sort *camera_tags*:
     List__sort(camera_tags, (List__Compare__Routine)Camera_Tag__compare);
 
-    // Sweep through all *camera_tag* pairs to generat associated *Arc*'s:
+    // Sweep through all *camera_tag* pairs to generate associated *Arc*'s:
     Unsigned camera_tags_size = List__size(camera_tags);
     if (camera_tags_size >= 2) {
 	// Iterate through all pairs, using a "triangle" scan:
@@ -809,30 +820,30 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	Double pi = 3.14159265358979323846264;
 	Unsigned half_width = CV_Image__width_get(gray_image) >> 1;
 	Unsigned half_height = CV_Image__height_get(gray_image) >> 1;
-	//File__format(stderr,
+	//File__format(log_file,
 	//  "half_width=%d half_height=%d\n", half_width, half_height);
 	Location closest_location = (Location)0;
 	for (Unsigned index = 0; index < camera_tags_size; index++) {
 	    Camera_Tag camera_tag = (Camera_Tag)List__fetch(camera_tags, index);
 	    Tag tag = camera_tag->tag;
-	    //File__format(stderr,
+	    //File__format(log_file,
 	    //  "[%d]:tag_id=%d tag_x=%f tag_y=%f tag_twist=%f\n",
 	    //  index, tag->id, tag->x, tag->y, tag->twist * 180.0 / pi);
 	    Double camera_dx = camera_tag->x - half_width;
 	    Double camera_dy = camera_tag->y - half_height;
-	    //File__format(stderr,
+	    //File__format(log_file,
 	    //  "[%d]:camera_dx=%f camera_dy=%f camera_twist=%f\n",
 	    //  index, camera_dx, camera_dy, camera_tag->twist * 180.0 / pi);
 	    Double polar_distance = Double__square_root(
 	      camera_dx * camera_dx + camera_dy * camera_dy);
 	    Double polar_angle = Double__arc_tangent2(camera_dy, camera_dx);
-	    //File__format(stderr,
+	    //File__format(log_file,
 	    //  "[%d]:polar_distance=%f polar_angle=%f\n", index,
 	    //  polar_distance, polar_angle * 180.0 / pi);
 	    Double floor_distance = polar_distance * tag->distance_per_pixel;
 	    Double angle =
 	      Double__angle_normalize(polar_angle + pi - camera_tag->twist);
-	    //File__format(stderr,
+	    //File__format(log_file,
 	    //  "[%d]:floor_distance=%f angle=%f\n",
 	    //  index, floor_distance, angle * 180.0 / pi);
 	    Double x = tag->x + floor_distance * Double__cosine(angle);
@@ -847,33 +858,40 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	    bearing = -bearing;
 	    bearing = Double__angle_normalize(bearing + pi / 2.0);
 
-	    //File__format(stderr, "[%d]:x=%f:y=%f:bearing=%f\n",
+	    //File__format(log_file, "[%d]:x=%f:y=%f:bearing=%f\n",
 	    //  index, x, y, bearing * 180.0 / pi);
 	    Unsigned location_index = List__size(locations);
-	    Location location =
-	      Location__create(x, y, bearing, floor_distance, location_index);
+	    Location location = Location__create(tag->id,
+	      x, y, bearing, floor_distance, location_index);
 	    if (closest_location == (Location)0) {
 		closest_location = location;
 	    } else {
 		if (location->goodness < closest_location->goodness) {
+		    Location__free(closest_location);
 		    closest_location = location;
 		}
 	    }
 	}
 	if (closest_location != (Location)0) {
 	    List__append(locations, (Memory)closest_location);
-	    //File__format(stderr,
+	    //File__format(log_file,
 	    //  "Location: x=%f y=%f bearing=%f goodness=%f index=%d\n",
 	    //  closest_location->x, closest_location->y,
 	    //  closest_location->bearing * 180.0 / pi,
 	    //  closest_location->goodness, closest_location->index);
 
 	    // send rviz marker message here
-	    fiducials->location_announce_routine(fiducials->announce_object, 0,
-	      closest_location->x, closest_location->y, 0.0,
+	    File__format(log_file,
+	      "Location: id=%d x=%f y=%f bearing=%f\n",
+	      closest_location->id, closest_location->x, closest_location->y,
 	      closest_location->bearing);
+	    location_announce_routine(fiducials->announce_object,
+	      closest_location->id, closest_location->x, closest_location->y,
+	      /* z */ 0.0, closest_location->bearing);
+
+	    // Release *closest_location*:
+	    Location__free(closest_location);
 	}
-	File__format(stderr, "\n");
     }
 
     // Visit each *current_tag* in *current_visibles*:
@@ -883,7 +901,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
       current_visibles_index++) {
 	Tag current_visible =
 	  (Tag)List__fetch(current_visibles, current_visibles_index);
-	//File__format(stderr, "Current[%d]:%d\n",
+	//File__format(log_file, "Current[%d]:%d\n",
 	//  current_visibles_index, current_visible->id);
 
 	// Always announce *current_visible* as visible:
@@ -900,7 +918,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
        previous_visibles_index++) {
 	Tag previous_visible =
 	  (Tag)List__fetch(previous_visibles, previous_visibles_index);
-	//File__format(stderr, "Previous[%d]:%d\n",
+	//File__format(log_file, "Previous[%d]:%d\n",
 	//  previous_visibles_index, previous_visible->id);
 
 	// Now look to see if *previous_visible* is in *current_visibles*:
@@ -930,7 +948,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     List__trim(previous_visibles, 0);
     fiducials->current_visibles = previous_visibles;
     fiducials->previous_visibles = current_visibles;
-    //File__format(stderr, "current_visibles=0x%x previous_visibles=0x%x\n",
+    //File__format(log_file, "current_visibles=0x%x previous_visibles=0x%x\n",
     //  current_visibles, previous_visibles);
 
     // Clean out *camera_tags*:
@@ -944,6 +962,9 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 
     // Update the map:
     Map__update(map);
+
+    File__format(log_file, "\n");
+    File__flush(log_file);
 
     return 0;
 }

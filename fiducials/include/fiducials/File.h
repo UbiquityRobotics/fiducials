@@ -25,6 +25,7 @@ extern Character File__character_read(File in_file);
 extern void File__close(File file);
 extern Float File__float_attribute_read(
   File in_file, String_Const attribute_name);
+extern void File__flush(File file);
 extern void File__format(File file, String_Const format, ...);
 extern Integer File__integer_attribute_read(
   File in_file, String_Const attribute_name);
@@ -33,7 +34,6 @@ extern void File__little_endian_short_write(File, Unsigned xshort);
 extern File File__open(String_Const file_name, String_Const flags);
 extern void File__string_match(File in_file, String_Const pattern);
 extern void File__tag_match(File in_file, String_Const tag_name);
-
 
 #ifdef __cplusplus
 }

@@ -116,6 +116,16 @@ Float File__float_attribute_read(File in_file, String_Const attribute_name) {
     return result;
 }
 
+/// @brief Flushes file content out of internal buffers.
+/// @param out_file to flush.
+///
+/// *File__flush*() will flush out the internal buffers of *out_file*.
+
+void File__flush(File file) {
+    (void)fflush(file);
+}
+
+
 /// @brief Reads in an XML attribute with a integer value.
 /// @param in_file is the input file to read from.
 /// @param attribute name is the attribute name.
