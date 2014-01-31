@@ -92,7 +92,7 @@ int main(int arguments_size, char * arguments[]) {
         void *rviz = initRviz(arguments_size, arguments, "Rviz_Demo");
         Fiducials fiducials =
           Fiducials__create(image, lens_calibrate_file_name,
-          rviz, Rviz__location_announce, Rviz__tag_announce);
+	  rviz, Rviz__location_announce, Rviz__tag_announce, (String_Const)0);
         Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
 
         for (Unsigned index = 0; index < size; index++) {

@@ -135,7 +135,8 @@ Fiducials Fiducials__create(
   CV_Image original_image, String_Const lens_calibrate_file_name,
   void *announce_object,
   Fiducials_Location_Announce_Routine location_announce_routine,
-  Fiducials_Tag_Announce_Routine tag_announce_routine) {
+  Fiducials_Tag_Announce_Routine tag_announce_routine,
+  String_Const log_file_name) {
     // Create *image_size*:
     Unsigned width = CV_Image__width_get(original_image);
     Unsigned height = CV_Image__height_get(original_image);
