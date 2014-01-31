@@ -194,7 +194,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         if(fiducials == NULL) {
             ROS_INFO("Git first image! Setting up Fiducials library");
             fiducials = Fiducials__create(image, NULL, NULL, location_announce,
-              tag_announce);
+	       tag_announce, NULL);
             Fiducials__tag_heights_xml_read(fiducials, tag_height_file.c_str());
         }
         Fiducials__image_set(fiducials, image);
