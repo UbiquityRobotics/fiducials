@@ -1,0 +1,10 @@
+<launch>
+  <!-- namespace for camera input -->
+  <arg name="camera" default="/camera"/>
+
+  <node pkg="fiducials_ros" name="fiducials_localization" 
+    type="fiducials_localization">
+    <param name="tag_height" value="$(find fiducials)/Tag_Heights.xml" />
+    <remap from="camera" to="$(arg camera)/image_rect_mono"/>
+  </node>
+</launch>
