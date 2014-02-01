@@ -57,7 +57,8 @@ int main(int arguments_size, char * arguments[]) {
 	assert (image != (CV_Image)0);
 	Fiducials fiducials =
 	  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
-	  Fiducials__location_announce, Map__tag_announce, log_file_name);
+	  Fiducials__location_announce, Map__tag_announce, log_file_name,
+	  (String_Const)0);
 	Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
 
 	for (Unsigned index = 0; index < size; index++) {

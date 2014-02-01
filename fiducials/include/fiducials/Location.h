@@ -35,6 +35,7 @@ struct Location__Struct {
 
 };
 
+extern void Location__free(Location location);
 extern Location Location__create(Unsigned id,
   Double x, Double y, Double bearing, Double goodness, Unsigned index);
 

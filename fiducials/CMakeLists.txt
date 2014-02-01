@@ -15,6 +15,7 @@ catkin_package(
 
 add_definitions(-std=c11)
 add_definitions(-g)
+#add_definitions(-DMEMORY_LEAK_CHECK=1)
 
 # Really simple, poor-man's find_package for the flycapture library
 if(EXISTS /usr/include/flycapture)

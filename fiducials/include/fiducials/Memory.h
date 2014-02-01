@@ -30,6 +30,10 @@ typedef void *Memory;
 
 // Extern declarations:
 
+#if defined(MEMORY_LEAK_CHECK)
+    extern void Memory__leak_check(Memory memory);
+#endif // defined(MEMORY_LEAK_CHECK)
+
 extern Memory Memory__allocate(Unsigned bytes);
 extern void Memory__free(Memory memory);
 extern Memory Memory__reallocate(Memory memory, Unsigned new_size);

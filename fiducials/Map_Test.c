@@ -84,7 +84,7 @@ int main(int arguments_size, char * arguments[]) {
 
     String xml_file_name = "Map_Test.xml";
     Map__save(map1, xml_file_name);
-    Map map2 = Map__restore(xml_file_name);
+    Map map2 = Map__restore(xml_file_name, Map__tag_announce);
 
     assert (Map__compare(map1, map2) == 0);
 

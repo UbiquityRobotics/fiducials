@@ -363,7 +363,8 @@ Map Map__read(File in_file) {
 /// *Map__restore*() will read in an map XML from *file_name* and return the
 /// resulting *Map* object.
 
-Map Map__restore(const String file_name) {
+Map Map__restore(String_Const file_name,
+  Fiducials_Tag_Announce_Routine tag_announce_routine) {
     File in_file = File__open(file_name, "r");
     assert(in_file != (File)0);
     Map map = Map__read(in_file);

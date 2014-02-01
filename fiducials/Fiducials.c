@@ -136,7 +136,7 @@ Fiducials Fiducials__create(
   void *announce_object,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String_Const log_file_name) {
+  String_Const log_file_name, String_Const map_file_name) {
     // Create *image_size*:
     Unsigned width = CV_Image__width_get(original_image);
     Unsigned height = CV_Image__height_get(original_image);
@@ -333,6 +333,13 @@ Fiducials Fiducials__create(
 	  lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
     }
 
+    Map map = (Map)0;
+    if (map_file_name == (String)0) {
+	map = Map__new(announce_object, tag_announce_routine);
+    } else {
+	map = Map__restore(map_file_name, tag_announce_routine);
+    }
+
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials);
     fiducials->announce_object = announce_object;
@@ -375,6 +382,10 @@ Fiducials Fiducials__create(
     fiducials->black = CV_Scalar__rgb(0, 0, 0);
 
     return fiducials;
+}
+
+void Fiducials__map_save(Fiducials fiducials, String_Const map_file_name) {
+    Map__save(fiducials->map, map_file_name);
 }
 
 Unsigned Fiducials__process(Fiducials fiducials) {

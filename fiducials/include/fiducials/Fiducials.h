@@ -94,7 +94,7 @@ extern Fiducials Fiducials__create(
   void *announce_object,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String_Const log_file_name);
+  String_Const log_file_name, String_Const map_file_name);
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, Logical show);
 extern Unsigned Fiducials__process(Fiducials fiducials);
