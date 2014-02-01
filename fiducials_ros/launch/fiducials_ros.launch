@@ -5,6 +5,6 @@
   <node pkg="fiducials_ros" name="fiducials_localization" 
     type="fiducials_localization">
     <param name="tag_height" value="$(find fiducials)/Tag_Heights.xml" />
-    <remap from="camera" to="$(arg camera)/image_rect_mono"/>
+    <remap from="camera" to="$(arg camera)/image_rect"/>
   </node>
 </launch>
