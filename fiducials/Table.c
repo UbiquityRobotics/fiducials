@@ -25,19 +25,19 @@
 /// *empty_value* is returned when a lookup fails.
 
 Table Table__create(Table_Equal_Routine equal_routine,
-  Table_Hash_Routine hash_routine, Memory empty_value)
+  Table_Hash_Routine hash_routine, Memory empty_value, String from)
 {
     // Allocate and initialize the *table_lists* object:
     Unsigned table_lists_size = 8;
     Table_List *table_lists = (Table_List *)Memory__allocate(
-      table_lists_size * sizeof(Table_List));
+    table_lists_size * sizeof(Table_List), from);
     for (Unsigned index = 0; index < table_lists_size; index++)
     {
 	table_lists[index] = Table_List__new();
     }
 
     // Build the *table* object:
-    Table table = Memory__new(Table);
+    Table table = Memory__new(Table, from);
     table->table_lists = table_lists;
     table->table_lists_size = table_lists_size;
     table->empty_value = empty_value;
@@ -222,7 +222,7 @@ void Table__resize(Table table)
     // Make sure there is enough storage for the new *table_lists_size* slots:
     Table_List *table_lists =
       (Table_List*)Memory__reallocate((Memory)table->table_lists,
-      sizeof(Table_List) * new_table_lists_size);
+      sizeof(Table_List) * new_table_lists_size, "Table__resize");
 
     // Initialize the *table_list_size* slots added to the end of *table_lists*:
     for (Unsigned index = 0; index < table_lists_size; index++)
@@ -425,7 +425,7 @@ void Table_List__free(Table_List table_list)
 
 Table_List Table_List__new(void)
 {
-    Table_List table_list = Memory__new(Table_List);
+    Table_List table_list = Memory__new(Table_List, "Table_List__new");
     table_list->size = 0;
     table_list->available = 0;
     return table_list;
@@ -452,7 +452,7 @@ Table_List Table_List__resize(Table_List table_list)
     // Make sure *table* list has enough slots:
     table_list = (Table_List)Memory__reallocate((Memory)table_list,
       sizeof(struct Table_List_Struct) +
-      sizeof(struct Table_Triple_Struct) * available);
+      sizeof(struct Table_Triple_Struct) * available, "Table_List__resize");
 
     // Update *available* and return:
     table_list->available = available;

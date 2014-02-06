@@ -60,7 +60,7 @@ Arc Arc__create(Tag from_tag, Double from_twist,
     }
 
     // Create and load *arc*:
-    Arc arc = Arc__new();
+    Arc arc = Arc__new("Arc__create:Arc__new:arc");
     arc->distance = distance;
     arc->from_tag = from_tag;
     arc->from_twist = from_twist;
@@ -118,13 +118,23 @@ Unsigned Arc__hash(Arc arc) {
     return Tag__hash(arc->from_tag) + Tag__hash(arc->to_tag);
 }
 
+/// @brief Release *arc* storage.
+/// @param arc to release storage of.
+///
+/// *Arc__free*() will release the storage of *arc*.
+
+void Arc__free(Arc arc) {
+    Memory__free((Memory)arc);
+}
+
+
 /// @brief Returns a new *Arc* object.
 /// @returns new *Arc* object.
 ///
 /// *Arc__new*() will return a new *Arc*.
 
-Arc Arc__new(void) {
-    Arc arc = Memory__new(Arc);
+Arc Arc__new(String from) {
+    Arc arc = Memory__new(Arc, from);
     arc->distance = 0.0;
     arc->from_tag = (Tag)0;
     arc->from_twist = 0.0;

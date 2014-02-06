@@ -117,6 +117,7 @@ extern void CV_Point2D32F__y_set(CV_Point2D32F point, Double y);
 
 extern CV_Scalar CV_Scalar__create(
   Double value0, Double value1, Double value2, Double value3);
+extern void CV_Scalar__free(CV_Scalar cv_scalar);
 extern CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue);
 
 extern CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
@@ -132,6 +133,7 @@ extern CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, Unsigned index);
 extern Integer CV_Sequence__total_get(CV_Sequence sequence);
 
 extern CV_Size CV_Size__create(Integer width, Integer height);
+extern void CV_Size__free(CV_Size cv_size);
 
 extern void CV__release_image(CV_Image image);
 #ifdef __cplusplus

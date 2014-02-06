@@ -32,7 +32,7 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 /// *Map__arc_append*() will append *arc* to *map*.
 
 void Map__arc_append(Map map, Arc arc) {
-    List__append(map->all_arcs, arc);
+    List__append(map->all_arcs, arc, "Map__arc_append:List__append:all_arcs");
     map->is_changed = (Logical)1;
 }
 
@@ -270,26 +270,71 @@ Double Map__distance_per_pixel(Map map, Unsigned id) {
     return distance_per_pixel;
 }
 
+/// @brief Releases storage associated with *map*.
+/// @param map to release storage for.
+///
+/// *Map__free*() will release the storage associaed with *map*.
+
+void Map__free(Map map) {
+    // Release all the *Arc*'s:
+    List /* <Arc> */ all_arcs = map->all_arcs;
+    Unsigned arcs_size = List__size(all_arcs);
+    for (Unsigned index = 0; index < arcs_size; index++) {
+	Arc arc = (Arc)List__fetch(all_arcs, index);
+	Arc__free(arc);
+    }
+    List__free(all_arcs);
+    Arc__free(map->temporary_arc);
+
+    // Release all the *Tag*'s:
+    List /* <Tap> */ all_tags = map->all_tags;
+    Unsigned tags_size = List__size(all_tags);
+    for (Unsigned index = 0; index < tags_size; index++) {
+	Tag tag = (Tag)List__fetch(all_tags, index);
+	Tag__free(tag);
+    }
+    List__free(all_tags);
+
+    // Release all the *Tag_Height*'s:
+    List /* <Tag_Height> */ tag_heights = map->tag_heights;
+    Unsigned tag_heights_size = List__size(tag_heights);
+    for (Unsigned index = 0; index < tag_heights_size; index++) {
+	Tag_Height tag_height = (Tag_Height)List__fetch(tag_heights, index);
+	Tag_Height__free(tag_height);
+    }
+    List__free(map->tag_heights);
+
+    List__free(map->pending_arcs);
+    Table__free(map->arcs_table);    
+    Table__free(map->tags_table);
+    Memory__free((Memory)map);
+}
+
 /// @brief Returns a new *Map*.
 /// @returns a new *Map*.
 ///
 /// *Map__new*() creates and returns an empty initialized *Map* object.
 
 Map Map__new(
-  void *announce_object, Fiducials_Tag_Announce_Routine tag_announce_routine) {
-    Map map = Memory__new(Map);
-    map->all_arcs = List__new(); // <Tag>
-    map->all_tags = List__new(); // <Tag>
+  void *announce_object, Fiducials_Tag_Announce_Routine tag_announce_routine,
+  String from) {
+    Map map = Memory__new(Map, from);
+    map->all_arcs = List__new("Map__new:List_New:all_arcs"); // <Tag>
+    map->all_tags = List__new("Map__new:List_New:all_tags"); // <Tag>
     map->announce_object = announce_object;
     map->arcs_table = Table__create((Table_Equal_Routine)Arc__equal,
-      (Table_Hash_Routine)Arc__hash, (Memory)0); // <Arc, Arc>
+      (Table_Hash_Routine)Arc__hash, (Memory)0,
+      "Map__new:Table__create:map_arcs_table"); // <Arc, Arc>
     map->is_changed = (Logical)0;
-    map->pending_arcs = List__new(); // <Tag>
+    map->pending_arcs = List__new("Map__new:List__new:pending_arcs"); // <Tag>
     map->tag_announce_routine = tag_announce_routine;
-    map->tag_heights = List__new(); // <Tag_Height>
+    map->tag_heights =
+      List__new("Map__new:List__new:tag_heights"); // <Tag_Height>
     map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
-      (Table_Hash_Routine)Unsigned__hash, (Memory)0); // <Unsigned, Tag>
-    map->temporary_arc = Arc__new();
+      (Table_Hash_Routine)Unsigned__hash, (Memory)0,
+      "Map__new:Table__create:map_tags_table");
+      // <Unsigned, Tag>
+    map->temporary_arc = Arc__new("Map__new:Arc__New:temporary_arc");
     map->visit = 0;
     return map;
 }
@@ -310,7 +355,8 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
     if (tag == (Tag)0) {
 	tag = Tag__create(tag_id, map);
 	Table__insert(tags_table, memory_tag_id, (Memory)tag);
-	List__append(map->all_tags, tag);
+	List__append(map->all_tags, tag,
+	  "Map__tag_lookup:List__append:all_tags");
 	map->is_changed = (Logical)1;
     }
     return tag;
@@ -325,7 +371,7 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
 
 Map Map__read(File in_file) {
     // Create *map* and get *tags* list:
-    Map map = Map__new((void *)0, Map__tag_announce);
+    Map map = Map__new((void *)0, Map__tag_announce, "Map_read:Map__new");
 
     // Read in Map XML tag '<Map Tags_Count="xx" Arcs_Count="xx">' :
     File__tag_match(in_file, "Map");
@@ -475,6 +521,8 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
 
     // Close *svg*:
     SVG__close(svg);
+
+    Bounding_Box__free(bounding_box);
 }
 
 /// @brief Writes *map* out to *out_file*.
@@ -662,7 +710,8 @@ void Map__tag_heights_xml_read(Map map, File xml_in_file) {
     // Read in the *count* *Tag_Height* objects:
     for (Unsigned index = 0; index < count; index++) {
 	Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
-	List__append(tag_heights, (Memory)tag_height);
+	List__append(tag_heights, (Memory)tag_height,
+	  "Map__tag_heights_xml_read:List__append, tag_heights");
     }
 
     // Process the final Map XML tag "</Map_Tag_Heights>":

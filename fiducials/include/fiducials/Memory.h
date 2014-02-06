@@ -18,12 +18,14 @@
 /// "sizeof(*((Type)0))" does not generate any code.  The compiler
 /// evaluates it to get the number of bytes associated with "Type":
 
+#include "String.h"
 #include "Unsigned.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define Memory__new(Type) ((Type)Memory__allocate(sizeof(*((Type)0))))
+#define Memory__new(Type, from) \
+  ((Type)Memory__allocate(sizeof(*((Type)0)), from))
 
 /// @brief *Memory* is a pointer to memory.
 typedef void *Memory;
@@ -35,9 +37,9 @@ typedef void *Memory;
     extern void Memory__leak_found(Memory memory);
 #endif // defined(MEMORY_LEAK_CHECK)
 
-extern Memory Memory__allocate(Unsigned bytes);
+extern Memory Memory__allocate(Unsigned bytes, String from);
 extern void Memory__free(Memory memory);
-extern Memory Memory__reallocate(Memory memory, Unsigned new_size);
+extern Memory Memory__reallocate(Memory memory, Unsigned new_size, String from);
 extern Memory Unsigned__to_memory(Unsigned unsigned1);
 
 #ifdef __cplusplus

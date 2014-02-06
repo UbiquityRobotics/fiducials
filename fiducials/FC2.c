@@ -77,7 +77,7 @@ void FC2_Camera__connect(
 FC2_Camera_Identifier FC2_Camera__identifier_fetch(
   FC2_Camera camera, Unsigned index) {
     FC2_Camera_Identifier camera_identifier =
-      Memory__new(FC2_Camera_Identifier);
+      Memory__new(FC2_Camera_Identifier, "FC2_Camera__identifier_fetch");
     FC2_Error error = fc2GetCameraFromIndex(camera, index, camera_identifier);
     assert (error == FC2_ERROR_OK);
     return camera_identifier;
@@ -117,7 +117,7 @@ void FC2_Camera__image_retrieve(FC2_Camera camera, FC2_Image image) {
 
 FC2_Camera_Information FC2_Camera__information_get(FC2_Camera camera) {
     FC2_Camera_Information camera_information =
-      Memory__new(FC2_Camera_Information);
+      Memory__new(FC2_Camera_Information, "FC2_Camera__information_get");
     FC2_Error error = fc2GetCameraInfo(camera, camera_information);
     assert (error == FC2_ERROR_OK);
     return camera_information;
@@ -182,7 +182,7 @@ void FC2_Image__convert(
 /// for containing a camera image.  An assertion error occurs on any error.
 
 FC2_Image FC2_Image__create(void) {
-    FC2_Image image = Memory__new(FC2_Image);
+    FC2_Image image = Memory__new(FC2_Image, "FC2_Image__create");
     FC2_Error error = fc2CreateImage(image);
     assert (error == FC2_ERROR_OK);
     return image;

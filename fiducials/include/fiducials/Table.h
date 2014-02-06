@@ -54,7 +54,7 @@ struct Table_List_Struct
 // *Table* routines:
 
 extern Table Table__create(Table_Equal_Routine equal_routine,
-  Table_Hash_Routine hash_routine, Memory empty_value);
+  Table_Hash_Routine hash_routine, Memory empty_value, String from);
 extern void Table__free(Table table);
 extern Logical Table__has_key(Table table, Memory key);
 extern void Table__insert(Table table, Memory key, Memory value);

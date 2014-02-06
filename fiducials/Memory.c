@@ -19,7 +19,7 @@
 /// *Memory__allocate*() will allocated and return a pointer to a chunk
 /// of *bytes* memory.
 
-Memory Memory__allocate(Unsigned bytes) {
+Memory Memory__allocate(Unsigned bytes, String from) {
     Memory memory = (Memory)malloc(bytes);
     assert (memory != (Memory)0);
     #if defined(MEMORY_LEAK_CHECK)
@@ -30,7 +30,7 @@ Memory Memory__allocate(Unsigned bytes) {
 	    assert (Memory__allocate_file != (File)0);
 	    assert (Memory__free_file != (File)0);
 	}
-	File__format(Memory__allocate_file, "0x%08x\n", memory);
+	File__format(Memory__allocate_file, "0x%08x %s\n", memory, from);
 	File__flush(Memory__allocate_file);
 
 	// Now check for a memory leak match:
@@ -76,7 +76,7 @@ void Memory__free(Memory memory) {
 /// size.  If the later case, the previous contents of memory is copied over
 /// before releasing the original storage.
 
-Memory Memory__reallocate(Memory memory, Unsigned new_size) {
+Memory Memory__reallocate(Memory memory, Unsigned new_size, String from) {
     #if defined(MEMORY_LEAK_CHECK)
 	Memory new_memory = (Memory)malloc(new_size);
 	assert(new_memory != (Memory)0);
@@ -95,9 +95,10 @@ Memory Memory__reallocate(Memory memory, Unsigned new_size) {
 	// New record the reallocation as an allocate and a free:
 	assert(Memory__allocate_file != (File)0);
 	assert(Memory__free_file != (File)0);
-	File__format(Memory__allocate_file, "0x%08x\n", new_memory);
+	File__format(Memory__allocate_file,
+	  "0x%08x %s_0x%08x\n", new_memory, from, memory);
 	File__flush(Memory__allocate_file);
-	File__format(Memory__free_file, "0x08x\n", memory);
+	File__format(Memory__free_file, "0x%08x\n", memory);
 	File__flush(Memory__free_file);
 
 	// Now check for a memory leak match:

@@ -64,7 +64,8 @@ int main(int arguments_size, char * arguments[]) {
 
     assert (gettimeofday(start_time_value, (struct timezone *)0) == 0);
 
-    List /* <String> */ image_file_names = List__new();
+    List /* <String> */ image_file_names =
+      List__new("Rviz_Demo:main:List__new:image_file_names");
     String lens_calibrate_file_name = (String)0;
     //File__format(stdout, "Hello\n");
     if (arguments_size <= 1) {
@@ -76,7 +77,8 @@ int main(int arguments_size, char * arguments[]) {
             if (size > 4 && String__equal(argument + size - 4, ".txt")) {
                 lens_calibrate_file_name = argument;
             } else if (size > 4 && String__equal(argument + size - 4, ".pnm")) {
-                List__append(image_file_names, argument);
+	      List__append(image_file_names, argument,
+	        "Rviz_Demo:main:List__append:image_file_names");
             } else {
                 File__format(stderr, "Unrecoginized file '%s'\n", argument);
             }

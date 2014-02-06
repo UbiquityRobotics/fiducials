@@ -17,7 +17,7 @@ extern void Map__build(Map map);
 
 
 int main(int arguments_size, char * arguments[]) {
-    Map map1 = Map__new((void *)0, Map__tag_announce);
+    Map map1 = Map__new((void *)0, Map__tag_announce, "main:Map__new");
     Unsigned visit = map1->visit;
 
     Double pi = 3.14159265358979323846264;
@@ -88,7 +88,8 @@ int main(int arguments_size, char * arguments[]) {
 
     assert (Map__compare(map1, map2) == 0);
 
-    List /*<Location>*/ locations = List__new();
+    List /*<Location>*/ locations =
+      List__new("Map_test:main:List__new:locations");
     Map__svg_write(map1, "Map_Test", locations);
 
     return 0;

@@ -78,6 +78,7 @@ void SVG__close(SVG svg) {
     File__format(svg_stream, "</svg>\n");
     File__close(svg_stream);
     svg->stream = (File)0;
+    Memory__free((Memory)svg);
 }
 
 /// @brief Draw a line from (*x1*, *y1*) to (*x2*, *y2*) using *stroke*.
@@ -140,7 +141,7 @@ SVG SVG__open(String base_name,
 	File__format(stderr, "Unable to open %s.svg\n", base_name);
     } else {
         // Allocate and load up *svg*:
-	svg = Memory__new(SVG);
+	svg = Memory__new(SVG, "SVG__open");
 	svg->height = height;
 	svg->stream = svg_stream;
 	svg->width = width;

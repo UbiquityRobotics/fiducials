@@ -34,12 +34,13 @@ struct List__Struct {
 // *List* routines:
 
 extern void List__all_append(List to_list, List from_list);
-extern void List__append(List list, Memory item);
-extern List List__new(void);
-extern Memory List__pop(List list);
-extern void List__sort(List list1, List__Compare__Routine compare_routine);
+extern void List__append(List list, Memory item, String from);
 extern Memory List__fetch(List list, Unsigned index);
+extern void List__free(List list);
+extern List List__new(String from);
+extern Memory List__pop(List list);
 extern Unsigned List__size(List list);
+extern void List__sort(List list1, List__Compare__Routine compare_routine);
 extern void List__trim(List list, Unsigned new_size);
 extern void List__unique(List list, List__Equal__Routine equal_routine);
 

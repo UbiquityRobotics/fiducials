@@ -19,7 +19,7 @@
 /// *size* characters excluding trailing null.
 
 String String__allocate(Unsigned size) {
-    return (String)Memory__allocate(size + 1);
+    return (String)Memory__allocate(size + 1, "String__allocate");
 }
 
 /// @brief Returns true if *string1* equals *string2*.
@@ -51,7 +51,8 @@ String String__format(String_Const format, ...) {
     char buffer[2];
     Unsigned formatted_size = vsnprintf(buffer, 0, format, variadic_arguments);
     // Allocated *formatted*:
-    String formatted = (String)Memory__allocate(formatted_size + 1);
+    String formatted =
+      (String)Memory__allocate(formatted_size + 1, "String__format");
 
     // Format *formatted*:
     (void)vsnprintf(formatted, formatted_size + 1, format, variadic_arguments);

@@ -4,13 +4,23 @@
 #include "Double.h"
 #include "Memory.h"
 
+/// @brief Release the storage associated with *bounding_box*.
+/// @param bounding box to release storage for.
+///
+/// *Bounding_Box__free*() will release the storage associated with
+/// *bounding_box*.
+
+void Bounding_Box__free(Bounding_Box bounding_box) {
+    Memory__free((Memory)bounding_box);
+}
+
 /// @brief Returns a new empty *Bounding_Box* object.
 /// @returns an empty *Bounding_Box* object.
 ///
 /// *Bounding_Box__new*() will return a new empty *Bounding_Box* object.
 
 Bounding_Box Bounding_Box__new(void) {
-    Bounding_Box bounding_box = Memory__new(Bounding_Box);
+    Bounding_Box bounding_box = Memory__new(Bounding_Box, "Bounding_Box__new");
     Bounding_Box__reset(bounding_box);
     return bounding_box;
 }
@@ -26,16 +36,6 @@ void Bounding_Box__reset(Bounding_Box bounding_box) {
     bounding_box->minimum_x = big;
     bounding_box->maximum_y = -big;
     bounding_box->minimum_y = big;
-}
-
-/// @brief Release the storage associated with *bounding_box*.
-/// @param bounding box to release storage for.
-///
-/// *Bounding_Box__free*() will release the storage associated with
-/// *bounding_box*.
-
-void Bounding_Box__free(Bounding_Box bounding_box) {
-    Memory__free((Memory)bounding_box);
 }
 
 /// @brief Adds the point (*x*, *y) to *bounding_box*.

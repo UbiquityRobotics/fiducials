@@ -863,12 +863,16 @@ CV_Point2D32F CV_Point2D32F_Vector__fetch1(
 
 CV_Scalar CV_Scalar__create(
   Double value0, Double value1, Double value2, Double value3) {
-    CV_Scalar scalar = Memory__new(CV_Scalar);
+    CV_Scalar scalar = Memory__new(CV_Scalar, "CV_Scalar__create");
     scalar->val[0] = value0;
     scalar->val[1] = value1;
     scalar->val[2] = value2;
     scalar->val[3] = value3;
     return scalar;
+}
+
+void CV_Scalar__free(CV_Scalar cv_scalar) {
+    Memory__free((Memory)cv_scalar);
 }
 
 // This routine will return a {CV_Scalar} that encodes {red}, {green},
@@ -920,10 +924,14 @@ Integer CV_Sequence__total_get(CV_Sequence sequence) {
 // *CV_Size* routines:
 
 CV_Size CV_Size__create(Integer width, Integer height) {
-    CV_Size size = Memory__new(CV_Size);
+    CV_Size size = Memory__new(CV_Size, "CV_Size__create");
     size->width = (Integer)width;
     size->height = (Integer)height;
     return size;
+}
+
+extern void CV_Size__free(CV_Size cv_size) {
+    Memory__free((Memory)cv_size);
 }
 
 // *CV_Slice* routines:

@@ -121,6 +121,7 @@ extern void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box);
 extern Tag Tag__create(Unsigned id, Map map);
 extern Integer Tag__compare(Tag tag1, Tag tag2);
 extern Logical Tag__equal(Tag tag1, Tag tag2);
+extern void Tag__free(Tag tag);
 extern Unsigned Tag__hash(Tag tag);
 extern void Tag__initialize(
   Tag tag, Double angle, Double x, Double y, Double diagonal, Unsigned visit);
@@ -133,6 +134,7 @@ extern void Tag__update_via_arc(Tag tag, Arc arc);
 // *Tag_Height* routines:
 extern Integer Tag_Height__compare(
   Tag_Height tag_height1, Tag_Height tag_height2);
+extern void Tag_Height__free(Tag_Height tag_height);
 extern Tag_Height Tag_Height__xml_read(File in_file);
 
 #ifdef __cplusplus

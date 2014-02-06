@@ -17,6 +17,7 @@ struct Bounding_Box__Struct {
   Double minimum_y;
 };
 
+extern void Bounding_Box__free(Bounding_Box bounding_box);
 extern Bounding_Box Bounding_Box__new(void);
 extern void Bounding_Box__reset(Bounding_Box bounding_box);
 extern void Bounding_Box__free(Bounding_Box bounding_box);

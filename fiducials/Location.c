@@ -23,7 +23,7 @@
 
 Location Location__create(Unsigned id,
   Double x, Double y, Double bearing, Double goodness, Unsigned index) {
-    Location location = Memory__new(Location);
+    Location location = Memory__new(Location, "Location__create");
     location->bearing = bearing;
     location->goodness = goodness;
     location->id = id;

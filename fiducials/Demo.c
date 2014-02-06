@@ -19,20 +19,6 @@
 #include "Unsigned.h"
 
 int main(int arguments_size, char * arguments[]) {
-    // Deal with any memory checking first:
-    #if defined(MEMORY_LEAK_CHECK)
-	// Deal with memory check stuff first:
-	for (Unsigned index = 1; index < arguments_size; index++) {
-	    String argument = arguments[index];
-	    Unsigned size = String__size(argument);
-	    if (size > 4 && String__equal(argument + size - 4, ".chk")) {
-		Memory address = (Memory)strtol(argument, (String *)0, 0);
-		File__format(stderr, "'%s'=>0x%x\n", argument, address);
-		Memory__leak_check(address);
-	    }
-	}
-    #endif // defined(MEMORY_LEAK_CHECK)
-
     struct timeval start_time_value_struct;    
     struct timeval end_time_value_struct;    
     struct timeval difference_time_value_struct;    
@@ -42,7 +28,8 @@ int main(int arguments_size, char * arguments[]) {
 
     assert (gettimeofday(start_time_value, (struct timezone *)0) == 0);
 
-    List /* <String> */ image_file_names = List__new();
+    List /* <String> */ image_file_names =
+      List__new("Demo:main:List__new:image_file_names");
     String lens_calibrate_file_name = (String)0;
     String log_file_name = (String)0;
     //File__format(stdout, "Hello\n");
@@ -57,7 +44,8 @@ int main(int arguments_size, char * arguments[]) {
 	    } else if (size > 4 && String__equal(argument + size - 4, ".log")) {
 		log_file_name = argument;
 	    } else if (size > 4 && String__equal(argument + size - 4, ".pnm")) {
-		List__append(image_file_names, argument);
+		List__append(image_file_names,
+		  argument, "Demo:main:List__append:image_file_names");
 	    } else if (size > 4 && String__equal(argument + size - 4, ".chk")) {
 		// Do nothing:
 	    } else {
@@ -108,8 +96,12 @@ int main(int arguments_size, char * arguments[]) {
 	      "Outputing %d locations\n", List__size(locations));
 	    Map__svg_write(map, "Demo", locations);
 	}
+
+	// Release all the storage associated with *fiducials*:
+	Fiducials__free(fiducials);
     }
 
+    List__free(image_file_names);
 
     return 0;
 }

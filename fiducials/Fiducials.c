@@ -335,20 +335,24 @@ Fiducials Fiducials__create(
 
     Map map = (Map)0;
     if (map_file_name == (String)0) {
-	map = Map__new(announce_object, tag_announce_routine);
+	map = Map__new(announce_object,
+	  tag_announce_routine, "Fiducials__new:Map_New");
     } else {
 	map = Map__restore(map_file_name, tag_announce_routine);
     }
 
     // Create and load *fiducials*:
-    Fiducials fiducials = Memory__new(Fiducials);
+    Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
     fiducials->announce_object = announce_object;
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
     fiducials->blur = (Logical)1;
-    fiducials->camera_tags = List__new(); // <Camera_Tag>
-    fiducials->camera_tags_pool = List__new(); // <Camera_Tag>
+    fiducials->camera_tags =
+      List__new("Fiducials__create:List__new:camera_tags"); // <Camera_Tag>
+    fiducials->camera_tags_pool =
+      List__new("Fiducials__create:List__new:camera_tags_pool"); // <Camera_Tag>
     fiducials->corners = CV_Point2D32F_Vector__create(4);
-    fiducials->current_visibles = List__new(); // Tag
+    fiducials->current_visibles =
+      List__new("Fiducials__create:List_new:current_visibles"); // Tag
     fiducials->cyan = CV_Scalar__rgb(0.0, 1.0, 1.0);
     fiducials->debug_image = CV_Image__create(image_size, CV__depth_8u, 3);
     fiducials->debug_index = 0;
@@ -356,16 +360,19 @@ Fiducials Fiducials__create(
     fiducials->fec = FEC__create(8, 4, 4);
     fiducials->gray_image = CV_Image__create(image_size, CV__depth_8u, 1);
     fiducials->green = CV_Scalar__rgb(0.0, 255.0, 0.0);
+    fiducials->image_size = image_size;
     fiducials->location_announce_routine = location_announce_routine;
-    fiducials->locations = List__new(); // <Location>
+    fiducials->locations =
+      List__new("Fiducials__create:List__new:locations"); // <Location>
     fiducials->log_file = log_file;
-    fiducials->map = Map__new(announce_object, tag_announce_routine);
+    fiducials->map = map;
     fiducials->map_x = map_x;
     fiducials->map_y = map_y;
     fiducials->mappings = &mappings[0];
     fiducials->origin = CV_Point__create(0, 0);
     fiducials->original_image = original_image;
-    fiducials->previous_visibles = List__new(); // Tag
+    fiducials->previous_visibles =
+      List__new("Fiducials__create:List__new:previous_visibles"); // Tag
     fiducials->purple = CV_Scalar__rgb(255.0, 0.0, 255.0);
     fiducials->red = CV_Scalar__rgb(255.0, 0.0, 0.0);
     fiducials->references = CV_Point2D32F_Vector__create(8);
@@ -382,6 +389,43 @@ Fiducials Fiducials__create(
     fiducials->black = CV_Scalar__rgb(0, 0, 0);
 
     return fiducials;
+}
+
+void Fiducials__free(Fiducials fiducials) {
+    // Free up the storage associated with *locations*:
+    List /* <Location> */ locations = fiducials->locations;
+    Unsigned locations_size = List__size(locations);
+    for (Unsigned index = 0; index < locations_size; index++) {
+	Location location = List__fetch(locations, index);
+	Location__free(location);
+    }
+    List__free(locations);
+
+    List /* <Camera_Tag> */ camera_tags_pool = fiducials->camera_tags_pool;
+    Unsigned pool_size = List__size(camera_tags_pool);
+    for (Unsigned index = 0; index < pool_size; index++) {
+	Camera_Tag camera_tag =
+	  (Camera_Tag)List__fetch(camera_tags_pool, index);
+	Camera_Tag__free(camera_tag);
+    }
+    List__free(camera_tags_pool);
+
+    CV_Scalar__free(fiducials->blue);
+    CV_Scalar__free(fiducials->cyan);
+    CV_Scalar__free(fiducials->green);
+    CV_Scalar__free(fiducials->purple);
+    CV_Scalar__free(fiducials->red);
+    CV_Scalar__free(fiducials->black);
+
+    CV_Size__free(fiducials->image_size);
+    CV_Size__free(fiducials->size_5x5);
+    CV_Size__free(fiducials->size_m1xm1);
+
+    List__free(fiducials->camera_tags);
+    List__free(fiducials->current_visibles);
+    List__free(fiducials->previous_visibles);
+    Map__free(fiducials->map);
+    Memory__free((Memory)fiducials);
 }
 
 void Fiducials__map_save(Fiducials fiducials, String_Const map_file_name) {
@@ -782,7 +826,8 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 				Camera_Tag__initialize(camera_tag, tag,
 				  direction_index, corners, (CV_Image)0);
 			    }
-			    List__append(current_visibles, (Memory)tag);
+			    List__append(current_visibles, (Memory)tag,
+			      "Fiduicals__create:List_append:current_visibles");
 			    File__format(log_file, "Tag: %d x=%f y=%f\n",
 			      tag->id, tag->x, tag->y);
 
@@ -795,7 +840,8 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 			    }
 
 			    // Append *camera_tag* to *camera_tags*:
-			    List__append(camera_tags, (Memory)camera_tag);
+			    List__append(camera_tags, (Memory)camera_tag,
+			      "Fiducials__Create:List__append:camera_tags");
 			    //File__format(log_file,
 			    //  "Found %d\n", camera_tag->tag->id);
 			}
@@ -880,11 +926,14 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		if (location->goodness < closest_location->goodness) {
 		    Location__free(closest_location);
 		    closest_location = location;
+		} else {
+		    Location__free(location);
 		}
 	    }
 	}
 	if (closest_location != (Location)0) {
-	    List__append(locations, (Memory)closest_location);
+	  List__append(locations, (Memory)closest_location,
+	   "Fiducials__create:List__append:locations");
 	    //File__format(log_file,
 	    //  "Location: x=%f y=%f bearing=%f goodness=%f index=%d\n",
 	    //  closest_location->x, closest_location->y,

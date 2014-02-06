@@ -20,7 +20,7 @@
 
 void Tag__arc_append(Tag tag, Arc arc) {
     assert(arc->from_tag == tag || arc->to_tag == tag);
-    List__append(tag->arcs, (Memory)arc);
+    List__append(tag->arcs, (Memory)arc, "Tag__arc_append:List__append:arcs");
 }
 
 /// @brief Updates *bounding_box* to include the 4 corners of tag.
@@ -63,9 +63,9 @@ Integer Tag__compare(Tag tag1, Tag tag2) {
 /// is called.
 
 Tag Tag__create(Unsigned id, Map map) {
-    Tag tag =  Memory__new(Tag);
+    Tag tag =  Memory__new(Tag, "Tag__create");
     tag->twist = (Double)0.0;
-    tag->arcs = List__new(); // <Arc>
+    tag->arcs = List__new("Tag__create:List__new:arcs"); // <Arc>
     tag->diagonal = 0.0;
     tag->hop_count = 0;
     tag->id = id;
@@ -88,6 +88,22 @@ Tag Tag__create(Unsigned id, Map map) {
 
 Logical Tag__equal(Tag tag1, Tag tag2) {
     return (Logical)(tag1->id == tag2->id);
+}
+
+/// @brief Releases *Tag* storage.
+/// @param tag to release storage of.
+///
+/// *Tag__free*() will release the storage of *tag*.
+
+void Tag__free(Tag tag) {
+    //List arcs /* <Arc> */ = tag->arcs;
+    //Unsigned arcs_size = List__size(arcs);
+    //for (Unsigned index = 0; index < arcs_size; index++) {
+    //	Arc arc = (Arc)List__fetch(arcs, index);
+    //	Arc__free(arc);
+    //}
+    List__free(tag->arcs);
+    Memory__free((Memory)tag);
 }
 
 /// @brief Return a hash for *tag*.
@@ -333,6 +349,15 @@ Integer Tag_Height__compare(Tag_Height tag_height1, Tag_Height tag_height2)
     return result;
 }
 
+/// @brief Releases stoarge for *tag_height*.
+/// @param tag_height to release storage of.
+///
+/// *Tag_Height__free*() will release the storate for *tag_height*.
+
+void Tag_Height__free(Tag_Height tag_height) {
+    Memory__free((Memory)tag_height);
+}
+
 /// @brief Reads in an a <Tag_Height .../> from *xml_in_file*.
 /// @param xml_in_file is the file to read from.
 /// @returns the resulting *Tag_Height* object.
@@ -354,7 +379,7 @@ Tag_Height__xml_read(File xml_in_file)
     File__string_match(xml_in_file, "/>\n");
 
     // Load up *tag_height*:
-    Tag_Height tag_height = Memory__new(Tag_Height);
+    Tag_Height tag_height = Memory__new(Tag_Height, "Tag_Height__xml_read");
     tag_height->distance_per_pixel = distance_per_pixel;
     tag_height->first_id = first_id;
     tag_height->last_id = last_id;

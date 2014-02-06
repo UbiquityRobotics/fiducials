@@ -18,6 +18,15 @@ Integer Camera_Tag__compare(Camera_Tag camera_tag1, Camera_Tag camera_tag2) {
     return Tag__compare(camera_tag1->tag, camera_tag2->tag);
 }
 
+/// @brief Release *camera_tag* storage.
+/// @param camera_tag to release storage of.
+///
+/// *Camera_Tag__free*() will release the storage for *camera_tag*.
+
+void Camera_Tag__free(Camera_Tag camera_tag) {
+    Memory__free((Memory)camera_tag);
+}
+
 /// @brief Initializes *camara_tag* from *tag_id*, *direction*, and *corners*
 /// @param camera_tag is the *Camera_Tag* to be initialized.
 /// @param tag_id is the fiducial tag identifier.
@@ -175,7 +184,7 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
 /// *Camera_Tag__new*() will return a new *Camera_Tag* object.
 
 Camera_Tag Camera_Tag__new(void) {
-    Camera_Tag camera_tag = Memory__new(Camera_Tag);
+    Camera_Tag camera_tag = Memory__new(Camera_Tag, "Camera_Tag__new");
     camera_tag->diagonal = 0.0;
     camera_tag->direction = 0;
     camera_tag->tag = (Tag)0;

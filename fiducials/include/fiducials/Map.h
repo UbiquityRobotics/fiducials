@@ -65,8 +65,9 @@ extern Unsigned Map__arc_update(
   Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image);
 extern Integer Map__compare(Map map1, Map map2);
 extern Double Map__distance_per_pixel(Map map, Unsigned id);
-extern Map Map__new(
-  void *announce_object, Fiducials_Tag_Announce_Routine announce_routine);
+extern void Map__free(Map map);
+extern Map Map__new(void *announce_object,
+  Fiducials_Tag_Announce_Routine announce_routine, String from);
 extern Map Map__read(File in_file);
 extern Map Map__restore(
   String_Const file_name, Fiducials_Tag_Announce_Routine tag_announce_routine);

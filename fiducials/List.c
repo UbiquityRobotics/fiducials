@@ -11,14 +11,14 @@
 ///
 /// *List__append*() will append *item* to the end of *list*.
 
-void List__append(List list, Memory item) {
+void List__append(List list, Memory item, String from) {
     Memory *items = list->items;
     Unsigned size = list->size;
     Unsigned limit = list->limit;
     if (size >= limit) {
 	limit <<= 1;
-	items =
-	  (Memory *)Memory__reallocate((Memory)items, limit * sizeof(Memory));
+	items = (Memory *)Memory__reallocate((Memory)items,
+	  limit * sizeof(Memory), from);
 	list->limit = limit;
 	list->items = items;
     }
@@ -36,7 +36,7 @@ void List__all_append(List to_list, List from_list) {
     Unsigned from_list_size = from_list->size;
     Memory *from_list_items = from_list->items;
     for (Unsigned index = 0; index < from_list_size; index++) {
-	List__append(to_list, from_list_items[index]);
+	List__append(to_list, from_list_items[index], "List__all_append");
     }
 }
 
@@ -53,13 +53,24 @@ Memory List__fetch(List list, Unsigned index) {
     return list->items[index];
 }
 
+/// @brief Release list storage.
+/// @param list to release storage of.
+///
+/// *List__free*() will release the storage of *list*.  The objects
+/// in *list* are not freed beforehand.
+
+void List__free(List list) {
+    Memory__free((Memory)list);
+}
+
 /// @brief Return a new empty *List* object.
+/// @param from is used for memory leak detection.
 ///
 /// *List__new*() will return a new empty *List* object.
 
-List List__new(void) {
-    List list = Memory__new(List);
-    list->items = (Memory *)Memory__allocate(sizeof(Memory));
+List List__new(String from) {
+    List list = Memory__new(List, from);
+    list->items = (Memory *)Memory__allocate(sizeof(Memory), "List__new");
     list->size = 0;
     list->limit = 1;
     return list;
@@ -112,7 +123,7 @@ void List__sort(List list, List__Compare__Routine compare_routine) {
     Unsigned index = 0;
     while (index < size) {
 	Memory mem = list->items[index];
-	(void)List__append(list, mem);
+	(void)List__append(list, mem, "List__sort");
 	index++;
     }
 
