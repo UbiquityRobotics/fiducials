@@ -23,6 +23,7 @@ Memory Memory__allocate(Unsigned bytes) {
     Memory memory = (Memory)malloc(bytes);
     assert (memory != (Memory)0);
     #if defined(MEMORY_LEAK_CHECK)
+	// Make sure that the logging files are open:
 	if (Memory__allocate_file == (File)0) {
 	    Memory__allocate_file = File__open("/tmp/memory_allocate.log","w");
 	    Memory__free_file = File__open("/tmp/memory_free.log","w");
@@ -31,9 +32,10 @@ Memory Memory__allocate(Unsigned bytes) {
 	}
 	File__format(Memory__allocate_file, "0x%08x\n", memory);
 	File__flush(Memory__allocate_file);
+
+	// Now check for a memory leak match:
 	if (memory == Memory__leak) {
-	    // Plant break point here:
-	    Memory__leak = memory;	// Nop
+	    Memory__leak_found(memory);
 	}
     #endif // defined(MEMORY_LEAK_CHECK)
     return memory;
@@ -42,6 +44,11 @@ Memory Memory__allocate(Unsigned bytes) {
 #if defined(MEMORY_LEAK_CHECK)
     void Memory__leak_check(Memory memory) {
 	Memory__leak = memory;
+    }
+
+    void Memory__leak_found(Memory memory) {
+	// Plant break point here:
+	memory = memory;
     }
 #endif // defined(MEMORY_LEAK_CHECK)
 
@@ -70,9 +77,38 @@ void Memory__free(Memory memory) {
 /// before releasing the original storage.
 
 Memory Memory__reallocate(Memory memory, Unsigned new_size) {
-    memory = realloc(memory, new_size);
-    assert (memory != (Memory)0);
-    return memory;
+    #if defined(MEMORY_LEAK_CHECK)
+	Memory new_memory = (Memory)malloc(new_size);
+	assert(new_memory != (Memory)0);
+
+	// This is a tad ugly.  We do not know the old size of *memory*,
+	// but we need to copy the contents of *memory* into *new_memory*.
+	// The solution is to copy *new_size* bytes from *memory* to
+	// completely fill up *new_memory*.  This may run off the end
+	// of *memory*, but it is unlikely that we cause a memory fault.
+	String new_string = (String)new_memory;
+	String old_string = (String)memory;
+	for (Unsigned index = 0; index < new_size; index++) {
+	    new_string[index] = old_string[index];
+	}
+
+	// New record the reallocation as an allocate and a free:
+	assert(Memory__allocate_file != (File)0);
+	assert(Memory__free_file != (File)0);
+	File__format(Memory__allocate_file, "0x%08x\n", new_memory);
+	File__flush(Memory__allocate_file);
+	File__format(Memory__free_file, "0x08x\n", memory);
+	File__flush(Memory__free_file);
+
+	// Now check for a memory leak match:
+	if (new_memory == Memory__leak) {
+	    Memory__leak_found(new_memory);
+	}
+    #else
+	Memory new_memory = realloc(memory, new_size);
+	assert (new_memory != (Memory)0);
+    #endif // defined(MEMORY_LEAK_CHECK)
+    return new_memory;
 }
 
 /// @brief Return *unsigned1* as a *Memory* pointer.

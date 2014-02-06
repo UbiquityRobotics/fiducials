@@ -378,7 +378,7 @@ Map Map__restore(String_Const file_name,
 ///
 /// *Map__save*() will save *map* to the *file_name* file in XML format.
 
-void Map__save(Map map, const String file_name) {
+void Map__save(Map map, String_Const file_name) {
     File out_file = File__open(file_name, "w");
     assert (out_file != (File)0);
     Map__write(map, out_file);

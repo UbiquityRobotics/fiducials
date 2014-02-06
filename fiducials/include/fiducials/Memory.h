@@ -32,6 +32,7 @@ typedef void *Memory;
 
 #if defined(MEMORY_LEAK_CHECK)
     extern void Memory__leak_check(Memory memory);
+    extern void Memory__leak_found(Memory memory);
 #endif // defined(MEMORY_LEAK_CHECK)
 
 extern Memory Memory__allocate(Unsigned bytes);

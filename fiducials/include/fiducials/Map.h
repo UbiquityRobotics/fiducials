@@ -70,7 +70,7 @@ extern Map Map__new(
 extern Map Map__read(File in_file);
 extern Map Map__restore(
   String_Const file_name, Fiducials_Tag_Announce_Routine tag_announce_routine);
-extern void Map__save(Map map, const String file_name);
+extern void Map__save(Map map, const String_Const file_name);
 extern void Map__sort(Map map);
 extern void Map__svg_write(
   Map map, const String svg_base_name, List /*<Location>*/ locations);
