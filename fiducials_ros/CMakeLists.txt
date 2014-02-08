@@ -7,7 +7,7 @@ project(fiducials_ros)
 find_package(catkin REQUIRED COMPONENTS
   fiducials
   roscpp
-  tf
+  tf2_ros
   visualization_msgs
   image_transport
   cv_bridge
