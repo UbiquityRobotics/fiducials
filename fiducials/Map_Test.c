@@ -1,4 +1,4 @@
-// Copyright (c) by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
 
@@ -17,7 +17,8 @@ extern void Map__build(Map map);
 
 
 int main(int arguments_size, char * arguments[]) {
-    Map map1 = Map__new((void *)0, Map__tag_announce, "main:Map__new");
+    Map map1 = Map__create("Map_Test.xml",
+      (void *)0, Map__tag_announce, "main:Map__new");
     Unsigned visit = map1->visit;
 
     Double pi = 3.14159265358979323846264;
@@ -83,8 +84,10 @@ int main(int arguments_size, char * arguments[]) {
     Map__update(map1);
 
     String xml_file_name = "Map_Test.xml";
-    Map__save(map1, xml_file_name);
-    Map map2 = Map__restore(xml_file_name, Map__tag_announce);
+    Map__save(map1);
+
+    Map map2 = Map__create("Map_Test.xml",
+      (void *)0, Map__tag_announce, "main:Map__new");
 
     assert (Map__compare(map1, map2) == 0);
 

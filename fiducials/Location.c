@@ -39,7 +39,7 @@ Location Location__create(Unsigned id,
 /// *Location__free*() will release the storage for *location*.
 
 void Location__free(Location location) {
-    Memory__free((Memory)location);
+  //Memory__free((Memory)location);
 }
 
 

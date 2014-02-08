@@ -63,7 +63,7 @@ int main(int arguments_size, char * arguments[]) {
 	Fiducials fiducials =
 	  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
 	  Fiducials__location_announce, Map__tag_announce, log_file_name,
-	  (String_Const)0);
+	  "Demo.xml");
 	Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
 
 	for (Unsigned index = 0; index < size; index++) {
@@ -90,11 +90,18 @@ int main(int arguments_size, char * arguments[]) {
 	    Fiducials__image_show(fiducials, (Logical)1);
 	} else {
 	    Map map = fiducials->map;
-	    Map__save(map, "Demo.xml");
+	    Map__save(map);
 	    List /*<Location>*/ locations = fiducials->locations;
 	    File__format(stderr,
 	      "Outputing %d locations\n", List__size(locations));
 	    Map__svg_write(map, "Demo", locations);
+
+	    Fiducials fiducials2 =
+	      Fiducials__create(image, lens_calibrate_file_name, (void *)0,
+	      Fiducials__location_announce, Map__tag_announce, log_file_name,
+	      "Demo.xml");
+	    fiducials2->map->file_name = "Demo2.xml";
+	    Fiducials__map_save(fiducials2);
 	}
 
 	// Release all the storage associated with *fiducials*:

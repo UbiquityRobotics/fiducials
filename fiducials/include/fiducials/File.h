@@ -7,6 +7,7 @@
 #include <stdarg.h>
 
 #include "Character.h"
+#include "Double.h"
 #include "Float.h"
 #include "Integer.h"
 #include "String.h"
@@ -23,6 +24,8 @@ extern Unsigned File__byte_read(File file);
 extern void File__byte_write(File file, Unsigned byte);
 extern Character File__character_read(File in_file);
 extern void File__close(File file);
+extern Double File__double_attribute_read(
+  File in_file, String_Const attribute_name);
 extern Float File__float_attribute_read(
   File in_file, String_Const attribute_name);
 extern void File__flush(File file);

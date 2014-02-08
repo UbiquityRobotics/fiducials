@@ -54,6 +54,51 @@ void File__close(File file) {
     assert (fclose(file) == 0);
 }
 
+/// @brief Reads in an XML attribute with a floating point value.
+/// @param in_file is the input file to read from.
+/// @param attribute name is the attribute name.
+/// @returns the floating point value.
+///
+/// *File__double_attribute_read*() will read in a pattern that matches
+/// ' ATTRIBUTE_NAME="VALUE"', where ATTRIBUTE_NAME matches *attribute_name*
+/// and VALUE is an optionally signed floating point number.  This is used
+/// for parsing "XML" file input.  "XML" is in quotes is because this is
+/// really not a very robust XML parser.  An assertion failure occurs if
+/// the input does not parse properly.
+
+Double File__double_attribute_read(File in_file, String_Const attribute_name) {
+    File__string_match(in_file, " ");
+    File__string_match(in_file, attribute_name);
+    File__string_match(in_file, "=\"");
+    Double fraction = (Double)1.0;
+    Logical have_decimal_point = (Logical)0;
+    Logical negative = (Logical)0;
+    Double result = (Double)0.0;
+    while (1) {
+        Character character = File__character_read(in_file);
+	if (Character__is_decimal_digit(character)) {
+	    if (have_decimal_point) {
+		fraction /= (Double)10.0;
+		result += fraction * (Double)(character - '0');
+	    } else {
+		result = result * 10.0 + (Double)(character - '0');
+	    }
+	} else if (character == '"') {
+	    break;
+	} else if (character == '.') {
+	    have_decimal_point = (Logical)1;
+	} else if (character == '-') {
+	    negative = (Logical)1;
+	} else {
+	    assert(0);
+	}
+    }
+    if (negative) {
+	result = -result;
+    }
+    return result;
+}
+
 /// @brief will write *format* out to *file* with all patterns that
 /// start with "%" replaced by formatted versions of its arguments.
 /// @param file to output to.
@@ -103,7 +148,7 @@ Float File__float_attribute_read(File in_file, String_Const attribute_name) {
 	} else if (character == '"') {
 	    break;
 	} else if (character == '.') {
-	    have_decimal_point;
+	    have_decimal_point = (Logical)1;
 	} else if (character == '-') {
 	    negative = (Logical)1;
 	} else {

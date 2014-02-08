@@ -152,16 +152,16 @@ Tag Tag__read(File in_file, Map map) {
     // Read in "<Tag .../>":
     File__tag_match(in_file, "Tag");
     Unsigned tag_id = (Unsigned)File__integer_attribute_read(in_file, "Id");
-    Unsigned diagonal = File__float_attribute_read(in_file, "Diagonal");
-    Double twist = File__float_attribute_read(in_file, "Twist");
-    Double x = File__float_attribute_read(in_file, "X");
-    Double y = File__float_attribute_read(in_file, "Y");
+    Double diagonal = File__double_attribute_read(in_file, "Diagonal");
+    Double pi = (Double)3.14159265358979323846264;
+    Double twist = File__double_attribute_read(in_file, "Twist");
+    Double x = File__double_attribute_read(in_file, "X");
+    Double y = File__double_attribute_read(in_file, "Y");
     Unsigned hop_count =
       (Unsigned)File__integer_attribute_read(in_file, "Hop_Count");
     File__string_match(in_file, "/>\n");
 
     // Convert *twist* from *degrees_to_radians*:
-    Double pi = (Double)3.14159265358979323846264;
     Double degrees_to_radians = pi / 180.0;
     twist *= degrees_to_radians;
 

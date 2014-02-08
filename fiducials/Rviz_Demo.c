@@ -130,7 +130,7 @@ int main(int arguments_size, char * arguments[]) {
             Fiducials__image_show(fiducials, (Logical)1);
         } else {
             Map map = fiducials->map;
-            Map__save(map, "Rviz_Demo.xml");
+            Map__save(map);
             List /*<Location>*/ locations = fiducials->locations;
             File__format(stderr,
               "Outputing %d locations\n", List__size(locations));

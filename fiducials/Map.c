@@ -33,7 +33,9 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 
 void Map__arc_append(Map map, Arc arc) {
     List__append(map->all_arcs, arc, "Map__arc_append:List__append:all_arcs");
+    map->changes_count += 1;
     map->is_changed = (Logical)1;
+    map->is_saved = (Logical)0;
 }
 
 /// @brief Returns the *Arc* that contains *from_tag* and *to_tag*.
@@ -188,6 +190,9 @@ Unsigned Map__arc_update(
 
 	// Finally, upate *arc*:
 	Arc__update(arc, from_twist, floor_distance, to_twist, goodness);
+	map->changes_count += 1;
+	map->is_changed = (Logical)1;
+	map->is_saved = (Logical)0;
 
 	changed = 1;
     }
@@ -276,6 +281,9 @@ Double Map__distance_per_pixel(Map map, Unsigned id) {
 /// *Map__free*() will release the storage associaed with *map*.
 
 void Map__free(Map map) {
+    // Save the map:
+    Map__save(map);
+
     // Release all the *Arc*'s:
     List /* <Arc> */ all_arcs = map->all_arcs;
     Unsigned arcs_size = List__size(all_arcs);
@@ -313,11 +321,12 @@ void Map__free(Map map) {
 /// @brief Returns a new *Map*.
 /// @returns a new *Map*.
 ///
-/// *Map__new*() creates and returns an empty initialized *Map* object.
+/// *Map__create*() creates and returns an empty initialized *Map* object.
 
-Map Map__new(
+Map Map__create(String_Const map_file_name,
   void *announce_object, Fiducials_Tag_Announce_Routine tag_announce_routine,
   String from) {
+    // Create and fill in *map*:
     Map map = Memory__new(Map, from);
     map->all_arcs = List__new("Map__new:List_New:all_arcs"); // <Tag>
     map->all_tags = List__new("Map__new:List_New:all_tags"); // <Tag>
@@ -325,7 +334,10 @@ Map Map__new(
     map->arcs_table = Table__create((Table_Equal_Routine)Arc__equal,
       (Table_Hash_Routine)Arc__hash, (Memory)0,
       "Map__new:Table__create:map_arcs_table"); // <Arc, Arc>
+    map->changes_count = 0;
+    map->file_name = map_file_name;
     map->is_changed = (Logical)0;
+    map->is_saved = (Logical)1;
     map->pending_arcs = List__new("Map__new:List__new:pending_arcs"); // <Tag>
     map->tag_announce_routine = tag_announce_routine;
     map->tag_heights =
@@ -336,6 +348,13 @@ Map Map__new(
       // <Unsigned, Tag>
     map->temporary_arc = Arc__new("Map__new:Arc__New:temporary_arc");
     map->visit = 0;
+
+    // Restore *map* if appropriate:
+    File in_file = File__open(map_file_name, "r");
+    if (in_file != (File)0) {
+        Map__restore(map, in_file);
+	File__close(in_file);
+    }
     return map;
 }
 
@@ -357,22 +376,21 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
 	Table__insert(tags_table, memory_tag_id, (Memory)tag);
 	List__append(map->all_tags, tag,
 	  "Map__tag_lookup:List__append:all_tags");
+	map->changes_count += 1;
 	map->is_changed = (Logical)1;
+	map->is_saved = (Logical)0;
     }
     return tag;
 }
 
-/// @brief Read a *Map* from *in_file* and returns it.
-/// @param in_file is the file to read from.
-/// @returns the *Map* object.
+/// @brief Restore the contents of *Map* from *in_file*.
+/// @param map is the *Map* to restore into
+/// @param in_file is the *File* to read from.
 ///
-/// *Map__read*() will read in an XML map file from *in_file* and return
-/// the resulting *Map* object.
+/// *Map__restore*() will read in an XML map file from *in_file* and
+/// store it into *map*.
 
-Map Map__read(File in_file) {
-    // Create *map* and get *tags* list:
-    Map map = Map__new((void *)0, Map__tag_announce, "Map_read:Map__new");
-
+void Map__restore(Map map, File in_file) {
     // Read in Map XML tag '<Map Tags_Count="xx" Arcs_Count="xx">' :
     File__tag_match(in_file, "Map");
     Unsigned all_tags_size =
@@ -398,24 +416,6 @@ Map Map__read(File in_file) {
     // Do some final checks:
     assert (List__size(map->all_arcs) == all_arcs_size);
     assert (List__size(map->all_tags) == all_tags_size);
-
-    return map;
-}
-
-/// @brief Read in a *map* XML file and return it.
-/// @param file_name is the file to read in.
-/// @returns the resulting *Map* object.
-///
-/// *Map__restore*() will read in an map XML from *file_name* and return the
-/// resulting *Map* object.
-
-Map Map__restore(String_Const file_name,
-  Fiducials_Tag_Announce_Routine tag_announce_routine) {
-    File in_file = File__open(file_name, "r");
-    assert(in_file != (File)0);
-    Map map = Map__read(in_file);
-    File__close(in_file);
-    return map;
 }
 
 /// @brief Save *map* out to the file named *file_name*.
@@ -424,11 +424,14 @@ Map Map__restore(String_Const file_name,
 ///
 /// *Map__save*() will save *map* to the *file_name* file in XML format.
 
-void Map__save(Map map, String_Const file_name) {
-    File out_file = File__open(file_name, "w");
-    assert (out_file != (File)0);
-    Map__write(map, out_file);
-    File__close(out_file);
+void Map__save(Map map) {
+    if (!map->is_saved) {
+	File out_file = File__open(map->file_name, "w");
+	assert (out_file != (File)0);
+	Map__write(map, out_file);
+	File__close(out_file);
+	map->is_saved = (Logical)1;
+    }
 }
 
 /// @brief Sort the contents of *map* to be in a consistent order.
@@ -496,6 +499,8 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
         Double x = location->x;
 	Double y = location->y;
 	Double bearing = location->bearing;
+	File__format(stderr, "Location[%d]: id:%d x:%f y:%f bearing:%f\n",
+	  index, location->id, x, y, bearing * 180 / 3.1415926);
 
 	// Draw a triangle that shows the bearing:
 	Double k1 = 40.0;
@@ -596,7 +601,7 @@ void Map__tag_announce(void *object, Integer id,
 /// *Map__update*() will update the location of all the *Tag*'s in *map*.
 
 void Map__update(Map map) {
-    if (map->is_changed != 0) {
+    if (map->is_changed) {
 	// Increment *visit* to the next value to use for updating:
 	Unsigned visit = map->visit + 1;
 	map->visit = visit;
@@ -687,6 +692,7 @@ void Map__update(Map map) {
 
 	// Mark that *map* is fully updated:
         map->is_changed = (Logical)0;
+	map->is_saved = (Logical)0;
     }
 }
 

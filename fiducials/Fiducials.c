@@ -1,4 +1,4 @@
-// Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 typedef struct Fiducials__Struct *Fiducials;
 
@@ -260,57 +260,57 @@ Fiducials Fiducials__create(
 	 //corner2	      corner3
     };
 
-//    static Logical north_mapping_flipped[64] = {
-//	//corner1	      corner0
-//	56, 57, 58, 59, 60, 61, 62, 63,
-//	48, 49, 50, 51, 52, 53, 54, 55,
-//	40, 41, 42, 43, 44, 45, 46, 47,
-//	32, 33, 34, 35, 36, 37, 38, 39,
-//	24, 25, 26, 27, 28, 29, 30, 31,
-//	16, 17, 18, 19, 20, 21, 22, 23,
-//	 8,  9, 10, 11, 12, 13, 14, 15,
-//	 0,  1,  2,  3,  4,  5,  6,  7,
-//	//corner2	      corner3
-//    };
-//
-//    static Logical west_mapping_flipped[64] = {
-//	//corner1	      corner0
-//	 0,  8, 16, 24, 32, 40, 48, 56,
-//	 1,  9, 17, 25, 33, 41, 49, 57,
-//	 2, 10, 18, 26, 34, 42, 50, 58,
-//	 3, 11, 19, 27, 35, 43, 51, 59,
-//	 4, 12, 20, 28, 36, 44, 52, 60,
-//	 5, 13, 21, 29, 37, 45, 53, 61,
-//	 6, 14, 22, 30, 38, 46, 54, 62,
-//	 7, 15, 23, 31, 39, 47, 55, 63,
-//	//corner2	      corner3
-//    };
-//
-//    static Logical south_mapping_flipped[64] = {
-//	//corner1	      corner0
-//	 7,  6,  5,  4,  3,  2,  1,  0,
-//	15, 14, 13, 12, 11, 10,  9,  8,
-//	23, 22, 21, 20, 19, 18, 17, 16,
-//	31, 30, 29, 28, 27, 26, 25, 24,
-//	39, 38, 37, 36, 35, 34, 33, 32,
-//	47, 46, 45, 44, 43, 42, 41, 40,
-//	55, 54, 53, 52, 51, 50, 49, 48,
-//	63, 62, 61, 60, 59, 58, 57, 56,
-//	//corner2	      corner3
-//    };
-//
-//    static Logical east_mapping_flipped[64] = {
-//	//corner1	      corner0
-//	63, 55, 47, 39, 31, 23, 15,  7,
-//	62, 54, 46, 38, 30, 22, 14,  6,
-//	61, 53, 45, 37, 29, 21, 13,  5,
-//	60, 52, 44, 36, 28, 20, 12,  4,
-//	59, 51, 43, 35, 27, 19, 11,  3,
-//	58, 50, 42, 34, 26, 18, 10,  2,
-//	57, 49, 41, 33, 25, 17,  9,  1,
-//	56, 48, 40, 32, 24, 16,  8,  0,
-//	//corner2	      corner3
-//    };
+    //static Logical north_mapping_flipped[64] = {
+    //	//corner1	      corner0
+    //	56, 57, 58, 59, 60, 61, 62, 63,
+    //	48, 49, 50, 51, 52, 53, 54, 55,
+    //	40, 41, 42, 43, 44, 45, 46, 47,
+    //	32, 33, 34, 35, 36, 37, 38, 39,
+    //	24, 25, 26, 27, 28, 29, 30, 31,
+    //	16, 17, 18, 19, 20, 21, 22, 23,
+    //	 8,  9, 10, 11, 12, 13, 14, 15,
+    //	 0,  1,  2,  3,  4,  5,  6,  7,
+    //	//corner2	      corner3
+    //};
+    //
+    //static Logical west_mapping_flipped[64] = {
+    //	//corner1	      corner0
+    //	 0,  8, 16, 24, 32, 40, 48, 56,
+    //	 1,  9, 17, 25, 33, 41, 49, 57,
+    //	 2, 10, 18, 26, 34, 42, 50, 58,
+    //	 3, 11, 19, 27, 35, 43, 51, 59,
+    //	 4, 12, 20, 28, 36, 44, 52, 60,
+    //	 5, 13, 21, 29, 37, 45, 53, 61,
+    //	 6, 14, 22, 30, 38, 46, 54, 62,
+    //	 7, 15, 23, 31, 39, 47, 55, 63,
+    //	//corner2	      corner3
+    //};
+    //
+    //static Logical south_mapping_flipped[64] = {
+    //	//corner1	      corner0
+    //	 7,  6,  5,  4,  3,  2,  1,  0,
+    //	15, 14, 13, 12, 11, 10,  9,  8,
+    //	23, 22, 21, 20, 19, 18, 17, 16,
+    //	31, 30, 29, 28, 27, 26, 25, 24,
+    //	39, 38, 37, 36, 35, 34, 33, 32,
+    //	47, 46, 45, 44, 43, 42, 41, 40,
+    //	55, 54, 53, 52, 51, 50, 49, 48,
+    //	63, 62, 61, 60, 59, 58, 57, 56,
+    //	//corner2	      corner3
+    //};
+    //
+    //static Logical east_mapping_flipped[64] = {
+    //	//corner1	      corner0
+    //	63, 55, 47, 39, 31, 23, 15,  7,
+    //	62, 54, 46, 38, 30, 22, 14,  6,
+    //	61, 53, 45, 37, 29, 21, 13,  5,
+    //	60, 52, 44, 36, 28, 20, 12,  4,
+    //	59, 51, 43, 35, 27, 19, 11,  3,
+    //	58, 50, 42, 34, 26, 18, 10,  2,
+    //	57, 49, 41, 33, 25, 17,  9,  1,
+    //	56, 48, 40, 32, 24, 16,  8,  0,
+    //	//corner2	      corner3
+    //};
 
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
@@ -333,13 +333,9 @@ Fiducials Fiducials__create(
 	  lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
     }
 
-    Map map = (Map)0;
-    if (map_file_name == (String)0) {
-	map = Map__new(announce_object,
-	  tag_announce_routine, "Fiducials__new:Map_New");
-    } else {
-	map = Map__restore(map_file_name, tag_announce_routine);
-    }
+    // Create the *map*:
+    Map map = Map__create(map_file_name, announce_object,
+      tag_announce_routine, "Fiducials__new:Map_New");
 
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
@@ -392,24 +388,10 @@ Fiducials Fiducials__create(
 }
 
 void Fiducials__free(Fiducials fiducials) {
-    // Free up the storage associated with *locations*:
-    List /* <Location> */ locations = fiducials->locations;
-    Unsigned locations_size = List__size(locations);
-    for (Unsigned index = 0; index < locations_size; index++) {
-	Location location = List__fetch(locations, index);
-	Location__free(location);
-    }
-    List__free(locations);
+    // Write the map out if it changed:
+    Map__save(fiducials->map);
 
-    List /* <Camera_Tag> */ camera_tags_pool = fiducials->camera_tags_pool;
-    Unsigned pool_size = List__size(camera_tags_pool);
-    for (Unsigned index = 0; index < pool_size; index++) {
-	Camera_Tag camera_tag =
-	  (Camera_Tag)List__fetch(camera_tags_pool, index);
-	Camera_Tag__free(camera_tag);
-    }
-    List__free(camera_tags_pool);
-
+    // Free up some *CV_Scalar* colors:
     CV_Scalar__free(fiducials->blue);
     CV_Scalar__free(fiducials->cyan);
     CV_Scalar__free(fiducials->green);
@@ -417,19 +399,45 @@ void Fiducials__free(Fiducials fiducials) {
     CV_Scalar__free(fiducials->red);
     CV_Scalar__free(fiducials->black);
 
+    // Free up some *SV_Size* objects:
     CV_Size__free(fiducials->image_size);
     CV_Size__free(fiducials->size_5x5);
     CV_Size__free(fiducials->size_m1xm1);
 
+    // Free up the storage associated with *locations*:
+    List /* <Location> */ locations = fiducials->locations;
+    Unsigned locations_size = List__size(locations);
+    for (Unsigned index = 0; index < locations_size; index++) {
+	Location location = List__fetch(locations, index);
+	// Kludge: memory double free?!!!
+	//Location__free(location);
+    }
+
+    // Free up the storage associated with *camera_tags_pool*:
+    List /* <Camera_Tag> */ camera_tags_pool = fiducials->camera_tags_pool;
+    Unsigned pool_size = List__size(camera_tags_pool);
+    for (Unsigned index = 0; index < pool_size; index++) {
+	Camera_Tag camera_tag =
+	  (Camera_Tag)List__fetch(camera_tags_pool, index);
+	Camera_Tag__free(camera_tag);
+    }
+
+    // Free up the *List*'s:
+    List__free(camera_tags_pool);
     List__free(fiducials->camera_tags);
     List__free(fiducials->current_visibles);
     List__free(fiducials->previous_visibles);
+    List__free(locations);
+
+    // Relaase the *Map*:
     Map__free(fiducials->map);
+
+    // Finally release *fiducials*:
     Memory__free((Memory)fiducials);
 }
 
-void Fiducials__map_save(Fiducials fiducials, String_Const map_file_name) {
-    Map__save(fiducials->map, map_file_name);
+void Fiducials__map_save(Fiducials fiducials) {
+    Map__save(fiducials->map);
 }
 
 Unsigned Fiducials__process(Fiducials fiducials) {

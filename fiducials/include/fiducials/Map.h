@@ -35,8 +35,17 @@ struct Map__Struct {
     /// @brief An lookup *Arc* table.
     Table /* <Arc, Arc> */ arcs_table;
 
+    /// @brief Number of map changes:
+    Unsigned changes_count;
+
+    /// @brief Name of map file name;
+    String_Const file_name;
+
     /// @brief True if map has changed since last update.
     Logical is_changed;
+
+    /// @brief True if changed map has been saved.
+    Logical is_saved;
 
     /// @brief List of pending *Arc*'s for map tree extraction.
     List /* <Arc> */ pending_arcs;
@@ -64,14 +73,12 @@ extern Arc Map__arc_lookup(Map map, Tag from, Tag to);
 extern Unsigned Map__arc_update(
   Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image);
 extern Integer Map__compare(Map map1, Map map2);
+extern Map Map__create(String_Const file_name, void *announce_object,
+  Fiducials_Tag_Announce_Routine announce_routine, String from);
 extern Double Map__distance_per_pixel(Map map, Unsigned id);
 extern void Map__free(Map map);
-extern Map Map__new(void *announce_object,
-  Fiducials_Tag_Announce_Routine announce_routine, String from);
-extern Map Map__read(File in_file);
-extern Map Map__restore(
-  String_Const file_name, Fiducials_Tag_Announce_Routine tag_announce_routine);
-extern void Map__save(Map map, const String_Const file_name);
+extern void Map__restore(Map map, File in_file);
+extern void Map__save(Map map);
 extern void Map__sort(Map map);
 extern void Map__svg_write(
   Map map, const String svg_base_name, List /*<Location>*/ locations);
