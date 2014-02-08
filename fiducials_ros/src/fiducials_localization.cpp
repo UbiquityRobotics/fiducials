@@ -77,6 +77,7 @@ class FiducialsNode {
 
     geometry_msgs::Pose scale_position(double x, double y, double z,
         double theta);
+    visualization_msgs::Marker createMarker(std::string ns, int id);
 
     static void tag_announce(void *t, int id, double x, double y, double z,
         double twist, double dx, double dy, double dz, int visible);
@@ -102,6 +103,15 @@ geometry_msgs::Pose FiducialsNode::scale_position(double x, double y,
   return res;
 }
 
+visualization_msgs::Marker FiducialsNode::createMarker(std::string ns, int id) {
+    visualization_msgs::Marker marker;
+    marker.header.stamp = ros::Time::now();
+    marker.header.frame_id = world_frame;
+    marker.ns = ns;
+    marker.id = id;
+    return marker;
+}
+
 void FiducialsNode::tag_announce(void *t, int id,
   double x, double y, double z, double twist, double dx, double dy, double dz,
   int visible) {
@@ -109,14 +119,9 @@ void FiducialsNode::tag_announce(void *t, int id,
       id, x, y, twist);
     FiducialsNode * ths = (FiducialsNode*)t;
 
-    visualization_msgs::Marker marker;
-    marker.header.stamp = ros::Time::now();
-    marker.header.frame_id = ths->world_frame;
-
-    marker.ns = ths->fiducial_namespace;
-    marker.id = id;
+    visualization_msgs::Marker marker = ths->createMarker(
+        ths->fiducial_namespace, id);
     marker.type = visualization_msgs::Marker::CUBE;
-
     marker.action = visualization_msgs::Marker::ADD;
 
     marker.pose = ths->scale_position(x, y, z, 0);
@@ -140,14 +145,10 @@ void FiducialsNode::tag_announce(void *t, int id,
     snprintf(str_id, 12, "%d", id);
     marker.text = str_id;
     marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-    marker.color.r = 1.0;
-    marker.color.g = 1.0;
-    marker.color.b = 1.0;
+    marker.color.r = marker.color.g = marker.color.b = 1.0; // white
+    marker.scale.x = marker.scale.y = marker.scale.z = 0.1;
     marker.id = id + 10000;
-    marker.scale.x = 0.1;
-    marker.scale.y = 0.1;
-    marker.scale.z = 0.1;
-    marker.pose.position.z += 0.05;
+    marker.pose.position.z += 0.05; // draw text above marker
     marker.ns = ths->fiducial_namespace + "_text";
     ths->marker_pub->publish(marker);
 }
@@ -158,14 +159,8 @@ void FiducialsNode::location_announce(void *t, int id,
       id, x, y, bearing * 180. / 3.1415926);
     FiducialsNode * ths = (FiducialsNode*)t;
 
-    visualization_msgs::Marker marker;
-    marker.header.stamp = ros::Time::now();
-    marker.header.frame_id = ths->world_frame;
-
-    marker.ns = ths->position_namespace;
-    marker.id = id;
+    visualization_msgs::Marker marker = ths->createMarker(ths->world_frame, id);
     marker.type = visualization_msgs::Marker::ARROW;
-
     marker.action = visualization_msgs::Marker::ADD;
 
     marker.pose = ths->scale_position(x, y, z, bearing);
@@ -179,7 +174,11 @@ void FiducialsNode::location_announce(void *t, int id,
     marker.lifetime = ros::Duration();
 
     ths->marker_pub->publish(marker);
+
+    // publish a transform based on the position
     geometry_msgs::TransformStamped transform;
+    // TODO: subtract out odometry position, and publish transform from
+    //  map to odom
     transform.transform.translation.x = marker.pose.position.x;
     transform.transform.translation.y = marker.pose.position.y;
     transform.transform.translation.z = marker.pose.position.z;
