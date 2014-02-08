@@ -36,7 +36,9 @@
 
 #include <ros/ros.h>
 #include <tf/transform_datatypes.h>
+#include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
@@ -50,25 +52,14 @@
 #include "fiducials/List.h"
 #include "fiducials/Logical.h"
 
-/// @brief Print out tag update information.
-/// @param anounce_object is an opaque object from *Map*->*announce_object*.
-/// @param id is the tag id.
-/// @param x is the tag X location.
-/// @param y is the tag Y location.
-/// @param z is the tag Z location.
-/// @param twist is the tag twist in radians.
-/// @param dx is the tag size along the X axis (before twist).
-/// @param dy is the tag size along the Y axis (before twist).
-/// @param dz is the tag height in the Z axis.
-///
-/// *Map__tag_announce*() is called each time the map algorithm
-/// updates the location or twist for a *tag*.
-
-
 class FiducialsNode {
   private:
     ros::Publisher * marker_pub;
-    tf2_ros::TransformBroadcaster * tf_pub;
+
+    // transform bits
+    tf2_ros::TransformBroadcaster tf_pub;
+    tf2_ros::Buffer tf_buffer;
+    tf2_ros::TransformListener tf_sub;
 
     std::string world_frame;
     std::string pose_frame;
@@ -78,10 +69,14 @@ class FiducialsNode {
     std::string position_namespace;
 
     std_msgs::ColorRGBA tag_color;
+    std_msgs::ColorRGBA hidden_tag_color;
     std_msgs::ColorRGBA position_color;
 
     Fiducials fiducials;
     std::string tag_height_file;
+
+    geometry_msgs::Pose scale_position(double x, double y, double z,
+        double theta);
 
     static void tag_announce(void *t, int id, double x, double y, double z,
         double twist, double dx, double dy, double dz, int visible);
@@ -94,6 +89,18 @@ class FiducialsNode {
   public:
     FiducialsNode(ros::NodeHandle &nh);
 };
+
+geometry_msgs::Pose FiducialsNode::scale_position(double x, double y, 
+    double z, double theta) {
+  geometry_msgs::Pose res;
+  res.position.x = x / scale;
+  res.position.y = y / scale;
+  res.position.z = z / scale;
+
+  res.orientation = tf::createQuaternionMsgFromYaw(theta);
+
+  return res;
+}
 
 void FiducialsNode::tag_announce(void *t, int id,
   double x, double y, double z, double twist, double dx, double dy, double dz,
@@ -112,30 +119,16 @@ void FiducialsNode::tag_announce(void *t, int id,
 
     marker.action = visualization_msgs::Marker::ADD;
 
-    marker.pose.position.x = x / ths->scale;
-    marker.pose.position.y = y / ths->scale;
-    marker.pose.position.z = z / ths->scale;
-
-    marker.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+    marker.pose = ths->scale_position(x, y, z, 0);
 
     marker.scale.x = dx / ths->scale;
     marker.scale.y = dy / ths->scale;
     marker.scale.z = dz / ths->scale;
 
-    marker.color = ths->tag_color;
-
-    // cycle through tag colors
-    ths->tag_color.r += 0.1;
-    if( ths->tag_color.r > 1.0 ) {
-      ths->tag_color.r = 0.0;
-      ths->tag_color.g += 0.1;
-    }
-    if( ths->tag_color.g > 1.0 ) {
-      ths->tag_color.g = 0.0;
-      ths->tag_color.b += 0.1;
-    }
-    if( ths->tag_color.b > 1.0 ) {
-      ths->tag_color.b = 0.0;
+    if( visible ) {
+      marker.color = ths->tag_color;
+    } else {
+      marker.color = ths->hidden_tag_color;
     }
 
     marker.lifetime = ros::Duration();
@@ -175,11 +168,7 @@ void FiducialsNode::location_announce(void *t, int id,
 
     marker.action = visualization_msgs::Marker::ADD;
 
-    marker.pose.position.x = x / ths->scale;
-    marker.pose.position.y = y / ths->scale;
-    marker.pose.position.z = z / ths->scale;
-
-    marker.pose.orientation = tf::createQuaternionMsgFromYaw(bearing);
+    marker.pose = ths->scale_position(x, y, z, bearing);
 
     marker.scale.x = 200.0 / ths->scale;
     marker.scale.y = 50.0 / ths->scale;
@@ -199,7 +188,7 @@ void FiducialsNode::location_announce(void *t, int id,
     transform.header.frame_id = ths->world_frame;
     transform.child_frame_id = ths->pose_frame;
 
-    ths->tf_pub->sendTransform(transform);
+    ths->tf_pub.sendTransform(transform);
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
@@ -221,7 +210,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     }
 }
 
-FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0) {
+FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0), tf_sub(tf_buffer) {
     fiducial_namespace = "fiducials";
     position_namespace = "position";
     // Define tags to be green
@@ -229,6 +218,12 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0) {
     tag_color.g = 1.0f;
     tag_color.b = 0.0f;
     tag_color.a = 1.0f;
+
+    // Define hidden tags to be red
+    hidden_tag_color.r = 1.0f;
+    hidden_tag_color.g = 0.0f;
+    hidden_tag_color.b = 0.0f;
+    hidden_tag_color.a = 1.0f;
 
     // define position ot be blue
     position_color.r = 0.0f;
@@ -242,8 +237,6 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0) {
     nh.param<std::string>("tag_height", tag_height_file, "Tag_Heights.xml");
 
     marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
-
-    tf_pub = new tf2_ros::TransformBroadcaster();
 
     fiducials = NULL;
 
