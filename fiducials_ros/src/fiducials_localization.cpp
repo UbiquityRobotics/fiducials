@@ -39,6 +39,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <visualization_msgs/Marker.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
@@ -62,7 +63,7 @@ class FiducialsNode {
     tf2_ros::TransformListener tf_sub;
 
     std::string world_frame;
-    std::string output_frame;
+    std::string pose_frame;
     std::string odom_frame;
     bool use_odom;
 
@@ -174,6 +175,8 @@ void FiducialsNode::location_cb(int id, double x, double y, double z,
       id, x, y, bearing * 180. / 3.1415926);
 
     visualization_msgs::Marker marker = createMarker(world_frame, id);
+    ros::Time now = marker.header.stamp;
+
     marker.type = visualization_msgs::Marker::ARROW;
     marker.action = visualization_msgs::Marker::ADD;
 
@@ -196,12 +199,31 @@ void FiducialsNode::location_cb(int id, double x, double y, double z,
     transform.transform.translation.x = marker.pose.position.x;
     transform.transform.translation.y = marker.pose.position.y;
     transform.transform.translation.z = marker.pose.position.z;
-    if( use_odom ) {
-    }
     transform.transform.rotation = marker.pose.orientation;
-    transform.header.stamp = marker.header.stamp;
+    transform.header.stamp = now;
     transform.header.frame_id = world_frame;
-    transform.child_frame_id = output_frame;
+
+    if( use_odom ) {
+      // if we're using odometry, look up the odom transform and subtract it
+      //  from our position so that we can publish a map->odom transform
+      //  such that map->odom->base_link reports the correct position
+      if( tf_buffer.canTransform(odom_frame, pose_frame, now) ) {
+        geometry_msgs::PoseStamped in;
+        in.pose = marker.pose;
+        in.header = marker.header;
+        in.header.frame_id = pose_frame;
+        geometry_msgs::PoseStamped out;
+        tf_buffer.transform(in, out, odom_frame);
+      } else {
+        ROS_WARN("Can't look up base transform from %s to %s",
+            pose_frame.c_str(),
+            odom_frame.c_str());
+      }
+      transform.child_frame_id = odom_frame;
+    } else {
+      // we're publishing absolute position
+      transform.child_frame_id = pose_frame;
+    }
 
     tf_pub.sendTransform(transform);
 }
@@ -251,11 +273,10 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0), tf_sub(tf_bu
     if( nh.hasParam("odom_frame") ) {
       use_odom = true;
       nh.getParam("odom_frame", odom_frame);
-      nh.param<std::string>("output_frame", output_frame, "odom");
     } else {
       use_odom = false;
-      nh.param<std::string>("output_frame", output_frame, "base_link");
     }
+    nh.param<std::string>("pose_frame", pose_frame, "base_link");
 
     marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
 
