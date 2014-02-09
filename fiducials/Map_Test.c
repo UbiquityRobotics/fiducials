@@ -18,7 +18,7 @@ extern void Map__build(Map map);
 
 int main(int arguments_size, char * arguments[]) {
     Map map1 = Map__create("Map_Test.xml",
-      (void *)0, Map__tag_announce, "main:Map__new");
+      (void *)0, Map__tag_announce, (String_Const)0, "main:Map__new");
     Unsigned visit = map1->visit;
 
     Double pi = 3.14159265358979323846264;
@@ -87,7 +87,7 @@ int main(int arguments_size, char * arguments[]) {
     Map__save(map1);
 
     Map map2 = Map__create("Map_Test.xml",
-      (void *)0, Map__tag_announce, "main:Map__new");
+     (void *)0, Map__tag_announce, (String_Const)0, "main:Map__new");
 
     assert (Map__compare(map1, map2) == 0);
 

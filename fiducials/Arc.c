@@ -1,4 +1,4 @@
-// Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved
 
 #include <assert.h>
 
@@ -135,7 +135,7 @@ void Arc__free(Arc arc) {
 
 Arc Arc__new(String from) {
     Arc arc = Memory__new(Arc, from);
-    arc->distance = 0.0;
+    arc->distance = -1.0;
     arc->from_tag = (Tag)0;
     arc->from_twist = 0.0;
     arc->goodness = 123456789.0;
@@ -160,27 +160,33 @@ Arc Arc__read(File in_file, Map map) {
     File__tag_match(in_file, "Arc");
     Unsigned from_tag_id =
       (Unsigned)File__integer_attribute_read(in_file, "From_Tag_Id");
-    Double from_twist = File__float_attribute_read(in_file, "From_Twist");
-    Double distance = File__float_attribute_read(in_file, "Distance");
+    Double from_twist = File__double_attribute_read(in_file, "From_Twist");
+
+    Double distance = File__double_attribute_read(in_file, "Distance");
     Unsigned to_tag_id =
        (Unsigned)File__integer_attribute_read(in_file, "To_Tag_Id");
-    Double to_twist = File__float_attribute_read(in_file, "To_Twist");
-    Double goodness = File__float_attribute_read(in_file, "Goodness");
+    Double to_twist = File__double_attribute_read(in_file, "To_Twist");
+    Double goodness = File__double_attribute_read(in_file, "Goodness");
     Logical in_tree = (Logical)File__integer_attribute_read(in_file, "In_Tree");
     File__string_match(in_file, "/>\n");
 
     // Convert from degrees to radians:
     Double pi = (Double)3.14159265358979323846264;
-    Double radians_to_degrees =  pi / 180.0;
-    from_twist *= radians_to_degrees;
-    to_twist *= radians_to_degrees;
+    Double degrees_to_radians = pi / 180.0;
+    from_twist *= degrees_to_radians;
+    to_twist *= degrees_to_radians;
 
     // Create and load *arc*:
     Tag from_tag = Map__tag_lookup(map, from_tag_id);
     Tag to_tag = Map__tag_lookup(map, to_tag_id);
-    Arc arc =
-      Arc__create(from_tag, from_twist, distance, to_tag, to_twist, goodness);
-    arc->in_tree = in_tree;
+    Arc arc = Map__arc_lookup(map, from_tag, to_tag);
+    
+    // Load the data into *arc*:
+    if (arc->goodness > goodness) {
+	Arc__update(arc, from_twist, distance, to_twist, goodness);
+	arc->in_tree = in_tree;
+    }
+
     return arc;
 }
 
@@ -209,6 +215,7 @@ void Arc__update(Arc arc,
     // Create and load *arc*:
     assert (arc->from_tag->id < arc->to_tag->id);
     arc->from_twist = from_twist;
+    assert (distance > 0.0);
     arc->distance = distance;
     arc->goodness = goodness;
     arc->to_twist = to_twist;

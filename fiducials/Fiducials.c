@@ -136,7 +136,8 @@ Fiducials Fiducials__create(
   void *announce_object,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String_Const log_file_name, String_Const map_file_name) {
+  String_Const log_file_name, String_Const map_file_name,
+  String_Const tag_heights_file_name) {
     // Create *image_size*:
     Unsigned width = CV_Image__width_get(original_image);
     Unsigned height = CV_Image__height_get(original_image);
@@ -334,8 +335,8 @@ Fiducials Fiducials__create(
     }
 
     // Create the *map*:
-    Map map = Map__create(map_file_name, announce_object,
-      tag_announce_routine, "Fiducials__new:Map_New");
+    Map map = Map__create(map_file_name, announce_object, tag_announce_routine,
+      tag_heights_file_name, "Fiducials__new:Map__create");
 
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
@@ -1577,15 +1578,3 @@ void Fiducials__tag_record(Unsigned direction, CV_Point2D32F_Vector vector) {
        //call d@(form@("%p%<=record@Tag(T%d%, *)\n\") % f@(indent) / f@(tag.id))
 }
 		  
-void Fiducials__tag_heights_xml_read(
-  Fiducials fiducials, String_Const xml_file_name) {
-    File xml_in_file = File__open(xml_file_name, "r");
-    if (xml_in_file == (File)0) {
-	File__format(stderr, "Could not open '%s'\n", xml_file_name);
-	assert(0);
-    }
-    Map map = fiducials->map;
-    assert(map != (Map)0);
-    Map__tag_heights_xml_read(map, xml_in_file);
-    File__close(xml_in_file);
-}

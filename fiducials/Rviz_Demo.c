@@ -95,8 +95,7 @@ int main(int arguments_size, char * arguments[]) {
         Fiducials fiducials =
           Fiducials__create(image, lens_calibrate_file_name,
 	  rviz, Rviz__location_announce, Rviz__tag_announce,
-          (String_Const)0, (String_Const)0);
-        Fiducials__tag_heights_xml_read(fiducials, "Tag_Heights.xml");
+	  (String_Const)0, "Rviz_Demo.xml", "Tag_Heights.xml");
 
         for (Unsigned index = 0; index < size; index++) {
             String image_file_name = 

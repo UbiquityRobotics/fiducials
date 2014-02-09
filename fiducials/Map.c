@@ -272,6 +272,7 @@ Double Map__distance_per_pixel(Map map, Unsigned id) {
 	    break;
 	}
     }
+    assert (distance_per_pixel > 0.0);
     return distance_per_pixel;
 }
 
@@ -325,7 +326,7 @@ void Map__free(Map map) {
 
 Map Map__create(String_Const map_file_name,
   void *announce_object, Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String from) {
+  String_Const tag_heights_file_name, String from) {
     // Create and fill in *map*:
     Map map = Memory__new(Map, from);
     map->all_arcs = List__new("Map__new:List_New:all_arcs"); // <Tag>
@@ -348,6 +349,9 @@ Map Map__create(String_Const map_file_name,
       // <Unsigned, Tag>
     map->temporary_arc = Arc__new("Map__new:Arc__New:temporary_arc");
     map->visit = 0;
+
+    // Read in the contents of *map_heights_file_name* into *map*:
+    Map__tag_heights_xml_read(map, tag_heights_file_name);
 
     // Restore *map* if appropriate:
     File in_file = File__open(map_file_name, "r");
@@ -499,8 +503,8 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
         Double x = location->x;
 	Double y = location->y;
 	Double bearing = location->bearing;
-	File__format(stderr, "Location[%d]: id:%d x:%f y:%f bearing:%f\n",
-	  index, location->id, x, y, bearing * 180 / 3.1415926);
+	//File__format(stderr, "Location[%d]: id:%d x:%f y:%f bearing:%f\n",
+	//  index, location->id, x, y, bearing * 180 / 3.1415926);
 
 	// Draw a triangle that shows the bearing:
 	Double k1 = 40.0;
@@ -696,24 +700,30 @@ void Map__update(Map map) {
     }
 }
 
-/// @brief Writes *map* out to *xml_in_file*.
-/// @param map to write out.
-/// @param xml_in_file is the *File* to write *map* out to.
+/// @brief Reads the tag heights .xml file.
+/// @param map to to store tag heights into.
+/// @param tag_heights_file_name is the file to read from.
 ///
-/// *Map__tag_heights_xml_read*() will write *map* out to *File* in
-/// XML file.
+/// *Map__tag_heights_xml_read*() will read the *tag_heights_file_name* .xml
+/// file and the the tag heights into *map*.
 
-void Map__tag_heights_xml_read(Map map, File xml_in_file) {
+void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
+    // Open *tag_height_file_name* for reading:
+    File xml_in_file = File__open(tag_heights_file_name, "r");
+    if (xml_in_file == (File)0) {
+	File__format(stderr, "Could not open '%s'\n", tag_heights_file_name);
+	assert(0);
+    }
+
     // Read in Map XML tag '<Map_Tag_Heights Count="xx">' :
     File__tag_match(xml_in_file, "Map_Tag_Heights");
     Unsigned count =
       (Unsigned)File__integer_attribute_read(xml_in_file, "Count");
     File__string_match(xml_in_file, ">\n");
 
+    // Read in the *count* *Tag_Height* objects into *tag_heights*:
     List tag_heights = map->tag_heights;
     assert (tag_heights != (List)0);
-
-    // Read in the *count* *Tag_Height* objects:
     for (Unsigned index = 0; index < count; index++) {
 	Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
 	List__append(tag_heights, (Memory)tag_height,
@@ -723,6 +733,9 @@ void Map__tag_heights_xml_read(Map map, File xml_in_file) {
     // Process the final Map XML tag "</Map_Tag_Heights>":
     File__tag_match(xml_in_file, "/Map_Tag_Heights");
     File__string_match(xml_in_file, ">\n");
+
+    // Close out *xml_in_file*:
+    File__close(xml_in_file);
 
     // Sort *tag_heights*:
     List__sort(tag_heights, (List__Compare__Routine)Tag_Height__compare);

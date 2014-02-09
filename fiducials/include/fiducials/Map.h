@@ -74,7 +74,8 @@ extern Unsigned Map__arc_update(
   Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image);
 extern Integer Map__compare(Map map1, Map map2);
 extern Map Map__create(String_Const file_name, void *announce_object,
-  Fiducials_Tag_Announce_Routine announce_routine, String from);
+  Fiducials_Tag_Announce_Routine announce_routine,
+  String_Const tag_heights_file_name, String from);
 extern Double Map__distance_per_pixel(Map map, Unsigned id);
 extern void Map__free(Map map);
 extern void Map__restore(Map map, File in_file);
@@ -82,7 +83,8 @@ extern void Map__save(Map map);
 extern void Map__sort(Map map);
 extern void Map__svg_write(
   Map map, const String svg_base_name, List /*<Location>*/ locations);
-extern void Map__tag_heights_xml_read(Map map, File xml_in_file);
+extern void Map__tag_heights_xml_read(
+  Map map, String_Const tag_heights_file_name);
 extern void Map__tag_announce(void *object, Integer id,
   Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz,
   Logical visible);

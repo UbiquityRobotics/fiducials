@@ -167,9 +167,10 @@ Tag Tag__read(File in_file, Map map) {
 
     // Load up *tag*:
     Tag tag = Map__tag_lookup(map, tag_id);
-    Tag__initialize(
-      tag, twist * degrees_to_radians, x, y, diagonal, map->visit);
+    Tag__initialize(tag, twist, x, y, diagonal, map->visit);
+    tag->distance_per_pixel = Map__distance_per_pixel(map, tag_id);
     tag->hop_count = hop_count;
+    tag->diagonal = diagonal;
 
     return tag;
 }

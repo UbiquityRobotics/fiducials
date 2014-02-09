@@ -95,7 +95,8 @@ extern Fiducials Fiducials__create(
   void *announce_object,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String_Const log_file_name, String_Const map_file_name);
+  String_Const log_file_name, String_Const map_file_name,
+  String_Const tag_heights_file_name);
 extern void Fiducials__free(Fiducials fiduicals);
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, Logical show);
@@ -104,8 +105,6 @@ extern Integer Fiducials__point_sample(
   Fiducials fiducials, CV_Point2D32F point);
 extern void Fiducials__sample_points_helper(
   String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point);
-extern void Fiducials__tag_heights_xml_read(
-  Fiducials fiducials, String_Const xml_file_name);
 extern Integer Fiducials__points_maximum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 extern Integer Fiducials__points_minimum(Fiducials fiducials,
