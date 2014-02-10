@@ -15,11 +15,16 @@ typedef struct Fiducials__Struct *Fiducials;
 #include "Logical.h"
 
 // Define the announce routine typedef's:
-typedef void (*Fiducials_Tag_Announce_Routine)(void *object, Integer id,
-  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz,
-  Logical visible);
-typedef void (*Fiducials_Location_Announce_Routine)(void *object, Integer id,
-  Double x, Double y, Double z, Double bearing);
+typedef void (*Fiducials_Arc_Announce_Routine)(void *announce_object,
+  Integer from_id, Double from_x, Double from_y, Double from_z,
+  Integer to_id, Double to_x, Double to_y, Double to_z,
+  Double goodness, Logical in_spanning_tree);
+typedef void (*Fiducials_Location_Announce_Routine)(void *announce_object,
+  Integer id, Double x, Double y, Double z, Double bearing);
+typedef void (*Fiducials_Tag_Announce_Routine)(void *announce_object,
+  Integer id, Double x, Double y, Double z, Double twist,
+  Double diagonal, Double distance_per_pixel,
+  Logical visible, Integer hop_count);
 
 // #include everything else:
 #include "Camera_Tag.h"
@@ -43,6 +48,7 @@ typedef Logical Mapping[64];
 typedef struct timeval *Time_Value;
 
 struct Fiducials__Struct {
+    Fiducials_Arc_Announce_Routine arc_announce_routine;
     void *announce_object;
     CV_Scalar black;
     CV_Scalar blue;
@@ -84,15 +90,14 @@ struct Fiducials__Struct {
     Logical y_flip;
 };
 
-extern void Fiducials__location_announce(void *object, Integer id,
-  Double x, Double y, Double z, Double bearing);
-extern void Fiducials__sample_points_compute(
-  CV_Point2D32F_Vector corners, CV_Point2D32F_Vector sample_points);
-extern CV_Point2D32F_Vector Fiducials__references_compute(
-  Fiducials fiducials, CV_Point2D32F_Vector corners);
+extern void Fiducials__arc_announce(void *announce_object,
+  Integer from_id, Double from_x, Double from_y, Double from_z,
+  Integer to_id, Double to_x, Double to_y, Double to_z,
+  Double goodness, Logical in_spanning_tree);
 extern Fiducials Fiducials__create(
   CV_Image original_image, String_Const lens_calibrate_file_name,
   void *announce_object,
+  Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
   String_Const log_file_name, String_Const map_file_name,
@@ -100,9 +105,15 @@ extern Fiducials Fiducials__create(
 extern void Fiducials__free(Fiducials fiduicals);
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, Logical show);
-extern Unsigned Fiducials__process(Fiducials fiducials);
+extern void Fiducials__location_announce(void *object, Integer id,
+  Double x, Double y, Double z, Double bearing);
 extern Integer Fiducials__point_sample(
   Fiducials fiducials, CV_Point2D32F point);
+extern Unsigned Fiducials__process(Fiducials fiducials);
+extern CV_Point2D32F_Vector Fiducials__references_compute(
+  Fiducials fiducials, CV_Point2D32F_Vector corners);
+extern void Fiducials__sample_points_compute(
+  CV_Point2D32F_Vector corners, CV_Point2D32F_Vector sample_points);
 extern void Fiducials__sample_points_helper(
   String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point);
 extern Integer Fiducials__points_maximum(Fiducials fiducials,

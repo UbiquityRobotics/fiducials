@@ -23,7 +23,18 @@ typedef struct Fiducials__Struct *Fiducials;
 #include "Tag.h"
 #include "Unsigned.h"
 
-void Fiducials__location_announce(void *object, Integer id,
+void Fiducials__arc_announce(void *announce_object,
+  Integer from_id, Double from_x, Double from_y, Double from_z,
+  Integer to_id, Double to_x, Double to_y, Double to_z,
+  Double goodness, Logical in_spanning_tree) {
+    File__format(stderr,
+      "Arc: from=(%d, %f, %f, %f,) to=(%d, %f, %f, %f) %f %d\n",
+      from_id, from_x, from_y, from_z,
+      to_id, to_x, to_y, to_z,
+      goodness, in_spanning_tree);
+}
+
+void Fiducials__location_announce(void *announce_object, Integer id,
   Double x, Double y, Double z, Double bearing) {
     File__format(stderr,
       "Location: id=%d x=%f y=%f bearing=%f\n", id, x, y, bearing);
@@ -134,6 +145,7 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
 Fiducials Fiducials__create(
   CV_Image original_image, String_Const lens_calibrate_file_name,
   void *announce_object,
+  Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
   String_Const log_file_name, String_Const map_file_name,
@@ -335,11 +347,13 @@ Fiducials Fiducials__create(
     }
 
     // Create the *map*:
-    Map map = Map__create(map_file_name, announce_object, tag_announce_routine,
+    Map map = Map__create(map_file_name, announce_object,
+      arc_announce_routine, tag_announce_routine,
       tag_heights_file_name, "Fiducials__new:Map__create");
 
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
+    fiducials->arc_announce_routine = arc_announce_routine;
     fiducials->announce_object = announce_object;
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
     fiducials->blur = (Logical)1;
@@ -976,8 +990,10 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	// Always announce *current_visible* as visible:
 	current_visible->visible = (Logical)1;
 	map->tag_announce_routine(map->announce_object, current_visible->id,
-	 current_visible->x, current_visible->y, 0.0, current_visible->twist,
-	 100.0, 100.0, 1.0, (Logical)1);
+	 current_visible->x, current_visible->y, current_visible->z,
+	 current_visible->twist, current_visible->diagonal,
+	 current_visible->distance_per_pixel, (Logical)1,
+	 current_visible->hop_count);
     }
 
     // Identifiy tags that are no longer visible:
@@ -1009,7 +1025,9 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	    previous_visible->visible = (Logical)1;
 	    map->tag_announce_routine(map->announce_object,
 	      previous_visible->id, previous_visible->x, previous_visible->y,
-	      0.0, previous_visible->twist, 100.0, 100.0, 1.0, (Logical)0);
+	      previous_visible->z, previous_visible->twist,
+	      previous_visible->diagonal, previous_visible->distance_per_pixel,
+	      (Logical)0, previous_visible->hop_count);
 	}
     }
     // Clear *previous_visibles* and swap *current_visible* with

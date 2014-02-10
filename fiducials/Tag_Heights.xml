@@ -1,4 +1,4 @@
 <Map_Tag_Heights Count="1">
-  <Tag_Height First_Id="0" Last_Id="100000" Distance_Per_Pixel=".2"/>
+  <Tag_Height First_Id="0" Last_Id="100000" Distance_Per_Pixel=".2" Z="192.0"/>
 </Map_Tag_Heights>
 

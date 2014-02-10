@@ -185,6 +185,7 @@ Arc Arc__read(File in_file, Map map) {
     if (arc->goodness > goodness) {
 	Arc__update(arc, from_twist, distance, to_twist, goodness);
 	arc->in_tree = in_tree;
+	Map__arc_announce(map, arc);
     }
 
     return arc;

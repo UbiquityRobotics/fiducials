@@ -23,13 +23,16 @@ extern "C" {
 
 /// @brief A *Map__Struct* represents the fiducial location map.
 struct Map__Struct {
+    /// @brief Routine to call to announce change to arc.
+    Fiducials_Arc_Announce_Routine arc_announce_routine;
+
     /// @brief All of the *Arc*'s (i.e. measured intertag distances) in the map.
     List /* <Arc> */ all_arcs;
 
     /// @brief All of the tags (i.e. fiducials) in the map.
     List /* <Tag> */ all_tags;
 
-    /// @brief Object passed into announce routine.
+    /// @brief Opaque object passed into announce routines.
     void *announce_object;
 
     /// @brief An lookup *Arc* table.
@@ -68,15 +71,17 @@ struct Map__Struct {
 
 // *Map* routines:
 
+extern void Map__arc_announce(Map map, Arc arc);
 extern void Map__arc_append(Map map, Arc arc);
 extern Arc Map__arc_lookup(Map map, Tag from, Tag to);
 extern Unsigned Map__arc_update(
   Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image);
 extern Integer Map__compare(Map map1, Map map2);
 extern Map Map__create(String_Const file_name, void *announce_object,
-  Fiducials_Tag_Announce_Routine announce_routine,
+  Fiducials_Arc_Announce_Routine arc_announce_routine,
+  Fiducials_Tag_Announce_Routine tag_announce_routine,
   String_Const tag_heights_file_name, String from);
-extern Double Map__distance_per_pixel(Map map, Unsigned id);
+extern Tag_Height Map__tag_height_lookup(Map map, Unsigned id);
 extern void Map__free(Map map);
 extern void Map__restore(Map map, File in_file);
 extern void Map__save(Map map);
@@ -86,8 +91,8 @@ extern void Map__svg_write(
 extern void Map__tag_heights_xml_read(
   Map map, String_Const tag_heights_file_name);
 extern void Map__tag_announce(void *object, Integer id,
-  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz,
-  Logical visible);
+  Double x, Double y, Double z, Double twist, Double diagonal,
+  Double distance_per_pixel, Logical visible, Integer hop_count);
 extern Tag Map__tag_lookup(Map map, Unsigned tag_id);
 extern void Map__update(Map map);
 extern void Map__write(Map map, File out_file);

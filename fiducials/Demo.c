@@ -62,8 +62,8 @@ int main(int arguments_size, char * arguments[]) {
 	assert (image != (CV_Image)0);
 	Fiducials fiducials =
 	  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
-	  Fiducials__location_announce, Map__tag_announce, log_file_name,
-	  "Demo.xml", "Tag_Heights.xml");
+	  Fiducials__arc_announce, Fiducials__location_announce,
+	  Map__tag_announce, log_file_name, "Demo.xml", "Tag_Heights.xml");
 
 	for (Unsigned index = 0; index < size; index++) {
 	    String image_file_name = 

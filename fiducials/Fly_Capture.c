@@ -145,9 +145,9 @@ int main(int arguments_size, char * arguments[]) {
 		    display_image->imageData = image_data;
 
 		    fiducials = Fiducials__create(display_image,
-		      (String_Const)0, (void *)0, Fiducials__location_announce,
-		      Map__tag_announce, (String_Const)0, (String_Const)0,
-		      (String_Const)0);
+		      (String_Const)0, (void *)0, Fiducials__arc_announce,
+		      Fiducials__location_announce, Map__tag_announce,
+		      (String_Const)0, (String_Const)0, (String_Const)0);
 		    fiducials->debug_index = 11;
 		}
 

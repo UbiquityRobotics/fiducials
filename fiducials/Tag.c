@@ -63,6 +63,7 @@ Integer Tag__compare(Tag tag1, Tag tag2) {
 /// is called.
 
 Tag Tag__create(Unsigned id, Map map) {
+    Tag_Height tag_height = Map__tag_height_lookup(map, id);
     Tag tag =  Memory__new(Tag, "Tag__create");
     tag->twist = (Double)0.0;
     tag->arcs = List__new("Tag__create:List__new:arcs"); // <Arc>
@@ -71,10 +72,11 @@ Tag Tag__create(Unsigned id, Map map) {
     tag->id = id;
     tag->initialized = (Logical)0;
     tag->map = map;
-    tag->distance_per_pixel = Map__distance_per_pixel(map, id);
+    tag->distance_per_pixel = tag_height->distance_per_pixel;
     tag->visit = map->visit;
     tag->x = (Double)0.0;
     tag->y = (Double)0.0;
+    tag->z = tag_height->z;
     return tag;
 }
 
@@ -165,12 +167,15 @@ Tag Tag__read(File in_file, Map map) {
     Double degrees_to_radians = pi / 180.0;
     twist *= degrees_to_radians;
 
+    // Grab some additional information about *tag_id* from *map*:
+    Tag_Height tag_height = Map__tag_height_lookup(map, tag_id);
+
     // Load up *tag*:
     Tag tag = Map__tag_lookup(map, tag_id);
     Tag__initialize(tag, twist, x, y, diagonal, map->visit);
-    tag->distance_per_pixel = Map__distance_per_pixel(map, tag_id);
+    tag->distance_per_pixel = tag_height->distance_per_pixel;
     tag->hop_count = hop_count;
-    tag->diagonal = diagonal;
+    tag->z = tag_height->z;
 
     return tag;
 }
@@ -366,9 +371,7 @@ void Tag_Height__free(Tag_Height tag_height) {
 /// *Tag_Height__xml_read*() will read in the a <Tag_Height .../> from
 /// *xml_in_file* and return the resulting *Tag_Height* object.
 
-Tag_Height 
-Tag_Height__xml_read(File xml_in_file)
-{
+Tag_Height Tag_Height__xml_read(File xml_in_file) {
     // Read in "<Tag_Height .../>":
     File__tag_match(xml_in_file, "Tag_Height");
     Unsigned first_id =
@@ -376,7 +379,8 @@ Tag_Height__xml_read(File xml_in_file)
     Unsigned last_id =
       (Unsigned)File__integer_attribute_read(xml_in_file, "Last_Id");
     Double distance_per_pixel =
-       File__float_attribute_read(xml_in_file, "Distance_Per_Pixel");
+       File__double_attribute_read(xml_in_file, "Distance_Per_Pixel");
+    Double z = File__double_attribute_read(xml_in_file, "Z");
     File__string_match(xml_in_file, "/>\n");
 
     // Load up *tag_height*:
@@ -384,6 +388,7 @@ Tag_Height__xml_read(File xml_in_file)
     tag_height->distance_per_pixel = distance_per_pixel;
     tag_height->first_id = first_id;
     tag_height->last_id = last_id;
+    tag_height->z = z;
 
     return tag_height;
 }

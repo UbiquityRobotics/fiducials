@@ -36,11 +36,15 @@
 /// updates the location or twist for a *tag*.
 
 void Rviz__tag_announce(void *rviz, Integer id,
-  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz,
-  Logical visible) {
+  Double x, Double y, Double z, Double twist, Double diagonal,
+  Double distance_per_pixel, Logical visible, Integer hop_count) {
     File__format(stderr, "Rviz__tag_announce:id=%d x=%f y=%f twist=%f\n",
       id, x, y, twist);
     Double scale = 1000.0;
+    // sqrt(2) = 1.41521...
+    Double dx = (diagonal * distance_per_pixel) / 1.4142135623730950488016887;
+    Double dy = dx;
+    Double dz = 1.0;
     sendMarker(rviz, "fiducial_frame", id, x / scale, y / scale, z / scale,
       0.0, dx / scale, dy / scale, dz / scale);
 }
@@ -93,8 +97,8 @@ int main(int arguments_size, char * arguments[]) {
         assert (image != (CV_Image)0);
         void *rviz = initRviz(arguments_size, arguments, "Rviz_Demo");
         Fiducials fiducials =
-          Fiducials__create(image, lens_calibrate_file_name,
-	  rviz, Rviz__location_announce, Rviz__tag_announce,
+          Fiducials__create(image, lens_calibrate_file_name, rviz,
+	  Fiducials__arc_announce, Rviz__location_announce, Rviz__tag_announce,
 	  (String_Const)0, "Rviz_Demo.xml", "Tag_Heights.xml");
 
         for (Unsigned index = 0; index < size; index++) {

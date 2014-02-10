@@ -52,14 +52,16 @@
 
 /// @brief A *Tag* is a pointer to a *Tag_Struct* object.
 typedef struct Tag__Struct *Tag;
+
+/// @brief A *Tag_Height* is a point to a *Tag_Height__Struct* object.
+typedef struct Tag_Height__Struct *Tag_Height;
+
 #include "Map.h"
 #include "Arc.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-/// @brief A *Tag_Height* is a point to a *Tag_Height__Struct* object.
-typedef struct Tag_Height__Struct *Tag_Height;
 
 /// @brief A *Tag_Struct* represents the location and orientation of one 
 /// ceiling fiducial tag.
@@ -99,6 +101,9 @@ struct Tag__Struct {
 
     /// @brief Absolute Y floor coordinate.
     Double y;
+
+    /// @brief Absolute Z floor coordinate.
+    Double z;
 };
 
 /// @brief A *Tag_Height__Struct* represents a span of tags a the same
@@ -110,8 +115,11 @@ struct Tag_Height__Struct {
     /// @brief The first tag identifier in the span.
     Unsigned first_id;
 
-    /// @breif The last tag identifier in the span.
+    /// @brief The last tag identifier in the span.
     Unsigned last_id;
+
+    /// @brief The fiducial height above the floor.
+    Double z;
 };
 
 // *Tag* routines;

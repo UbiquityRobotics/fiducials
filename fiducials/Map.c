@@ -1,4 +1,4 @@
-// Copyright (c) 20013 by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 /// @brief Global map of ceiling fiducial markers.
 ///
@@ -24,6 +24,22 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include "Unsigned.h"
 
 // *Map* routines:
+
+/// @brief Causes an arc announce callback routine to be called.
+/// @param map is the parent *Map* object.
+/// @param arc is the *Arc* object that has just been changed.
+///
+/// *Map__arc_announce*() will cause the arc announde call back routine
+/// to be called for *arc*.
+
+void Map__arc_announce(Map map, Arc arc) {
+   Tag from_tag = arc->from_tag;
+   Tag to_tag = arc->to_tag;
+   map->arc_announce_routine(map->announce_object,
+     from_tag->id, from_tag->x, from_tag->y, from_tag->z,
+     to_tag->id, to_tag->x, to_tag->y, to_tag->z,
+     arc->goodness, arc->in_tree);
+}
 
 /// @brief Appends *arc* to *map*.
 /// @param map to append to.
@@ -194,6 +210,9 @@ Unsigned Map__arc_update(
 	map->is_changed = (Logical)1;
 	map->is_saved = (Logical)0;
 
+	// Let interested parties know that *arc* has been updated:
+	Map__arc_announce(map, arc);
+
 	changed = 1;
     }
     return changed;
@@ -260,20 +279,21 @@ Integer Map__compare(Map map1, Map map2) {
 /// (millimeters, centimeters, meters, kilometers, inches, feet, miles,
 /// light seconds, etc.)
 
-Double Map__distance_per_pixel(Map map, Unsigned id) {
+Tag_Height Map__tag_height_lookup(Map map, Unsigned id) {
     Double distance_per_pixel = 0.0;
     List /* Tag_Height */ tag_heights = map->tag_heights;
+    Tag_Height tag_height = (Tag_Height)0;
     assert (tag_heights != (List)0);
     Unsigned size = List__size(tag_heights);
     for (Unsigned index = 0; index < size; index++) {
-	Tag_Height tag_height = (Tag_Height)List__fetch(tag_heights, index);
+	tag_height = (Tag_Height)List__fetch(tag_heights, index);
 	if (tag_height->first_id <= id && id <= tag_height->last_id) {
 	    distance_per_pixel = tag_height->distance_per_pixel;
 	    break;
 	}
+	tag_height = (Tag_Height)0;
     }
-    assert (distance_per_pixel > 0.0);
-    return distance_per_pixel;
+    return tag_height;
 }
 
 /// @brief Releases storage associated with *map*.
@@ -320,15 +340,24 @@ void Map__free(Map map) {
 }
 
 /// @brief Returns a new *Map*.
+/// @param map_file_name is the name of the Map .xml file
+/// @param announce_object is an opaque object that is passed into announce
+///        routines.
+/// @param arc_announce_routine is the arc callback routine.
+/// @param tag_announce_routine is the tag callback routine.
+/// @param tag_heights_file_name is the tag ceiling heights .xml file.
+/// @param from is used for memory leak checking.
 /// @returns a new *Map*.
 ///
 /// *Map__create*() creates and returns an empty initialized *Map* object.
 
-Map Map__create(String_Const map_file_name,
-  void *announce_object, Fiducials_Tag_Announce_Routine tag_announce_routine,
+Map Map__create(String_Const map_file_name, void *announce_object,
+  Fiducials_Arc_Announce_Routine arc_announce_routine,
+  Fiducials_Tag_Announce_Routine tag_announce_routine,
   String_Const tag_heights_file_name, String from) {
     // Create and fill in *map*:
     Map map = Memory__new(Map, from);
+    map->arc_announce_routine = arc_announce_routine;
     map->all_arcs = List__new("Map__new:List_New:all_arcs"); // <Tag>
     map->all_tags = List__new("Map__new:List_New:all_tags"); // <Tag>
     map->announce_object = announce_object;
@@ -589,8 +618,8 @@ void Map__write(Map map, File out_file) {
 /// updates the location or twist for a *tag*.
 
 void Map__tag_announce(void *object, Integer id,
-  Double x, Double y, Double z, Double twist, Double dx, Double dy, Double dz,
-  Logical visible) {
+  Double x, Double y, Double z, Double twist, Double diagnoal,
+  Double distance_per_pixel, Logical visible, Integer hop_count) {
     String visible_text = "";
     if (!visible) {
 	visible_text = "*** No longer visible ***";
