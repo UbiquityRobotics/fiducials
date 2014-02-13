@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   sensor_msgs
 )
+find_package(orocos_kdl REQUIRED)
+
 
 catkin_package()
 
@@ -23,8 +25,11 @@ catkin_package()
 
 include_directories(${catkin_INCLUDE_DIRS})
 
+link_directories(${orocos_kdl_LIBRARY_DIRS})
+
 add_executable(fiducials_localization src/fiducials_localization.cpp)
-target_link_libraries(fiducials_localization ${catkin_LIBRARIES})
+target_link_libraries(fiducials_localization ${catkin_LIBRARIES}
+${orocos_kdl_LIBRARIES})
 
 #############
 ## Install ##
