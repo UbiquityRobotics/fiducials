@@ -53,57 +53,60 @@
 #include "fiducials/List.h"
 #include "fiducials/Logical.h"
 
-/// @brief Print out tag update information.
-/// @param anounce_object is an opaque object from *Map*->*announce_object*.
-/// @param id is the tag id.
-/// @param x is the tag X location.
-/// @param y is the tag Y location.
-/// @param z is the tag Z location.
-/// @param twist is the tag twist in radians.
-/// @param dx is the tag size along the X axis (before twist).
-/// @param dy is the tag size along the Y axis (before twist).
-/// @param dz is the tag height in the Z axis.
-///
-/// *Map__tag_announce*() is called each time the map algorithm
-/// updates the location or twist for a *tag*.
+class FiducialsNode {
+  private:
+    ros::Publisher * marker_pub;
 
-ros::Publisher * marker_pub;
-tf::TransformBroadcaster * tf_pub;
+    // transform bits
+    tf2_ros::TransformBroadcaster tf_pub;
+    tf2_ros::Buffer tf_buffer;
+    tf2_ros::TransformListener tf_sub;
 
-std::string world_frame;
-std::string pose_frame;
+    std::string world_frame;
+    std::string pose_frame;
+    std::string odom_frame;
+    bool use_odom;
 
-const double scale = 1000.0;
-std::string fiducial_namespace;
-std::string position_namespace;
+    const double scale;
+    std::string fiducial_namespace;
+    std::string position_namespace;
 
-std_msgs::ColorRGBA tag_color;
-std_msgs::ColorRGBA position_color;
+    std_msgs::ColorRGBA tag_color;
+    std_msgs::ColorRGBA hidden_tag_color;
+    std_msgs::ColorRGBA position_color;
 
-Fiducials fiducials;
-std::string tag_height_file;
+    Fiducials fiducials;
+    std::string tag_height_file;
 
-/// @brief Deal creation and changes to tag parameters.
-/// @param rviz is an opaque *announce_object* that was handed into
-///        Fiducials__create().
-/// @param id is that fiducial tag identifier.
-/// @param x is the X coordinate in absolute coordinate space.
-/// @param y is the Y coordinate in absolute coordinate space.
-/// @param z is the Z coordinate in absolute coordinate space.
-/// @param twist is the fiducial twist amount in radians.
-/// @param diagonal is the fiduical diagonal in camera pixels.
-/// @param distance_per_pixel is the amount of distance each camera
-///        pixel occupies.
-/// @param visible is 1 if the tag is currently in the camera field of view.
-/// @param hop_count is the number arc's between the tag and the origin tag
-///        along the spanning tree.  -1 specifies that the tag is not
-///        connected to the spanning tree (i.e. a partitioned map.)
+    geometry_msgs::Pose scale_position(double x, double y, double z,
+        double theta);
+    visualization_msgs::Marker createMarker(std::string ns, int id);
 
-void tag_announce(void *rviz, int id,
-  double x, double y, double z, double twist,
-  double diagonal, double distance_per_pixel, int visible, int hop_count) {
-    ROS_INFO("tag_announce:id=%d x=%f y=%f twist=%f\n",
-      id, x, y, twist);
+    static void arc_announce(void *t, int from_id, double from_x,
+	double from_y, double from_z, int to_id, double to_x, double to_y,
+	double to_z, double goodness, int in_spanning_tree);
+    static void tag_announce(void *t, int id, double x, double y, double z,
+	double twist, double diagonal, double distance_per_pixel, int visible,
+	int hop_count);
+    void tag_cb(int id, double x, double y, double z, double twist, double dx,
+        double dy, double dz, int visible);
+
+    static void location_announce(void *t, int id, double x, double y,
+        double z, double bearing);
+    void location_cb(int id, double x, double y, double z, double bearing);
+
+    void imageCallback(const sensor_msgs::ImageConstPtr & msg);
+
+  public:
+    FiducialsNode(ros::NodeHandle &nh);
+};
+
+geometry_msgs::Pose FiducialsNode::scale_position(double x, double y, 
+    double z, double theta) {
+  geometry_msgs::Pose res;
+  res.position.x = x / scale;
+  res.position.y = y / scale;
+  res.position.z = z / scale;
 
   res.orientation = tf::createQuaternionMsgFromYaw(theta);
 
@@ -119,12 +122,21 @@ visualization_msgs::Marker FiducialsNode::createMarker(std::string ns, int id) {
     return marker;
 }
 
-void FiducialsNode::tag_announce(void *t, int id,
-  double x, double y, double z, double twist, double dx, double dy, double dz,
-  int visible) {
+void FiducialsNode::arc_announce(void *t, int from_id, double from_x,
+    double from_y, double from_z, int to_id, double to_x, double to_y,
+    double to_z, double goodness, int in_spanning_tree) {
+}
+
+void FiducialsNode::tag_announce(void *t, int id, double x, double y, double z,
+  double twist, double diagonal, double distance_per_pixel, int visible,
+  int hop_count) {
     ROS_INFO("tag_announce:id=%d x=%f y=%f twist=%f\n",
       id, x, y, twist);
     FiducialsNode * ths = (FiducialsNode*)t;
+    // sqrt(2) = 1.414213...
+    double dx = (diagonal * distance_per_pixel) / 1.4142135623730950488016887;
+    double dy = dx;
+    double dz = 1.0;
     ths->tag_cb(id, x, y, z, twist, dx, dy, dz, visible);
 }
 
@@ -163,10 +175,11 @@ void FiducialsNode::tag_cb(int id, double x, double y, double z, double twist,
     marker_pub->publish(marker);
 }
 
-void arc_announce(void *rvis,
-  int from_id, double from_x, double from_y, double from_z,
-  int to_id, double to_x, double to_y, double to_z,
-  double goodness, int in_spanning_tree) {
+
+void FiducialsNode::location_announce(void * t, int id, double x, double y,
+    double z,double bearing) {
+    FiducialsNode * ths = (FiducialsNode*)t;
+    ths->location_cb(id, x, y, z, bearing);
 }
 
 void location_announce(void *rviz, int id,
@@ -299,4 +312,3 @@ int main(int argc, char ** argv) {
 
     return 0;
 }
-
