@@ -28,6 +28,7 @@ int main(int arguments_size, char * arguments[]) {
 
     assert (gettimeofday(start_time_value, (struct timezone *)0) == 0);
 
+    Logical image_log = (Logical)0;
     List /* <String> */ image_file_names =
       List__new("Demo:main:List__new:image_file_names");
     String lens_calibrate_file_name = (String)0;
@@ -39,7 +40,9 @@ int main(int arguments_size, char * arguments[]) {
 	for (Unsigned index = 1; index < arguments_size; index++) {
 	    String argument = arguments[index];
 	    Unsigned size = String__size(argument);
-	    if (size > 4 && String__equal(argument + size - 4, ".txt")) {
+	    if (String__equal(argument, "--image_log")) {
+		image_log = (Logical)1;
+	    } else if (size > 4 && String__equal(argument + size - 4, ".txt")) {
 		lens_calibrate_file_name = argument;
 	    } else if (size > 4 && String__equal(argument + size - 4, ".log")) {
 		log_file_name = argument;
@@ -61,9 +64,11 @@ int main(int arguments_size, char * arguments[]) {
 	image = CV_Image__pnm_read(image_file_name0);
 	assert (image != (CV_Image)0);
 	Fiducials fiducials =
-	  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
-	  Fiducials__arc_announce, Fiducials__location_announce,
-	  Map__tag_announce, log_file_name, "Demo.xml", "Tag_Heights.xml");
+	  Fiducials__create(image, lens_calibrate_file_name,
+	  (void *)0, Fiducials__arc_announce,
+	  Fiducials__location_announce, Fiducials__tag_announce,
+	  log_file_name, "Demo.xml", "Tag_Heights.xml");
+	fiducials->map->image_log = image_log;
 
 	for (Unsigned index = 0; index < size; index++) {
 	    String image_file_name = 

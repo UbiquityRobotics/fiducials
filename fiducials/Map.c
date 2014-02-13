@@ -32,13 +32,15 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 /// *Map__arc_announce*() will cause the arc announde call back routine
 /// to be called for *arc*.
 
-void Map__arc_announce(Map map, Arc arc) {
+void Map__arc_announce(Map map,
+  Arc arc, CV_Image image, Unsigned sequence_number) {
    Tag from_tag = arc->from_tag;
    Tag to_tag = arc->to_tag;
    map->arc_announce_routine(map->announce_object,
      from_tag->id, from_tag->x, from_tag->y, from_tag->z,
      to_tag->id, to_tag->x, to_tag->y, to_tag->z,
      arc->goodness, arc->in_tree);
+   Map__image_log(map, image, sequence_number);
 }
 
 /// @brief Appends *arc* to *map*.
@@ -90,13 +92,14 @@ Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
 /// @brief from is the *Camera_Tag* to for one end of the *Arc*.
 /// @brief to is the *Camera_Tag* to the other end of the *Arc*.
 /// @brief image is the image that the *Camera_Tag*'s came from.
+/// @breif sequence_number is the image sequence number.
 /// @returns the number of *Arc*'s updated (1 or 0).
 ///
 /// *Map__arc_update*() will create or update the *Arc* in *map* associated
 /// with *from* and *to*.  *image* used to determine the frame size.
 
-Unsigned Map__arc_update(
-  Map map, Camera_Tag camera_from, Camera_Tag camera_to, CV_Image image) {
+Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
+  CV_Image image, Unsigned sequence_number) {
     // Get the *width* and *height*:
     Integer rows = CV_Image__height_get(image);
     Integer columns = CV_Image__width_get(image);
@@ -211,7 +214,7 @@ Unsigned Map__arc_update(
 	map->is_saved = (Logical)0;
 
 	// Let interested parties know that *arc* has been updated:
-	Map__arc_announce(map, arc);
+	Map__arc_announce(map, arc, image, sequence_number);
 
 	changed = 1;
     }
@@ -269,31 +272,57 @@ Integer Map__compare(Map map1, Map map2) {
     return result;
 }
 
-/// @brief Returns the distance per pixel for *id*.
-/// @param map is the *Map* object that contains the distance per pixel table.
-/// @param id is the *Tag* identifier to look up.
-/// @returns the distance per pixel for *Tag* id.
+/// @brief Returns a new *Map*.
+/// @param map_file_name is the name of the Map .xml file
+/// @param announce_object is an opaque object that is passed into announce
+///        routines.
+/// @param arc_announce_routine is the arc callback routine.
+/// @param tag_announce_routine is the tag callback routine.
+/// @param tag_heights_file_name is the tag ceiling heights .xml file.
+/// @param from is used for memory leak checking.
+/// @returns a new *Map*.
 ///
-/// *Map__distance_per_pixel*() will return the distance per pixel for
-/// *Tag* *id*.  The distance can be in any consistent distance (e.g.
-/// (millimeters, centimeters, meters, kilometers, inches, feet, miles,
-/// light seconds, etc.)
+/// *Map__create*() creates and returns an empty initialized *Map* object.
 
-Tag_Height Map__tag_height_lookup(Map map, Unsigned id) {
-    Double distance_per_pixel = 0.0;
-    List /* Tag_Height */ tag_heights = map->tag_heights;
-    Tag_Height tag_height = (Tag_Height)0;
-    assert (tag_heights != (List)0);
-    Unsigned size = List__size(tag_heights);
-    for (Unsigned index = 0; index < size; index++) {
-	tag_height = (Tag_Height)List__fetch(tag_heights, index);
-	if (tag_height->first_id <= id && id <= tag_height->last_id) {
-	    distance_per_pixel = tag_height->distance_per_pixel;
-	    break;
-	}
-	tag_height = (Tag_Height)0;
+Map Map__create(String_Const map_file_name, void *announce_object,
+  Fiducials_Arc_Announce_Routine arc_announce_routine,
+  Fiducials_Tag_Announce_Routine tag_announce_routine,
+  String_Const tag_heights_file_name, String from) {
+    // Create and fill in *map*:
+    Map map = Memory__new(Map, from);
+    map->arc_announce_routine = arc_announce_routine;
+    map->all_arcs = List__new("Map__new:List_New:all_arcs"); // <Tag>
+    map->all_tags = List__new("Map__new:List_New:all_tags"); // <Tag>
+    map->announce_object = announce_object;
+    map->arcs_table = Table__create((Table_Equal_Routine)Arc__equal,
+      (Table_Hash_Routine)Arc__hash, (Memory)0,
+      "Map__new:Table__create:map_arcs_table"); // <Arc, Arc>
+    map->changes_count = 0;
+    map->file_name = map_file_name;
+    map->is_changed = (Logical)0;
+    map->is_saved = (Logical)1;
+    map->image_log = (Logical)0;
+    map->pending_arcs = List__new("Map__new:List__new:pending_arcs"); // <Tag>
+    map->tag_announce_routine = tag_announce_routine;
+    map->tag_heights =
+      List__new("Map__new:List__new:tag_heights"); // <Tag_Height>
+    map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
+      (Table_Hash_Routine)Unsigned__hash, (Memory)0,
+      "Map__new:Table__create:map_tags_table");
+      // <Unsigned, Tag>
+    map->temporary_arc = Arc__new("Map__new:Arc__New:temporary_arc");
+    map->visit = 0;
+
+    // Read in the contents of *map_heights_file_name* into *map*:
+    Map__tag_heights_xml_read(map, tag_heights_file_name);
+
+    // Restore *map* if appropriate:
+    File in_file = File__open(map_file_name, "r");
+    if (in_file != (File)0) {
+        Map__restore(map, in_file);
+	File__close(in_file);
     }
-    return tag_height;
+    return map;
 }
 
 /// @brief Releases storage associated with *map*.
@@ -339,81 +368,22 @@ void Map__free(Map map) {
     Memory__free((Memory)map);
 }
 
-/// @brief Returns a new *Map*.
-/// @param map_file_name is the name of the Map .xml file
-/// @param announce_object is an opaque object that is passed into announce
-///        routines.
-/// @param arc_announce_routine is the arc callback routine.
-/// @param tag_announce_routine is the tag callback routine.
-/// @param tag_heights_file_name is the tag ceiling heights .xml file.
-/// @param from is used for memory leak checking.
-/// @returns a new *Map*.
+/// @brief Log image to disk if image logging is turned on.
+/// @param map to use.
+/// @param image to log.
 ///
-/// *Map__create*() creates and returns an empty initialized *Map* object.
+/// *Map__image_log*() will log *image* to disk if image logging is turned on.
 
-Map Map__create(String_Const map_file_name, void *announce_object,
-  Fiducials_Arc_Announce_Routine arc_announce_routine,
-  Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String_Const tag_heights_file_name, String from) {
-    // Create and fill in *map*:
-    Map map = Memory__new(Map, from);
-    map->arc_announce_routine = arc_announce_routine;
-    map->all_arcs = List__new("Map__new:List_New:all_arcs"); // <Tag>
-    map->all_tags = List__new("Map__new:List_New:all_tags"); // <Tag>
-    map->announce_object = announce_object;
-    map->arcs_table = Table__create((Table_Equal_Routine)Arc__equal,
-      (Table_Hash_Routine)Arc__hash, (Memory)0,
-      "Map__new:Table__create:map_arcs_table"); // <Arc, Arc>
-    map->changes_count = 0;
-    map->file_name = map_file_name;
-    map->is_changed = (Logical)0;
-    map->is_saved = (Logical)1;
-    map->pending_arcs = List__new("Map__new:List__new:pending_arcs"); // <Tag>
-    map->tag_announce_routine = tag_announce_routine;
-    map->tag_heights =
-      List__new("Map__new:List__new:tag_heights"); // <Tag_Height>
-    map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
-      (Table_Hash_Routine)Unsigned__hash, (Memory)0,
-      "Map__new:Table__create:map_tags_table");
-      // <Unsigned, Tag>
-    map->temporary_arc = Arc__new("Map__new:Arc__New:temporary_arc");
-    map->visit = 0;
+static int last_sequence_number = 0xffffffff;
 
-    // Read in the contents of *map_heights_file_name* into *map*:
-    Map__tag_heights_xml_read(map, tag_heights_file_name);
-
-    // Restore *map* if appropriate:
-    File in_file = File__open(map_file_name, "r");
-    if (in_file != (File)0) {
-        Map__restore(map, in_file);
-	File__close(in_file);
+void Map__image_log(Map map, CV_Image image, Unsigned sequence_number) {
+    if (image != (CV_Image)0 && map->image_log &&
+      sequence_number != last_sequence_number) {
+	// Log the image here:
+	String file_name = String__format("log%05d.tga", sequence_number);
+	CV_Image__tga_write(image, file_name);
+	last_sequence_number = sequence_number;
     }
-    return map;
-}
-
-/// @brief Return the *Tag* associated with *tag_id* from *map*.
-/// @param map to use for lookup.
-/// @param tap_id to lookup.
-/// @returns *Tag* associated with *tag_id*.
-///
-/// *Map__tag_lookup*() will lookup and return the *Tag* associaed with
-/// *tag_id* using *map.  If no previous instance of *tag_id* has been
-/// encountered, a new *Tag* is created and add to the association in *map*.
-
-Tag Map__tag_lookup(Map map, Unsigned tag_id) {
-    Table tags_table /* <Unsigned, Tag> */ = map->tags_table;
-    Memory memory_tag_id = Unsigned__to_memory(tag_id);
-    Tag tag = (Tag)Table__lookup(tags_table, memory_tag_id);
-    if (tag == (Tag)0) {
-	tag = Tag__create(tag_id, map);
-	Table__insert(tags_table, memory_tag_id, (Memory)tag);
-	List__append(map->all_tags, tag,
-	  "Map__tag_lookup:List__append:all_tags");
-	map->changes_count += 1;
-	map->is_changed = (Logical)1;
-	map->is_saved = (Logical)0;
-    }
-    return tag;
 }
 
 /// @brief Restore the contents of *Map* from *in_file*.
@@ -563,6 +533,118 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
     Bounding_Box__free(bounding_box);
 }
 
+/// @brief Causes an arc announce callback routine to be called.
+/// @param map is the parent *Map* object.
+/// @param tag is the *Tag* object that has just been changed.
+/// @param visible is True if the tag is in the current field of view.
+/// @param image is the current image being processed.
+///
+/// *Map__arc_announce*() will cause the arc announde call back routine
+/// to be called for *arc*.
+
+void Map__tag_announce(Map map,
+  Tag tag, Logical visible, CV_Image image, Unsigned sequence_number) {
+    map->tag_announce_routine(map->announce_object,
+      tag->id, tag->x, tag->y, tag->z, tag->twist,
+      tag->diagonal, tag->distance_per_pixel, visible, tag->hop_count);
+    if (visible) {
+	//Map__image_log(map, image, sequence_number);
+    }
+}
+
+/// @brief Returns the distance per pixel for *id*.
+/// @param map is the *Map* object that contains the distance per pixel table.
+/// @param id is the *Tag* identifier to look up.
+/// @returns the distance per pixel for *Tag* id.
+///
+/// *Map__distance_per_pixel*() will return the distance per pixel for
+/// *Tag* *id*.  The distance can be in any consistent distance (e.g.
+/// (millimeters, centimeters, meters, kilometers, inches, feet, miles,
+/// light seconds, etc.)
+
+Tag_Height Map__tag_height_lookup(Map map, Unsigned id) {
+    Double distance_per_pixel = 0.0;
+    List /* Tag_Height */ tag_heights = map->tag_heights;
+    Tag_Height tag_height = (Tag_Height)0;
+    assert (tag_heights != (List)0);
+    Unsigned size = List__size(tag_heights);
+    for (Unsigned index = 0; index < size; index++) {
+	tag_height = (Tag_Height)List__fetch(tag_heights, index);
+	if (tag_height->first_id <= id && id <= tag_height->last_id) {
+	    distance_per_pixel = tag_height->distance_per_pixel;
+	    break;
+	}
+	tag_height = (Tag_Height)0;
+    }
+    return tag_height;
+}
+
+/// @brief Reads the tag heights .xml file.
+/// @param map to to store tag heights into.
+/// @param tag_heights_file_name is the file to read from.
+///
+/// *Map__tag_heights_xml_read*() will read the *tag_heights_file_name* .xml
+/// file and the the tag heights into *map*.
+
+void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
+    // Open *tag_height_file_name* for reading:
+    File xml_in_file = File__open(tag_heights_file_name, "r");
+    if (xml_in_file == (File)0) {
+	File__format(stderr, "Could not open '%s'\n", tag_heights_file_name);
+	assert(0);
+    }
+
+    // Read in Map XML tag '<Map_Tag_Heights Count="xx">' :
+    File__tag_match(xml_in_file, "Map_Tag_Heights");
+    Unsigned count =
+      (Unsigned)File__integer_attribute_read(xml_in_file, "Count");
+    File__string_match(xml_in_file, ">\n");
+
+    // Read in the *count* *Tag_Height* objects into *tag_heights*:
+    List tag_heights = map->tag_heights;
+    assert (tag_heights != (List)0);
+    for (Unsigned index = 0; index < count; index++) {
+	Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
+	List__append(tag_heights, (Memory)tag_height,
+	  "Map__tag_heights_xml_read:List__append, tag_heights");
+    }
+
+    // Process the final Map XML tag "</Map_Tag_Heights>":
+    File__tag_match(xml_in_file, "/Map_Tag_Heights");
+    File__string_match(xml_in_file, ">\n");
+
+    // Close out *xml_in_file*:
+    File__close(xml_in_file);
+
+    // Sort *tag_heights*:
+    List__sort(tag_heights, (List__Compare__Routine)Tag_Height__compare);
+}
+
+/// @brief Return the *Tag* associated with *tag_id* from *map*.
+/// @param map to use for lookup.
+/// @param tap_id to lookup.
+/// @returns *Tag* associated with *tag_id*.
+///
+/// *Map__tag_lookup*() will lookup and return the *Tag* associaed with
+/// *tag_id* using *map.  If no previous instance of *tag_id* has been
+/// encountered, a new *Tag* is created and add to the association in *map*.
+
+Tag Map__tag_lookup(Map map, Unsigned tag_id) {
+    Table tags_table /* <Unsigned, Tag> */ = map->tags_table;
+    Memory memory_tag_id = Unsigned__to_memory(tag_id);
+    Tag tag = (Tag)Table__lookup(tags_table, memory_tag_id);
+    if (tag == (Tag)0) {
+	tag = Tag__create(tag_id, map);
+	Table__insert(tags_table, memory_tag_id, (Memory)tag);
+	List__append(map->all_tags, tag,
+	  "Map__tag_lookup:List__append:all_tags");
+	map->changes_count += 1;
+	map->is_changed = (Logical)1;
+	map->is_saved = (Logical)0;
+    }
+    return tag;
+}
+
 /// @brief Writes *map* out to *out_file*.
 /// @param map to write out.
 /// @param out_file to write to.
@@ -601,39 +683,14 @@ void Map__write(Map map, File out_file) {
     File__format(out_file, "</Map>\n");
 }
 
-/// @brief Print out tag update information.
-/// @param anounce_object is an opaque object from *Map*->*announce_object*.
-/// @param id is the tag id.
-/// @param x is the tag X location.
-/// @param y is the tag Y location.
-/// @param z is the tag Z location.
-/// @param twist is the tag twist in radians.
-/// @param dx is the tag size along the X axis (before twist).
-/// @param dy is the tag size along the Y axis (before twist).
-/// @param dz is the tag height in the Z axis.
-/// @param visible is (*Logical*)1 if the tag is currently in camera
-//         field of view, and (*Logical*)0 otherwise.
-///
-/// *Map__tag_announce*() is called each time the map algorithm
-/// updates the location or twist for a *tag*.
-
-void Map__tag_announce(void *object, Integer id,
-  Double x, Double y, Double z, Double twist, Double diagnoal,
-  Double distance_per_pixel, Logical visible, Integer hop_count) {
-    String visible_text = "";
-    if (!visible) {
-	visible_text = "*** No longer visible ***";
-    }
-    File__format(stderr, "id=%d x=%f y=%f twist=%f %s\n",
-      id, x, y, twist, visible_text);
-}
-
 /// @brief Updates the location of each *tag* in *map*.
-/// @param map to update
+/// @param map to update.
+/// @param image is the current image.
+/// @param sequence_number is the image sequence number.
 ///
 /// *Map__update*() will update the location of all the *Tag*'s in *map*.
 
-void Map__update(Map map) {
+void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
     if (map->is_changed) {
 	// Increment *visit* to the next value to use for updating:
 	Unsigned visit = map->visit + 1;
@@ -699,14 +756,16 @@ void Map__update(Map map) {
 			from_tag->hop_count = to_tag->hop_count + 1;
 			List__all_append(pending_arcs, from_tag->arcs);
 			from_tag->visit = visit;
-			Tag__update_via_arc(from_tag, arc);
+			Tag__update_via_arc(from_tag,
+			  arc, image, sequence_number);
 		    } else {
 			// Add *from* to spanning tree:
 			assert (!from_is_new);
 			to_tag->hop_count = from_tag->hop_count + 1;
 			List__all_append(pending_arcs, to_tag->arcs);
 			to_tag->visit = visit;
-			Tag__update_via_arc(to_tag, arc);
+			Tag__update_via_arc(to_tag,
+			  arc, image, sequence_number);
 		    }
 
 		    // Mark that *arc* is part of the spanning tree:
@@ -727,46 +786,5 @@ void Map__update(Map map) {
         map->is_changed = (Logical)0;
 	map->is_saved = (Logical)0;
     }
-}
-
-/// @brief Reads the tag heights .xml file.
-/// @param map to to store tag heights into.
-/// @param tag_heights_file_name is the file to read from.
-///
-/// *Map__tag_heights_xml_read*() will read the *tag_heights_file_name* .xml
-/// file and the the tag heights into *map*.
-
-void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
-    // Open *tag_height_file_name* for reading:
-    File xml_in_file = File__open(tag_heights_file_name, "r");
-    if (xml_in_file == (File)0) {
-	File__format(stderr, "Could not open '%s'\n", tag_heights_file_name);
-	assert(0);
-    }
-
-    // Read in Map XML tag '<Map_Tag_Heights Count="xx">' :
-    File__tag_match(xml_in_file, "Map_Tag_Heights");
-    Unsigned count =
-      (Unsigned)File__integer_attribute_read(xml_in_file, "Count");
-    File__string_match(xml_in_file, ">\n");
-
-    // Read in the *count* *Tag_Height* objects into *tag_heights*:
-    List tag_heights = map->tag_heights;
-    assert (tag_heights != (List)0);
-    for (Unsigned index = 0; index < count; index++) {
-	Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
-	List__append(tag_heights, (Memory)tag_height,
-	  "Map__tag_heights_xml_read:List__append, tag_heights");
-    }
-
-    // Process the final Map XML tag "</Map_Tag_Heights>":
-    File__tag_match(xml_in_file, "/Map_Tag_Heights");
-    File__string_match(xml_in_file, ">\n");
-
-    // Close out *xml_in_file*:
-    File__close(xml_in_file);
-
-    // Sort *tag_heights*:
-    List__sort(tag_heights, (List__Compare__Routine)Tag_Height__compare);
 }
 

@@ -390,6 +390,7 @@ Fiducials Fiducials__create(
     fiducials->sample_points = CV_Point2D32F_Vector__create(64);
     fiducials->size_5x5 = CV_Size__create(5, 5);
     fiducials->size_m1xm1 = CV_Size__create(-1, -1);
+    fiducials->sequence_number = 0;
     fiducials->storage = storage;
     fiducials->temporary_gray_image =
       CV_Image__create(image_size, CV__depth_8u, 1);
@@ -473,6 +474,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     CV_Image temporary_gray_image = fiducials->temporary_gray_image;
     Fiducials_Location_Announce_Routine location_announce_routine =
       fiducials->location_announce_routine;
+    Unsigned sequence_number = fiducials->sequence_number++;
 
     // For *debug_level* 0, we show the original image in color:
     if (debug_index == 0) {
@@ -891,7 +893,8 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 		Camera_Tag camera_tag2 =
 		  (Camera_Tag)List__fetch(camera_tags, tag2_index);
 		assert (camera_tag1->tag->id != camera_tag2->tag->id);
-		Map__arc_update(map, camera_tag1, camera_tag2, gray_image);
+		Map__arc_update(map,
+		  camera_tag1, camera_tag2, gray_image, sequence_number);
 	    }
 	}
     }
@@ -989,11 +992,8 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 
 	// Always announce *current_visible* as visible:
 	current_visible->visible = (Logical)1;
-	map->tag_announce_routine(map->announce_object, current_visible->id,
-	 current_visible->x, current_visible->y, current_visible->z,
-	 current_visible->twist, current_visible->diagonal,
-	 current_visible->distance_per_pixel, (Logical)1,
-	 current_visible->hop_count);
+	Map__tag_announce(map, current_visible,
+	  (Logical)1, original_image, sequence_number);
     }
 
     // Identifiy tags that are no longer visible:
@@ -1023,11 +1023,8 @@ Unsigned Fiducials__process(Fiducials fiducials) {
 	if (current_visible == (Tag)0) {
 	    // Not found => announce the tag as no longer visible:
 	    previous_visible->visible = (Logical)1;
-	    map->tag_announce_routine(map->announce_object,
-	      previous_visible->id, previous_visible->x, previous_visible->y,
-	      previous_visible->z, previous_visible->twist,
-	      previous_visible->diagonal, previous_visible->distance_per_pixel,
-	      (Logical)0, previous_visible->hop_count);
+	    Map__tag_announce(map,
+	      previous_visible, (Logical)0, original_image, sequence_number);
 	}
     }
     // Clear *previous_visibles* and swap *current_visible* with
@@ -1048,7 +1045,7 @@ Unsigned Fiducials__process(Fiducials fiducials) {
     }
 
     // Update the map:
-    Map__update(map);
+    Map__update(map, original_image, sequence_number);
 
     File__format(log_file, "\n");
     File__flush(log_file);
@@ -1425,6 +1422,34 @@ void Fiducials__sample_points_helper(
     File__format(stderr, "Label: %s corner: %f:%f sample_point %f:%f\n",
       label, (Integer)corner_x, (Integer)corner_y,
       (Integer)sample_point_x, (Integer)sample_point_y);
+}
+
+/// @brief Print out tag update information.
+/// @param anounce_object is an opaque object from *Map*->*announce_object*.
+/// @param id is the tag id.
+/// @param x is the tag X location.
+/// @param y is the tag Y location.
+/// @param z is the tag Z location.
+/// @param twist is the tag twist in radians.
+/// @param dx is the tag size along the X axis (before twist).
+/// @param dy is the tag size along the Y axis (before twist).
+/// @param dz is the tag height in the Z axis.
+/// @param visible is (*Logical*)1 if the tag is currently in camera
+//         field of view, and (*Logical*)0 otherwise.
+///
+/// *Fiducials_tag_announce*() is a tag announce routine that can be
+/// fed into *Fiducials__create*() as a routine to call each time a
+/// tag is updated.
+
+void Fiducials__tag_announce(void *object, Integer id,
+  Double x, Double y, Double z, Double twist, Double diagnoal,
+  Double distance_per_pixel, Logical visible, Integer hop_count) {
+    String visible_text = "";
+    if (!visible) {
+	visible_text = "*** No longer visible ***";
+    }
+    File__format(stderr, "id=%d x=%f y=%f twist=%f %s\n",
+      id, x, y, twist, visible_text);
 }
 
 void Fiducials__tag_record(Unsigned direction, CV_Point2D32F_Vector vector) {

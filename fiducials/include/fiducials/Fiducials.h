@@ -79,6 +79,7 @@ struct Fiducials__Struct {
     CV_Scalar red;
     CV_Point2D32F_Vector references;
     CV_Point2D32F_Vector sample_points;
+    Unsigned sequence_number;
     CV_Size size_5x5;
     CV_Size size_m1xm1;
     CV_Memory_Storage storage;
@@ -109,6 +110,10 @@ extern void Fiducials__location_announce(void *object, Integer id,
   Double x, Double y, Double z, Double bearing);
 extern Integer Fiducials__point_sample(
   Fiducials fiducials, CV_Point2D32F point);
+extern Integer Fiducials__points_maximum(Fiducials fiducials,
+  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+extern Integer Fiducials__points_minimum(Fiducials fiducials,
+  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 extern Unsigned Fiducials__process(Fiducials fiducials);
 extern CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners);
@@ -116,10 +121,10 @@ extern void Fiducials__sample_points_compute(
   CV_Point2D32F_Vector corners, CV_Point2D32F_Vector sample_points);
 extern void Fiducials__sample_points_helper(
   String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point);
-extern Integer Fiducials__points_maximum(Fiducials fiducials,
-  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
-extern Integer Fiducials__points_minimum(Fiducials fiducials,
-  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+extern void Fiducials__tag_announce(void *announce_object,
+  Integer id, Double x, Double y, Double z, Double twist,
+  Double diagonal, Double distance_per_pixel,
+  Logical visible, Integer hop_count);
 
 #ifdef __cplusplus
 }

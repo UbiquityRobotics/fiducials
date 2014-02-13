@@ -239,12 +239,15 @@ void Tag__svg_write(Tag tag, SVG svg) {
 /// @brief Updates the position and orientation of *tag* using *arc*.
 /// @param tag to update.
 /// @param arc to use to find the arc to update from.
+/// @param image is the current image being processed.
+/// @param sequence_number is the image sequence number.
 ///
 /// *Tag__update_via_arc*() will use the contents of *arc* to update
 /// the position and oritation of *tag*.  The position is computed using
 /// the "other" end of *arc*.
 
-void Tag__update_via_arc(Tag tag, Arc arc) {
+void Tag__update_via_arc(
+  Tag tag, Arc arc, CV_Image image, Unsigned sequence_number) {
     // Some values to use for radian/degree conversion:
     Double pi = (Double)3.14159265358979323846264;
     Double r2d = 180.0 / pi;
@@ -298,16 +301,14 @@ void Tag__update_via_arc(Tag tag, Arc arc) {
     // If *to_tag* values are to change
     if (to_tag->twist != to_tag_twist ||
       to_tag->x != to_tag_x || to_tag->y != to_tag_y) {
-	// Let any interested party know that tag values changed.
-	Map map = to_tag->map;
-	Logical visible = (Logical)1;
-	map->tag_announce_routine(map->announce_object, to_tag->id,
-	  to_tag_x, to_tag_y, 0.0, to_tag_twist, 100.0, 100.0, 1.0, visible);
-
 	// Load new values into *to_tag*:
 	to_tag->twist = to_tag_twist;
 	to_tag->x = to_tag_x;
 	to_tag->y = to_tag_y;
+
+	// Let any interested party know that tag values changed.
+	Map map = to_tag->map;
+	Map__tag_announce(map, to_tag, (Logical)1, image, sequence_number);
     }
 
     //File__format(stderr, "To_Tag[id:%d x:%.2f y:%.2f tw:%.4f] angle=%.4f\n",
