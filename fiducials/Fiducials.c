@@ -349,6 +349,10 @@ Fiducials Fiducials__create(
       arc_announce_routine, tag_announce_routine,
       tag_heights_file_name, "Fiducials__new:Map__create");
 
+    Fiducials_Results results =
+      Memory__new(Fiducials_Results, "Fiducials__create");
+    results->map_changed = (Logical)0;
+
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
     fiducials->arc_announce_routine = arc_announce_routine;
@@ -385,7 +389,7 @@ Fiducials Fiducials__create(
     fiducials->purple = CV_Scalar__rgb(255.0, 0.0, 255.0);
     fiducials->red = CV_Scalar__rgb(255.0, 0.0, 0.0);
     fiducials->references = CV_Point2D32F_Vector__create(8);
-    fiducials->results = Memory__new(Fiducials_Results, "Fiducials__create");
+    fiducials->results = results;
     fiducials->sample_points = CV_Point2D32F_Vector__create(64);
     fiducials->size_5x5 = CV_Size__create(5, 5);
     fiducials->size_m1xm1 = CV_Size__create(-1, -1);
@@ -1049,7 +1053,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     File__format(log_file, "\n");
     File__flush(log_file);
 
-    return 0;
+    return fiducials->results;
 }
 
 Integer Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
