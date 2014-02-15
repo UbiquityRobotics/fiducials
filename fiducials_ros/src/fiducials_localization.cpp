@@ -254,7 +254,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 	    NULL, "Map.xml", tag_height_file.c_str());
         }
         Fiducials__image_set(fiducials, image);
-        Fiducials__process(fiducials);
+        Fiducials_Results results = Fiducials__process(fiducials);
+	if (results->map_changed) {
+	    // Do something here:
+	}
     } catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
     }
