@@ -1,3 +1,4 @@
+#error "This is depricated"
 // Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
 #include "assert.h"

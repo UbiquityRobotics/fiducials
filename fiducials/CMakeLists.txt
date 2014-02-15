@@ -10,7 +10,6 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES fiducials
   DEPENDS OpenCV
-  CATKIN_DEPENDS fiducials_rviz
 )
 
 add_definitions(-std=c11)
@@ -41,9 +40,9 @@ add_executable(Demo Demo.c)
 target_link_libraries(Demo fiducials)
 target_link_libraries(Demo m)
 
-add_executable(Rviz_Demo Rviz_Demo.c)
-target_link_libraries(Rviz_Demo fiducials)
-target_link_libraries(Rviz_Demo m ${catkin_LIBRARIES})
+#add_executable(Rviz_Demo Rviz_Demo.c)
+#target_link_libraries(Rviz_Demo fiducials)
+#target_link_libraries(Rviz_Demo m ${catkin_LIBRARIES})
 
 add_executable(Tags Tags.c)
 target_link_libraries(Tags fiducials_base)

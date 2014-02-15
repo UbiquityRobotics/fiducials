@@ -4,6 +4,7 @@
 #define FIDUCIALS_H_INCLUDED 1
 
 typedef struct Fiducials__Struct *Fiducials;
+typedef struct Fiducials_Results__Struct *Fiducials_Results;
 
 #include <assert.h>
 #include <sys/time.h>
@@ -78,6 +79,7 @@ struct Fiducials__Struct {
     CV_Scalar purple;
     CV_Scalar red;
     CV_Point2D32F_Vector references;
+    Fiducials_Results results;
     CV_Point2D32F_Vector sample_points;
     Unsigned sequence_number;
     CV_Size size_5x5;
@@ -89,6 +91,10 @@ struct Fiducials__Struct {
     CV_Term_Criteria term_criteria;
     Unsigned weights_index;
     Logical y_flip;
+};
+
+struct Fiducials_Results__Struct {
+    Logical map_changed;
 };
 
 extern void Fiducials__arc_announce(void *announce_object,
@@ -114,7 +120,7 @@ extern Integer Fiducials__points_maximum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 extern Integer Fiducials__points_minimum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
-extern Unsigned Fiducials__process(Fiducials fiducials);
+extern Fiducials_Results Fiducials__process(Fiducials fiducials);
 extern CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners);
 extern void Fiducials__sample_points_compute(

@@ -1,7 +1,5 @@
 // Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
-typedef struct Fiducials__Struct *Fiducials;
-
 #include "assert.h"
 #include "sys/time.h"
 
@@ -387,6 +385,7 @@ Fiducials Fiducials__create(
     fiducials->purple = CV_Scalar__rgb(255.0, 0.0, 255.0);
     fiducials->red = CV_Scalar__rgb(255.0, 0.0, 0.0);
     fiducials->references = CV_Point2D32F_Vector__create(8);
+    fiducials->results = Memory__new(Fiducials_Results, "Fiducials__create");
     fiducials->sample_points = CV_Point2D32F_Vector__create(64);
     fiducials->size_5x5 = CV_Size__create(5, 5);
     fiducials->size_m1xm1 = CV_Size__create(-1, -1);
@@ -456,7 +455,7 @@ void Fiducials__map_save(Fiducials fiducials) {
     Map__save(fiducials->map);
 }
 
-Unsigned Fiducials__process(Fiducials fiducials) {
+Fiducials_Results Fiducials__process(Fiducials fiducials) {
     // Clear *storage*:
     CV_Memory_Storage storage = fiducials->storage;
     CV_Memory_Storage__clear(storage);
