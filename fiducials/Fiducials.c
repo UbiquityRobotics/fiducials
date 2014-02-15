@@ -474,6 +474,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     File log_file = fiducials->log_file;
     CV_Image original_image = fiducials->original_image;
     List /*<Tag>*/ previous_visibles = fiducials->previous_visibles;
+    Fiducials_Results results = fiducials->results;
     CV_Image temporary_gray_image = fiducials->temporary_gray_image;
     Fiducials_Location_Announce_Routine location_announce_routine =
       fiducials->location_announce_routine;
@@ -896,8 +897,10 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 		Camera_Tag camera_tag2 =
 		  (Camera_Tag)List__fetch(camera_tags, tag2_index);
 		assert (camera_tag1->tag->id != camera_tag2->tag->id);
-		Map__arc_update(map,
-		  camera_tag1, camera_tag2, gray_image, sequence_number);
+		if (Map__arc_update(map,
+		  camera_tag1, camera_tag2, gray_image, sequence_number) > 0) {
+		    results->map_changed = (Logical)1;
+		}
 	    }
 	}
     }
@@ -1053,7 +1056,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     File__format(log_file, "\n");
     File__flush(log_file);
 
-    return fiducials->results;
+    return results;
 }
 
 Integer Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
