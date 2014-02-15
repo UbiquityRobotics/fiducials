@@ -56,6 +56,7 @@
 class FiducialsNode {
   private:
     ros::Publisher * marker_pub;
+    image_transport::Subscriber img_sub;
 
     // transform bits
     tf2_ros::TransformBroadcaster tf_pub;
@@ -299,7 +300,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0), tf_sub(tf_bu
     fiducials = NULL;
 
     image_transport::ImageTransport img_transport(nh);
-    image_transport::Subscriber img_sub = img_transport.subscribe("camera", 1,
+    img_sub = img_transport.subscribe("camera", 1,
         &FiducialsNode::imageCallback, this);
 
     ROS_INFO("Fiducials Localization ready");
