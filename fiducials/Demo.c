@@ -64,7 +64,7 @@ int main(int arguments_size, char * arguments[]) {
 	image = CV_Image__pnm_read(image_file_name0);
 	assert (image != (CV_Image)0);
 	Fiducials fiducials =
-	  Fiducials__create(image, lens_calibrate_file_name,
+	  Fiducials__create(image, ".", lens_calibrate_file_name,
 	  (void *)0, Fiducials__arc_announce,
 	  Fiducials__location_announce, Fiducials__tag_announce,
 	  log_file_name, "Demo.xml", "Tag_Heights.xml");

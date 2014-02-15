@@ -144,7 +144,7 @@ int main(int arguments_size, char * arguments[]) {
 		      IPL_DEPTH_8U, 3);
 		    display_image->imageData = image_data;
 
-		    fiducials = Fiducials__create(display_image,
+		    fiducials = Fiducials__create(display_image, ".",
 		      (String_Const)0, (void *)0, Fiducials__arc_announce,
 		      Fiducials__location_announce, Fiducials__tag_announce,
 		      (String_Const)0, (String_Const)0, (String_Const)0);

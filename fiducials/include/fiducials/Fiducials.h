@@ -75,6 +75,7 @@ struct Fiducials__Struct {
     Logical **mappings;
     CV_Image map_x;
     CV_Image map_y;
+    String_Const path;
     List /* <Tag> */ previous_visibles;
     CV_Scalar purple;
     CV_Scalar red;
@@ -102,8 +103,8 @@ extern void Fiducials__arc_announce(void *announce_object,
   Integer to_id, Double to_x, Double to_y, Double to_z,
   Double goodness, Logical in_spanning_tree);
 extern Fiducials Fiducials__create(
-  CV_Image original_image, String_Const lens_calibrate_file_name,
-  void *announce_object,
+  CV_Image original_image, String_Const fiducials_path,
+  String_Const lens_calibrate_file_name, void *announce_object,
   Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,

@@ -141,8 +141,8 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
 }
 
 Fiducials Fiducials__create(
-  CV_Image original_image, String_Const lens_calibrate_file_name,
-  void *announce_object,
+  CV_Image original_image, String_Const fiducials_path,
+  String_Const lens_calibrate_file_name, void *announce_object,
   Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
@@ -384,6 +384,7 @@ Fiducials Fiducials__create(
     fiducials->mappings = &mappings[0];
     fiducials->origin = CV_Point__create(0, 0);
     fiducials->original_image = original_image;
+    fiducials->path = fiducials_path;
     fiducials->previous_visibles =
       List__new("Fiducials__create:List__new:previous_visibles"); // Tag
     fiducials->purple = CV_Scalar__rgb(255.0, 0.0, 255.0);
