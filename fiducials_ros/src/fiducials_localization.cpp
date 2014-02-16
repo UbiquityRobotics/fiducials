@@ -250,9 +250,9 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         IplImage *image = new IplImage(cv_img->image);
         if(fiducials == NULL) {
             ROS_INFO("Git first image! Setting up Fiducials library");
-            fiducials = Fiducials__create(image, NULL, NULL, NULL,
+            fiducials = Fiducials__create(image, ".", NULL, NULL,
 	    arc_announce, location_announce, tag_announce,
-	    NULL, "Map.xml", tag_height_file.c_str());
+	    NULL, "ROS_Map", tag_height_file.c_str());
         }
         Fiducials__image_set(fiducials, image);
         Fiducials_Results results = Fiducials__process(fiducials);
