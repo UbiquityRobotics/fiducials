@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(fiducials)
 
-find_package(catkin REQUIRED COMPONENTS fiducials_rviz)
+find_package(catkin REQUIRED COMPONENTS)
 
 find_package(OpenCV REQUIRED)
 
