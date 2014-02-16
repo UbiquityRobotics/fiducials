@@ -67,7 +67,7 @@ int main(int arguments_size, char * arguments[]) {
 	  Fiducials__create(image, ".", lens_calibrate_file_name,
 	  (void *)0, Fiducials__arc_announce,
 	  Fiducials__location_announce, Fiducials__tag_announce,
-	  log_file_name, "Demo.xml", "Tag_Heights.xml");
+	  log_file_name, "Demo_Map", "Tag_Heights.xml");
 	fiducials->map->image_log = image_log;
 
 	for (Unsigned index = 0; index < size; index++) {

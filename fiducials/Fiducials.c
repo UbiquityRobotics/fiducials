@@ -146,7 +146,7 @@ Fiducials Fiducials__create(
   Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Location_Announce_Routine location_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String_Const log_file_name, String_Const map_file_name,
+  String_Const log_file_name, String_Const map_base_name,
   String_Const tag_heights_file_name) {
     // Create *image_size*:
     Unsigned width = CV_Image__width_get(original_image);
@@ -351,14 +351,11 @@ Fiducials Fiducials__create(
     }
 
     // Create the *map*:
-    String full_map_file_name =
-      String__format("%s/%s", fiducials_path, map_file_name);
     String full_tag_heights_file_name =
       String__format("%s/%s", fiducials_path, tag_heights_file_name);
-    Map map = Map__create(full_map_file_name, announce_object,
+    Map map = Map__create(fiducials_path, map_base_name, announce_object,
       arc_announce_routine, tag_announce_routine,
       full_tag_heights_file_name, "Fiducials__new:Map__create");
-    String__free(full_map_file_name);
     String__free(full_tag_heights_file_name);
 
     Fiducials_Results results =

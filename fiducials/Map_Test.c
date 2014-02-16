@@ -17,7 +17,7 @@
 extern void Map__build(Map map);
 
 int main(int arguments_size, char * arguments[]) {
-    Map map1 = Map__create("Map_Test.xml",
+    Map map1 = Map__create(".", "Map_Test_Map",
       (void *)0, Fiducials__arc_announce, Fiducials__tag_announce,
       (String_Const)0, "main:Map__new");
     Unsigned visit = map1->visit;
@@ -84,10 +84,9 @@ int main(int arguments_size, char * arguments[]) {
 
     Map__update(map1, (CV_Image)0, 0);
 
-    String xml_file_name = "Map_Test.xml";
     Map__save(map1);
 
-    Map map2 = Map__create("Map_Test.xml",
+    Map map2 = Map__create(".", "Map_Test_Map",
       (void *)0, Fiducials__arc_announce, Fiducials__tag_announce,
       (String_Const)0, "main:Map__new");
 

@@ -41,8 +41,11 @@ struct Map__Struct {
     /// @brief Number of map changes:
     Unsigned changes_count;
 
-    /// @brief Name of map file name;
-    String_Const file_name;
+    /// @brief Base name of map file name.
+    String_Const file_base;
+
+    /// @brief Directory/folder of map file.
+    String_Const file_path;
 
     /// @brief True if images that change map need to be recorded.
     Logical image_log;
@@ -81,8 +84,8 @@ extern Arc Map__arc_lookup(Map map, Tag from, Tag to);
 extern Unsigned Map__arc_update(Map map, Camera_Tag camera_from,
   Camera_Tag camera_to, CV_Image image, Unsigned sequence_number);
 extern Integer Map__compare(Map map1, Map map2);
-extern Map Map__create(String_Const file_name, void *announce_object,
-  Fiducials_Arc_Announce_Routine arc_announce_routine,
+extern Map Map__create(String_Const map_path, String_Const map_base,
+  void *announce_object, Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
   String_Const tag_heights_file_name, String from);
 extern void Map__free(Map map);

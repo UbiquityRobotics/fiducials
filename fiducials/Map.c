@@ -273,7 +273,8 @@ Integer Map__compare(Map map1, Map map2) {
 }
 
 /// @brief Returns a new *Map*.
-/// @param map_file_name is the name of the Map .xml file
+/// @param file_path is the directory/folder that the map fileis stored in.
+/// @param file_base is the base name of the map file.
 /// @param announce_object is an opaque object that is passed into announce
 ///        routines.
 /// @param arc_announce_routine is the arc callback routine.
@@ -284,8 +285,8 @@ Integer Map__compare(Map map1, Map map2) {
 ///
 /// *Map__create*() creates and returns an empty initialized *Map* object.
 
-Map Map__create(String_Const map_file_name, void *announce_object,
-  Fiducials_Arc_Announce_Routine arc_announce_routine,
+Map Map__create(String_Const file_path, String_Const file_base,
+  void *announce_object, Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
   String_Const tag_heights_file_name, String from) {
     // Create and fill in *map*:
@@ -298,7 +299,8 @@ Map Map__create(String_Const map_file_name, void *announce_object,
       (Table_Hash_Routine)Arc__hash, (Memory)0,
       "Map__new:Table__create:map_arcs_table"); // <Arc, Arc>
     map->changes_count = 0;
-    map->file_name = map_file_name;
+    map->file_base = file_base;
+    map->file_path = file_path;
     map->is_changed = (Logical)0;
     map->is_saved = (Logical)1;
     map->image_log = (Logical)0;
@@ -316,9 +318,24 @@ Map Map__create(String_Const map_file_name, void *announce_object,
     // Read in the contents of *map_heights_file_name* into *map*:
     Map__tag_heights_xml_read(map, tag_heights_file_name);
 
-    // Restore *map* if appropriate:
-    File in_file = File__open(map_file_name, "r");
-    if (in_file != (File)0) {
+    // Restore *map* from "*map_path*/*map_base*{0,1}.xml".
+    // We try to read "...1.xml" first, followed by "...0.xml":
+    String full_map_file_name =
+      String__format("%s/1%s.xml", file_path, file_base);
+    File in_file = File__open(full_map_file_name, "r");
+    if (in_file == (File)0) {
+	// We failed to open "...1.xml"; now try "...0.xml":
+	String__free(full_map_file_name);
+	String full_map_file_name =
+	  String__format("%s/0%s.xml", file_path, file_base);
+	in_file = File__open(full_map_file_name, "r");
+	if (in_file != (File)0) {
+	    // We opened "...0.xml", read it in:
+	    Map__restore(map, in_file);
+	    File__close(in_file);
+	}
+    } else {
+	// We opened "...1.xml", read it in:
         Map__restore(map, in_file);
 	File__close(in_file);
     }
@@ -429,8 +446,11 @@ void Map__restore(Map map, File in_file) {
 
 void Map__save(Map map) {
     if (!map->is_saved) {
-	File out_file = File__open(map->file_name, "w");
+	String full_map_file_name =
+	  String__format("%s/%s1.xml", map->file_path, map->file_base);
+	File out_file = File__open(full_map_file_name, "w");
 	assert (out_file != (File)0);
+	String__free(full_map_file_name);
 	Map__write(map, out_file);
 	File__close(out_file);
 	map->is_saved = (Logical)1;
