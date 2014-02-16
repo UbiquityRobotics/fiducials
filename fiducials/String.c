@@ -55,6 +55,7 @@ String String__format(String_Const format, ...) {
       (String)Memory__allocate(formatted_size + 1, "String__format");
 
     // Format *formatted*:
+    va_start(variadic_arguments, format);
     (void)vsnprintf(formatted, formatted_size + 1, format, variadic_arguments);
 
     return formatted;
