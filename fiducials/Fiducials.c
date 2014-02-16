@@ -156,7 +156,10 @@ Fiducials Fiducials__create(
 
     File log_file = stderr;
     if (log_file_name != (String_Const)0) {
+	String full_log_file_name =
+	  String__format("%s/%s", fiducials_path, log_file_name);
 	log_file = File__open(log_file_name, "w");
+	String__free(full_log_file_name);
     }
 
     File__format(log_file, "CV width=%d CV height = %d\n", width, height);
@@ -340,14 +343,23 @@ Fiducials Fiducials__create(
     CV_Image map_x = (CV_Image)0;
     CV_Image map_y = (CV_Image)0;
     if (lens_calibrate_file_name != (String)0) {
+	String full_lens_calibrate_file_name =
+	  String__format("%s/%s", fiducials_path, lens_calibrate_file_name);
 	assert (CV__undistortion_setup(
-	  lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
+	  full_lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
+	String__free(full_lens_calibrate_file_name);
     }
 
     // Create the *map*:
-    Map map = Map__create(map_file_name, announce_object,
+    String full_map_file_name =
+      String__format("%s/%s", fiducials_path, map_file_name);
+    String full_tag_heights_file_name =
+      String__format("%s/%s", fiducials_path, tag_heights_file_name);
+    Map map = Map__create(full_map_file_name, announce_object,
       arc_announce_routine, tag_announce_routine,
-      tag_heights_file_name, "Fiducials__new:Map__create");
+      full_tag_heights_file_name, "Fiducials__new:Map__create");
+    String__free(full_map_file_name);
+    String__free(full_tag_heights_file_name);
 
     Fiducials_Results results =
       Memory__new(Fiducials_Results, "Fiducials__create");
