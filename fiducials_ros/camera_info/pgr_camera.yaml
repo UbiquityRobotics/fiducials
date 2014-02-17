@@ -1,0 +1,20 @@
+image_width: 640
+image_height: 480
+camera_name: pgr_camera
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [756.390688347099, 0, 319.508003528162, 0, 756.296436194278, 236.491331172788, 0, 0, 1]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.43323390357113, 0.240811821770013, 0.00243457645854512, 0.00168624441927229, 0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [694.052795410156, 0, 319.875370471167, 0, 0, 720.879211425781, 236.328421922644, 0, 0, 0, 1, 0]
