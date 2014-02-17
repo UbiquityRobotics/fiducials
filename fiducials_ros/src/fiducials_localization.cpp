@@ -68,6 +68,10 @@ class FiducialsNode {
     std::string odom_frame;
     bool use_odom;
 
+    // if set, we publish the images that contain fiducials
+    bool publish_images;
+    image_transport::Publisher image_pub;
+
     const double scale;
     std::string fiducial_namespace;
     std::string position_namespace;
@@ -256,9 +260,9 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         }
         Fiducials__image_set(fiducials, image);
         Fiducials_Results results = Fiducials__process(fiducials);
-	if (results->map_changed) {
-	    // Do something here:
-	}
+	if (publish_images && results->map_changed) {
+	    image_pub.publish(msg);
+        }
     } catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
     }
@@ -295,13 +299,20 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0), tf_sub(tf_bu
     }
     nh.param<std::string>("pose_frame", pose_frame, "base_link");
 
-    marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
-
-    fiducials = NULL;
+    nh.param<bool>("publish_images", publish_images, false);
 
     image_transport::ImageTransport img_transport(nh);
+
+    if (publish_images) {
+      image_pub = img_transport.advertise("fiducials_images", 1);
+    }
+
+    marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
+    
+    fiducials = NULL;
+
     img_sub = img_transport.subscribe("camera", 1,
-        &FiducialsNode::imageCallback, this);
+				      &FiducialsNode::imageCallback, this);
 
     ROS_INFO("Fiducials Localization ready");
 }
