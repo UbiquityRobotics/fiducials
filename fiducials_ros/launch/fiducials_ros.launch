@@ -7,5 +7,6 @@
     <param name="tag_height" value="$(find fiducials)/Tag_Heights.xml" />
     <param name="odom_frame" value="odom"/>
     <remap from="fiducials_localization/camera" to="$(arg camera)/image_rect"/>
+    <param name="publish_images" value="true"/>
   </node>
 </launch>
