@@ -68,8 +68,8 @@ endif()
 add_executable(undistort undistort.c)
 target_link_libraries(undistort ${OpenCV_LIBS})
 
-add_executable(Rviz_Test Rviz_Test.c)
-target_link_libraries(Rviz_Test ${catkin_LIBRARIES})
+#add_executable(Rviz_Test Rviz_Test.c)
+#target_link_libraries(Rviz_Test ${catkin_LIBRARIES})
 
 install(PROGRAMS
 	Demo Tags Map_Test Video_Capture
