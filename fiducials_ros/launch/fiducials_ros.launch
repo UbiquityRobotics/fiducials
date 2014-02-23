@@ -3,8 +3,9 @@
   <arg name="camera" default="/camera"/>
 
   <node pkg="fiducials_ros" name="fiducials_localization" 
-    type="fiducials_localization">
+    type="fiducials_localization" output="screen">
     <param name="tag_height" value="$(find fiducials)/Tag_Heights.xml" />
-    <remap from="camera" to="$(arg camera)/image_rect"/>
+    <param name="odom_frame" value="odom"/>
+    <remap from="fiducials_localization/camera" to="$(arg camera)/image_rect"/>
   </node>
 </launch>

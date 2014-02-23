@@ -36,6 +36,7 @@
 
 #include <ros/ros.h>
 #include <tf/transform_datatypes.h>
+#include <tf2/LinearMath/Transform.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
@@ -192,7 +193,7 @@ void location_announce(void *rviz, int id,
     ROS_INFO("location_announce:id=%d x=%f y=%f bearing=%f\n",
       id, x, y, bearing * 180. / 3.1415926);
 
-    visualization_msgs::Marker marker = createMarker(world_frame, id);
+    visualization_msgs::Marker marker = createMarker(position_namespace, id);
     ros::Time now = marker.header.stamp;
 
     marker.type = visualization_msgs::Marker::ARROW;
@@ -210,40 +211,83 @@ void location_announce(void *rviz, int id,
 
     marker_pub->publish(marker);
 
-    // publish a transform based on the position
-    geometry_msgs::TransformStamped transform;
     // TODO: subtract out odometry position, and publish transform from
     //  map to odom
-    transform.transform.translation.x = marker.pose.position.x;
-    transform.transform.translation.y = marker.pose.position.y;
-    transform.transform.translation.z = marker.pose.position.z;
-    transform.transform.rotation = marker.pose.orientation;
-    transform.header.stamp = now;
-    transform.header.frame_id = world_frame;
+    double tf_x = marker.pose.position.x;
+    double tf_y = marker.pose.position.y;
+    double tf_yaw = bearing;
 
+    // publish a transform based on the position
     if( use_odom ) {
       // if we're using odometry, look up the odom transform and subtract it
       //  from our position so that we can publish a map->odom transform
       //  such that map->odom->base_link reports the correct position
-      if( tf_buffer.canTransform(odom_frame, pose_frame, now) ) {
-        geometry_msgs::PoseStamped in;
-        in.pose = marker.pose;
-        in.header = marker.header;
-        in.header.frame_id = pose_frame;
-        geometry_msgs::PoseStamped out;
-        tf_buffer.transform(in, out, odom_frame);
+      std::string tf_err;
+      if( tf_buffer.canTransform(pose_frame, odom_frame, now,
+            ros::Duration(0.1), &tf_err ) ) {
+        // get odometry position from TF
+        tf2::Quaternion tf_quat;
+        tf_quat.setRPY(0.0, 0.0, tf_yaw);
+        tf2::Transform pose(tf_quat, tf2::Vector3(tf_x, tf_y, 0));
+
+
+        geometry_msgs::TransformStamped odom;
+        odom = tf_buffer.lookupTransform(odom_frame, pose_frame, now);
+        tf2::Transform odom_tf(
+            tf2::Quaternion(
+              odom.transform.rotation.x,
+              odom.transform.rotation.y,
+              odom.transform.rotation.z,
+              odom.transform.rotation.w),
+            tf2::Vector3(
+              odom.transform.translation.x,
+              odom.transform.translation.y,
+              odom.transform.translation.z));
+
+        // M = C * O
+        // C^-1 * M = O
+        // C^-1 = O * M-1
+        tf2::Transform odom_correction = (odom_tf * pose.inverse()).inverse();
+        
+        geometry_msgs::TransformStamped transform;
+        tf2::Vector3 odom_correction_v = odom_correction.getOrigin();
+        transform.transform.translation.x = odom_correction_v.getX();
+        transform.transform.translation.y = odom_correction_v.getY();
+        transform.transform.translation.z = odom_correction_v.getZ();
+
+        tf2::Quaternion odom_correction_q = odom_correction.getRotation();
+        transform.transform.rotation.x = odom_correction_q.getX();
+        transform.transform.rotation.y = odom_correction_q.getY();
+        transform.transform.rotation.z = odom_correction_q.getZ();
+        transform.transform.rotation.w = odom_correction_q.getW();
+
+        transform.header.stamp = now;
+        transform.header.frame_id = world_frame;
+        transform.child_frame_id = odom_frame;
+        //tf2::transformTF2ToMsg(odom_correction, transform, now, world_frame,
+            //odom_frame);
+
+        tf_pub.sendTransform(transform);
       } else {
-        ROS_WARN("Can't look up base transform from %s to %s",
+        ROS_ERROR("Can't look up base transform from %s to %s: %s",
             pose_frame.c_str(),
-            odom_frame.c_str());
+            odom_frame.c_str(),
+            tf_err.c_str());
       }
-      transform.child_frame_id = odom_frame;
     } else {
       // we're publishing absolute position
+      geometry_msgs::TransformStamped transform;
+      transform.header.stamp = now;
+      transform.header.frame_id = world_frame;
       transform.child_frame_id = pose_frame;
-    }
 
-    tf_pub.sendTransform(transform);
+      transform.transform.translation.x = tf_x;
+      transform.transform.translation.y = tf_y;
+      transform.transform.translation.z = 0.0;
+      transform.transform.rotation = tf::createQuaternionMsgFromYaw(tf_yaw);
+
+      tf_pub.sendTransform(transform);
+    }
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
@@ -254,7 +298,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         IplImage *image = new IplImage(cv_img->image);
         if(fiducials == NULL) {
             ROS_INFO("Git first image! Setting up Fiducials library");
-            fiducials = Fiducials__create(image, ".", NULL, NULL,
+            fiducials = Fiducials__create(image, ".", NULL, this,
 	    arc_announce, location_announce, tag_announce,
 	    NULL, "ROS_Map", tag_height_file.c_str());
         }
@@ -291,13 +335,18 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0), tf_sub(tf_bu
 
     nh.param<std::string>("tag_height", tag_height_file, "Tag_Heights.xml");
     nh.param<std::string>("map_frame", world_frame, "map");
+    nh.param<std::string>("pose_frame", pose_frame, "base_link");
+    ROS_INFO("Publishing transform from %s to %s", world_frame.c_str(),
+        pose_frame.c_str());
+
     if( nh.hasParam("odom_frame") ) {
       use_odom = true;
       nh.getParam("odom_frame", odom_frame);
+      ROS_INFO("Using odometry frame %s", odom_frame.c_str());
     } else {
       use_odom = false;
+      ROS_INFO("Not using odometry");
     }
-    nh.param<std::string>("pose_frame", pose_frame, "base_link");
 
     nh.param<bool>("publish_images", publish_images, false);
 

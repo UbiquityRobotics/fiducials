@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf2_geometry_msgs
   tf2_ros
+  tf2
   visualization_msgs
   image_transport
   cv_bridge
