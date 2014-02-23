@@ -1,0 +1,8 @@
+<launch>
+  <group ns="camera">
+    <node pkg="uvc_camera" type="uvc_camera_node" name="camera_driver">
+      <param name="device" value="/dev/video1"/>
+    </node>
+    <node pkg="image_proc" type="image_proc" name="image_proc"/>
+  </group>
+</launch>
