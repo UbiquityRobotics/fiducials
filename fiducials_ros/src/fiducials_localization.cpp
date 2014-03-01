@@ -312,7 +312,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     }
 }
 
-FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(1000.0), tf_sub(tf_buffer) {
+FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(10.0), tf_sub(tf_buffer) {
     fiducial_namespace = "fiducials";
     position_namespace = "position";
     // Define tags to be green
