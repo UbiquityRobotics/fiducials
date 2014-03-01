@@ -89,11 +89,11 @@ class FiducialsNode {
     visualization_msgs::Marker createMarker(std::string ns, int id);
 
     static void arc_announce(void *t, int from_id, double from_x,
-	double from_y, double from_z, int to_id, double to_x, double to_y,
-	double to_z, double goodness, int in_spanning_tree);
+        double from_y, double from_z, int to_id, double to_x, double to_y,
+        double to_z, double goodness, int in_spanning_tree);
     static void tag_announce(void *t, int id, double x, double y, double z,
-	double twist, double diagonal, double distance_per_pixel, int visible,
-	int hop_count);
+        double twist, double diagonal, double distance_per_pixel, int visible,
+        int hop_count);
     void tag_cb(int id, double x, double y, double z, double twist, double dx,
         double dy, double dz, int visible);
 
@@ -299,20 +299,20 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         if(fiducials == NULL) {
             ROS_INFO("Git first image! Setting up Fiducials library");
             fiducials = Fiducials__create(image, ".", NULL, this,
-	    arc_announce, location_announce, tag_announce,
-	    NULL, "ROS_Map", tag_height_file.c_str());
+            arc_announce, location_announce, tag_announce,
+            NULL, "ROS_Map", tag_height_file.c_str());
         }
         Fiducials__image_set(fiducials, image);
         Fiducials_Results results = Fiducials__process(fiducials);
-	if (publish_images && results->map_changed) {
-	    image_pub.publish(msg);
+        if (publish_images && results->map_changed) {
+            image_pub.publish(msg);
         }
     } catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
     }
 }
 
-FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(10.0), tf_sub(tf_buffer) {
+FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buffer) {
     fiducial_namespace = "fiducials";
     position_namespace = "position";
     // Define tags to be green
@@ -361,7 +361,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(10.0), tf_sub(tf_buff
     fiducials = NULL;
 
     img_sub = img_transport.subscribe("camera", 1,
-				      &FiducialsNode::imageCallback, this);
+                                      &FiducialsNode::imageCallback, this);
 
     ROS_INFO("Fiducials Localization ready");
 }
