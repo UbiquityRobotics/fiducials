@@ -8,5 +8,6 @@
     <param name="map_frame" value="odom" />
     <param name="pose_frame" value="slam" />
     <remap from="fiducials_localization/camera" to="$(arg camera)/image_rect"/>
+    <param name="publish_images" value="true"/>
   </node>
 </launch>
