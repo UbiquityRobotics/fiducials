@@ -71,7 +71,7 @@ endif()
 #add_executable(Rviz_Test Rviz_Test.c)
 #target_link_libraries(Rviz_Test ${catkin_LIBRARIES})
 
-install(PROGRAMS
-	Demo Tags Map_Test Video_Capture
+install(TARGETS
+  Demo Tags Map_Test Video_Capture
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
