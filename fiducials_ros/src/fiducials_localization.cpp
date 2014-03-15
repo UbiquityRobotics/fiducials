@@ -83,6 +83,9 @@ class FiducialsNode {
 
     Fiducials fiducials;
     std::string tag_height_file;
+    std::string data_directory;
+    std::string map_file;
+    std::string log_file;
 
     geometry_msgs::Pose scale_position(double x, double y, double z,
         double theta);
@@ -297,15 +300,21 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         cv_img = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8);
         IplImage *image = new IplImage(cv_img->image);
         if(fiducials == NULL) {
-            ROS_INFO("Git first image! Setting up Fiducials library");
-            fiducials = Fiducials__create(image, ".", NULL, this,
-            arc_announce, location_announce, tag_announce,
-            NULL, "ROS_Map", tag_height_file.c_str());
+            ROS_INFO("Got first image! Setting up Fiducials library");
+            fiducials = Fiducials__create(image, data_directory.c_str(), NULL, this,
+	    arc_announce, location_announce, tag_announce,
+	    log_file.c_str(), map_file.c_str(), tag_height_file.c_str());
         }
         Fiducials__image_set(fiducials, image);
         Fiducials_Results results = Fiducials__process(fiducials);
-        if (publish_images && results->map_changed) {
-            image_pub.publish(msg);
+	if (publish_images) {
+  	    if (results->map_changed) {
+	      ROS_INFO("+");
+	      image_pub.publish(msg);
+            }
+            else {
+              ROS_INFO("-");
+            }
         }
     } catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -327,13 +336,16 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
     hidden_tag_color.b = 0.0f;
     hidden_tag_color.a = 1.0f;
 
-    // define position ot be blue
+    // define position to be blue
     position_color.r = 0.0f;
     position_color.g = 0.0f;
     position_color.b = 1.0f;
     position_color.a = 1.0f;
 
     nh.param<std::string>("tag_height", tag_height_file, "Tag_Heights.xml");
+    nh.param<std::string>("data_directory", data_directory, ".");
+    nh.param<std::string>("map_file", map_file, "ROS_Map");
+    nh.param<std::string>("log_file", log_file, "fiducials.log.txt");
     nh.param<std::string>("map_frame", world_frame, "map");
     nh.param<std::string>("pose_frame", pose_frame, "base_link");
     ROS_INFO("Publishing transform from %s to %s", world_frame.c_str(),
