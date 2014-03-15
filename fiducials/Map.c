@@ -445,7 +445,7 @@ void Map__restore(Map map, File in_file) {
 /// *Map__save*() will save *map* to the *file_name* file in XML format.
 
 void Map__save(Map map) {
-    if (!map->is_saved) {
+      if (!map->is_saved) {
 	String full_map_file_name =
 	  String__format("%s/%s1.xml", map->file_path, map->file_base);
 	File out_file = File__open(full_map_file_name, "w");
@@ -800,6 +800,10 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 		    arc->in_tree = (Logical)0;
 		}
 	    }
+	}
+
+	if (map->is_changed) {
+	    Map__save(map);
 	}
 
 	// Mark that *map* is fully updated:
