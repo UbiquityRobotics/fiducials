@@ -77,6 +77,7 @@ Tag Tag__create(Unsigned id, Map map) {
     tag->x = (Double)0.0;
     tag->y = (Double)0.0;
     tag->z = tag_height->z;
+    tag->updated = (Logical)1;
     return tag;
 }
 
@@ -305,6 +306,7 @@ void Tag__update_via_arc(
 	to_tag->twist = to_tag_twist;
 	to_tag->x = to_tag_x;
 	to_tag->y = to_tag_y;
+        to_tag->updated = (Logical)1;
 
 	// Let any interested party know that tag values changed.
 	Map map = to_tag->map;

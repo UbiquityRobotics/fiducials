@@ -105,6 +105,9 @@ struct Tag__Struct {
 
     /// @brief Absolute Z floor coordinate.
     Double z;
+
+    /// @brief Set if tag was updated
+    Logical updated;
 };
 
 /// @brief A *Tag_Height__Struct* represents a span of tags a the same

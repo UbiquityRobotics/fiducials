@@ -351,12 +351,9 @@ Fiducials Fiducials__create(
     }
 
     // Create the *map*:
-    String full_tag_heights_file_name =
-      String__format("%s/%s", fiducials_path, tag_heights_file_name);
     Map map = Map__create(fiducials_path, map_base_name, announce_object,
       arc_announce_routine, tag_announce_routine,
-      full_tag_heights_file_name, "Fiducials__new:Map__create");
-    String__free(full_tag_heights_file_name);
+      tag_heights_file_name, "Fiducials__new:Map__create");
 
     Fiducials_Results results =
       Memory__new(Fiducials_Results, "Fiducials__create");
@@ -876,6 +873,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 			       camera_diagonal * tag->distance_per_pixel;
 			    if (diagonal  > tag->diagonal) {
 				tag->diagonal = diagonal;
+                                tag->updated = (Logical)1;
 			    }
 
 			    // Append *camera_tag* to *camera_tags*:
@@ -1008,8 +1006,11 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
 	// Always announce *current_visible* as visible:
 	current_visible->visible = (Logical)1;
-	Map__tag_announce(map, current_visible,
-	  (Logical)1, original_image, sequence_number);
+        if( current_visible->updated ) {
+	    Map__tag_announce(map, current_visible,
+	        (Logical)1, original_image, sequence_number);
+            current_visible->updated = (Logical)0;
+        }
     }
 
     // Identifiy tags that are no longer visible:
@@ -1038,7 +1039,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 	// *current_visible* is null if it was not found:
 	if (current_visible == (Tag)0) {
 	    // Not found => announce the tag as no longer visible:
-	    previous_visible->visible = (Logical)1;
+	    previous_visible->visible = (Logical)0;
 	    Map__tag_announce(map,
 	      previous_visible, (Logical)0, original_image, sequence_number);
 	}
