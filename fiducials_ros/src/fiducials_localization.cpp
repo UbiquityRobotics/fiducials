@@ -142,7 +142,7 @@ void FiducialsNode::arc_announce(void *t, int from_id, double from_x,
 void FiducialsNode::tag_announce(void *t, int id, double x, double y, double z,
   double twist, double diagonal, double distance_per_pixel, int visible,
   int hop_count) {
-    ROS_INFO("tag_announce:id=%d x=%f y=%f twist=%f\n",
+    ROS_INFO("tag_announce:id=%d x=%f y=%f twist=%f",
       id, x, y, twist);
     FiducialsNode * ths = (FiducialsNode*)t;
     // sqrt(2) = 1.414213...
@@ -206,9 +206,9 @@ void FiducialsNode::location_announce(void * t, int id, double x, double y,
     ths->location_cb(id, x, y, z, bearing);
 }
 
-void location_announce(void *rviz, int id,
-  double x, double y, double z, double bearing) {
-    ROS_INFO("location_announce:id=%d x=%f y=%f bearing=%f\n",
+void FiducialsNode::location_cb(int id, double x, double y, double z,
+    double bearing) {
+    ROS_INFO("location_announce:id=%d x=%f y=%f bearing=%f",
       id, x, y, bearing * 180. / 3.1415926);
 
     visualization_msgs::Marker marker = createMarker(position_namespace, id);
@@ -219,9 +219,9 @@ void location_announce(void *rviz, int id,
 
     marker.pose = scale_position(x, y, z, bearing);
 
-    marker.scale.x = 200.0 / scale;
-    marker.scale.y = 50.0 / scale;
-    marker.scale.z = 50.0 / scale;
+    marker.scale.x = 0.2 / scale;
+    marker.scale.y = 0.05 / scale;
+    marker.scale.z = 0.05 / scale;
 
     marker.color = position_color;
 
