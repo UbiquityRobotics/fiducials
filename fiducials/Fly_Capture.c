@@ -144,10 +144,25 @@ int main(int arguments_size, char * arguments[]) {
 		      IPL_DEPTH_8U, 3);
 		    display_image->imageData = image_data;
 
-		    fiducials = Fiducials__create(display_image, ".",
-		      (String_Const)0, (void *)0, Fiducials__arc_announce,
-		      Fiducials__location_announce, Fiducials__tag_announce,
-		      (String_Const)0, (String_Const)0, (String_Const)0);
+		    // Load up *fiducials_create*:
+		    Fiducials_Create fiducials_create =
+		      Fiducials_Create__one_and_only();
+		    fiducials_create->fiducials_path = (String_Const)".";
+		    fiducials_create->lens_calibrate_file_name =
+		      (String_Const)0;
+		    fiducials_create->announce_object = (Memory)0;
+		    fiducials_create->arc_announce_routine =
+		      Fiducials__arc_announce;
+		    fiducials_create->location_announce_routine =
+		      Fiducials__location_announce;
+		    fiducials_create->tag_announce_routine =
+		      Fiducials__tag_announce;
+		    fiducials_create->log_file_name = (String_Const)0;
+		    fiducials_create->map_base_name = (String_Const)0;
+		    fiducials_create->tag_heights_file_name = (String_Const)0;
+
+		    fiducials =
+		      Fiducials__create(display_image, fiducials_create);
 		    fiducials->debug_index = 11;
 		}
 

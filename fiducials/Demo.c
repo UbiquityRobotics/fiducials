@@ -63,11 +63,22 @@ int main(int arguments_size, char * arguments[]) {
 	CV_Image image = (CV_Image)0;
 	image = CV_Image__pnm_read(image_file_name0);
 	assert (image != (CV_Image)0);
-	Fiducials fiducials =
-	  Fiducials__create(image, ".", lens_calibrate_file_name,
-	  (void *)0, Fiducials__arc_announce,
-	  Fiducials__location_announce, Fiducials__tag_announce,
-	  log_file_name, "Demo_Map", "Tag_Heights.xml");
+
+	// Load up *fiducials_create*:
+	Fiducials_Create fiducials_create = Fiducials_Create__one_and_only();
+	fiducials_create->fiducials_path = (String_Const)".";
+	fiducials_create->lens_calibrate_file_name = lens_calibrate_file_name;
+	fiducials_create->announce_object = (Memory)0;
+	fiducials_create->arc_announce_routine = Fiducials__arc_announce;
+	fiducials_create->location_announce_routine =
+	  Fiducials__location_announce;
+	fiducials_create->tag_announce_routine = Fiducials__tag_announce;
+	fiducials_create->log_file_name = log_file_name;
+	fiducials_create->map_base_name = (String_Const)"Demo_Map";
+	fiducials_create->tag_heights_file_name =
+	  (String_Const)"Tag_Heights.xml";
+	
+	Fiducials fiducials = Fiducials__create(image, fiducials_create);
 	fiducials->map->image_log = image_log;
 
 	for (Unsigned index = 0; index < size; index++) {
