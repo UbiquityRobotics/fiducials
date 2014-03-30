@@ -323,9 +323,22 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         IplImage *image = new IplImage(cv_img->image);
         if(fiducials == NULL) {
             ROS_INFO("Got first image! Setting up Fiducials library");
-            fiducials = Fiducials__create(image, data_directory.c_str(), NULL, this,
-	    arc_announce, location_announce, tag_announce,
-	    log_file.c_str(), map_file.c_str(), tag_height_file.c_str());
+
+	    // Load up *fiducials_create*:
+	    Fiducials_Create fiducials_create =
+	      Fiducials_Create__one_and_only();
+	    fiducials_create->fiducials_path = data_directory.c_str();
+	    fiducials_create->lens_calibrate_file_name = (String_Const)0;
+	    fiducials_create->announce_object = (Memory)this;
+	    fiducials_create->arc_announce_routine = arc_announce;
+	    fiducials_create->location_announce_routine = location_announce;
+	    fiducials_create->tag_announce_routine = tag_announce;
+	    fiducials_create->log_file_name = log_file.c_str();
+	    fiducials_create->map_base_name = map_file.c_str();
+	    fiducials_create->tag_heights_file_name = tag_height_file.c_str();
+
+	    // Create *fiducials* object using first image:
+            fiducials = Fiducials__create(image, fiducials_create);
         }
         Fiducials__image_set(fiducials, image);
         Fiducials_Results results = Fiducials__process(fiducials);
