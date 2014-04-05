@@ -1001,9 +1001,11 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 	    Double change_dy = closest_location->y - fiducials->last_y;
 	    Double change = Double__square_root(
 	      change_dx * change_dx + change_dy * change_dy);
-	    if (change > 10.0) {
+	    if (change > 0.1) {
 		results->image_interesting = (Logical)1;
 	    }
+	    fiducials->last_x = closest_location->x;
+	    fiducials->last_y = closest_location->y;
 
 	    // send rviz marker message here
 	    File__format(log_file,
