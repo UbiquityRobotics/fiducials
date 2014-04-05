@@ -445,6 +445,7 @@ void Map__restore(Map map, File in_file) {
 /// *Map__save*() will save *map* to the *file_name* file in XML format.
 
 void Map__save(Map map) {
+      File__format(stderr, "**********Map__save************\n");
       if (!map->is_saved) {
 	String full_map_file_name =
 	  String__format("%s/%s1.xml", map->file_path, map->file_base);
