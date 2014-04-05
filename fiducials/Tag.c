@@ -72,7 +72,7 @@ Tag Tag__create(Unsigned id, Map map) {
     tag->id = id;
     tag->initialized = (Logical)0;
     tag->map = map;
-    tag->distance_per_pixel = tag_height->distance_per_pixel;
+    tag->world_diagonal = tag_height->world_diagonal;
     tag->visit = map->visit;
     tag->x = (Double)0.0;
     tag->y = (Double)0.0;
@@ -129,13 +129,14 @@ Unsigned Tag__hash(Tag tag) {
 ///
 /// *Tag__initialize*() will initialize *tag* to contain *twist*, *x*,
 /// and *y*.  *twist* is the fiducial twist relative to the floor X axis
-/// measured in radians.  *x*, *y*, and *diagonal*  are measured in any
+/// measured in radians.  *x*, *y*, are measured in any
 /// consistent set of units (millimeters, centimeters, meters, inches,
 /// light years, etc.)  *visit* is used for the tree walker.
+/// *diagonal* is in pixels.
 
 void Tag__initialize(
   Tag tag, Double twist, Double x, Double y, Double diagonal, Unsigned visit) {
-    tag->diagonal = diagonal * tag->distance_per_pixel;
+    tag->diagonal = diagonal; 
     tag->initialized = (Logical)1;
     tag->twist = twist;
     tag->x = x;
@@ -174,7 +175,6 @@ Tag Tag__read(File in_file, Map map) {
     // Load up *tag*:
     Tag tag = Map__tag_lookup(map, tag_id);
     Tag__initialize(tag, twist, x, y, diagonal, map->visit);
-    tag->distance_per_pixel = tag_height->distance_per_pixel;
     tag->hop_count = hop_count;
     tag->z = tag_height->z;
 
@@ -205,7 +205,7 @@ void Tag__svg_write(Tag tag, SVG svg) {
 
     // Grab some values from *tag*:
     Unsigned id = tag->id;
-    Double half_diagonal = tag->diagonal / 2.0;
+    Double half_diagonal = tag->world_diagonal / 2.0;
     Double x = tag->x;
     Double y = tag->y;
     Double twist = tag->twist - quarter_pi;
@@ -381,14 +381,17 @@ Tag_Height Tag_Height__xml_read(File xml_in_file) {
       (Unsigned)File__integer_attribute_read(xml_in_file, "First_Id");
     Unsigned last_id =
       (Unsigned)File__integer_attribute_read(xml_in_file, "Last_Id");
-    Double distance_per_pixel =
-       File__double_attribute_read(xml_in_file, "Distance_Per_Pixel");
+
+    Double World_Diagonal = 
+       File__double_attribute_read(xml_in_file, "World_Diagonal");
+
     Double z = File__double_attribute_read(xml_in_file, "Z");
+
     File__string_match(xml_in_file, "/>\n");
 
     // Load up *tag_height*:
     Tag_Height tag_height = Memory__new(Tag_Height, "Tag_Height__xml_read");
-    tag_height->distance_per_pixel = distance_per_pixel;
+    tag_height->world_diagonal = World_Diagonal;
     tag_height->first_id = first_id;
     tag_height->last_id = last_id;
     tag_height->z = z;

@@ -73,8 +73,8 @@ struct Tag__Struct {
     /// @brief Fiducial tag diagnal distance in camera pixels.
     Double diagonal;
 
-    /// @brief Distance per camera pixel.
-    Double distance_per_pixel;
+    /// @brief Distance along one side of the tag in world units.
+    Double world_diagonal;
 
     ///@brief True if rest of *Tag* is initialized.
     Logical initialized;
@@ -113,8 +113,8 @@ struct Tag__Struct {
 /// @brief A *Tag_Height__Struct* represents a span of tags a the same
 /// ceiling height.
 struct Tag_Height__Struct {
-    /// @brief The distance (in consistent units) per pixel at the tag height.
-    Double distance_per_pixel;
+    /// @brief Distance along one side of the tag in world units.
+    Double world_diagonal;
 
     /// @brief The first tag identifier in the span.
     Unsigned first_id;

@@ -161,8 +161,10 @@ Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
 
 	// Get two *distance_from_pixel* values which may not be
 	// the same because the fiducials are at different heights:
-        Double from_distance_per_pixel = from_tag->distance_per_pixel;
-        Double to_distance_per_pixel = to_tag->distance_per_pixel;
+        Double from_distance_per_pixel = 
+	  from_tag->world_diagonal / from_tag->diagonal;
+        Double to_distance_per_pixel = 
+	  to_tag->world_diagonal / to_tag->diagonal;
 
 	// Now compute floor to/from X/Y's that coorrespond to the (X,Y)
 	// projection of each tag center onto the floor as if the camera
@@ -567,7 +569,8 @@ void Map__tag_announce(Map map,
   Tag tag, Logical visible, CV_Image image, Unsigned sequence_number) {
     map->tag_announce_routine(map->announce_object,
       tag->id, tag->x, tag->y, tag->z, tag->twist,
-      tag->diagonal, tag->distance_per_pixel, visible, tag->hop_count);
+      tag->diagonal, tag->world_diagonal/tag->diagonal,
+      visible, tag->hop_count);
     if (visible) {
 	//Map__image_log(map, image, sequence_number);
     }
@@ -584,7 +587,7 @@ void Map__tag_announce(Map map,
 /// light seconds, etc.)
 
 Tag_Height Map__tag_height_lookup(Map map, Unsigned id) {
-    Double distance_per_pixel = 0.0;
+    //Double distance_per_pixel = 0.0;
     List /* Tag_Height */ tag_heights = map->tag_heights;
     Tag_Height tag_height = (Tag_Height)0;
     assert (tag_heights != (List)0);
@@ -592,7 +595,8 @@ Tag_Height Map__tag_height_lookup(Map map, Unsigned id) {
     for (Unsigned index = 0; index < size; index++) {
 	tag_height = (Tag_Height)List__fetch(tag_heights, index);
 	if (tag_height->first_id <= id && id <= tag_height->last_id) {
-	    distance_per_pixel = tag_height->distance_per_pixel;
+	    //distance_per_pixel = tag_height->distance_per_pixel;
+          
 	    break;
 	}
 	tag_height = (Tag_Height)0;
