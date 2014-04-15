@@ -38,6 +38,15 @@ void Fiducials__location_announce(void *announce_object, Integer id,
       "Location: id=%d x=%f y=%f bearing=%f\n", id, x, y, bearing);
 }
 
+void Fiducials__fiducial_announce(void *announce_object,
+    Integer id, Integer direction, Double world_diagonal,
+    Double x1, Double y1, Double x2, Double y2,
+    Double x3, Double y3, Double x4, Double y4) {
+    File__format(stderr,
+      "Fiducial: id=%d dir=%d diag=%.2f (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
+       id, direction, world_diagonal, x1, y1, x2, y2, x3, y3, x4, y4);
+}
+
 void Fiducials__image_set(Fiducials fiducials, CV_Image image) {
     fiducials->original_image = image;
 }
@@ -160,6 +169,8 @@ Fiducials Fiducials__create(
       fiducials_create->location_announce_routine;
     Fiducials_Tag_Announce_Routine tag_announce_routine =
       fiducials_create->tag_announce_routine;
+    Fiducials_Fiducial_Announce_Routine  fiducial_announce_routine = 
+      fiducials_create->fiducial_announce_routine; 
     String_Const log_file_name = fiducials_create->log_file_name;
     String_Const map_base_name = fiducials_create->map_base_name;
     String_Const tag_heights_file_name =
@@ -373,6 +384,10 @@ Fiducials Fiducials__create(
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
     fiducials->arc_announce_routine = arc_announce_routine;
+    if (fiducial_announce_routine != NULL) 
+       fiducials->fiducial_announce_routine = fiducial_announce_routine;
+    else
+       fiducials->fiducial_announce_routine = Fiducials__fiducial_announce;
     fiducials->announce_object = announce_object;
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
     fiducials->blur = (Logical)1;
@@ -869,6 +884,20 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
 			    // Load up *camera_tag* to get center, twist, etc.:
 			    Tag tag = Map__tag_lookup(map, tag_id);
+
+			    double vertices[4][2];
+			    for (Unsigned index = 0; index < 4; index++) {
+			      CV_Point2D32F pt = CV_Point2D32F_Vector__fetch1(corners, index);
+			      vertices[index][0] = pt->x;
+			      vertices[index][1] = pt->y;
+			    }			    
+                            fiducials->fiducial_announce_routine(NULL, tag_id,
+				direction_index, tag->world_diagonal,
+                                vertices[0][0], vertices[0][1],
+				vertices[1][0], vertices[1][1],
+                                vertices[2][0], vertices[2][1],
+                                vertices[3][0], vertices[3][1]);
+
 			    if (debug_index == 11) {
 				Camera_Tag__initialize(camera_tag, tag,
 				  direction_index, corners, debug_image);
@@ -1673,6 +1702,7 @@ static struct Fiducials_Create__Struct fiducials_create_struct =
     (Fiducials_Arc_Announce_Routine)0,		// arc_announce_routine
     (Fiducials_Location_Announce_Routine)0,	// location_announce_routine
     (Fiducials_Tag_Announce_Routine)0,		// tag_announce_routine
+    (Fiducials_Fiducial_Announce_Routine)0,    	// fiducial_announce_routine
     (String_Const)0,				// log_file_name
     (String_Const)0,				// map_base_name
     (String_Const)0,				// tag_heights_file_name

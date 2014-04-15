@@ -21,12 +21,20 @@ typedef void (*Fiducials_Arc_Announce_Routine)(void *announce_object,
   Integer from_id, Double from_x, Double from_y, Double from_z,
   Integer to_id, Double to_x, Double to_y, Double to_z,
   Double goodness, Logical in_spanning_tree);
+
 typedef void (*Fiducials_Location_Announce_Routine)(void *announce_object,
   Integer id, Double x, Double y, Double z, Double bearing);
+
 typedef void (*Fiducials_Tag_Announce_Routine)(void *announce_object,
   Integer id, Double x, Double y, Double z, Double twist,
   Double diagonal, Double distance_per_pixel,
   Logical visible, Integer hop_count);
+
+typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
+    Integer id, Integer direction, Double world_diagonal,
+    Double x1, Double y1, Double x2, Double y2,
+    Double x3, Double y3, Double x4, Double y4);
+
 
 // #include everything else:
 #include "Camera_Tag.h"
@@ -70,6 +78,7 @@ struct Fiducials__Struct {
     Double last_x;
     Double last_y;
     Fiducials_Location_Announce_Routine location_announce_routine;
+    Fiducials_Fiducial_Announce_Routine fiducial_announce_routine;
     List /* <Location> */ locations;
     File log_file;
     Map map;
@@ -104,6 +113,7 @@ struct Fiducials_Create__Struct {
     Fiducials_Arc_Announce_Routine arc_announce_routine;
     Fiducials_Location_Announce_Routine location_announce_routine;
     Fiducials_Tag_Announce_Routine tag_announce_routine;
+    Fiducials_Fiducial_Announce_Routine fiducial_announce_routine;
     String_Const log_file_name;
     String_Const map_base_name;
     String_Const tag_heights_file_name;
