@@ -323,13 +323,13 @@ Map Map__create(String_Const file_path, String_Const file_base,
     // Restore *map* from "*map_path*/*map_base*{0,1}.xml".
     // We try to read "...1.xml" first, followed by "...0.xml":
     String full_map_file_name =
-      String__format("%s/1%s.xml", file_path, file_base);
+      String__format("%s/%s1.xml", file_path, file_base);
     File in_file = File__open(full_map_file_name, "r");
     if (in_file == (File)0) {
 	// We failed to open "...1.xml"; now try "...0.xml":
 	String__free(full_map_file_name);
 	String full_map_file_name =
-	  String__format("%s/0%s.xml", file_path, file_base);
+	  String__format("%s/%s0.xml", file_path, file_base);
 	in_file = File__open(full_map_file_name, "r");
 	if (in_file != (File)0) {
 	    // We opened "...0.xml", read it in:
@@ -338,6 +338,7 @@ Map Map__create(String_Const file_path, String_Const file_base,
 	}
     } else {
 	// We opened "...1.xml", read it in:
+        printf("Reading %s\n", full_map_file_name);
         Map__restore(map, in_file);
 	File__close(in_file);
     }
@@ -424,6 +425,12 @@ void Map__restore(Map map, File in_file) {
     // Read in the *all_tags_size* *Tag* objects:
     for (Unsigned index = 0; index < all_tags_size; index++) {
 	Tag tag = Tag__read(in_file, map);
+
+fprintf(stderr, "announce %d\n", tag->id);
+        map->tag_announce_routine(map->announce_object,
+        tag->id, tag->x, tag->y, tag->z, tag->twist,
+        tag->diagonal, tag->world_diagonal/tag->diagonal,
+        0, tag->hop_count);
     }
 
     // Read in the *all_arcs_size* *Arc* objects:
