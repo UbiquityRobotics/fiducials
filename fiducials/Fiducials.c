@@ -891,7 +891,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 			      vertices[index][0] = pt->x;
 			      vertices[index][1] = pt->y;
 			    }			    
-                            fiducials->fiducial_announce_routine(NULL, tag_id,
+                            fiducials->fiducial_announce_routine(
+                                fiducials->announce_object, tag_id,
 				direction_index, tag->world_diagonal,
                                 vertices[0][0], vertices[0][1],
 				vertices[1][0], vertices[1][1],
