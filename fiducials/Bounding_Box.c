@@ -5,7 +5,7 @@
 #include "Memory.h"
 
 /// @brief Release the storage associated with *bounding_box*.
-/// @param bounding box to release storage for.
+/// @param bounding_box the *Bounding_Box* object to release storage of.
 ///
 /// *Bounding_Box__free*() will release the storage associated with
 /// *bounding_box*.

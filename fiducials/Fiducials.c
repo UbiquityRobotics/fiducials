@@ -21,6 +21,26 @@
 #include "Tag.h"
 #include "Unsigned.h"
 
+/// @brief Callback routine that prints a new *Arc* object when it shows up.
+/// @param announce_object is unused (other routines might us it).
+/// @param from_id is the tag identifier that has the lower tag id number.
+/// @param from_x is the X coordinate of the from tag.
+/// @param from_y is the Y coordinate of the from tag.
+/// @param from_z is the Z coordinate of the from tag.
+/// @param to_id is the tag identifier that has the higher tag id number.
+/// @param to_x is the X coordinate of the to tag.
+/// @param to_y is the Y coordinate of the to tag.
+/// @param to_z is the Z coordinate of the to tag.
+/// @param goodness is the distance between the arc center point and the camera.
+/// @param in_spanning_tree is true if the arc is in the spanning tree.
+///
+/// *Fiducials__arc_announce*() is a callback routine that can be called
+/// whenever an arc data structure is modified.  The announce routine is
+/// specified as an argument to *Map__create*().
+
+// FIXME: Why isn't the from_twist and to_twist included???!!!
+// FIXME: Why don't we just pass the *Arc* object???!!!
+
 void Fiducials__arc_announce(void *announce_object,
   Integer from_id, Double from_x, Double from_y, Double from_z,
   Integer to_id, Double to_x, Double to_y, Double to_z,
@@ -32,28 +52,84 @@ void Fiducials__arc_announce(void *announce_object,
       goodness, in_spanning_tree);
 }
 
+/// @brief Callback routine that prints out location when it changes.
+/// @param announce_object is unused.
+/// @param id is ???
+/// @param x is the X location of the robot.
+/// @param y is the Y location of the robot.
+/// @param z is the Y location of the robot (currently ignored.)
+/// @param bearing is the robot bearin in radians.
+///
+/// *Fiducials__location_announce*() is a callback routine that can be
+/// calld to print out the location information.  The location announce
+/// routine is a field of the *Fiducials_Create__Struct*.
+
+//FIXME: Why don't we just pass in a *Location* object???!!!
+
 void Fiducials__location_announce(void *announce_object, Integer id,
   Double x, Double y, Double z, Double bearing) {
     File__format(stderr,
       "Location: id=%d x=%f y=%f bearing=%f\n", id, x, y, bearing);
 }
 
+/// @brief Callback routine tthat prints out the fidicial information.
+/// @param announce_object is unused.
+/// @param id is the tag id.
+/// @param direction specifies (0-3) which of the 4 possible fiducial
+///        orientations matched.
+/// @param world_diagonal is the diagonal measured in world coordinate.
+/// @param x1 is the X coordinate of corner1 in camera coordinates.
+/// @param y1 is the y coordinate of corner1 in camera coordinates.
+/// @param x2 is the X coordinate of corner2 in camera coordinates.
+/// @param y2 is the y coordinate of corner2 in camera coordinates.
+/// @param x3 is the X coordinate of corner3 in camera coordinates.
+/// @param y3 is the y coordinate of corner3 in camera coordinates.
+/// @param x4 is the X coordinate of corner4 in camera coordinates.
+/// @param y4 is the y coordinate of corner4 in camera coordinates.
+///
+/// *Fiducials__fiducial_announce*() will announce finding a fiducial
+/// in a camera image.  This callback routine is supplied as an
+/// argument to *Fiducials__create*().
+
 void Fiducials__fiducial_announce(void *announce_object,
     Integer id, Integer direction, Double world_diagonal,
     Double x1, Double y1, Double x2, Double y2,
     Double x3, Double y3, Double x4, Double y4) {
     File__format(stderr,
-      "Fiducial: id=%d dir=%d diag=%.2f (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
+       "Fiducial: id=%d dir=%d diag=%.2f (%.2f,%.2f), " /* + */
+       "(%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
        id, direction, world_diagonal, x1, y1, x2, y2, x3, y3, x4, y4);
 }
+
+/// @brief Sets the original image for *fiducials.
+/// @param fiducials is the *Fiducials* object to use.
+/// @param image is the new image to use as the original image.
+///
+/// *Fiducials__image_set*() will set the original image for *fiducials*
+/// to *image*.
 
 void Fiducials__image_set(Fiducials fiducials, CV_Image image) {
     fiducials->original_image = image;
 }
 
-// This routine will show {original_image} on the screen along
-// with a primitive debugging interface to showing how the debugging
-// is going.
+/// @brief Is a HighGUI interface to show the current image.
+/// @param fiducials is the *Fiducials* object that contains the image.
+/// @param show is true to force the HighGUI interface to activate.
+///
+/// *Fiducials__image_show*() will cause an image to be shown with
+/// at each of the various stages of the recognition cycle.  This
+/// only occurs if *show* is *true*.
+///
+///  The character commands are:
+///
+/// * '/033' -- Escape from program.
+/// * '+' -- View next stage in processing pipeline.
+/// * '-' -- View previous stage in processing pipeline.
+/// * '<' -- Goto beginning of processing pipeline.
+/// * 'b' -- Toggle image blur.
+/// * 'f' -- Flip fiducials allong X axis
+
+//FIXME: Is there any point to having *show* set to false???!!!
 
 void Fiducials__image_show(Fiducials fiducials, Logical show) {
     // Grab some values out of *fiduicals*:
@@ -148,6 +224,18 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
 	CV__destroy_window(window_name);
     }
 }
+
+/// @brief Create and return a *Fiducials* object.
+/// @param original_image is the image to start with.
+/// @param fiducials_create is a *Fiducials_Create* object that
+///        specifies the various features to enable or disable.
+///
+/// *Fiducials__create*() creates and returns a *Fiducials* object
+/// using the values in *fiduicials_create*.
+
+//FIXME: Change this code so that the image size is determined from
+// the first image that is processed.  This allows the image size
+// to change in midstream!!!
 
 Fiducials Fiducials__create(
   CV_Image original_image, Fiducials_Create fiducials_create)
@@ -296,58 +384,6 @@ Fiducials Fiducials__create(
 	 //corner2	      corner3
     };
 
-    //static Logical north_mapping_flipped[64] = {
-    //	//corner1	      corner0
-    //	56, 57, 58, 59, 60, 61, 62, 63,
-    //	48, 49, 50, 51, 52, 53, 54, 55,
-    //	40, 41, 42, 43, 44, 45, 46, 47,
-    //	32, 33, 34, 35, 36, 37, 38, 39,
-    //	24, 25, 26, 27, 28, 29, 30, 31,
-    //	16, 17, 18, 19, 20, 21, 22, 23,
-    //	 8,  9, 10, 11, 12, 13, 14, 15,
-    //	 0,  1,  2,  3,  4,  5,  6,  7,
-    //	//corner2	      corner3
-    //};
-    //
-    //static Logical west_mapping_flipped[64] = {
-    //	//corner1	      corner0
-    //	 0,  8, 16, 24, 32, 40, 48, 56,
-    //	 1,  9, 17, 25, 33, 41, 49, 57,
-    //	 2, 10, 18, 26, 34, 42, 50, 58,
-    //	 3, 11, 19, 27, 35, 43, 51, 59,
-    //	 4, 12, 20, 28, 36, 44, 52, 60,
-    //	 5, 13, 21, 29, 37, 45, 53, 61,
-    //	 6, 14, 22, 30, 38, 46, 54, 62,
-    //	 7, 15, 23, 31, 39, 47, 55, 63,
-    //	//corner2	      corner3
-    //};
-    //
-    //static Logical south_mapping_flipped[64] = {
-    //	//corner1	      corner0
-    //	 7,  6,  5,  4,  3,  2,  1,  0,
-    //	15, 14, 13, 12, 11, 10,  9,  8,
-    //	23, 22, 21, 20, 19, 18, 17, 16,
-    //	31, 30, 29, 28, 27, 26, 25, 24,
-    //	39, 38, 37, 36, 35, 34, 33, 32,
-    //	47, 46, 45, 44, 43, 42, 41, 40,
-    //	55, 54, 53, 52, 51, 50, 49, 48,
-    //	63, 62, 61, 60, 59, 58, 57, 56,
-    //	//corner2	      corner3
-    //};
-    //
-    //static Logical east_mapping_flipped[64] = {
-    //	//corner1	      corner0
-    //	63, 55, 47, 39, 31, 23, 15,  7,
-    //	62, 54, 46, 38, 30, 22, 14,  6,
-    //	61, 53, 45, 37, 29, 21, 13,  5,
-    //	60, 52, 44, 36, 28, 20, 12,  4,
-    //	59, 51, 43, 35, 27, 19, 11,  3,
-    //	58, 50, 42, 34, 26, 18, 10,  2,
-    //	57, 49, 41, 33, 25, 17,  9,  1,
-    //	56, 48, 40, 32, 24, 16,  8,  0,
-    //	//corner2	      corner3
-    //};
-
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
 
@@ -441,6 +477,11 @@ Fiducials Fiducials__create(
     return fiducials;
 }
 
+/// @brief will release the storage associated with *fiducials*.
+/// @param fiducials is the *Fiducials* object to release.
+///
+/// *Fiducials__free*() releases the storage associated with *fiducials*.
+
 void Fiducials__free(Fiducials fiducials) {
     // Write the map out if it changed:
     Map__save(fiducials->map);
@@ -490,9 +531,23 @@ void Fiducials__free(Fiducials fiducials) {
     Memory__free((Memory)fiducials);
 }
 
+/// @brief Force the map associated with *fiducials* to be saved.
+/// @param fiducials is the *Fiducials* object to save the map of.
+///
+/// *Fiducials__map_save*() will cause the map associated with
+/// *fiducials* to be saved.
+
 void Fiducials__map_save(Fiducials fiducials) {
     Map__save(fiducials->map);
 }
+
+/// @brief Process the current image associated with *fiducials*.
+/// @param fiducials is the *Fiducials* object to use.
+/// @returns a *Fiducials_Results* that contains information about
+///          how the processing worked.
+///
+/// *Fiducials__process*() will process *fiducials* to determine
+/// the robot location.
 
 Fiducials_Results Fiducials__process(Fiducials fiducials) {
     // Clear *storage*:
@@ -1127,6 +1182,16 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     return results;
 }
 
+/// @brief Helper routine to sample a point from the image in *fiducials*.
+/// @param fiducials is the *Fiducials* object that contains the image.
+/// @param point is the point location to sample.
+/// @returns weighted sample value.
+///
+/// *Fiducials__point_sample*() will return a weighted sample value for
+/// *point* in the image associated with *fiducials*.  The weight algorithm
+/// is controlled by the *weights_index* field of *fiducials*.  The returned
+/// value is between 0 (black) to 255 (white).
+
 Integer Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
     // This routine will return a sample *fiducials* at *point*.
 
@@ -1195,6 +1260,16 @@ Integer Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
     return result;
 }
 
+/// @brief Force *corners* to be counter-clockwise.
+/// @param corners is the list of 4 fiducial corners.
+///
+/// *CV_Point2D32F_Vector__corners_normalize*() will force *corners*
+/// to be counter-clockwise.  Note there is no check to ensure that
+/// *corners* actually has 4 values in it.
+
+//FIXME: Does this routine belong in CV.c???!!!  
+//FIXME: Should this be merged with *CV_Point2D32F_Vector__is_clockwise*???!!!
+
 void CV_Point2D32F_Vector__corners_normalize(CV_Point2D32F_Vector corners) {
     // This routine will ensure that {corners} are ordered
     // in the counter-clockwise direction.
@@ -1218,9 +1293,16 @@ void CV_Point2D32F_Vector__corners_normalize(CV_Point2D32F_Vector corners) {
     }
 }
 
+/// @brief Return true if *corners* is in a clockwise direction.
+/// @param corners is a vector of 4 fiducials corners to test.
+/// @returns true if the corners are clockwiase and false otherwise.
+///
+/// *CV_Point2D32F_Vector__is_clockwise*() will return true if the 4 fiducial
+/// corners in *corners* are clockwise and false otherwise.
+
 Logical CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners) {
 
-    // Extract the four corners:
+    // Extract the three corners:
     CV_Point2D32F corner0 = CV_Point2D32F_Vector__fetch1(corners, 0);
     CV_Point2D32F corner1 = CV_Point2D32F_Vector__fetch1(corners, 1);
     CV_Point2D32F corner2 = CV_Point2D32F_Vector__fetch1(corners, 2);
@@ -1246,14 +1328,22 @@ Logical CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners) {
     return z < 0.0;
  }
 
+/// @brief Return 8 sample locations to determine if a quadralateral is
+///        worth testing for quadralateral'ness.
+/// @param fiducials is the *Fiducals* object that contains the image.
+/// @param corners is the 4 potential fiducial corners.
+/// @returns a vector 8 places to test for ficial'ness.
+///
+/// *Fiducials__references_compute*() 4 corner points in *corners* to
+/// compute 8 reference points that are returned.  The first 4 reference
+/// points will be just outside of the quadrateral formed by *corners*
+/// (i.e. the white bounding box) and the last 4 reference points are
+/// on the inside (i.e. the black bounding box).  The returned vector
+/// is perminately allocated in *fiducials*, so it does not need to have
+/// it storage released.
+
 CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners) {
-
-    // This routine will use the 4 corner points in {corners} to
-    // compute 8 reference points that returned.  The first 4 reference
-    // points will be just outside of the quadrateral formed by {corners}
-    // (i.e. the white bounding box) and the last 4 reference points are
-    // on the inside (i.e. the black bounding box).
 
     // Extract the 8 references from {references}:
     CV_Point2D32F_Vector references = fiducials->references;
@@ -1308,7 +1398,7 @@ CV_Point2D32F_Vector Fiducials__references_compute(
     CV_Point2D32F__y_set(reference5, yy0 + dyy10 * 19.0 / 20.0);
 
     // Determine the points ({xx2, yy2}) and ({xx3, yy3}) that determine
-    //a line parrallel to the other side of the quadralatal:
+    // a line parrallel to the other side of the quadralatal:
     Double xx2 = x1 + dx21 * 15.0 / 20.0;
     Double yy2 = y1 + dy21 * 15.0 / 20.0;
     Double xx3 = x0 + dx30 * 15.0 / 20.0;
@@ -1330,12 +1420,21 @@ CV_Point2D32F_Vector Fiducials__references_compute(
     return references;
 }
 
+/// @brief Return the maximum value of the points in *points*.
+/// @param fiducials is the *Fiducials* object that contains the image.
+/// @param points is the vector of points to sample.
+/// @param start_index is the first index to start with.
+/// @param end_index is the last index to end with.
+/// @returns the maximum sampled value.
+///
+///
+/// *Fiducials__points_maximum*() will sweep from *start_index* to
+/// *end_index* through *points*.  Using each selected point in *points*},
+/// the corresponding value in *image* is sampled.  The minimum of the
+/// sampled point is returned.
+
 Integer Fiducials__points_maximum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index) {
-    // This routine will sweep from {start_index} to {end_index} through
-    // {points}.  Using each selected point in {points}, the corresponding
-    // value in {image} is sampled.  The minimum of the sampled point is
-    // returned.
 
     // Start with a big value move it down:
     Integer result = 0;
@@ -1354,13 +1453,20 @@ Integer Fiducials__points_maximum(Fiducials fiducials,
     return result;
 }
 
+/// @brief Return the minimum value of the points in *points*.
+/// @param fiducials is the *Fiducials* object that contains the image.
+/// @param points is the vector of points to sample.
+/// @param start_index is the first index to start with.
+/// @param end_index is the last index to end with.
+/// @returns the minimum sampled value.
+///
+/// *Fiducials__points_minimum*() will sweep from *start_index* to
+/// *end_index* through *points*.  Using each selected point in *points*},
+/// the corresponding value in *image* is sampled.  The minimum of the
+/// sampled point is returned.
+
 Integer Fiducials__points_minimum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index) {
-
-    // This routine will sweep from {start_index} to {end_index} through
-    // {points}.  Using each selected point in {points}, the corresponding
-    // value in {image} is sampled.  The minimum of the sampled point is
-    // returned.
 
     // Start with a big value move it down:
     Integer result = 0x7fffffff;
@@ -1377,16 +1483,24 @@ Integer Fiducials__points_minimum(Fiducials fiducials,
     return result;
 }
 
+/// @brief Compute the fiducial locations to sample using *corners*
+/// @param corners is the the 4 of the fiducials.
+/// @param sample_points is the 64 vector of points that are computed.
+///
+/// *Fiducials__sample_points_compute*() will use the 4 corners in 
+/// *corners* as a quadralateral to compute an 8 by 8 grid of tag
+/// bit sample points and store the results into the the 64
+/// preallocated *CV_Point2D32F* objects in *sample_points*.
+/// The quadralateral must be convex and in the counter-clockwise
+/// direction.  Bit 0 will be closest to corners[1], bit 7 will be
+/// closest to corners[0], bit 56 closest to corners[2] and bit 63
+/// closest to corners[3].
+
+//FIXME: sample points comes from *fiducials*, so shouldn't have
+// have *fiducials* as a argument instead of *sample_points*???!!!
+
 void Fiducials__sample_points_compute(
   CV_Point2D32F_Vector corners, CV_Point2D32F_Vector sample_points) {
-
-    // This routine will use the 4 corners in {corners} as a quadralateral
-    // to compute an 8 by 8 grid of tag bit sample points and store the
-    // results into the the 64 preallocated {CV_Point2D32F} objects in
-    // {sample_points}.  The quadralateral must be convex and in the
-    // counter-clockwise direction.  Bit 0 will be closest to corners[1],
-    // bit 7 will be closest to corners[0], bit 56 closest to corners[2] and
-    // bit 63 closest to corners[3].
 
     CV_Point2D32F corner0 = CV_Point2D32F_Vector__fetch1(corners, 0);
     CV_Point2D32F corner1 = CV_Point2D32F_Vector__fetch1(corners, 1);
@@ -1486,37 +1600,38 @@ void Fiducials__sample_points_compute(
     //Fiducials__sample_points_helper("3:63", corner0, sample_point63);
 }
 
-
-void Fiducials__sample_points_helper(
-  String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point) {
-    Double corner_x = CV_Point2D32F__x_get(corner);
-    Double corner_y = CV_Point2D32F__y_get(corner);
-    Double sample_point_x = CV_Point2D32F__x_get(sample_point);
-    Double sample_point_y = CV_Point2D32F__y_get(sample_point);
-    File__format(stderr, "Label: %s corner: %f:%f sample_point %f:%f\n",
-      label, (Integer)corner_x, (Integer)corner_y,
-      (Integer)sample_point_x, (Integer)sample_point_y);
-}
+// Used in *Fiducials__sample_points*() for debugging:
+//
+//void Fiducials__sample_points_helper(
+//  String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point) {
+//    Double corner_x = CV_Point2D32F__x_get(corner);
+//    Double corner_y = CV_Point2D32F__y_get(corner);
+//    Double sample_point_x = CV_Point2D32F__x_get(sample_point);
+//    Double sample_point_y = CV_Point2D32F__y_get(sample_point);
+//    File__format(stderr, "Label: %s corner: %f:%f sample_point %f:%f\n",
+//      label, (Integer)corner_x, (Integer)corner_y,
+//      (Integer)sample_point_x, (Integer)sample_point_y);
+//}
 
 /// @brief Print out tag update information.
-/// @param anounce_object is an opaque object from *Map*->*announce_object*.
+/// @param announce_object is an opaque object from *Map*->*announce_object*.
 /// @param id is the tag id.
 /// @param x is the tag X location.
 /// @param y is the tag Y location.
 /// @param z is the tag Z location.
 /// @param twist is the tag twist in radians.
-/// @param dx is the tag size along the X axis (before twist).
-/// @param dy is the tag size along the Y axis (before twist).
-/// @param dz is the tag height in the Z axis.
+/// @param diagonal is the tag diagonal distance.
+/// @param distance_per_pixel is the distance per pixel.
 /// @param visible is (*Logical*)1 if the tag is currently in camera
-//         field of view, and (*Logical*)0 otherwise.
+///        field of view, and (*Logical*)0 otherwise.
+/// @param hop_count is the hop count along the spanning tree to the origin.
 ///
 /// *Fiducials_tag_announce*() is a tag announce routine that can be
 /// fed into *Fiducials__create*() as a routine to call each time a
 /// tag is updated.
 
-void Fiducials__tag_announce(void *object, Integer id,
-  Double x, Double y, Double z, Double twist, Double diagnoal,
+void Fiducials__tag_announce(void *announce_object, Integer id,
+  Double x, Double y, Double z, Double twist, Double diagonal,
   Double distance_per_pixel, Logical visible, Integer hop_count) {
     String visible_text = "";
     if (!visible) {
@@ -1524,175 +1639,6 @@ void Fiducials__tag_announce(void *object, Integer id,
     }
     File__format(stderr, "id=%d x=%f y=%f twist=%f %s\n",
       id, x, y, twist, visible_text);
-}
-
-void Fiducials__tag_record(Unsigned direction, CV_Point2D32F_Vector vector) {
-    // This routine will update the contents {Tag} to contain {direction},
-    // and {vector}.  {vector} contains four points that form a convex
-    // quadralateral in the counter-clockwise direction.  This routine will
-    // compute the diagonal and twist values for {tag} as well.
-
-    // Load up the contents of {tag.corners} from {corners} depending
-    // upon {direction}:
-    Unsigned offset = 0;
-    switch (direction) {
-      case 0:
-	// North mapping:
-	//offset := 2
-	offset = 0;
-	break;
-      case 1:
-	// East mapping:
-	//offset := 1
-	offset = 1;
-	break;
-      case 2:
-	// South mapping:
-	//offset := 0
-	offset = 2;
-	  break;
-      case 3:
-	// West mapping:
-	//offset := 3
-	offset = 3;
-	break;
-      default:
-	assert (0);
-    }
-
-    // Compute {x_center} and {y_center} and fill in {corners}:
-    //tag_corners :@= tag.corners
-    for (Unsigned point_index = 0; point_index < 4; point_index++) {
-	Unsigned corner_index = 0;
-	switch (direction) {
-	  case 0:
-	    corner_index = (3 - point_index + 2) & 3;
-	    break;
-	  case 1:
-	    corner_index = (3 - point_index + 1) & 3;
-	    break;
-	  case 2:
-	    corner_index = (3 - point_index + 0) & 3;
-	    break;
-	  case 3:
-	    corner_index = (3 - point_index + 3) & 3;
-	    break;
-	  default:
-	    assert(0);
-	    break;
-	}
-	//corner :@= vector[corner_index]
-	//x :@= corner.x
-	//y :@= corner.y
-	//tag_corner :@= tag_corners[point_index]
-	//tag_corner.x := x
-	//tag_corner.y := y
-	//point_index := point_index + 1
-    }
-
-    // The comment below is out of date:
-    //# The Y axis in is image coordinates goes from 0 at the top to
-    //# a positive number as it goes towards the bottom.  This is the
-    //# opposite direction from from normal cartisian coordinates where
-    //# positive Y goes up.  Because my brain can't cope with angles
-    //# unless they are in cartisian coordinates, I negate the Y axis
-    //# for the purpose of computing the {twist} angles below.  This
-    //# flips the direction of the Y axis.
-
-    Double pi = 3.14159265358979323846;
-
-    // Compute {twist}:
-    //tag_corner0 = tag_corners[0]
-    //tag_corner1 = tag_corners[1]
-    //tag_corner2 = tag_corners[2]
-    //tag_corner3 = tag_corners[3]
-
-    // Pull out the X and Y coordinates:
-    //x0 :@= tag_corner0.x
-    //y0 :@= tag_corner0.y
-    //x1 :@= tag_corner1.x
-    //y1 :@= tag_corner1.y
-    //x2 :@= tag_corner2.x
-    //y2 :@= tag_corner2.y
-    //x3 :@= tag_corner3.x
-    //y3 :@= tag_corner3.y
-
-    // Compute the angle of the tag bottom edge to camera X axis:
-    //dx01 :@= x0 - x1
-    //dy01 :@= y0 - y1
-    //twist1 :@= arc_tangent2@(dy01, dx01)
-    //dx32 :@= x3 - x2
-    //dy32 :@= y3 - y2
-    //twist2 :@= arc_tangent2@(dy32, dx32)
-
-    // We want the average angle of {twist1} and {twist2}.  We have
-    // be careful about modular arithmetic issues.  Compute the angle
-    // change and add in half of that to get the average angle:
-    //twist_change :@= angle_between@(twist1, twist2)
-    //twist :@= angle_normalize@(twist1 + twist_change / 2.0)
-    //tag.twist := twist
-
-    // Compute the X/Y axis deltas for the two diagonals:
-    //dx02 :@= x0 - x2
-    //dy02 :@= y0 - y2
-    //dx13 :@= x1 - x3
-    //dy13 :@= y1 - y3
-
-    // Compute the actual diagonals:
-    //diagonal02 :@= square_root@(dx02 * dx02 + dy02 * dy02)
-    //diagonal13 :@= square_root@(dx13 * dx13 + dy13 * dy13)
-
-    // Compute the average diagonal:
-    //diagonal :@= (diagonal02 + diagonal13) / 2.0
-    //tag.diagonal := diagonal
-
-    // Compute the center by averagine all for corners:
-    //center_x :@= (x0 + x1 + x2 + x3) / 4.0
-    //center_y :@= (y0 + y1 + y2 + y2) / 4.0
-    //tag.center_x := center_x
-    //tag.center_y := center_y
-
-    //if trace
-      //call d@(form@(
-      //  "%p%id=%d% c0=%2f%,%2f% c1=%2f%,%2f% c2=%2f%,%2f% c3=%2f%,%2f%\n\") %
-      //  f@(indent1) % f@(tag.id) %
-      //  f@(x0) % f@(y0) % f@(x1) % f@(y1) %
-      //  f@(x2) % f@(y2) % f@(x3) / f@(y3))
-      //call d@(form@("%p%dx01=%2f% dy01=%2f% dir=%d%\n\") %
-      //  f@(indent1) % f@(dx01) % f@(dy01) / f@(tag.direction))
-      //call d@(form@("%p%tw1=%2f% tw2=%2f% tw=%2f%\n\") %
-      //  f@(indent1) % f@(twist1 * 180.0 / pi) %
-      //  f@(twist2 * 180.0 / pi) /  f@(twist * 180.0 / pi))
-      //call d@(form@("%p%center_x==%2f% center_y=%2f%\n\") %
-      //  f@(indent1) % f@(center_x) / f@(center_y))
-
-    // # For debugging, display everything:
-    //if 0f	# 1t
-       //#call d@(form@("Mapping:%v% offset:%d%\n\") %
-       //#  f@(extractor.mapping_names[direction]) / f@(offset))
-       //index :@= 0i
-       //while index < 4i
-	       //corner := vector[unsigned@(index)]
-	    //vector_x :@= round@CV(corner.x)
-	    //vector_y :@= round@CV(corner.y)
-
-	    //#point_x :@= round@CV(get_real_2d@CV(points, index, 0i))
-	    //#npoint_y :@= round@CV(get_real_2d@CV(points, index, 1i))
-	    //#corner_x :@= round@CV(get_real_2d@CV(corners, index, 0i))
-	    //#corner_y :@= round@CV(get_real_2d@CV(corners, index, 1i))
-
-	    //#call d@(form@(
-	    //#  "[%d%]: corner_vect=%d%:%d% point=%d%:%d% corner=%d%:%d%\n\") %
-	    //#  f@(index) % f@(vector_x) % f@(vector_y) %
-	    //#  f@(point_x) % f@(point_y) %
-	    //#  f@(corner_x) / f@(corner_y))
-	    //index := index + 1i
-       //#call d@(form@("corners_vec CW:%l% points CW:%l% corners CW:%l%\n\") %
-       //#  f@(is_clockwise@(vector)) % f@(is_clockwise@(points)) /
-       //#  f@(is_clockwise@(corners)))
-
-    //if trace
-       //call d@(form@("%p%<=record@Tag(T%d%, *)\n\") % f@(indent) / f@(tag.id))
 }
 
 static struct Fiducials_Create__Struct fiducials_create_struct =
@@ -1708,6 +1654,13 @@ static struct Fiducials_Create__Struct fiducials_create_struct =
     (String_Const)0,				// map_base_name
     (String_Const)0,				// tag_heights_file_name
 };
+
+/// @brief Returns the one and only *Fiducials_Create* object.
+/// @returns the one and only *Fiducials_Create* object.
+///
+/// *Fiducials_Create__one_and_only*() will return the one and only
+/// *Fiducials_Create* object.  This object needs to be initalized
+/// prior to calling *Fiduciasl__create*().
 
 Fiducials_Create Fiducials_Create__one_and_only(void)
 {

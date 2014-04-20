@@ -1,4 +1,4 @@
-// Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 #include "Camera_Tag.h"
 #include "Double.h"
@@ -29,9 +29,10 @@ void Camera_Tag__free(Camera_Tag camera_tag) {
 
 /// @brief Initializes *camara_tag* from *tag_id*, *direction*, and *corners*
 /// @param camera_tag is the *Camera_Tag* to be initialized.
-/// @param tag_id is the fiducial tag identifier.
+/// @param tag is the fiducial tag.
 /// @param direction is the direction that match the fiducial orientation.
 /// @param corners are the 4 corners of the fiducial tag.
+/// @param debug_image is a *CV_Image* that is used for debugging.
 ///
 /// *Camera_Tag__initialize*() will initialize *camera_tag*.  *tag_id*
 /// is the fiduical tag identifier.  *direction* specifies which of the

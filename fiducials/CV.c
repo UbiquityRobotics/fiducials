@@ -504,7 +504,7 @@ Integer CV_Image__height_get(CV_Image image) {
 }
 
 /// @brief Reads in a *CV_Image* in from the .pnm file named *file_name*.
-/// @param file_base_name is the base name (excluding suffix) to write out to.
+/// @param file_name is the base name (excluding suffix) to write out to.
 /// @returns the *CV_Image* corresponding to the file read in.
 ///
 /// *CV_Image__pnm_read*() will reads in and return a *CV_Image* in from

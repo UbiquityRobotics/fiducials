@@ -29,21 +29,17 @@ Integer Arc__compare(Arc arc1, Arc arc2) {
 }
 
 /// @brief Create and return a new *Arc* object.
-/// @param origin *Tag*.
-/// @param target *Tag*.
-/// @param distance between *origin* and *target*.
-/// @param target_angle is angle from *origin* center to *target* center.
-/// @param target_twist is twist from *origin* to *target*. 
-/// @returns new *Arc* object.
+/// @param from_tag is the tag with the lower id.
+/// @param from_twist is the amount the *from_tag* is twisted in radians.
+/// @param distance between the tags.
+/// @param to_tag is the tag with the higher id.
+/// @param to_twist is the amount *to_tag* is twisted in radians.
+/// @param goodness is the distance from camera center to tag point center.
+/// @returns new *Arc* object
 ///
 /// *Arc__create*() will create and return arc a new *Arc* object that
-/// contains *from*, *to*, *distance*, *angle*, *twist* and *goodness*.
-/// Both *from* and *to* are *Tag* objects.  *distance* is the
-/// distance between the fiducial centers measured in the consistent
-/// set of distance units (e.g. mm, cm, meter, etc.)  *angle* is the
-/// the angle measued in radians from the *from* "X Axis" (see Tag.h)
-/// line that connects *to* to *frm*.  *twist* is the angle measures
-/// amount that *to* is twisted relative to *from*.
+/// contains *from_tag*, *from_twist*, *distance*, *to_tag*, *to_twist*,
+/// and *goodness*.
 
 Arc Arc__create(Tag from_tag, Double from_twist,
   Double distance, Tag to_tag, Double to_twist, Double goodness) {
@@ -201,15 +197,16 @@ void Arc__svg_write(Arc arc, SVG svg) {
     SVG__line(svg, from_tag->x, from_tag->y, to_tag->x, to_tag->y, color);
 }
 
-/// @brief Updates the contenst of *arc*.
+/// @brief Updates the contents of *arc*.
 /// @param arc to update.
-/// @param distance to load into *arc*.
-/// @param angle to load into *arc*.
-/// @param twist to load into *arc*.
-/// @param goodness to load into *arc*.
+/// @param from_twist is the amount the from tag is twisted in radians.
+/// @param distance between the two tag centers.
+/// @param to_twist is the amount the to tag is twisted in radians.
+/// @param goodness the distence between the camera center and center point
+///        between the two tag centers.
 ///
-/// *Arc__update*() will load *distance*, *angle*, *twist*, and *goodness*
-/// into *arc*.
+/// *Arc__update*() will load *from_twist*, *distance*, *to_twist*, and
+/// *goodness* into *arc*.
 
 void Arc__update(Arc arc,
  Double from_twist, Double distance, Double to_twist, Double goodness) {
