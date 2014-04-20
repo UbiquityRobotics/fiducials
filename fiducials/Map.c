@@ -28,6 +28,8 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 /// @brief Causes an arc announce callback routine to be called.
 /// @param map is the parent *Map* object.
 /// @param arc is the *Arc* object that has just been changed.
+/// @param image is the image associated with the arc.
+/// @param sequence_number is the sequence number associated with announce.
 ///
 /// *Map__arc_announce*() will cause the arc announde call back routine
 /// to be called for *arc*.
@@ -88,11 +90,11 @@ Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
 }
 
 /// @brief Makes sure the *Arc* connecting *from* to *to* is up to date.
-/// @brief map to use for *Arc* updating.
-/// @brief from is the *Camera_Tag* to for one end of the *Arc*.
-/// @brief to is the *Camera_Tag* to the other end of the *Arc*.
-/// @brief image is the image that the *Camera_Tag*'s came from.
-/// @breif sequence_number is the image sequence number.
+/// @param map to use for *Arc* updating.
+/// @param camera_from is the *Camera_Tag* to for one end of the *Arc*.
+/// @param camera_to is the *Camera_Tag* to the other end of the *Arc*.
+/// @param image is the image that the *Camera_Tag*'s came from.
+/// @param sequence_number is the image sequence number.
 /// @returns the number of *Arc*'s updated (1 or 0).
 ///
 /// *Map__arc_update*() will create or update the *Arc* in *map* associated
@@ -449,7 +451,6 @@ fprintf(stderr, "announce %d\n", tag->id);
 
 /// @brief Save *map* out to the file named *file_name*.
 /// @param map to save out.
-/// @param file_name to save *map* to.
 ///
 /// *Map__save*() will save *map* to the *file_name* file in XML format.
 
@@ -481,6 +482,7 @@ void Map__sort(Map map) {
 /// @brief Writes *map* out to a file called *svg_base_name*.svg.
 /// @param map is the *Map* to write out.
 /// @param svg_base_name is the base name of the .svg file to write out.
+/// @param locations is the list of locations that the robot path took.
 ///
 /// *Map__svg_write*() will write out *map* out *svg_base_name*.svg.
 
@@ -568,6 +570,7 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
 /// @param tag is the *Tag* object that has just been changed.
 /// @param visible is True if the tag is in the current field of view.
 /// @param image is the current image being processed.
+/// @param sequence_number is the sequence number.
 ///
 /// *Map__arc_announce*() will cause the arc announde call back routine
 /// to be called for *arc*.
@@ -654,7 +657,7 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
 
 /// @brief Return the *Tag* associated with *tag_id* from *map*.
 /// @param map to use for lookup.
-/// @param tap_id to lookup.
+/// @param tag_id to lookup.
 /// @returns *Tag* associated with *tag_id*.
 ///
 /// *Map__tag_lookup*() will lookup and return the *Tag* associaed with

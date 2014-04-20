@@ -1,4 +1,4 @@
-// Copyright (c) by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
 
@@ -56,6 +56,7 @@ Integer Tag__compare(Tag tag1, Tag tag2) {
 
 /// @brief Create and return a new *Tag*.
 /// @param id is the tag identifier.
+/// @param map is the map associated with the tag.
 /// @returns new *Tag*.
 ///
 /// *Tag__create*() will create and return a *Tag* object with an identifier
@@ -110,7 +111,7 @@ void Tag__free(Tag tag) {
 }
 
 /// @brief Return a hash for *tag*.
-/// @param *tag* to hash.
+/// @param tag to hash.
 /// @returns hash of *tag*.
 ///
 /// *Tag__hash*() will return a hash of *tag*.
@@ -318,8 +319,8 @@ void Tag__update_via_arc(
 }
 
 /// @brief Writes *tag* out ot *out_file* in XML format.
-/// @param *tag to write out.
-/// @param *out_file* to write to.
+/// @param tag to write out.
+/// @param out_file to write to.
 ///
 /// *Tag__write*() will write *tag* out to *out_file* in XML format.
 

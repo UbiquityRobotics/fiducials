@@ -1,4 +1,4 @@
-// Copyright (c) by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
 
@@ -208,10 +208,12 @@ void SVG__rectangle(SVG svg, Double x, Double y,
 }
 
 /// @brief draw *message* at (*x*, *y*).
+/// @param svg is the *SVG* object to use.
+/// @param message is the message to draw.
 /// @param x is the X coordinate to draw text at.
 /// @param y is the Y coordinate of draw text at.
-/// @param font_size is the font size.
 /// @param font_family is the font family to use.
+/// @param font_size is the font size.
 ///
 /// *SVG__text*() will draw *message* at (*x*, *y*) with *font_size* font
 /// of type *font_family*.

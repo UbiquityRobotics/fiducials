@@ -1,4 +1,4 @@
-// Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
 #include "List.h"
@@ -7,7 +7,8 @@
 
 /// @brief Append *item* to the end of *list*.
 /// @param list to append to.
-/// @param itme to append to *list*
+/// @param item to append to *list*
+/// @param from is a debugging string.
 ///
 /// *List__append*() will append *item* to the end of *list*.
 
@@ -41,8 +42,8 @@ void List__all_append(List to_list, List from_list) {
 }
 
 /// @brief Return the *index*'th item from *list*.
-/// @param *list* to fetch from.
-/// @param *index* to fetch from.
+/// @param list to fetch from.
+/// @param index to fetch from.
 /// @returns the *index*'th *item*.
 ///
 /// *List__fetch*() will return the *index*'th item from *list*.
@@ -210,6 +211,7 @@ void List__sort(List list, List__Compare__Routine compare_routine) {
 }
 
 /// @brief Trims *list* to be *new_size* in length.
+/// @param list is the *List* to trim.
 /// @param new_size is the new list size.
 ///
 /// *List__trim*() will trim the size of *list* to be *new_size*.

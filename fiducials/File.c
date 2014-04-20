@@ -56,7 +56,7 @@ void File__close(File file) {
 
 /// @brief Reads in an XML attribute with a floating point value.
 /// @param in_file is the input file to read from.
-/// @param attribute name is the attribute name.
+/// @param attribute_name is the attribute name.
 /// @returns the floating point value.
 ///
 /// *File__double_attribute_read*() will read in a pattern that matches
@@ -102,7 +102,7 @@ Double File__double_attribute_read(File in_file, String_Const attribute_name) {
 /// @brief will write *format* out to *file* with all patterns that
 /// start with "%" replaced by formatted versions of its arguments.
 /// @param file to output to.
-/// @parma format is the formatting string.
+/// @param format is the formatting string.
 ///
 /// *File__format*() will write *format* out to *file* with all patterns that
 /// start with "%" replaced by formatted versions of its arguments.
@@ -118,7 +118,7 @@ void File__format(File file, String_Const format, ...) {
 
 /// @brief Reads in an XML attribute with a floating point value.
 /// @param in_file is the input file to read from.
-/// @param attribute name is the attribute name.
+/// @param attribute_name is the attribute name.
 /// @returns the floating point value.
 ///
 /// *File__float_attribute_read*() will read in a pattern that matches
@@ -162,7 +162,7 @@ Float File__float_attribute_read(File in_file, String_Const attribute_name) {
 }
 
 /// @brief Flushes file content out of internal buffers.
-/// @param out_file to flush.
+/// @param file to flush.
 ///
 /// *File__flush*() will flush out the internal buffers of *out_file*.
 
@@ -173,7 +173,7 @@ void File__flush(File file) {
 
 /// @brief Reads in an XML attribute with a integer value.
 /// @param in_file is the input file to read from.
-/// @param attribute name is the attribute name.
+/// @param attribute_name is the attribute name.
 /// @returns the floating point value.
 ///
 /// *File__integer_attribute_read*() will read in a pattern that matches

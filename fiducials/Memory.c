@@ -1,4 +1,4 @@
-// Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
+// Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
 #include <stdlib.h>
@@ -14,6 +14,7 @@
 
 /// @brief Allocates *bytes* of memory and returns a pointer to it.
 /// @param bytes is the number of bytes to allocate.
+/// @param from is a debugging string.
 /// @returns a pointer to the allocated memory chunk.
 ///
 /// *Memory__allocate*() will allocated and return a pointer to a chunk
@@ -69,6 +70,7 @@ void Memory__free(Memory memory) {
 /// @brief Expands/contracts *memory* to be *new_size* bytes.
 /// @param memory to expand or contract.
 /// @param new_size is the new size of the memory segement.
+/// @param from is a debugging string.
 /// @returns *memory* or a copy of *memory*.
 ///
 /// *Memory__reallocate*() will either *resize* *memory* to be *new_bytes*

@@ -1,4 +1,4 @@
-// Copyright (c) 2013 by Hasbro, Inc.  All rights reserved.
+// Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
 
@@ -18,6 +18,7 @@
 /// @param hash_routine is a procedure variable that is used to compute a
 ///        32-bit hash of a key.
 /// @param empty_value is a value that is returned on lookup failure.
+/// @param from is a debugging string.
 ///
 /// *Table__create*() will create and return an empty table for
 /// storing key/value bindings.  *equal_routine*() is used to test key equality.

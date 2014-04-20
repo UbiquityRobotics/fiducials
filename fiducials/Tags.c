@@ -41,6 +41,7 @@ int main(int arguments_size, char * arguments[]) {
 }
 
 /// @brief Draw a rectangular section of bits:
+/// @param svg is the *SVG* object to use.
 /// @param cell_width is the cell width and height.
 /// @param first_column is the first column of rectantle.
 /// @param first_row is the first column of rectantle.
@@ -92,6 +93,7 @@ void SVG__tag_bits(SVG svg, Double cell_width, Unsigned first_column,
 }
 
 /// @brief Draw a bit at *row* and *column*.
+/// @param svg is the *SVG* object to use.
 /// @param cell_width is the cell width and height.
 /// @param row is the row to draw the bit at.
 /// @param column is the column to draw the bit at.
