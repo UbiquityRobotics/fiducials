@@ -14,15 +14,27 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   cv_bridge
   sensor_msgs
+  std_msgs
 )
 find_package(orocos_kdl REQUIRED)
 
+
+add_message_files(
+   FILES
+   Fiducial.msg
+)
+
+generate_messages(
+  DEPENDENCIES std_msgs
+)
 
 catkin_package()
 
 ###########
 ## Build ##
 ###########
+
+
 
 include_directories(${catkin_INCLUDE_DIRS})
 
