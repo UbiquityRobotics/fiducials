@@ -202,7 +202,7 @@ Video_Capture: ${COMMON_O_FILES} ${VIDEO_CAPTURE_O_FILES}
 	${CC_MIXED} -o $@ ${VIDEO_CAPTURE_O_FILES} \
 	  ${COMMON_O_FILES} ${OPENCV_LIBRARIES} ${POINT_GREY_LIBRARIES} -lm
 
-review.pdf:
+review.pdf: ${REVIEW_FILES}
 	rm -rf /tmp/review /tmp/numbered
 	mkdir -p /tmp/review /tmp/numbered
 	cp ${REVIEW_FILES} /tmp/review
