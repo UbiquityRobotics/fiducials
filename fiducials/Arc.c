@@ -187,6 +187,12 @@ Arc Arc__read(File in_file, Map map) {
     return arc;
 }
 
+/// @brief Draws *arc* into *svg*.
+/// @param arc is the *Arc* to draw.
+/// @param svg is the *SVG* object to draw it into.
+///
+/// *Arc__svg_write*() will draw *arc* into *svg*.
+
 void Arc__svg_write(Arc arc, SVG svg) {
     Tag from_tag = arc->from_tag;
     Tag to_tag = arc->to_tag;

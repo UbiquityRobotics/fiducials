@@ -428,7 +428,7 @@ void Map__restore(Map map, File in_file) {
     for (Unsigned index = 0; index < all_tags_size; index++) {
 	Tag tag = Tag__read(in_file, map);
 
-fprintf(stderr, "announce %d\n", tag->id);
+	fprintf(stderr, "announce %d\n", tag->id);
         map->tag_announce_routine(map->announce_object,
         tag->id, tag->x, tag->y, tag->z, tag->twist,
         tag->diagonal, tag->world_diagonal/tag->diagonal,

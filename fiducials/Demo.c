@@ -18,7 +18,14 @@
 #include "String.h"
 #include "Unsigned.h"
 
-int main(int arguments_size, char * arguments[]) {
+/// @brief Run the demo code.
+/// @param arguments_size is the number of arguments
+/// @param arguments is the vector of command line arguments.
+/// @returns 0 for success.
+///
+/// *main*() will run the demonstration code.
+
+int main(int arguments_size, char *arguments[]) {
     struct timeval start_time_value_struct;    
     struct timeval end_time_value_struct;    
     struct timeval difference_time_value_struct;    

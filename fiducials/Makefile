@@ -138,6 +138,23 @@ ALL_C_BACKUPS := ${ALL_O_FILES:%.o=%.c~}
 ALL_D_FILES := ${ALL_O_FILES:%.o=%.d}
 ALL_H_BACKUPS := ${ALL_O_FILES:%.o=%.h~}
 
+REVIEW_FILE_BASES := \
+    Arc \
+    Camera_Tag \
+    CV \
+    Fiducials \
+    List \
+    Location \
+    Map \
+    Memory \
+    String \
+    Table \
+    Tag
+
+REVIEW_FILES := \
+    ${REVIEW_FILE_BASES:%=%.c} \
+    ${REVIEW_FILE_BASES:%=include/fiducials/%.h}
+
 POINT_GREY_LIBRARIES := \
     -lflycapture-c \
     -lflycapture \
@@ -185,6 +202,18 @@ Video_Capture: ${COMMON_O_FILES} ${VIDEO_CAPTURE_O_FILES}
 	${CC_MIXED} -o $@ ${VIDEO_CAPTURE_O_FILES} \
 	  ${COMMON_O_FILES} ${OPENCV_LIBRARIES} ${POINT_GREY_LIBRARIES} -lm
 
+review.pdf:
+	rm -rf /tmp/review /tmp/numbered
+	mkdir -p /tmp/review /tmp/numbered
+	cp ${REVIEW_FILES} /tmp/review
+	(cd /tmp/review ; \
+	    for i in *.[ch] ; do \
+		echo $$i; \
+		cat -n $$i > ../numbered/$$i ; \
+	    done)
+	(cd /tmp/numbered ; enscript *.h *.c -p review.pdf)
+	cp /tmp/numbered/review.pdf $@
+	rm -rf /tmp/review /tmp/numbered
 
 # Individual C file compilation:
 

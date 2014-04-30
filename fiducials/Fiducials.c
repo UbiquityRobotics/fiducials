@@ -21,6 +21,287 @@
 #include "Tag.h"
 #include "Unsigned.h"
 
+// A tag consists of a 12 x 12 matrix of bits that encodes 64-bits of
+// information in an 8 x 8 data matrix.  The outermost square of the matrix
+// is set to zeros (white squares) and the next level in is 1's
+// (black squares).  When viewed in an upright form printed on paper
+// it looks as follows (-- = zero, XX = one, ## = bit number):
+//
+// -- -- -- -- -- -- -- -- -- -- -- --
+// -- XX XX XX XX XX XX XX XX XX XX -- 
+// -- XX 56 57 58 59 60 61 62 63 XX --
+// -- XX 48 49 50 51 52 53 54 55 XX --
+// -- XX 40 41 42 43 44 45 45 47 XX --
+// -- XX 32 33 34 35 36 37 38 39 XX --
+// -- XX 24 25 26 27 28 29 30 31 XX --
+// -- XX 16 17 18 19 20 21 22 23 XX --
+// -- XX 08 09 10 11 12 13 14 15 XX --
+// -- XX 00 01 02 03 04 05 06 07 XX --
+// -- XX XX XX XX XX XX XX XX XX XX -- 
+// -- -- -- -- -- -- -- -- -- -- -- --
+//
+// To make things a little complicated, Scalable Vector Graphics
+// has its origin up in the upper left of the page.
+//
+// When it comes to performing the image analysis of a picture to
+// compute robot location and bearing there are three coordinate systems
+// to consider -- the floor, camera, and robot coordinate systems:
+//
+//    -	The floor coordinate system is a right handed cartesian
+//	coordinate system where one point on the floor is the
+//	origin.  The X and Y axes are separated by a 90 degree
+//	angle and X axis can be oriented to aligned with either a
+//	building feature or an east-west line of latitude or
+//	whatever the user chooses.  Conceptually, the floor is
+//	viewed from the top looking down.  As long as all length
+//	measurements are performed using the same units, the
+//	choice of length unit does not actually matter (e.g.
+//	meter, centimeter, millimeter, inch, foot, etc.)
+//
+//    -	The image coordinate system is another right handed cartesian
+//	coordinate system that is used to locate the individual
+//	pixels in the image.  The image is one of the common image
+//	format sizes (320 x 240, 640 x 480, etc.)  For this system,
+//	the origin is selected to be the lower left pixel of the
+//	image.  For 640 x 480 image, the lower left coordinate is
+//	(0, 0) and the upper right pixel coordinate is (639, 479).
+//	While computer imaging systems typically use a left-handed
+//	coordinate system where the origin is in the upper left,
+//	we will apply a transformation that causes the origin to
+//	be placed in the lower left.  All distances are measured
+//	in units of pixels.
+//
+//    -	The robot coordinate system is another right handed cartesian
+//	coordinate system where the origin is located in the center
+//	between the two drive wheels.  The X axis of the robot
+//	coordinate system goes through the front of the robot.
+//
+// Conceptually there a bunch of square fiducial tags (hereafter called
+// just tags) scattered on the floor.  For each tag, we record the following
+// information in an ordered quintuple:
+//
+//    (tid, tx, ty, tb, te)
+//
+// where:
+//
+//    tid	is the tag identifier (a number between 0 and 2^16-1),
+//    tx	is the x coordinate of the tag center (floor coord.),
+//    ty	is the y coordinate of the tag center (floor coord.),
+//    tw	is the angle (twist) of the bottom tag edge and the
+//		floor X axis (floor coord.), and
+//    td	is the length of a tag diagonal (both diagonals of a square
+//		have the same length) (floor coord.)
+//
+// Conceptually, the camera is going to be placed a fixed distance
+// above the floor and take an image of rectangular area of the floor.
+// If image contains one or more tags, the image processing algorithm
+// computes the following ordered triple:
+//
+//	(cx, cy, cb)
+//
+// where:
+//
+//    cx	is the X coordinate of the image rectangle center
+//		(floor coord.),
+//    cy	is the Y coordinate of the image rectangle center
+//		(floor coord.), and
+//    ctw	is the angle (twist) of the rectangle bottom edge with
+//		respect to the floor X axis (floor coord.)
+//
+// Conceptually, the floor is printed out on a large sheet of paper
+// with all of the tags present.  The camera image is printed out on
+// a piece of translucent material (e.g. acetate) with the same dimensions
+// as the floor sheet.  This translucent image is placed on the floor
+// sheet and moved around until the image tag(s) align with the
+// corresponding tag(s) on the floor sheet.  The translucent image
+// center is now sitting directly on top of (cx, cy) on the floor sheet.
+// The amount of "twist" on the image is ctw.  Hopefully, this mental
+// image of what we are trying to accomplish will help as you wade
+// through the math below.
+//
+// When an image contains a tag, what we are doing is computing
+// the function F below:
+//
+//    (cx, cy, ctw) = F( (tid, tx, ty, ta, te), (c0, c1, c2, c3) )
+//
+// where
+//
+//    (cx, cy, ctw)		is camera location and orientation
+//				result as defined before (floor coord.),
+//    (tid, tx, ty, tw, te)	is the tag quintuple as defined before
+//				(floor coord.), and
+//    (c0, c1, c2, c3)		is are the coordinates of the 4 tag
+//				corners in the image.
+//
+// c0, c1, c2, and c3 are actually ordered pairs (c0x, c0y), (c1x, c1y),
+// (c2x, c2y) and (c3x, c3y).  c0 is next to the least significant bit
+// of the tag id, c1 is next to the most significant bit of the tag id,
+// c2 is above c1, and c3 is above c0.  The 4 corners go in a clockwise
+// direction around the tag (when viewed from above, of course.)  The tag
+// looks as follows in ASCII art:
+//
+//      +Y
+//       ^
+//       |
+//       |  c2                         c3
+//       |     ** ** ** ** ** ** ** **
+//       |     ** ** ** ** ** ** ** **
+//       |     ** ** ** ** ** ** ** **
+//       |     ** ** ** ** ** ** ** **
+//       |     ** ** ** ** ** ** ** **
+//       |     ** ** ** ** ** ** ** **
+//       |     15 14 13 12 11 10  9  8
+//       |      7  6  5  4  3  2  1  0
+//       |  c1                         c0
+//       |
+//       +--------------------------------> +X
+//
+// where 0 through 15 are the bit numbers of the tag id.  The
+// ASCII art above, does not have any tag twist; it just shows
+// where the corners are located with respect to tag bits.
+//
+// Using (c0, c1, c2, c3), we compute the following:
+//
+//    (tagctrx, tagctry)	is the camera center (image coord.),
+//    tagdiag			is the camera diagonal (image coord.)
+//    tagtwist			is the angle of the lower tag edge
+//				(image coord.)
+//
+// These values are computed as follows:
+//
+//   tagctrx = (c0x + c1x + c2x + c3x) / 4	# The average of the X's
+//   tagctry = (c0y + c1y + c2y + c3y) / 4	# The average of the Y's
+//
+//   tagdiag1 = sqrt( (c0x-c2x)^2 + (c0y-c2y)^2) )	# First diagonal
+//   tagdiag2 = sqrt( (c1x-c3x)^2 + (c1y-c3y)^2) )	# Second diagonal
+//   tagdiag = (tagdiag1 + tagdiag2) / 2		# Avg. of both diagonals
+//   tagtwist = arctangent2(c0y - c1y, c0x - c1y) # Bottom tag edge angle
+//
+// The image center is defined as:
+//
+//	(camctrx, camctry)
+//
+// where
+//
+//    camctrx	is the image center X coordinate (image coord.)
+//    camctry	is the image center Y coordinate (image coord.)
+//
+// for an image that is 640 x 480, the image center is (320, 240).
+//
+// Using the image center the following values are computed:
+//
+//    camdist		is the distance from the tag center to camera
+//			center (image coord.), and
+//    camctrangle	is the angle from the tag center to the camera
+//			center (image coord.)
+//
+// These two values are computed as:
+//
+//    camdist = sqrt( (camctrx - tagctrx)^2 + (camctry - tagctry)^2) )
+//    camctrangle = arctangent2( camctry - tagctry, camctrx - tagctry)
+//
+// Now camdist needs to be converted from a distance in pixels into
+// a distance on the floor.  This is done using tagdiag and te (the
+// tag edge length.
+//
+//    flrcamdist = camdist * (te * sqrt(2) / tagdiag )
+//
+// Need to compute to angles that are measured relative to the
+// floor X axis:
+//
+//    cb	is the direction that the camera X axis points
+//		relative to the floor X Axis.
+//    ca	is the direction to the image center relative
+//		to the floor X Axis
+//
+// cb and ca are computed as:
+//
+//    ctw = tb - tagtwist
+//
+//    ca = ctw + camctrangle
+//
+// Now cx, and cy are computed as follows:
+//
+//    cx = tx + flrcamdist * cos(ca)
+//    cy = ty + flrcamdist * sin(ca)
+//
+// Thus, the final result of (cx, cy, ctw) has been determined.
+//
+// Once we know the camera location and orientation, (ca, cy, cb),
+// we need to compute the ordered triple:
+//
+//    (rx, ry, rb)
+//
+// where
+//
+//    rx	is the X coordinate of the robot center (floor coord.),
+//    ry	is the Y coordinate of the robot center (floor coord.),
+//    rb	is the bearing angle of the robot X axis (floor coord.)
+//
+// These values are computed as a function:
+//
+//    (rx, ry, rtw) = F( (cx, cy, ctw) )
+//
+// There are two constants need to do this computation:
+//
+//    robdist		is the distance from the camera center to the robot
+//			center, and
+//    robcamangle	is the angle from the angle from camera X axis to the
+//			robot X axis.
+//
+// Both robdist and robangle are constants that can be directly measured
+// from the camera placement relative to the robot origin.
+//
+// Now (rx, ry, rtw) can be computed as follows:
+//
+//    rtw = ctw + robcamangle
+//    rx = robdist * cos(rtw)
+//    ry = robdist * sin(rtw)
+//
+// That covers the image processing portion of the algorithm.
+//
+// The robot dead reckoning system keeps track of the robot position
+// using wheel encoders.  These values are represented in the ordered
+// triple:
+//
+//    (ex, ey, etw)
+//
+// where
+//
+//    ex		is the robot X coordinate (floor coord.),
+//    ey		is the robot Y coordinate (floor coord.), and
+//    etw		is the robot X axis twist (floor coord.)
+//
+// (rx, ry, rtw) and (ex, ey, etw) are supposed to be the same.  Over
+// time, small errors will accumulate in the computation of (ex, ey, eb).
+// (rx, ry, rtw) can be used to reset (ex, ey, etw).
+//
+// That pretty much summarizes what the basic algorithm does.
+//
+// What remains is to do the transformations that place the tags
+// on the ceiling.  There are three transformations.
+//
+//    tags lift		The tags are lifted straight up from the floor
+//			to the ceiling.  The person looking on down
+//			from above would see no changes in tag position
+//			or orientation (ignoring parallax issues.)
+//
+//    camera flip	The camera is rotated 180 degrees around the
+//			camera X axis.  The causes the Y axis to change
+//			its sign.
+//
+//    image framing	For historical reasons, the camera image API
+//			provides the camera image with the image origin
+//			in upper left hand corner, whereas the all of
+//			the math above assumes that image origin is
+//			in the lower left corner.  It turns out this
+//			is just changes the Y axis sign again.
+//
+// The bottom line is that the "camera flip" and the "image framing"
+// transformation cancel one another out.  Thus, the there is no
+// work needed to tweak the equations above.
+
+
 /// @brief Callback routine that prints a new *Arc* object when it shows up.
 /// @param announce_object is unused (other routines might us it).
 /// @param from_id is the tag identifier that has the lower tag id number.

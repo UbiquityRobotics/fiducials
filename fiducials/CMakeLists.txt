@@ -65,8 +65,8 @@ if(${flycapture_FOUND})
    ${OpenCV_LIBS})
 endif()
 
-add_executable(undistort undistort.c)
-target_link_libraries(undistort ${OpenCV_LIBS})
+#add_executable(undistort undistort.c)
+#target_link_libraries(undistort ${OpenCV_LIBS})
 
 #add_executable(Rviz_Test Rviz_Test.c)
 #target_link_libraries(Rviz_Test ${catkin_LIBRARIES})
