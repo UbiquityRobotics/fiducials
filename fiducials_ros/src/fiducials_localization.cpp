@@ -72,6 +72,10 @@ class FiducialsNode {
     std::string odom_frame;
     bool use_odom;
 
+    // this would only be turned off if we are publishing the tf
+    // in another node
+    bool publish_tf;
+
     // the last frame we saw on the camera header
     std::string last_camera_frame;
 
@@ -345,7 +349,8 @@ void FiducialsNode::location_cb(int id, double x, double y, double z,
         //tf2::transformTF2ToMsg(odom_correction, transform, now, world_frame,
             //odom_frame);
 
-        tf_pub.sendTransform(transform);
+        if (publish_tf)
+            tf_pub.sendTransform(transform);
       } else {
         ROS_ERROR("Can't look up base transform from %s to %s: %s",
             pose_frame.c_str(),
@@ -364,7 +369,8 @@ void FiducialsNode::location_cb(int id, double x, double y, double z,
       transform.transform.translation.z = 0.0;
       transform.transform.rotation = tf::createQuaternionMsgFromYaw(tf_yaw);
 
-      tf_pub.sendTransform(transform);
+      if (publish_tf)
+          tf_pub.sendTransform(transform);
     }
 }
 
@@ -452,6 +458,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
     }
 
     nh.param<bool>("publish_images", publish_images, false);
+    nh.param<bool>("publish_tf", publish_tf, true);
     nh.param<bool>("publish_interesting_images", publish_interesting_images, 
 		   false);
 
