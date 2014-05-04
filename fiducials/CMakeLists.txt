@@ -12,7 +12,6 @@ catkin_package(
   DEPENDS OpenCV
 )
 
-add_definitions(-std=c11)
 add_definitions(-g)
 #add_definitions(-DMEMORY_LEAK_CHECK=1)
 
@@ -27,48 +26,48 @@ include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(fiducials_base
-  Bounding_Box.c Character.c CRC.c Double.c FEC.c File.c Float.c Integer.c
-  List.c Logical.c Memory.c String.c SVG.c Table.c Unsigned.c)
+  Bounding_Box.cpp Character.cpp CRC.cpp Double.cpp FEC.cpp File.cpp Float.cpp Integer.cpp
+  List.cpp Logical.cpp Memory.cpp String.cpp SVG.cpp Table.cpp Unsigned.cpp)
 
-add_library(fiducials_cv CV.c High_GUI2.c)
+add_library(fiducials_cv CV.cpp High_GUI2.cpp)
 target_link_libraries(fiducials_cv fiducials_base ${OpenCV_LIBS})
 
-add_library(fiducials Fiducials.c Location.c Arc.c Camera_Tag.c Map.c Tag.c)
+add_library(fiducials Fiducials.cpp Location.cpp Arc.cpp Camera_Tag.cpp Map.cpp Tag.cpp)
 target_link_libraries(fiducials fiducials_base fiducials_cv)
 
-add_executable(Demo Demo.c)
+add_executable(Demo Demo.cpp)
 target_link_libraries(Demo fiducials)
 target_link_libraries(Demo m)
 
-#add_executable(Rviz_Demo Rviz_Demo.c)
+#add_executable(Rviz_Demo Rviz_Demo.cpp)
 #target_link_libraries(Rviz_Demo fiducials)
 #target_link_libraries(Rviz_Demo m ${catkin_LIBRARIES})
 
-add_executable(Tags Tags.c)
+add_executable(Tags Tags.cpp)
 target_link_libraries(Tags fiducials_base)
 target_link_libraries(Tags m)
 
-add_executable(Map_Test Map_Test.c)
+add_executable(Map_Test Map_Test.cpp)
 target_link_libraries(Map_Test fiducials)
 target_link_libraries(Map_Test m)
 
-add_executable(Video_Capture Video_Capture.c)
+add_executable(Video_Capture Video_Capture.cpp)
 target_link_libraries(Video_Capture fiducials_cv)
 target_link_libraries(Video_Capture m)
 
 if(${flycapture_FOUND})
-  add_executable(FlyCapture2Test FlyCapture2Test.c)
+  add_executable(FlyCapture2Test FlyCapture2Test.cpp)
   target_link_libraries(FlyCapture2Test flycapture-c flycapture)
 
-  add_executable(Fly_Capture Fly_Capture.c FC2.c)
+  add_executable(Fly_Capture Fly_Capture.cpp FC2.cpp)
   target_link_libraries(Fly_Capture flycapture-c flycapture m fiducials
    ${OpenCV_LIBS})
 endif()
 
-#add_executable(undistort undistort.c)
+#add_executable(undistort undistort.cpp)
 #target_link_libraries(undistort ${OpenCV_LIBS})
 
-#add_executable(Rviz_Test Rviz_Test.c)
+#add_executable(Rviz_Test Rviz_Test.cpp)
 #target_link_libraries(Rviz_Test ${catkin_LIBRARIES})
 
 install(TARGETS
