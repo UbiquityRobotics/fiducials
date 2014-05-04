@@ -12,7 +12,7 @@
 /// This macro when expanded works as follows:
 ///
 ///        Type zilch = (Type)0;
-///        UInteger type_size = sizeof(*zilch);
+///        Uint type_size = sizeof(*zilch);
 ///        Type type = (Type)Memory_allocate(type_size);
 ///
 /// "sizeof(*((Type)0))" does not generate any code.  The compiler

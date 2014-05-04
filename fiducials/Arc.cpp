@@ -20,8 +20,8 @@
 /// *Arc__compare*() will return -1 if *arc1* sorts before *arc2*,
 /// 0 if they are equal, and 1 if *arc1* sorts after *arc2*.
 
-Integer Arc__compare(Arc arc1, Arc arc2) {
-    Integer result = Tag__compare(arc1->from_tag, arc2->from_tag);
+int Arc__compare(Arc arc1, Arc arc2) {
+    int result = Tag__compare(arc1->from_tag, arc2->from_tag);
     if (result == 0) {
 	result = Tag__compare(arc1->to_tag, arc2->to_tag);
     }
@@ -80,8 +80,8 @@ Arc Arc__create(Tag from_tag, Double from_twist,
 /// *Arc__distance_compare*() will return -1 if the *arc1* distance is larger
 /// than the *arc2* distance, 0 if they are equal, and 1 otherwize.
 
-Integer Arc__distance_compare(Arc arc1, Arc arc2) {
-    Integer result = -Double__compare(arc1->distance, arc2->distance);
+int Arc__distance_compare(Arc arc1, Arc arc2) {
+    int result = -Double__compare(arc1->distance, arc2->distance);
     if (result == 0) {
 	Unsigned arc1_lowest_hop_count =
 	  Unsigned__minimum(arc1->from_tag->hop_count, arc1->to_tag->hop_count);

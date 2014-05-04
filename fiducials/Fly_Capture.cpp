@@ -20,7 +20,6 @@
 #include "File.hpp"
 #include "Fiducials.hpp"
 #include "High_GUI2.hpp"
-#include "Integer.hpp"
 #include "Memory.hpp"
 #include "String.hpp"
 #include "Unsigned.hpp"

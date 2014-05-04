@@ -9,7 +9,6 @@
 #include "Character.hpp"
 #include "Double.hpp"
 #include "Float.hpp"
-#include "Integer.hpp"
 #include "String.hpp"
 #include "Unsigned.hpp"
 
@@ -27,7 +26,7 @@ extern Float File__float_attribute_read(
   File in_file, String_Const attribute_name);
 extern void File__flush(File file);
 extern void File__format(File file, String_Const format, ...);
-extern Integer File__integer_attribute_read(
+extern int File__integer_attribute_read(
   File in_file, String_Const attribute_name);
 extern Unsigned File__little_endian_short_read(File);
 extern void File__little_endian_short_write(File, Unsigned xshort);

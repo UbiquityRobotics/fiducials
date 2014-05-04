@@ -13,25 +13,24 @@ typedef struct Fiducials_Results__Struct *Fiducials_Results;
 // #include scalar typedef's first so we can define the announce routine
 // typedef's:
 #include "Double.hpp"
-#include "Integer.hpp"
 #include "Logical.hpp"
 
 // Define the announce routine typedef's:
 typedef void (*Fiducials_Arc_Announce_Routine)(void *announce_object,
-  Integer from_id, Double from_x, Double from_y, Double from_z,
-  Integer to_id, Double to_x, Double to_y, Double to_z,
+  int from_id, Double from_x, Double from_y, Double from_z,
+  int to_id, Double to_x, Double to_y, Double to_z,
   Double goodness, Logical in_spanning_tree);
 
 typedef void (*Fiducials_Location_Announce_Routine)(void *announce_object,
-  Integer id, Double x, Double y, Double z, Double bearing);
+  int id, Double x, Double y, Double z, Double bearing);
 
 typedef void (*Fiducials_Tag_Announce_Routine)(void *announce_object,
-  Integer id, Double x, Double y, Double z, Double twist,
+  int id, Double x, Double y, Double z, Double twist,
   Double diagonal, Double distance_per_pixel,
-  Logical visible, Integer hop_count);
+  Logical visible, int hop_count);
 
 typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
-    Integer id, Integer direction, Double world_diagonal,
+    int id, int direction, Double world_diagonal,
     Double x1, Double y1, Double x2, Double y2,
     Double x3, Double y3, Double x4, Double y4);
 
@@ -123,21 +122,21 @@ struct Fiducials_Results__Struct {
 };
 
 extern void Fiducials__arc_announce(void *announce_object,
-  Integer from_id, Double from_x, Double from_y, Double from_z,
-  Integer to_id, Double to_x, Double to_y, Double to_z,
+  int from_id, Double from_x, Double from_y, Double from_z,
+  int to_id, Double to_x, Double to_y, Double to_z,
   Double goodness, Logical in_spanning_tree);
 extern Fiducials Fiducials__create(
   CV_Image original_image, Fiducials_Create fiducials_create);
 extern void Fiducials__free(Fiducials fiduicals);
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, Logical show);
-extern void Fiducials__location_announce(void *object, Integer id,
+extern void Fiducials__location_announce(void *object, int id,
   Double x, Double y, Double z, Double bearing);
-extern Integer Fiducials__point_sample(
+extern int Fiducials__point_sample(
   Fiducials fiducials, CV_Point2D32F point);
-extern Integer Fiducials__points_maximum(Fiducials fiducials,
+extern int Fiducials__points_maximum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
-extern Integer Fiducials__points_minimum(Fiducials fiducials,
+extern int Fiducials__points_minimum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
 extern Fiducials_Results Fiducials__process(Fiducials fiducials);
 extern CV_Point2D32F_Vector Fiducials__references_compute(
@@ -147,9 +146,9 @@ extern void Fiducials__sample_points_compute(
 extern void Fiducials__sample_points_helper(
   String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point);
 extern void Fiducials__tag_announce(void *announce_object,
-  Integer id, Double x, Double y, Double z, Double twist,
+  int id, Double x, Double y, Double z, Double twist,
   Double diagonal, Double distance_per_pixel,
-  Logical visible, Integer hop_count);
+  Logical visible, int hop_count);
 extern Fiducials_Create Fiducials_Create__one_and_only(void);
 
 #endif // !defined(FIDUCIALS_H_INCLUDED)

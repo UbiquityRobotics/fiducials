@@ -8,7 +8,6 @@
 #include "Character.hpp"
 #include "CV.hpp"
 #include "Double.hpp"
-#include "Integer.hpp"
 #include "File.hpp"
 #include "Logical.hpp"
 #include "String.hpp"
@@ -22,158 +21,158 @@ void CV_Slice__Initialize(void)
 }
 
 // Depth constants:
-Integer CV__depth_1u = IPL_DEPTH_1U;
-Integer CV__depth_8u = IPL_DEPTH_8U;
-Integer CV__depth_16u = IPL_DEPTH_16U;
-Integer CV__depth_8s = IPL_DEPTH_8S;
-Integer CV__depth_16s = IPL_DEPTH_16S;
-Integer CV__depth_32s = IPL_DEPTH_32S;
-Integer CV__depth_32f = IPL_DEPTH_32F;
-Integer CV__depth_64f = IPL_DEPTH_64F;
+int CV__depth_1u = IPL_DEPTH_1U;
+int CV__depth_8u = IPL_DEPTH_8U;
+int CV__depth_16u = IPL_DEPTH_16U;
+int CV__depth_8s = IPL_DEPTH_8S;
+int CV__depth_16s = IPL_DEPTH_16S;
+int CV__depth_32s = IPL_DEPTH_32S;
+int CV__depth_32f = IPL_DEPTH_32F;
+int CV__depth_64f = IPL_DEPTH_64F;
 
-Integer CV__load_image_any_color = CV_LOAD_IMAGE_ANYCOLOR;
-Integer CV__load_image_any_depth = CV_LOAD_IMAGE_ANYDEPTH;
-Integer CV__load_image_color = CV_LOAD_IMAGE_COLOR;
-Integer CV__load_image_gray_scale = CV_LOAD_IMAGE_GRAYSCALE;
-Integer CV__load_image_unchanged = CV_LOAD_IMAGE_UNCHANGED;
-Integer CV__window_auto_size = CV_WINDOW_AUTOSIZE;
+int CV__load_image_any_color = CV_LOAD_IMAGE_ANYCOLOR;
+int CV__load_image_any_depth = CV_LOAD_IMAGE_ANYDEPTH;
+int CV__load_image_color = CV_LOAD_IMAGE_COLOR;
+int CV__load_image_gray_scale = CV_LOAD_IMAGE_GRAYSCALE;
+int CV__load_image_unchanged = CV_LOAD_IMAGE_UNCHANGED;
+int CV__window_auto_size = CV_WINDOW_AUTOSIZE;
 
 // Color space conversion codes:
-Integer CV__bgr_to_bgra = CV_BGR2BGRA;
-Integer CV__rgb_to_rgba = CV_RGB2RGBA;
-Integer CV__bgra_to_bgr = CV_BGRA2BGR;
-Integer CV__rgba_to_rgb = CV_RGBA2RGB;
-Integer CV__bgr_to_rgba = CV_BGR2RGBA;
-Integer CV__rgb_to_bgra = CV_RGB2BGRA;
-Integer CV__rgba_to_bgr = CV_RGBA2BGR;
-Integer CV__bgra_to_rgb = CV_BGRA2RGB;
-Integer CV__bgr_to_rgb = CV_BGR2RGB;
-Integer CV__rgb_to_bgr = CV_RGB2BGR;
-Integer CV__brga_to_rgba = CV_BGRA2RGBA;
-Integer CV__rgba_to_brga = CV_RGBA2BGRA;
-Integer CV__bgr_to_gray = CV_BGR2GRAY;
-Integer CV__rgb_to_gray = CV_RGB2GRAY;
-Integer CV__gray_to_brg = CV_GRAY2BGR;
-Integer CV__gray_to_rgb = CV_GRAY2RGB;
-Integer CV__gray_to_bgra = CV_GRAY2BGRA;
-Integer CV__gray_to_rgba = CV_GRAY2RGBA;
-Integer CV__brga_to_gray = CV_BGRA2GRAY;
-Integer CV__rgba_to_gray = CV_RGBA2GRAY;
-Integer CV__bgr_to_bgr565 = CV_BGR2BGR565;
-Integer CV__rgb_to_bgr565 = CV_RGB2BGR565;
-Integer CV__bgr565_to_bgr = CV_BGR5652BGR;
-Integer CV__bg4565_to_rgb = CV_BGR5652RGB;
-Integer CV__bgra_to_bgr565 = CV_BGRA2BGR565;
-Integer CV__rgba_to_bgr565 = CV_RGBA2BGR565;
-Integer CV__bgr565_to_bgra = CV_BGR5652BGRA;
-Integer CV__bgr565_to_rgba = CV_BGR5652RGBA;
-Integer CV__gray_to_bgr565 = CV_GRAY2BGR565;
-Integer CV__bgr565_to_gray =  CV_BGR5652GRAY;
-Integer CV__bgr_to_bgr555 = CV_BGR2BGR555;
-Integer CV__rgb_to_bgr555 = CV_RGB2BGR555;
-Integer CV__bgr555_to_bgr = CV_BGR5552BGR;
-Integer CV__bgr555_to_rgb = CV_BGR5552RGB;
-Integer CV__bgra_to_bgr555 = CV_BGRA2BGR555;
-Integer CV__rgba_to_bgr555 = CV_RGBA2BGR555;
-Integer CV__bgr555_to_bgra = CV_BGR5552BGRA;
-Integer CV__bgr555_to_rgba = CV_BGR5552RGBA;
-Integer CV__gray_to_bgr555 = CV_GRAY2BGR555;
-Integer CV__bgr555_to_gray = CV_BGR5552GRAY;
-Integer CV__bgr_to_xyz = CV_BGR2XYZ;
-Integer CV__rgb_to_xyz = CV_RGB2XYZ;
-Integer CV__xyz_to_bgr = CV_XYZ2BGR;
-Integer CV__xyz_to_rgb = CV_XYZ2RGB;
-Integer CV__bgr_to_ycrcb = CV_BGR2YCrCb;
-Integer CV__rgb_to_ycrcb = CV_RGB2YCrCb;
-Integer CV__ycrcb_to_bgr = CV_YCrCb2BGR;
-Integer CV__ycrcb_to_rgb = CV_YCrCb2RGB;
-Integer CV__bgr_to_hsv = CV_BGR2HSV;
-Integer CV__rgb_to_hsv = CV_RGB2HSV;
-Integer CV__bgr_to_lab = CV_BGR2Lab;
-Integer CV__rgb_to_lab = CV_RGB2Lab;
-Integer CV__bayerbg_to_bgr = CV_BayerBG2BGR;
-Integer CV__bayergb_to_bgr = CV_BayerGB2BGR;
-Integer CV__bayerrg_to_bgr = CV_BayerRG2BGR;
-Integer CV__bayergr_to_bgr = CV_BayerGR2BGR;
-Integer CV__bayerbg_to_rgb = CV_BayerBG2RGB;
-Integer CV__bayergb_to_rgb = CV_BayerGB2RGB;
-Integer CV__bayerrg_to_rgb = CV_BayerRG2RGB;
-Integer CV__bayergr_to_rgb = CV_BayerGR2RGB;
-Integer CV__bgr_to_luv = CV_BGR2Luv;
-Integer CV__rgb_to_luv = CV_RGB2Luv;
-Integer CV__bgr_to_hls = CV_BGR2HLS;
-Integer CV__rgb_to_hls = CV_RGB2HLS;
-Integer CV__hsv_to_bgr = CV_HSV2BGR;
-Integer CV__hsv_to_rgb = CV_HSV2RGB;
-Integer CV__lab_to_bgr = CV_Lab2BGR;
-Integer CV__lab_to_rgb = CV_Lab2RGB;
-Integer CV__luv_to_bgr = CV_Luv2BGR;
-Integer CV__luv_to_rgb = CV_Luv2RGB;
-Integer CV__hls_to_bgr = CV_HLS2BGR;
-Integer CV__hls_to_rgb = CV_HLS2RGB;
+int CV__bgr_to_bgra = CV_BGR2BGRA;
+int CV__rgb_to_rgba = CV_RGB2RGBA;
+int CV__bgra_to_bgr = CV_BGRA2BGR;
+int CV__rgba_to_rgb = CV_RGBA2RGB;
+int CV__bgr_to_rgba = CV_BGR2RGBA;
+int CV__rgb_to_bgra = CV_RGB2BGRA;
+int CV__rgba_to_bgr = CV_RGBA2BGR;
+int CV__bgra_to_rgb = CV_BGRA2RGB;
+int CV__bgr_to_rgb = CV_BGR2RGB;
+int CV__rgb_to_bgr = CV_RGB2BGR;
+int CV__brga_to_rgba = CV_BGRA2RGBA;
+int CV__rgba_to_brga = CV_RGBA2BGRA;
+int CV__bgr_to_gray = CV_BGR2GRAY;
+int CV__rgb_to_gray = CV_RGB2GRAY;
+int CV__gray_to_brg = CV_GRAY2BGR;
+int CV__gray_to_rgb = CV_GRAY2RGB;
+int CV__gray_to_bgra = CV_GRAY2BGRA;
+int CV__gray_to_rgba = CV_GRAY2RGBA;
+int CV__brga_to_gray = CV_BGRA2GRAY;
+int CV__rgba_to_gray = CV_RGBA2GRAY;
+int CV__bgr_to_bgr565 = CV_BGR2BGR565;
+int CV__rgb_to_bgr565 = CV_RGB2BGR565;
+int CV__bgr565_to_bgr = CV_BGR5652BGR;
+int CV__bg4565_to_rgb = CV_BGR5652RGB;
+int CV__bgra_to_bgr565 = CV_BGRA2BGR565;
+int CV__rgba_to_bgr565 = CV_RGBA2BGR565;
+int CV__bgr565_to_bgra = CV_BGR5652BGRA;
+int CV__bgr565_to_rgba = CV_BGR5652RGBA;
+int CV__gray_to_bgr565 = CV_GRAY2BGR565;
+int CV__bgr565_to_gray =  CV_BGR5652GRAY;
+int CV__bgr_to_bgr555 = CV_BGR2BGR555;
+int CV__rgb_to_bgr555 = CV_RGB2BGR555;
+int CV__bgr555_to_bgr = CV_BGR5552BGR;
+int CV__bgr555_to_rgb = CV_BGR5552RGB;
+int CV__bgra_to_bgr555 = CV_BGRA2BGR555;
+int CV__rgba_to_bgr555 = CV_RGBA2BGR555;
+int CV__bgr555_to_bgra = CV_BGR5552BGRA;
+int CV__bgr555_to_rgba = CV_BGR5552RGBA;
+int CV__gray_to_bgr555 = CV_GRAY2BGR555;
+int CV__bgr555_to_gray = CV_BGR5552GRAY;
+int CV__bgr_to_xyz = CV_BGR2XYZ;
+int CV__rgb_to_xyz = CV_RGB2XYZ;
+int CV__xyz_to_bgr = CV_XYZ2BGR;
+int CV__xyz_to_rgb = CV_XYZ2RGB;
+int CV__bgr_to_ycrcb = CV_BGR2YCrCb;
+int CV__rgb_to_ycrcb = CV_RGB2YCrCb;
+int CV__ycrcb_to_bgr = CV_YCrCb2BGR;
+int CV__ycrcb_to_rgb = CV_YCrCb2RGB;
+int CV__bgr_to_hsv = CV_BGR2HSV;
+int CV__rgb_to_hsv = CV_RGB2HSV;
+int CV__bgr_to_lab = CV_BGR2Lab;
+int CV__rgb_to_lab = CV_RGB2Lab;
+int CV__bayerbg_to_bgr = CV_BayerBG2BGR;
+int CV__bayergb_to_bgr = CV_BayerGB2BGR;
+int CV__bayerrg_to_bgr = CV_BayerRG2BGR;
+int CV__bayergr_to_bgr = CV_BayerGR2BGR;
+int CV__bayerbg_to_rgb = CV_BayerBG2RGB;
+int CV__bayergb_to_rgb = CV_BayerGB2RGB;
+int CV__bayerrg_to_rgb = CV_BayerRG2RGB;
+int CV__bayergr_to_rgb = CV_BayerGR2RGB;
+int CV__bgr_to_luv = CV_BGR2Luv;
+int CV__rgb_to_luv = CV_RGB2Luv;
+int CV__bgr_to_hls = CV_BGR2HLS;
+int CV__rgb_to_hls = CV_RGB2HLS;
+int CV__hsv_to_bgr = CV_HSV2BGR;
+int CV__hsv_to_rgb = CV_HSV2RGB;
+int CV__lab_to_bgr = CV_Lab2BGR;
+int CV__lab_to_rgb = CV_Lab2RGB;
+int CV__luv_to_bgr = CV_Luv2BGR;
+int CV__luv_to_rgb = CV_Luv2RGB;
+int CV__hls_to_bgr = CV_HLS2BGR;
+int CV__hls_to_rgb = CV_HLS2RGB;
 
-Integer CV__adaptive_thresh_mean_c = CV_ADAPTIVE_THRESH_MEAN_C;
-Integer CV__adaptive_thresh_gaussian_c = CV_ADAPTIVE_THRESH_GAUSSIAN_C;
-Integer CV__thresh_binary = CV_THRESH_BINARY;
-Integer CV__thresh_binary_inv = CV_THRESH_BINARY_INV;
+int CV__adaptive_thresh_mean_c = CV_ADAPTIVE_THRESH_MEAN_C;
+int CV__adaptive_thresh_gaussian_c = CV_ADAPTIVE_THRESH_GAUSSIAN_C;
+int CV__thresh_binary = CV_THRESH_BINARY;
+int CV__thresh_binary_inv = CV_THRESH_BINARY_INV;
 
 // Types for Matrices and images:
-Integer CV__u8 = CV_8U;
-Integer CV__s8 = CV_8S;
-Integer CV__u16 = CV_16U;
-Integer CV__s16 = CV_16S;
-Integer CV__s32 = CV_32S;
-Integer CV__f32 = CV_32F;
-Integer CV__f64 = CV_64F;
-Integer CV__user_type = CV_USRTYPE1;
+int CV__u8 = CV_8U;
+int CV__s8 = CV_8S;
+int CV__u16 = CV_16U;
+int CV__s16 = CV_16S;
+int CV__s32 = CV_32S;
+int CV__f32 = CV_32F;
+int CV__f64 = CV_64F;
+int CV__user_type = CV_USRTYPE1;
 
-Integer CV__u8c1 = CV_8UC1;
-Integer CV__u8c2 = CV_8UC2;
-Integer CV__u8c3 = CV_8UC3;
-Integer CV__u8c4 = CV_8UC4;
+int CV__u8c1 = CV_8UC1;
+int CV__u8c2 = CV_8UC2;
+int CV__u8c3 = CV_8UC3;
+int CV__u8c4 = CV_8UC4;
 
-Integer CV__s8c1 = CV_8SC1;
-Integer CV__s8c2 = CV_8SC2;
-Integer CV__s8c3 = CV_8SC3;
-Integer CV__s8c4 = CV_8SC4;
+int CV__s8c1 = CV_8SC1;
+int CV__s8c2 = CV_8SC2;
+int CV__s8c3 = CV_8SC3;
+int CV__s8c4 = CV_8SC4;
 
-Integer CV__u16c1 = CV_16UC1;
-Integer CV__u16c2 = CV_16UC2;
-Integer CV__u16c3 = CV_16UC3;
-Integer CV__u16c4 = CV_16UC4;
+int CV__u16c1 = CV_16UC1;
+int CV__u16c2 = CV_16UC2;
+int CV__u16c3 = CV_16UC3;
+int CV__u16c4 = CV_16UC4;
 
-Integer CV__s16c1 = CV_16SC1;
-Integer CV__s16c2 = CV_16SC2;
-Integer CV__s16c3 = CV_16SC3;
-Integer CV__s16c4 = CV_16SC4;
+int CV__s16c1 = CV_16SC1;
+int CV__s16c2 = CV_16SC2;
+int CV__s16c3 = CV_16SC3;
+int CV__s16c4 = CV_16SC4;
 
-Integer CV__s32c1 = CV_32SC1;
-Integer CV__s32c2 = CV_32SC2;
-Integer CV__s32c3 = CV_32SC3;
-Integer CV__s32c4 = CV_32SC4;
+int CV__s32c1 = CV_32SC1;
+int CV__s32c2 = CV_32SC2;
+int CV__s32c3 = CV_32SC3;
+int CV__s32c4 = CV_32SC4;
 
-Integer CV__f32c1 = CV_32FC1;
-Integer CV__f32c2 = CV_32FC2;
-Integer CV__f32c3 = CV_32FC3;
-Integer CV__f32c4 = CV_32FC4;
+int CV__f32c1 = CV_32FC1;
+int CV__f32c2 = CV_32FC2;
+int CV__f32c3 = CV_32FC3;
+int CV__f32c4 = CV_32FC4;
 
-Integer CV__f64c1 = CV_64FC1;
-Integer CV__f64c2 = CV_64FC2;
-Integer CV__f64c3 = CV_64FC3;
-Integer CV__f64c4 = CV_64FC4;
+int CV__f64c1 = CV_64FC1;
+int CV__f64c2 = CV_64FC2;
+int CV__f64c3 = CV_64FC3;
+int CV__f64c4 = CV_64FC4;
 
-Integer CV__auto_step = CV_AUTO_STEP;
+int CV__auto_step = CV_AUTO_STEP;
 
-Integer CV__blur_no_scale = CV_BLUR_NO_SCALE;
-Integer CV__blur = CV_BLUR;
-Integer CV__gaussian = CV_GAUSSIAN;
-Integer CV__median = CV_MEDIAN;
-Integer CV__bilateral = CV_BILATERAL;
+int CV__blur_no_scale = CV_BLUR_NO_SCALE;
+int CV__blur = CV_BLUR;
+int CV__gaussian = CV_GAUSSIAN;
+int CV__median = CV_MEDIAN;
+int CV__bilateral = CV_BILATERAL;
 
 // *CV* routines:
 
 void CV__draw_chessboard_corners(CV_Image image, CV_Size pattern_size,
-  CV_Point2D32F_Vector corners, Integer count, Logical pattern_was_found) {
+  CV_Point2D32F_Vector corners, int count, Logical pattern_was_found) {
     cvDrawChessboardCorners(image,
       *pattern_size, corners, count, pattern_was_found);
 }
@@ -192,17 +191,17 @@ CV_Image CV__clone_image(CV_Image image) {
 //  CV_Matrix distortion_coefficients, 
 //  CV_Matrix rotation_vectors,
 //  CV_Matrix translation_vectors,
-//  Integer flags)
+//  int flags)
 //{
 //    cvCalibrateCamera2(object_points, image_points, point_counts,
 //      *image_size, camera_matrix, distortion_coefficients, rotation_vectors,
 //      translation_vectors, flags);
 //}
 
-Integer CV__find_chessboard_corners(CV_Image image, CV_Size pattern_size,
-  CV_Point2D32F_Vector corners, Integer flags) {
-    Integer corner_count;
-    Integer result;
+int CV__find_chessboard_corners(CV_Image image, CV_Size pattern_size,
+  CV_Point2D32F_Vector corners, int flags) {
+    int corner_count;
+    int result;
 
     result = cvFindChessboardCorners(image,
       *pattern_size, corners, &corner_count, flags);
@@ -219,21 +218,21 @@ void CV__find_extrinsic_camera_params2(
   CV_Matrix distortion_coefficients,
   CV_Matrix rotation_vector,
   CV_Matrix translation_vector,
-  Integer use_extrinsic_guess)
+  int use_extrinsic_guess)
 {
   cvFindExtrinsicCameraParams2(object_points, image_points, camera,
     distortion_coefficients, rotation_vector, translation_vector,
     use_extrinsic_guess);
 }
 
-Integer CV__fourcc(Character character1, Character character2,
+int CV__fourcc(Character character1, Character character2,
   Character character3, Character character4) {
     return CV_FOURCC(character1, character2, character3, character4);
 }
 
-Integer CV__gemm_a_t = CV_GEMM_A_T;
-Integer CV__gemm_b_t = CV_GEMM_B_T;
-Integer CV__gemm_c_t = CV_GEMM_C_T;
+int CV__gemm_a_t = CV_GEMM_A_T;
+int CV__gemm_b_t = CV_GEMM_B_T;
+int CV__gemm_c_t = CV_GEMM_C_T;
 
 void CV__gemm(CV_Matrix a, CV_Matrix b, double alpha, CV_Matrix c, double beta,
   CV_Matrix d,int transpose_a_b_c) {
@@ -241,7 +240,7 @@ void CV__gemm(CV_Matrix a, CV_Matrix b, double alpha, CV_Matrix c, double beta,
 }
 
 
-Double CV__get_real_2d(CV_Matrix matrix, Integer row, Integer column) {
+Double CV__get_real_2d(CV_Matrix matrix, int row, int column) {
     return cvGetReal2D(matrix, row, column);
 }
 
@@ -270,8 +269,8 @@ void CV__release_image(CV_Image image) {
     cvReleaseImage(&image);
 }
 
-Integer CV__inter_linear = CV_INTER_LINEAR;
-Integer CV__warp_fill_outliers = CV_WARP_FILL_OUTLIERS;
+int CV__inter_linear = CV_INTER_LINEAR;
+int CV__warp_fill_outliers = CV_WARP_FILL_OUTLIERS;
 
 void CV__rodrigues2(
   CV_Matrix rotation_vector, CV_Matrix rotation_matrix, CV_Matrix jacobian) {
@@ -283,7 +282,7 @@ void CV__set_identity(CV_Matrix matrix, CV_Scalar scalar) {
 }
 
 void CV__set_real_2d(
-  CV_Matrix matrix, Integer row, Integer column, Double value) {
+  CV_Matrix matrix, int row, int column, Double value) {
     cvSetReal2D(matrix, row, column, value);
 }
 
@@ -291,7 +290,7 @@ void CV__set_zero(CV_Matrix matrix) {
     cvSetZero(matrix);
 }
 
-Integer CV__round(Double value) {
+int CV__round(Double value) {
     return cvRound(value);
 }
 
@@ -302,8 +301,8 @@ Integer CV__round(Double value) {
 // out:
 //   mapx, mapy,           - undistortion maps
 
-Integer CV__undistortion_setup(String_Const calibrate_file_name,
- Integer width, Integer height, CV_Image *mapx, CV_Image *mapy) {
+int CV__undistortion_setup(String_Const calibrate_file_name,
+ int width, int height, CV_Image *mapx, CV_Image *mapy) {
     Double fcx, fcy, ccx, ccy;
     Double kc[4];
   
@@ -349,14 +348,14 @@ Integer CV__undistortion_setup(String_Const calibrate_file_name,
 // *CV_Image* routines:
 
 void CV_Image__adaptive_threshold(CV_Image source_image,
-  CV_Image destination_image, Double maximum_value, Integer adaptive_method,
-  Integer threshold_type, Integer block_size, Double parameter1) {
+  CV_Image destination_image, Double maximum_value, int adaptive_method,
+  int threshold_type, int block_size, Double parameter1) {
     cvAdaptiveThreshold(source_image, destination_image, maximum_value,
       adaptive_method, threshold_type, block_size, parameter1);
 }
 
 void CV_Image__blob_draw(
-  CV_Image image, Integer x, Integer y, CV_Scalar color) {
+  CV_Image image, int x, int y, CV_Scalar color) {
     // Draw a small cross at the indicated point.
     uchar red = cvRound(color->val[0]);
     uchar green = cvRound(color->val[1]);
@@ -370,8 +369,8 @@ void CV_Image__blob_draw(
     }
 
     // Draw away:
-    for (Integer i = -2; i <= 2; i++) {
-	for (Integer j = -2; j <= 2; j++) {
+    for (int i = -2; i <= 2; i++) {
+	for (int j = -2; j <= 2; j++) {
 	  uchar *pixel = &(data + width_step * (y + j))[(x + i) * 3];
 	  pixel[0] = red; pixel[1] = green; pixel[2] = blue;
 	}
@@ -382,12 +381,12 @@ CV_Image CV_Image__create(CV_Size size, Unsigned depth, Unsigned channels) {
     return cvCreateImage(*size, depth, channels);
 }
 
-Integer CV_Image__channels_get(CV_Image image) {
+int CV_Image__channels_get(CV_Image image) {
     return image->nChannels;
 }
 
 void CV_Image__convert_color(
- CV_Image source_image, CV_Image destination_image, Integer conversion_code) {
+ CV_Image source_image, CV_Image destination_image, int conversion_code) {
     cvCvtColor(source_image, destination_image, conversion_code);
 }
 
@@ -397,7 +396,7 @@ void CV_Image__copy(
 }
 
 void CV_Image__cross_draw(
-  CV_Image image, Integer x, Integer y, CV_Scalar color) {
+  CV_Image image, int x, int y, CV_Scalar color) {
     // Draw a small cross at the indicated point.
     uchar *pixel;
     uchar *pixel_lt;
@@ -431,33 +430,33 @@ void CV_Image__cross_draw(
 }
 
 void CV_Image__draw_contours(CV_Image image, CV_Sequence contour,
-  CV_Scalar external_color, CV_Scalar hole_color, Integer maximal_level,
-  Integer thickness, Integer line_type, CV_Point offset) {
+  CV_Scalar external_color, CV_Scalar hole_color, int maximal_level,
+  int thickness, int line_type, CV_Point offset) {
   cvDrawContours(image, contour, *external_color,
     *hole_color, maximal_level, thickness, line_type, *offset);
 }
 
 // {mode} constants:
-Integer CV__retr_external = CV_RETR_EXTERNAL;
-Integer CV__retr_list = CV_RETR_LIST;
-Integer CV__retr_ccomp = CV_RETR_CCOMP;
-Integer CV__retr_tree = CV_RETR_TREE;
+int CV__retr_external = CV_RETR_EXTERNAL;
+int CV__retr_list = CV_RETR_LIST;
+int CV__retr_ccomp = CV_RETR_CCOMP;
+int CV__retr_tree = CV_RETR_TREE;
 
 // {method} constants:
-Integer CV__chain_code = CV_CHAIN_CODE;
-Integer CV__chain_approx_none = CV_CHAIN_APPROX_NONE;
-Integer CV__chain_approx_simple = CV_CHAIN_APPROX_SIMPLE;
-Integer CV__chain_approx_tc89_l1 = CV_CHAIN_APPROX_TC89_L1;
-Integer CV__chain_approx_tc89_kcos = CV_CHAIN_APPROX_TC89_KCOS;
-Integer CV__chain_link_runs = CV_LINK_RUNS;
+int CV__chain_code = CV_CHAIN_CODE;
+int CV__chain_approx_none = CV_CHAIN_APPROX_NONE;
+int CV__chain_approx_simple = CV_CHAIN_APPROX_SIMPLE;
+int CV__chain_approx_tc89_l1 = CV_CHAIN_APPROX_TC89_L1;
+int CV__chain_approx_tc89_kcos = CV_CHAIN_APPROX_TC89_KCOS;
+int CV__chain_link_runs = CV_LINK_RUNS;
 
-Integer CV__calib_cb_adaptive_thresh = CV_CALIB_CB_ADAPTIVE_THRESH;
-Integer CV__calib_cb_normalize_image = CV_CALIB_CB_NORMALIZE_IMAGE;
-Integer CV__calib_cb_filter_quads = CV_CALIB_CB_FILTER_QUADS;
+int CV__calib_cb_adaptive_thresh = CV_CALIB_CB_ADAPTIVE_THRESH;
+int CV__calib_cb_normalize_image = CV_CALIB_CB_NORMALIZE_IMAGE;
+int CV__calib_cb_filter_quads = CV_CALIB_CB_FILTER_QUADS;
 
 CV_Sequence CV_Image__find_contours(CV_Image image, CV_Memory_Storage storage,
-  Integer header_size, Integer mode, Integer method, CV_Point point) {
-    Integer result;
+  int header_size, int mode, int method, CV_Point point) {
+    int result;
     CV_Sequence contours;
 
     contours = (CV_Sequence)0;
@@ -476,21 +475,21 @@ Unsigned CV_Image__fetch3(
     return pointer[channel];
 }
 
-Integer CV_Image__gray_fetch(CV_Image image, Integer x, Integer y) {
-    Integer result = -1;
+int CV_Image__gray_fetch(CV_Image image, int x, int y) {
+    int result = -1;
     if (0 <= x && x < image->width && 0 <= y && y < image->height) {
 	result =
-	  (Integer)(((uchar *)image->imageData + image->widthStep * y))[x];
+	  (int)(((uchar *)image->imageData + image->widthStep * y))[x];
     }
     return result;
 }
 
 void CV_Image__find_corner_sub_pix(CV_Image image, CV_Point2D32F_Vector corners,
-  Integer count, CV_Size window, CV_Size zero_zone, CV_Term_Criteria criteria) {
+  int count, CV_Size window, CV_Size zero_zone, CV_Term_Criteria criteria) {
     cvFindCornerSubPix(image, corners, count, *window, *zero_zone, *criteria);
 }
 
-void CV_Image__flip(CV_Image from_image, CV_Image to_image, Integer flip_code) {
+void CV_Image__flip(CV_Image from_image, CV_Image to_image, int flip_code) {
     cvFlip(from_image, to_image, flip_code);
 }
 
@@ -499,7 +498,7 @@ CV_Image CV_Image__header_create(
     return cvCreateImageHeader(*size, depth, channels);
 }
 
-Integer CV_Image__height_get(CV_Image image) {
+int CV_Image__height_get(CV_Image image) {
     return image->height;
 }
 
@@ -531,17 +530,17 @@ CV_Image CV_Image__pnm_read(String_Const file_name) {
 void CV_Image__pnm_write(CV_Image image, String_Const file_name) {
     Unsigned size = String__size(file_name);
     assert (String__equal(file_name + size - 4, ".pnm"));
-    cvSaveImage(file_name, image, (Integer *)0);
+    cvSaveImage(file_name, image, (int *)0);
 }
 
 void CV_Image__remap(CV_Image source_image, CV_Image destination_image,
-  CV_Image map_x, CV_Image map_y, Integer flags, CV_Scalar fill_value) {
+  CV_Image map_x, CV_Image map_y, int flags, CV_Scalar fill_value) {
     cvRemap(source_image,
       destination_image, map_x, map_y, flags, *fill_value);
 }
 
 void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
-  Integer smooth_type, Integer parameter1, Integer parameter2,
+  int smooth_type, int parameter1, int parameter2,
   Double parameter3, Double parameter4) {
     cvSmooth(source_image, destination_image, smooth_type, parameter1,
       parameter2, parameter3, parameter4);
@@ -626,7 +625,7 @@ CV_Image CV_Image__tga_read(CV_Image image, String_Const tga_file_name) {
 
     // Allocate a new {image} if we need to:
     if (image == (CV_Image)0) {
-	CV_Size size = CV_Size__create((Integer)width, (Integer)height);
+	CV_Size size = CV_Size__create((int)width, (int)height);
 	if (gray_mode) {
 	    image = CV_Image__create(size, 8, 1);
 	} else {
@@ -742,17 +741,17 @@ void CV_Image__tga_write(CV_Image image, String_Const file_name) {
     File__close(tga_out_file);
 }
 
-Integer CV_Image__width_get(CV_Image image) {
+int CV_Image__width_get(CV_Image image) {
     return (Unsigned)image->width;
 }
 
 // *CV_Matrix* routines:
 
-Integer CV_Matrix__columns_get(CV_Matrix matrix) {
+int CV_Matrix__columns_get(CV_Matrix matrix) {
     return matrix->cols;
 }
 
-Integer CV_Matrix__rows_get(CV_Matrix matrix) {
+int CV_Matrix__rows_get(CV_Matrix matrix) {
     return matrix->rows;
 }
 
@@ -770,13 +769,13 @@ void CV_Memory_Storage__clear(CV_Memory_Storage storage) {
     cvClearMemStorage(storage);
 }
 
-CV_Memory_Storage CV_Memory_Storage__create(Integer block_size) {
+CV_Memory_Storage CV_Memory_Storage__create(int block_size) {
     return cvCreateMemStorage(block_size);
 }
 
 // *CV_Point* routines:
 
-CV_Point CV_Point__create(Integer x, Integer y) {
+CV_Point CV_Point__create(int x, int y) {
     Unsigned malloc_bytes = sizeof *((CV_Point)0);
     // (void)printf("CV_Point__create: malloc_bytes=%d\n", malloc_bytes);
     CV_Point point = (CV_Point) malloc(sizeof *((CV_Point *)0) );
@@ -786,19 +785,19 @@ CV_Point CV_Point__create(Integer x, Integer y) {
     return point;
 }
 
-Integer CV_Point__x_get(CV_Point point) {
+int CV_Point__x_get(CV_Point point) {
     return point->x;
 }
 
-void CV_Point__x_set(CV_Point point, Integer x) {
+void CV_Point__x_set(CV_Point point, int x) {
     point->x = x;
 }
 
-Integer CV_Point__y_get(CV_Point point) {
+int CV_Point__y_get(CV_Point point) {
     return point->y;
 }
 
-void CV_Point__y_set(CV_Point point, Integer y) {
+void CV_Point__y_set(CV_Point point, int y) {
     point->y = y;
 }
 
@@ -884,11 +883,11 @@ CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue) {
 
 // *CV_Sequence* routines:
 
-Integer CV__poly_approx_dp = CV_POLY_APPROX_DP;
+int CV__poly_approx_dp = CV_POLY_APPROX_DP;
 
 CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
-  Integer header_size, CV_Memory_Storage storage, Integer method,
-  Integer parameter1, Double parameter2) {
+  int header_size, CV_Memory_Storage storage, int method,
+  int parameter1, Double parameter2) {
     //(void)printf("sizeof=%d method=%d param1=%d\n",
     //  sizeof(CvContour), method, parameter1);
     return cvApproxPoly(contour,
@@ -896,7 +895,7 @@ CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
 }
 
 Double CV_Sequence__arc_length(
-  CV_Sequence contour, CV_Slice slice, Integer is_closed) {
+  CV_Sequence contour, CV_Slice slice, int is_closed) {
     return cvArcLength(contour, *slice, is_closed);
 }    
 
@@ -905,7 +904,7 @@ Logical CV_Sequence__check_contour_convexity(CV_Sequence contour) {
 }
 
 Double CV_Sequence__contour_area(
-  CV_Sequence contour, CV_Slice slice, Integer oriented) {
+  CV_Sequence contour, CV_Slice slice, int oriented) {
     return cvContourArea(contour, *slice, oriented);
 }
 
@@ -917,16 +916,16 @@ CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, Unsigned index) {
     return (CV_Point)cvGetSeqElem(sequence, index);
 }
 
-Integer CV_Sequence__total_get(CV_Sequence sequence) {
+int CV_Sequence__total_get(CV_Sequence sequence) {
     return sequence->total;
 }
 
 // *CV_Size* routines:
 
-CV_Size CV_Size__create(Integer width, Integer height) {
+CV_Size CV_Size__create(int width, int height) {
     CV_Size size = Memory__new(CV_Size, "CV_Size__create");
-    size->width = (Integer)width;
-    size->height = (Integer)height;
+    size->width = (int)width;
+    size->height = (int)height;
     return size;
 }
 
@@ -935,7 +934,7 @@ extern void CV_Size__free(CV_Size cv_size) {
 }
 
 // *CV_Slice* routines:
-CV_Slice CV_Slice__create(Integer start_index, Integer end_index) {
+CV_Slice CV_Slice__create(int start_index, int end_index) {
     Unsigned malloc_bytes = sizeof *((CV_Slice)0);
     // (void)printf("CV_Slice__create: malloc_bytes=%d\n", malloc_bytes);
     CV_Slice slice = (CV_Slice)malloc(malloc_bytes);
@@ -946,11 +945,11 @@ CV_Slice CV_Slice__create(Integer start_index, Integer end_index) {
 }
 
 // *CV_Term* rouitines:
-Integer CV__term_criteria_iterations = CV_TERMCRIT_ITER;
-Integer CV__term_criteria_eps = CV_TERMCRIT_EPS;
+int CV__term_criteria_iterations = CV_TERMCRIT_ITER;
+int CV__term_criteria_eps = CV_TERMCRIT_EPS;
 
 CV_Term_Criteria CV_Term_Criteria__create(
-  Integer type, Integer maximum_iterations, Double epsilon) {
+  int type, int maximum_iterations, Double epsilon) {
     Unsigned malloc_bytes = sizeof *((CV_Term_Criteria)0);
     // (void)printf("CV_Term_Criteria__create: malloc_bytes=%d\n",
     //   malloc_bytes);

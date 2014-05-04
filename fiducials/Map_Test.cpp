@@ -6,7 +6,6 @@
 #include "CV.hpp"
 #include "File.hpp"
 #include "Double.hpp"
-#include "Integer.hpp"
 #include "List.hpp"
 #include "Logical.hpp"
 #include "Map.hpp"

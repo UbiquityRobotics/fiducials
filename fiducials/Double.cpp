@@ -65,8 +65,8 @@ Double Double__arc_tangent2(Double y, Double x) {
 /// *Double__compare*() will return -1 if *float1* is less than *float2*,
 /// 0 if they are equal, and 1 otherwise.
 
-Integer Double__compare(Double float1, Double float2) {
-    Integer result = 0;
+int Double__compare(Double float1, Double float2) {
+    int result = 0;
     if (float1 < float2) {
         result = -1;
     } else if (float1 > float2) {

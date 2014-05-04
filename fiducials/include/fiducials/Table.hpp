@@ -4,7 +4,6 @@
 #define TABLE_H_INCLUDED 1
 
 #include "File.hpp"
-#include "Integer.hpp"
 #include "Logical.hpp"
 #include "Memory.hpp"
 #include "Unsigned.hpp"
@@ -14,7 +13,7 @@ typedef struct Table_List_Struct *Table_List;
 typedef struct Table_Triple_Struct *Table_Triple;
 
 typedef Logical (*Table_Equal_Routine)(Memory, Memory);
-typedef Integer (*Table_Hash_Routine)(Memory);
+typedef int (*Table_Hash_Routine)(Memory);
 typedef void (*Table_Key_Show_Routine)(Memory, File);
 typedef void (*Table_Value_Show_Routine)(Memory, File);
 

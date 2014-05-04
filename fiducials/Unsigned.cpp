@@ -1,6 +1,5 @@
 // Copyright (c) by Wayne C. Gramlich.  All rights reserved.
 
-#include "Integer.hpp"
 #include "Logical.hpp"
 #include "Unsigned.hpp"
 
@@ -13,8 +12,8 @@
 /// *unsigned2*, zero if they are equal, and 1 if *unsigned1* greater
 /// than *unsigned2*.
 
-Integer Unsigned__compare(Unsigned unsigned1, Unsigned unsigned2) {
-    Integer result = 0;
+int Unsigned__compare(Unsigned unsigned1, Unsigned unsigned2) {
+    int result = 0;
     if (unsigned1 < unsigned2) {
 	result = -1;
     } else if (unsigned1 > unsigned2) {

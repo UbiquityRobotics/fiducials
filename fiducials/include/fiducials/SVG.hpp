@@ -8,7 +8,6 @@
 #include "Bounding_Box.hpp"
 #include "Double.hpp"
 #include "File.hpp"
-#include "Integer.hpp"
 #include "Logical.hpp"
 #include "Memory.hpp"
 #include "Unsigned.hpp"

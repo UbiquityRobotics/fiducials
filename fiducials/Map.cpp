@@ -14,7 +14,6 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include "Arc.hpp"
 #include "CV.hpp"
 #include "Camera_Tag.hpp"
-#include "Integer.hpp"
 #include "File.hpp"
 #include "List.hpp"
 #include "Location.hpp"
@@ -103,8 +102,8 @@ Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
 Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
   CV_Image image, Unsigned sequence_number) {
     // Get the *width* and *height*:
-    Integer rows = CV_Image__height_get(image);
-    Integer columns = CV_Image__width_get(image);
+    int rows = CV_Image__height_get(image);
+    int columns = CV_Image__width_get(image);
     Double height = (Double)rows;
     Double width = (Double)columns;
 
@@ -235,8 +234,8 @@ Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
 /// after *map2*.  Realistically, this routine is only used for testing
 /// equality.
 
-Integer Map__compare(Map map1, Map map2) {
-    Integer result = 0;
+int Map__compare(Map map1, Map map2) {
+    int result = 0;
 
     // First make sure all of the *Tag*'s match up:
     List /* <Tag> */ all_tags1 = map1->all_tags;

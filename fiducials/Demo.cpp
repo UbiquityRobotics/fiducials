@@ -11,7 +11,6 @@
 #include "Fiducials.hpp"
 #include "Float.hpp"
 #include "High_GUI2.hpp"
-#include "Integer.hpp"
 #include "List.hpp"
 #include "Logical.hpp"
 #include "Map.hpp"

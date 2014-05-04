@@ -4,7 +4,6 @@
 
 #include "Bounding_Box.hpp"
 #include "Double.hpp"
-#include "Integer.hpp"
 #include "String.hpp"
 #include "SVG.hpp"
 #include "Unsigned.hpp"

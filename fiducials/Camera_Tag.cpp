@@ -14,7 +14,7 @@
 /// *Camera_Tag__compare*() will return the -1 if *camera_tag1* is less
 /// than *camera_tag2*, 0 if they are equal, and 1 otherwise.
 
-Integer Camera_Tag__compare(Camera_Tag camera_tag1, Camera_Tag camera_tag2) {
+int Camera_Tag__compare(Camera_Tag camera_tag1, Camera_Tag camera_tag2) {
     return Tag__compare(camera_tag1->tag, camera_tag2->tag);
 }
 
@@ -103,8 +103,8 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
     // For debugging plot the for colors
     if (debug_image != (CV_Image)0) {
 	for (Unsigned index = 0; index < 4; index++) {
-	    Integer x = (Integer)x_corners[index];
-	    Integer y = (Integer)y_corners[index];
+	    int x = (int)x_corners[index];
+	    int y = (int)y_corners[index];
 	    CV_Scalar color = (CV_Scalar)0;
 	    String text = (String)0;
 	    switch (index) {

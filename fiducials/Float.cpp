@@ -29,8 +29,8 @@ Float Float__angle_normalize(Float angle) {
 /// *Float__compare*() will return -1 if *float1* is less than *float2*,
 /// 0 if they are equal, and 1 otherwise.
 
-Integer Float__compare(Float float1, Float float2) {
-    Integer result = 0;
+int Float__compare(Float float1, Float float2) {
+    int result = 0;
     if (float1 < float2) {
         result = -1;
     } else if (float1 > float2) {

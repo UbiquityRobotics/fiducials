@@ -10,7 +10,6 @@ typedef struct Arc__Struct *Arc;
 #include "File.hpp"
 #include "Double.hpp"
 #include "Logical.hpp"
-#include "Integer.hpp"
 #include "Map.hpp"
 #include "SVG.hpp"
 #include "Tag.hpp"
@@ -85,8 +84,8 @@ struct Arc__Struct {
 
 // *Arc* routines:
 
-extern Integer Arc__compare(Arc arc1, Arc arc2);
-extern Integer Arc__distance_compare(Arc arc1, Arc arc2);
+extern int Arc__compare(Arc arc1, Arc arc2);
+extern int Arc__distance_compare(Arc arc1, Arc arc2);
 extern Logical Arc__equal(Arc arc1, Arc arc2);
 extern Arc Arc__create(Tag from_tag, Double from_twist,
   Double distance, Tag to_tag, Double to_twist, Double goodness);

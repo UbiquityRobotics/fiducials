@@ -10,7 +10,7 @@
 typedef struct List__Struct *List;
 
 /// @brief A procedure variable signature for comparing two *Memory* objects.
-typedef Integer (*List__Compare__Routine)(Memory, Memory);
+typedef int (*List__Compare__Routine)(Memory, Memory);
 
 /// @brief A procedure variable signature for testing two *Memory* objects
 /// for equality.

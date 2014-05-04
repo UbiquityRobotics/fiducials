@@ -6,7 +6,6 @@
 #include "CV.hpp"
 #include "File.hpp"
 #include "High_GUI2.hpp"
-#include "Integer.hpp"
 #include "String.hpp"
 #include "Unsigned.hpp"
 
@@ -38,7 +37,7 @@ int main(int arguments_size, char * arguments[]) {
 	if (Character__is_decimal_digit(argument1[0])) {
 	    // Open the camera:
 	    Unsigned camera_number = String__to_unsigned(argument1);
-	    Integer camera_flags = CV__capture_any + (Integer)camera_number;
+	    int camera_flags = CV__capture_any + (int)camera_number;
 	    capture = CV_Capture__create_camera(camera_flags);
 	    if (capture == (CV_Capture)0) {
 		File__format(stderr,

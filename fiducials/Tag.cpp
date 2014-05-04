@@ -47,10 +47,10 @@ void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box) {
 /// *Tag__compare*() will return -1 if *tag1* sorts before *tag2*, 0 if they
 /// are equal, and 1 if *tag1* sorts after *tag2*.
 
-Integer Tag__compare(Tag tag1, Tag tag2) {
+int Tag__compare(Tag tag1, Tag tag2) {
     Unsigned id1 = tag1->id;
     Unsigned id2 = tag2->id;
-    Integer result = Unsigned__compare(id1, id2);
+    int result = Unsigned__compare(id1, id2);
     return result;
 }
 
@@ -351,9 +351,9 @@ void Tag__write(Tag tag, File out_file) {
 /// *Tag_Height__compare*() will return -1 if *tag_height1* sorts before
 /// *tag_height2*, 0 if they are equal, and 1 otherwise.
 
-Integer Tag_Height__compare(Tag_Height tag_height1, Tag_Height tag_height2)
+int Tag_Height__compare(Tag_Height tag_height1, Tag_Height tag_height2)
 {
-    Integer result =
+    int result =
       Unsigned__compare(tag_height1->first_id, tag_height2->last_id);
     assert (result != 0);
     return result;

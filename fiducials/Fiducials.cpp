@@ -13,7 +13,6 @@
 #include "Fiducials.hpp"
 #include "Float.hpp"
 #include "High_GUI2.hpp"
-#include "Integer.hpp"
 #include "List.hpp"
 #include "Logical.hpp"
 #include "Map.hpp"
@@ -417,8 +416,8 @@
 // FIXME: Why don't we just pass the *Arc* object???!!!
 
 void Fiducials__arc_announce(void *announce_object,
-  Integer from_id, Double from_x, Double from_y, Double from_z,
-  Integer to_id, Double to_x, Double to_y, Double to_z,
+  int from_id, Double from_x, Double from_y, Double from_z,
+  int to_id, Double to_x, Double to_y, Double to_z,
   Double goodness, Logical in_spanning_tree) {
     File__format(stderr,
       "Arc: from=(%d, %f, %f, %f,) to=(%d, %f, %f, %f) %f %d\n",
@@ -441,7 +440,7 @@ void Fiducials__arc_announce(void *announce_object,
 
 //FIXME: Why don't we just pass in a *Location* object???!!!
 
-void Fiducials__location_announce(void *announce_object, Integer id,
+void Fiducials__location_announce(void *announce_object, int id,
   Double x, Double y, Double z, Double bearing) {
     File__format(stderr,
       "Location: id=%d x=%f y=%f bearing=%f\n", id, x, y, bearing);
@@ -467,7 +466,7 @@ void Fiducials__location_announce(void *announce_object, Integer id,
 /// argument to *Fiducials__create*().
 
 void Fiducials__fiducial_announce(void *announce_object,
-    Integer id, Integer direction, Double world_diagonal,
+    int id, int direction, Double world_diagonal,
     Double x1, Double y1, Double x2, Double y2,
     Double x3, Double y3, Double x4, Double y4) {
     File__format(stderr,
@@ -649,7 +648,7 @@ Fiducials Fiducials__create(
     }
     File__format(log_file, "CV width=%d CV height = %d\n", width, height);
 
-    Integer term_criteria_type =
+    int term_criteria_type =
       CV__term_criteria_iterations | CV__term_criteria_eps;
 
     // The north/west/south/east mappings must reside in static
@@ -962,7 +961,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     }
 
     // Convert from color to gray scale:
-    Integer channels = CV_Image__channels_get(original_image);
+    int channels = CV_Image__channels_get(original_image);
 
     // Deal with *debug_index* 0:
     if (debug_index == 0) {
@@ -994,7 +993,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     
     // Preform undistort if available:
     if (fiducials->map_x != (CV_Image)0) {
-	Integer flags = CV_INTER_NN | CV_WARP_FILL_OUTLIERS;
+	int flags = CV_INTER_NN | CV_WARP_FILL_OUTLIERS;
 	CV_Image__copy(gray_image, temporary_gray_image, (CV_Image)0);
 	CV_Image__remap(temporary_gray_image, gray_image,
 	  fiducials->map_x, fiducials->map_y, flags, fiducials->black);
@@ -1026,7 +1025,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
     // Find the *edge_image* *contours*:
     CV_Point origin = fiducials->origin;
-    Integer header_size = 128;
+    int header_size = 128;
     CV_Sequence contours = CV_Image__find_contours(edge_image, storage,
       header_size, CV__retr_list, CV__chain_approx_simple, origin);
     if (contours == (CV_Sequence)0) {
@@ -1062,8 +1061,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 	whole_sequence = CV_WHOLE_SEQ;
 
 	// Perform a polygon approximation of {contour}:
-	Integer arc_length =
-	  (Integer)(CV_Sequence__arc_length(contour, CV__whole_seq, 1) * 0.02);
+	int arc_length =
+	  (int)(CV_Sequence__arc_length(contour, CV__whole_seq, 1) * 0.02);
 	CV_Sequence polygon_contour =
 	  CV_Sequence__approximate_polygon(contour,
 	  header_size, storage, CV__poly_approx_dp, arc_length, 0.0);
@@ -1119,8 +1118,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 		for (Unsigned index = 0; index < 4; index++) {
 		    CV_Point point =
 		      CV_Sequence__point_fetch1(polygon_contour, index);
-		    Integer x = CV_Point__x_get(point);
-		    Integer y = CV_Point__y_get(point);
+		    int x = CV_Point__x_get(point);
+		    int y = CV_Point__y_get(point);
 		    CV_Scalar color = (CV_Scalar)0;
 		    String text = (String)0;
 		    switch (index) {
@@ -1157,17 +1156,17 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 	    // Now sample the periphery of the tag and looking for the
 	    // darkest white value (i.e. minimum) and the lightest black
 	    // value (i.e. maximum):
-	    //Integer white_darkest =
+	    //int white_darkest =
 	    //  CV_Image__points_minimum(gray_image, references, 0, 3);
-	    //Integer black_lightest =
+	    //int black_lightest =
 	    //  CV_Image__points_maximum(gray_image, references, 4, 7);
-	    Integer white_darkest =
+	    int white_darkest =
 	      Fiducials__points_minimum(fiducials, references, 0, 3);
-	    Integer black_lightest =
+	    int black_lightest =
 	      Fiducials__points_maximum(fiducials, references, 4, 7);
 
 	    // {threshold} should be smack between the two:
-	    Integer threshold = (white_darkest + black_lightest) / 2;
+	    int threshold = (white_darkest + black_lightest) / 2;
 	    
 	    // For debugging, show the 8 points that are sampled around the
 	    // the tag periphery to even decide whether to do further testing.
@@ -1178,11 +1177,11 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 		for (Unsigned index = 0; index < 8; index++) {
 		    CV_Point2D32F reference =
 		      CV_Point2D32F_Vector__fetch1(references, index);
-		    Integer x = CV__round(CV_Point2D32F__x_get(reference));
-		    Integer y = CV__round(CV_Point2D32F__y_get(reference));
-		    //Integer value =
+		    int x = CV__round(CV_Point2D32F__x_get(reference));
+		    int y = CV__round(CV_Point2D32F__y_get(reference));
+		    //int value =
 		    //  CV_Image__point_sample(gray_image, reference);
-		    Integer value =
+		    int value =
 		      Fiducials__point_sample(fiducials, reference);
 		    CV_Scalar color = red;
 		    if (value < threshold) {
@@ -1209,9 +1208,9 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 		    // Grab the pixel value and convert into a {bit}:
 		    CV_Point2D32F sample_point =
 		      CV_Point2D32F_Vector__fetch1(sample_points, index);
-		    //Integer value =
+		    //int value =
 		    //  CV_Image__point_sample(gray_image, sample_point);
-		    Integer value =
+		    int value =
 		      Fiducials__point_sample(fiducials, sample_point);
 		    Logical bit = (value < threshold);
 		    tag_bits[index] = bit;
@@ -1240,9 +1239,9 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 			//}
 
 			// Now splat a cross of {color} at ({x},{y}):
-			Integer x =
+			int x =
 			  CV__round(CV_Point2D32F__x_get(sample_point));
-			Integer y =
+			int y =
 			  CV__round(CV_Point2D32F__y_get(sample_point));
 			CV_Image__cross_draw(debug_image, x, y, color);
 		    }
@@ -1583,41 +1582,41 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 /// is controlled by the *weights_index* field of *fiducials*.  The returned
 /// value is between 0 (black) to 255 (white).
 
-Integer Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
+int Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
     // This routine will return a sample *fiducials* at *point*.
 
     // Get the (*x*, *y*) coordinates of *point*:
-    Integer x = CV__round(CV_Point2D32F__x_get(point));
-    Integer y = CV__round(CV_Point2D32F__y_get(point));
+    int x = CV__round(CV_Point2D32F__x_get(point));
+    int y = CV__round(CV_Point2D32F__y_get(point));
     CV_Image image = fiducials->gray_image;
 
-    static Integer weights0[9] = {
+    static int weights0[9] = {
       0,   0,  0,
       0, 100,  0,
       0,  0,   0};
 
-    static Integer weights1[9] = {
+    static int weights1[9] = {
        0,  15,  0,
       15,  40,  15,
        0,  15,  0};
 
-    static Integer weights2[9] = {
+    static int weights2[9] = {
        5,  10,  5,
       10,  40, 10,
        5,  10,  5};
 
     // Sample *image*:
-    static Integer x_offsets[9] = {
+    static int x_offsets[9] = {
       -1,  0,  1,
       -1,  0,  1,
       -1,  0,  1};
-    static Integer y_offsets[9] = {
+    static int y_offsets[9] = {
       -1, -1, -1,
        0,  0,  0,
        1,  1,  1};
 
     // Select sample *weights*:
-    Integer *weights = (Integer *)0;
+    int *weights = (int *)0;
     switch (fiducials->weights_index) {
       case 1:
 	weights = weights1;
@@ -1631,20 +1630,20 @@ Integer Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
     }
 
     // Interate across sample point;
-    Integer numerator = 0;
-    Integer denominator = 0;
-    for (Integer index = 0; index < 9; index++) {
-	Integer sample = CV_Image__gray_fetch(image,
+    int numerator = 0;
+    int denominator = 0;
+    for (int index = 0; index < 9; index++) {
+	int sample = CV_Image__gray_fetch(image,
 	  x + x_offsets[index], y + y_offsets[index]);
 	if (sample >= 0) {
-	    Integer weight = weights[index];
+	    int weight = weights[index];
 	    numerator += sample * weight;
 	    denominator += weight;
 	}
     }
 
     // Compute *result* checking for divide by zero:
-    Integer result = 0;
+    int result = 0;
     if (denominator > 0) {
 	result = numerator / denominator;
     }
@@ -1824,16 +1823,16 @@ CV_Point2D32F_Vector Fiducials__references_compute(
 /// the corresponding value in *image* is sampled.  The minimum of the
 /// sampled point is returned.
 
-Integer Fiducials__points_maximum(Fiducials fiducials,
+int Fiducials__points_maximum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index) {
 
     // Start with a big value move it down:
-    Integer result = 0;
+    int result = 0;
 
     // Iterate across the {points} from {start_index} to {end_index}:
     for (Unsigned index = start_index; index <= end_index; index++) {
 	CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
-	Integer value = Fiducials__point_sample(fiducials, point);
+	int value = Fiducials__point_sample(fiducials, point);
 	//call d@(form@("max[%f%:%f%]:%d%\n\") %
 	//  f@(point.x) % f@(point.y) / f@(value))
 	if (value > result) {
@@ -1856,16 +1855,16 @@ Integer Fiducials__points_maximum(Fiducials fiducials,
 /// the corresponding value in *image* is sampled.  The minimum of the
 /// sampled point is returned.
 
-Integer Fiducials__points_minimum(Fiducials fiducials,
+int Fiducials__points_minimum(Fiducials fiducials,
   CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index) {
 
     // Start with a big value move it down:
-    Integer result = 0x7fffffff;
+    int result = 0x7fffffff;
 
     // Iterate across the {points} from {start_index} to {end_index}:
     for (Unsigned index = start_index; index <= end_index; index++) {
 	CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
-	Integer value = Fiducials__point_sample(fiducials, point);
+	int value = Fiducials__point_sample(fiducials, point);
 	if (value < result) {
 	    // New minimum value:
 	    result = value;
@@ -2000,8 +1999,8 @@ void Fiducials__sample_points_compute(
 //    Double sample_point_x = CV_Point2D32F__x_get(sample_point);
 //    Double sample_point_y = CV_Point2D32F__y_get(sample_point);
 //    File__format(stderr, "Label: %s corner: %f:%f sample_point %f:%f\n",
-//      label, (Integer)corner_x, (Integer)corner_y,
-//      (Integer)sample_point_x, (Integer)sample_point_y);
+//      label, (int)corner_x, (int)corner_y,
+//      (int)sample_point_x, (int)sample_point_y);
 //}
 
 /// @brief Print out tag update information.
@@ -2021,9 +2020,9 @@ void Fiducials__sample_points_compute(
 /// fed into *Fiducials__create*() as a routine to call each time a
 /// tag is updated.
 
-void Fiducials__tag_announce(void *announce_object, Integer id,
+void Fiducials__tag_announce(void *announce_object, int id,
   Double x, Double y, Double z, Double twist, Double diagonal,
-  Double distance_per_pixel, Logical visible, Integer hop_count) {
+  Double distance_per_pixel, Logical visible, int hop_count) {
     String visible_text = "";
     if (!visible) {
 	visible_text = "*** No longer visible ***";

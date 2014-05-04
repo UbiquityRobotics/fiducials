@@ -2,7 +2,6 @@
 
 #include <assert.h>
 
-#include "Integer.hpp"
 #include "Logical.hpp"
 #include "Memory.hpp"
 #include "String.hpp"

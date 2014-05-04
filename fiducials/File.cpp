@@ -5,7 +5,6 @@
 #include "Character.hpp"
 #include "File.hpp"
 #include "Float.hpp"
-#include "Integer.hpp"
 #include "String.hpp"
 #include "Unsigned.hpp"
 
@@ -18,7 +17,7 @@
 /// *File__byte_read*() will read a byte from *file* and return it.
 
 Unsigned File__byte_read(File file) {
-    Integer byte = fgetc(file);
+    int byte = fgetc(file);
     assert (byte >= 0);
     return (Unsigned)byte;
 }
@@ -183,13 +182,13 @@ void File__flush(File file) {
 /// really not a very robust XML parser.  An assertion failure occurs if
 /// the input does not parse properly.
 
-Integer File__integer_attribute_read(
+int File__integer_attribute_read(
   File in_file, String_Const attribute_name) {
     File__string_match(in_file, " ");
     File__string_match(in_file, attribute_name);
     File__string_match(in_file, "=\"");
     Logical negative = (Logical)0;
-    Integer result = 0;
+    int result = 0;
     while (1) {
         Character character = File__character_read(in_file);
 	if (Character__is_decimal_digit(character)) {
@@ -216,9 +215,9 @@ Integer File__integer_attribute_read(
 /// from *file* and return it.
 
 Unsigned File__little_endian_short_read(File file) {
-    Integer low_byte = fgetc(file);
+    int low_byte = fgetc(file);
     assert (low_byte >= 0);
-    Integer high_byte = fgetc(file);
+    int high_byte = fgetc(file);
     assert (high_byte >= 0);
     Unsigned result = ((Unsigned)high_byte << 8) | (Unsigned)low_byte;
     return result;
