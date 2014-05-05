@@ -26,8 +26,8 @@ include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(fiducials_base
-  Bounding_Box.cpp Character.cpp CRC.cpp Double.cpp FEC.cpp File.cpp Float.cpp Integer.cpp
-  List.cpp Logical.cpp Memory.cpp String.cpp SVG.cpp Table.cpp Unsigned.cpp)
+  Bounding_Box.cpp Character.cpp CRC.cpp Double.cpp FEC.cpp File.cpp Float.cpp 
+  List.cpp Memory.cpp String.cpp SVG.cpp Table.cpp Unsigned.cpp)
 
 add_library(fiducials_cv CV.cpp High_GUI2.cpp)
 target_link_libraries(fiducials_cv fiducials_base ${OpenCV_LIBS})

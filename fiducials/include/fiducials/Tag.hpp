@@ -73,7 +73,7 @@ struct Tag__Struct {
     Double world_diagonal;
 
     ///@brief True if rest of *Tag* is initialized.
-    Logical initialized;
+    bool initialized;
 
     /// @brief Distance from origin in hops:
     Unsigned hop_count;
@@ -88,7 +88,7 @@ struct Tag__Struct {
     Double twist;
 
     /// @brief True if tag is currently visible in camera field of view.
-    Logical visible;
+    bool visible;
 
     /// @brief Visit counter.
     Unsigned visit;
@@ -103,7 +103,7 @@ struct Tag__Struct {
     Double z;
 
     /// @brief Set if tag was updated
-    Logical updated;
+    bool updated;
 };
 
 /// @brief A *Tag_Height__Struct* represents a span of tags a the same
@@ -128,7 +128,7 @@ extern void Tag__arc_append(Tag tag, Arc arc);
 extern void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box);
 extern Tag Tag__create(Unsigned id, Map map);
 extern int Tag__compare(Tag tag1, Tag tag2);
-extern Logical Tag__equal(Tag tag1, Tag tag2);
+extern bool Tag__equal(Tag tag1, Tag tag2);
 extern void Tag__free(Tag tag);
 extern Unsigned Tag__hash(Tag tag);
 extern void Tag__initialize(

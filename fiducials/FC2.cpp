@@ -4,7 +4,6 @@
 
 #include "FC2.hpp"
 #include "File.hpp"
-#include "Logical.hpp"
 #include "Memory.hpp"
 
 /// @brief Returns a *FC2_Version* object for the Fly Capture library.

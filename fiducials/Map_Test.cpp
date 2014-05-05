@@ -7,7 +7,6 @@
 #include "File.hpp"
 #include "Double.hpp"
 #include "List.hpp"
-#include "Logical.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"

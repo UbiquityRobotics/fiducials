@@ -7,23 +7,22 @@
 #include "Double.hpp"
 #include "CRC.hpp"
 #include "FEC.hpp"
-#include "Logical.hpp"
 #include "String.hpp"
 #include "SVG.hpp"
 #include "Unsigned.hpp"
 
 extern void SVG__tag_write(/* Extractor extractor, */
-  Unsigned tag_id, Unsigned tag_size, Logical border);
+  Unsigned tag_id, Unsigned tag_size, bool border);
 extern void SVG__tag_bit(SVG svg,
-  Double cell_width, Unsigned row, Unsigned column, Logical border);
+  Double cell_width, Unsigned row, Unsigned column, bool border);
 extern void SVG__tag_write(/* Extractor extractor, */
-  Unsigned tag_id, Unsigned tag_size, Logical border);
+  Unsigned tag_id, Unsigned tag_size, bool border);
 
 int main(int arguments_size, char * arguments[]) {
     if (arguments_size <= 1) {
         File__format(stderr, "Usage: tag_id...\n");
     } else {
-	Logical border = 1;
+	bool border = 1;
 	Unsigned tag_size = 160;
 	for (Unsigned index = 1; index < arguments_size; index++) {
 	    String tag_name = arguments[index];
@@ -55,7 +54,7 @@ int main(int arguments_size, char * arguments[]) {
 /// *false*, the matrix is offset by the left by one.
 
 void SVG__tag_bits(SVG svg, Double cell_width, Unsigned first_column,
-  Unsigned first_row, Unsigned last_column, Unsigned last_row, Logical border) {
+  Unsigned first_row, Unsigned last_column, Unsigned last_row, bool border) {
 
     // Deal with *border*:
     Unsigned delta = 0;
@@ -104,7 +103,7 @@ void SVG__tag_bits(SVG svg, Double cell_width, Unsigned first_column,
 /// the matrix is offset to the left by one.
 
 void SVG__tag_bit(SVG svg,
-  Double cell_width, Unsigned row, Unsigned column, Logical border) {
+  Double cell_width, Unsigned row, Unsigned column, bool border) {
     SVG__tag_bits(svg, cell_width, row, column, row, column, border);
 }
 
@@ -113,7 +112,7 @@ void SVG__tag_bit(SVG svg,
 // is a black line drawn around the "white" border of the tag.
 
 void SVG__tag_write(/* Extractor extractor, */
-  Unsigned tag_id, Unsigned tag_size, Logical border) {
+  Unsigned tag_id, Unsigned tag_size, bool border) {
 
     Double cell_width = (Double)(tag_size) / 10.0;
     //Double offset = cell_width / 2.0;

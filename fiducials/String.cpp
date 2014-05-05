@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "Character.hpp"
-#include "Logical.hpp"
 #include "String.hpp"
 #include "Memory.hpp"
 #include "Unsigned.hpp"
@@ -30,8 +29,8 @@ String String__allocate(Unsigned size) {
 /// *String__equal*() will return true if *string1* is equal to *string2*
 /// and false otherwise.
 
-Logical String__equal(String_Const string1, String_Const string2) {
-    return (Logical)(strcmp(string1, string2) == 0);
+bool String__equal(String_Const string1, String_Const string2) {
+    return (bool)(strcmp(string1, string2) == 0);
 }
 
 /// @brief Return a formatted version of *format*.

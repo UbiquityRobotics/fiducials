@@ -9,7 +9,6 @@
 #include "CV.hpp"
 #include "Double.hpp"
 #include "File.hpp"
-#include "Logical.hpp"
 #include "String.hpp"
 
 static CvSlice whole_sequence;		// CV_WHOLE_SEQ (see below)
@@ -172,7 +171,7 @@ int CV__bilateral = CV_BILATERAL;
 // *CV* routines:
 
 void CV__draw_chessboard_corners(CV_Image image, CV_Size pattern_size,
-  CV_Point2D32F_Vector corners, int count, Logical pattern_was_found) {
+  CV_Point2D32F_Vector corners, int count, bool pattern_was_found) {
     cvDrawChessboardCorners(image,
       *pattern_size, corners, count, pattern_was_found);
 }
@@ -610,12 +609,12 @@ CV_Image CV_Image__tga_read(CV_Image image, String_Const tga_file_name) {
     // If {image} is not equal to {null@CV_Image} we can reuse {image}:
 
     // Figure out whether .tga file is gray scale or color:
-    Logical gray_mode = (Logical)0;
+    bool gray_mode = (bool)0;
     if (image_type == 3 && bpp == 8) {
-	gray_mode = (Logical)1;
+	gray_mode = (bool)1;
     } else if (image_type == 2 && bpp == 24) {
 	// Color mode:
-	gray_mode = (Logical)0;
+	gray_mode = (bool)0;
     } else {
 	// Something else:
 	File__format(stderr, "'%s' has image type=%d and bpp=%d\n",
@@ -681,16 +680,16 @@ void CV_Image__tga_write(CV_Image image, String_Const file_name) {
 
     Unsigned bpp = 0;
     Unsigned image_type = 0;	// 2=>color; 3=>b&w:
-    Logical gray_mode = (Logical)0;
+    bool gray_mode = (bool)0;
     if (channels == 1) {
 	// Gray scale:
 	bpp = 8;
-	gray_mode = (Logical)1;
+	gray_mode = (bool)1;
 	image_type = 3;
     } else if (channels == 3) {
 	// Color:
 	bpp = 24;
-	gray_mode = (Logical)0;
+	gray_mode = (bool)0;
 	image_type = 2;
     } else {
 	assert (0);
@@ -899,8 +898,8 @@ Double CV_Sequence__arc_length(
     return cvArcLength(contour, *slice, is_closed);
 }    
 
-Logical CV_Sequence__check_contour_convexity(CV_Sequence contour) {
-    return (Logical)(cvCheckContourConvexity(contour) ? 1 : 0);
+bool CV_Sequence__check_contour_convexity(CV_Sequence contour) {
+    return (bool)(cvCheckContourConvexity(contour) ? 1 : 0);
 }
 
 Double CV_Sequence__contour_area(

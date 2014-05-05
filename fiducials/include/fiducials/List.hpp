@@ -14,7 +14,7 @@ typedef int (*List__Compare__Routine)(Memory, Memory);
 
 /// @brief A procedure variable signature for testing two *Memory* objects
 /// for equality.
-typedef Logical (*List__Equal__Routine)(Memory, Memory);
+typedef bool (*List__Equal__Routine)(Memory, Memory);
 
 /// @brief *List__Struct* is the structure for a list of items.
 struct List__Struct {

@@ -53,8 +53,8 @@ void Map__arc_announce(Map map,
 void Map__arc_append(Map map, Arc arc) {
     List__append(map->all_arcs, arc, "Map__arc_append:List__append:all_arcs");
     map->changes_count += 1;
-    map->is_changed = (Logical)1;
-    map->is_saved = (Logical)0;
+    map->is_changed = (bool)1;
+    map->is_saved = (bool)0;
 }
 
 /// @brief Returns the *Arc* that contains *from_tag* and *to_tag*.
@@ -213,8 +213,8 @@ Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
 	// Finally, upate *arc*:
 	Arc__update(arc, from_twist, floor_distance, to_twist, goodness);
 	map->changes_count += 1;
-	map->is_changed = (Logical)1;
-	map->is_saved = (Logical)0;
+	map->is_changed = (bool)1;
+	map->is_saved = (bool)0;
 
 	// Let interested parties know that *arc* has been updated:
 	Map__arc_announce(map, arc, image, sequence_number);
@@ -304,9 +304,9 @@ Map Map__create(String_Const file_path, String_Const file_base,
     map->changes_count = 0;
     map->file_base = file_base;
     map->file_path = file_path;
-    map->is_changed = (Logical)0;
-    map->is_saved = (Logical)1;
-    map->image_log = (Logical)0;
+    map->is_changed = (bool)0;
+    map->is_saved = (bool)1;
+    map->image_log = (bool)0;
     map->pending_arcs = List__new("Map__new:List__new:pending_arcs"); // <Tag>
     map->tag_announce_routine = tag_announce_routine;
     map->tag_heights =
@@ -463,7 +463,7 @@ void Map__save(Map map) {
 	String__free(full_map_file_name);
 	Map__write(map, out_file);
 	File__close(out_file);
-	map->is_saved = (Logical)1;
+	map->is_saved = (bool)1;
     }
 }
 
@@ -578,7 +578,7 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
 /// to be called for *arc*.
 
 void Map__tag_announce(Map map,
-  Tag tag, Logical visible, CV_Image image, Unsigned sequence_number) {
+  Tag tag, bool visible, CV_Image image, Unsigned sequence_number) {
     map->tag_announce_routine(map->announce_object,
       tag->id, tag->x, tag->y, tag->z, tag->twist,
       tag->diagonal, tag->world_diagonal/tag->diagonal,
@@ -676,8 +676,8 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
 	List__append(map->all_tags, tag,
 	  "Map__tag_lookup:List__append:all_tags");
 	map->changes_count += 1;
-	map->is_changed = (Logical)1;
-	map->is_saved = (Logical)0;
+	map->is_changed = (bool)1;
+	map->is_saved = (bool)0;
     }
     return tag;
 }
@@ -783,8 +783,8 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 		// spanning tree yet:
 		Tag from_tag = arc->from_tag;
 		Tag to_tag = arc->to_tag;
-		Logical from_is_new = (Logical)(from_tag->visit != visit);
-		Logical to_is_new = (Logical)(to_tag->visit != visit);
+		bool from_is_new = (bool)(from_tag->visit != visit);
+		bool to_is_new = (bool)(to_tag->visit != visit);
 
 		if (from_is_new || to_is_new) {
 		    if (from_is_new) {
@@ -806,7 +806,7 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 		    }
 
 		    // Mark that *arc* is part of the spanning tree:
-		    arc->in_tree = (Logical)1;
+		    arc->in_tree = (bool)1;
 
 		    // Resort *pending_arcs* to that the shortest distance
 		    // sorts to the end:
@@ -814,7 +814,7 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 		      (List__Compare__Routine)Arc__distance_compare);
 		} else {
 		    // *arc* connects across two nodes of spanning tree:
-		    arc->in_tree = (Logical)0;
+		    arc->in_tree = (bool)0;
 		}
 	    }
 	}
@@ -824,8 +824,8 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 	}
 
 	// Mark that *map* is fully updated:
-        map->is_changed = (Logical)0;
-	map->is_saved = (Logical)0;
+        map->is_changed = (bool)0;
+	map->is_saved = (bool)0;
     }
 }
 

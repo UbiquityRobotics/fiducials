@@ -43,7 +43,6 @@
 #include <alloca.h>
 
 #include "FEC.hpp"
-#include "Logical.hpp"
 #include "Unsigned.hpp"
 
 // No legal value in index form represents zero, so
@@ -602,7 +601,7 @@ rvInt16 rvFec_Correct(rvFec* self, rvUint8* blockBuffer)
     return 1;
 }
 
-Logical
+bool
 FEC__correct(
     FEC fec,
     Unsigned *data,
@@ -610,7 +609,7 @@ FEC__correct(
 {
     unsigned char data_bytes[8];
     Unsigned index;
-    Logical result;
+    bool result;
 
     /* Load {data} into {data_bytes}: */
     for (index = 0; index < size; index++) {

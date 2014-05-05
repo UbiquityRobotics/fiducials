@@ -71,14 +71,14 @@ Tag Tag__create(Unsigned id, Map map) {
     tag->diagonal = 0.0;
     tag->hop_count = 0;
     tag->id = id;
-    tag->initialized = (Logical)0;
+    tag->initialized = (bool)0;
     tag->map = map;
     tag->world_diagonal = tag_height->world_diagonal;
     tag->visit = map->visit;
     tag->x = (Double)0.0;
     tag->y = (Double)0.0;
     tag->z = tag_height->z;
-    tag->updated = (Logical)1;
+    tag->updated = (bool)1;
     return tag;
 }
 
@@ -90,8 +90,8 @@ Tag Tag__create(Unsigned id, Map map) {
 /// *Tag__equal*() will return true if *tag1* is equal to *tag2* and false
 /// otherwise.
 
-Logical Tag__equal(Tag tag1, Tag tag2) {
-    return (Logical)(tag1->id == tag2->id);
+bool Tag__equal(Tag tag1, Tag tag2) {
+    return (bool)(tag1->id == tag2->id);
 }
 
 /// @brief Releases *Tag* storage.
@@ -138,7 +138,7 @@ Unsigned Tag__hash(Tag tag) {
 void Tag__initialize(
   Tag tag, Double twist, Double x, Double y, Double diagonal, Unsigned visit) {
     tag->diagonal = diagonal; 
-    tag->initialized = (Logical)1;
+    tag->initialized = (bool)1;
     tag->twist = twist;
     tag->x = x;
     tag->y = y;
@@ -307,11 +307,11 @@ void Tag__update_via_arc(
 	to_tag->twist = to_tag_twist;
 	to_tag->x = to_tag_x;
 	to_tag->y = to_tag_y;
-        to_tag->updated = (Logical)1;
+        to_tag->updated = (bool)1;
 
 	// Let any interested party know that tag values changed.
 	Map map = to_tag->map;
-	Map__tag_announce(map, to_tag, (Logical)1, image, sequence_number);
+	Map__tag_announce(map, to_tag, (bool)1, image, sequence_number);
     }
 
     //File__format(stderr, "To_Tag[id:%d x:%.2f y:%.2f tw:%.4f] angle=%.4f\n",

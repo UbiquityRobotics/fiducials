@@ -14,7 +14,6 @@
 #include "Float.hpp"
 #include "High_GUI2.hpp"
 #include "List.hpp"
-#include "Logical.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
@@ -418,7 +417,7 @@
 void Fiducials__arc_announce(void *announce_object,
   int from_id, Double from_x, Double from_y, Double from_z,
   int to_id, Double to_x, Double to_y, Double to_z,
-  Double goodness, Logical in_spanning_tree) {
+  Double goodness, bool in_spanning_tree) {
     File__format(stderr,
       "Arc: from=(%d, %f, %f, %f,) to=(%d, %f, %f, %f) %f %d\n",
       from_id, from_x, from_y, from_z,
@@ -505,7 +504,7 @@ void Fiducials__image_set(Fiducials fiducials, CV_Image image) {
 
 //FIXME: Is there any point to having *show* set to false???!!!
 
-void Fiducials__image_show(Fiducials fiducials, Logical show) {
+void Fiducials__image_show(Fiducials fiducials, bool show) {
     // Grab some values out of *fiduicals*:
     CV_Image debug_image = fiducials->debug_image;
     CV_Image gray_image = fiducials->gray_image;
@@ -521,7 +520,7 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
     // for each time through the loop:
     Unsigned debug_index = 0;
     Unsigned previous_debug_index = debug_index;
-    Logical done = (Logical)0;
+    bool done = (bool)0;
     while (!done) {
 	// Process {gray_image}; a debug image lands in {debug_image}:
 	Fiducials__process(fiducials);
@@ -541,7 +540,7 @@ void Fiducials__image_show(Fiducials fiducials, Logical show) {
 	switch (control_character) {
 	  case '\33':
 	    //# Exit program:
-	    done = (Logical)1;
+	    done = (bool)1;
 	    File__format(stderr, "done\n");
 	    break;
 	  case '+':
@@ -654,7 +653,7 @@ Fiducials Fiducials__create(
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
 
-    static Logical north_mapping[64] = {
+    static bool north_mapping[64] = {
 	//corner1	      corner0
 	 0,  1,  2,  3,  4,  5,  6,  7,
 	 8,  9, 10, 11, 12, 13, 14, 15,
@@ -667,7 +666,7 @@ Fiducials Fiducials__create(
 	//corner2	      corner3
     };
 
-    static Logical west_mapping[64] = {
+    static bool west_mapping[64] = {
 	//corner1	      corner0
 	 7, 15, 23, 31, 39, 47, 55, 63,
 	 6, 14, 22, 30, 38, 46, 54, 62,
@@ -680,7 +679,7 @@ Fiducials Fiducials__create(
 	//corner2	      corner3
     };
 
-    static Logical south_mapping[64] = {
+    static bool south_mapping[64] = {
 	//corner1	      corner0
 	63, 62, 61, 60, 59, 58, 57, 56,
 	55, 54, 53, 52, 51, 50, 49, 48,
@@ -693,7 +692,7 @@ Fiducials Fiducials__create(
 	//corner2	      corner3
     };
 
-    static Logical east_mapping[64] = {
+    static bool east_mapping[64] = {
 	//corner1	      corner0
 	56, 48, 40, 32, 24, 16,  8,  0,
 	57, 49, 41, 33, 25, 17,  9,  1,
@@ -706,7 +705,7 @@ Fiducials Fiducials__create(
 	//corner2	      corner3
     };
 
-    static Logical north_mapping_flipped[64] = {
+    static bool north_mapping_flipped[64] = {
 	//corner1	      corner0
 	 7,  6,  5,  4,  3,  2,  1,  0,
 	15, 14, 13, 12, 11, 10,  9,  8,
@@ -719,7 +718,7 @@ Fiducials Fiducials__create(
 	 //corner2	      corner3
     };
 
-    static Logical west_mapping_flipped[64] = {
+    static bool west_mapping_flipped[64] = {
 	//corner1	      corner0
 	63, 55, 47, 39, 31, 23, 15, 7,
 	62, 54, 46, 38, 30, 22, 14, 6,
@@ -732,7 +731,7 @@ Fiducials Fiducials__create(
 	//corner2	      corner3
     };
 
-    static Logical south_mapping_flipped[64] = {
+    static bool south_mapping_flipped[64] = {
 	//corner1	      corner0
 	56, 57, 58, 59, 60, 61, 62, 63, 
 	48, 49, 50, 51, 52, 53, 54, 55,
@@ -745,7 +744,7 @@ Fiducials Fiducials__create(
 	//corner2	      corner3
     };
 
-    static Logical east_mapping_flipped[64] = {
+    static bool east_mapping_flipped[64] = {
 	//corner1	      corner0
 	 0,  8, 16, 24, 32, 40, 48, 56,
 	 1,  9, 17, 25, 33, 41, 49, 57,
@@ -761,7 +760,7 @@ Fiducials Fiducials__create(
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
 
-    static Logical *mappings[4] = {
+    static bool *mappings[4] = {
 	&north_mapping_flipped[0],
 	&west_mapping_flipped[0],
 	&south_mapping_flipped[0],
@@ -789,7 +788,7 @@ Fiducials Fiducials__create(
 
     Fiducials_Results results =
       Memory__new(Fiducials_Results, "Fiducials__create");
-    results->map_changed = (Logical)0;
+    results->map_changed = (bool)0;
 
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
@@ -800,7 +799,7 @@ Fiducials Fiducials__create(
        fiducials->fiducial_announce_routine = Fiducials__fiducial_announce;
     fiducials->announce_object = announce_object;
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
-    fiducials->blur = (Logical)1;
+    fiducials->blur = (bool)1;
     fiducials->camera_tags =
       List__new("Fiducials__create:List__new:camera_tags"); // <Camera_Tag>
     fiducials->camera_tags_pool =
@@ -847,7 +846,7 @@ Fiducials Fiducials__create(
     fiducials->weights_index = 0;
     fiducials->term_criteria = 
       CV_Term_Criteria__create(term_criteria_type, 5, 0.2);
-    fiducials->y_flip = (Logical)0;
+    fiducials->y_flip = (bool)0;
     fiducials->black = CV_Scalar__rgb(0, 0, 0);
 
     return fiducials;
@@ -1203,7 +1202,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 		Fiducials__sample_points_compute(corners, sample_points);
 
 		// Extract all 64 tag bit values:
-		Logical *tag_bits = &fiducials->tag_bits[0];
+		bool *tag_bits = &fiducials->tag_bits[0];
 		for (Unsigned index = 0; index < 64; index++) {
 		    // Grab the pixel value and convert into a {bit}:
 		    CV_Point2D32F sample_point =
@@ -1212,7 +1211,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 		    //  CV_Image__point_sample(gray_image, sample_point);
 		    int value =
 		      Fiducials__point_sample(fiducials, sample_point);
-		    Logical bit = (value < threshold);
+		    bool bit = (value < threshold);
 		    tag_bits[index] = bit;
 
 		    // For debugging:
@@ -1253,17 +1252,17 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
 		// Now we iterate through the 4 different mapping
 		// orientations to see if any one of the 4 mappings match:
-		Logical **mappings = fiducials->mappings;
+		bool **mappings = fiducials->mappings;
 		Unsigned mappings_size = 4;
 		for (Unsigned direction_index = 0;
 		  direction_index < mappings_size; direction_index++) {
 		    // Grab the mapping:
-		    Logical *mapping = mappings[direction_index];
+		    bool *mapping = mappings[direction_index];
 		    //File__format(log_file,
 		    //  "mappings[%d]:0x%x\n", direction_index, mapping);
 
 
-		    Logical mapped_bits[64];
+		    bool mapped_bits[64];
 		    for (Unsigned i = 0; i < 64; i++) {
 			 mapped_bits[mapping[i]] = tag_bits[i];
 		    }
@@ -1357,7 +1356,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 			      camera_diagonal;
 			    if (diagonal  > tag->diagonal) {
 				tag->diagonal = diagonal;
-                                tag->updated = (Logical)1;
+                                tag->updated = (bool)1;
 			    }
 
 			    // Append *camera_tag* to *camera_tags*:
@@ -1391,14 +1390,14 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 		assert (camera_tag1->tag->id != camera_tag2->tag->id);
 		if (Map__arc_update(map,
 		  camera_tag1, camera_tag2, gray_image, sequence_number) > 0) {
-		    results->map_changed = (Logical)1;
+		    results->map_changed = (bool)1;
 		}
 	    }
 	}
     }
 
     List__trim(locations, 0);
-    results->image_interesting = (Logical)0;
+    results->image_interesting = (bool)0;
     if (camera_tags_size > 0) {
 	Double pi = 3.14159265358979323846264;
 	Unsigned half_width = CV_Image__width_get(gray_image) >> 1;
@@ -1480,7 +1479,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 	    Double change = Double__square_root(
 	      change_dx * change_dx + change_dy * change_dy);
 	    if (change > 0.1) {
-		results->image_interesting = (Logical)1;
+		results->image_interesting = (bool)1;
 	    }
 	    fiducials->last_x = closest_location->x;
 	    fiducials->last_y = closest_location->y;
@@ -1507,11 +1506,11 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 	//  current_visibles_index, current_visible->id);
 
 	// Always announce *current_visible* as visible:
-	current_visible->visible = (Logical)1;
+	current_visible->visible = (bool)1;
         if( current_visible->updated ) {
 	    Map__tag_announce(map, current_visible,
-	        (Logical)1, original_image, sequence_number);
-            current_visible->updated = (Logical)0;
+	        (bool)1, original_image, sequence_number);
+            current_visible->updated = (bool)0;
         }
     }
 
@@ -1541,9 +1540,9 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 	// *current_visible* is null if it was not found:
 	if (current_visible == (Tag)0) {
 	    // Not found => announce the tag as no longer visible:
-	    previous_visible->visible = (Logical)0;
+	    previous_visible->visible = (bool)0;
 	    Map__tag_announce(map,
-	      previous_visible, (Logical)0, original_image, sequence_number);
+	      previous_visible, (bool)0, original_image, sequence_number);
 	}
     }
     // Clear *previous_visibles* and swap *current_visible* with
@@ -1690,7 +1689,7 @@ void CV_Point2D32F_Vector__corners_normalize(CV_Point2D32F_Vector corners) {
 /// *CV_Point2D32F_Vector__is_clockwise*() will return true if the 4 fiducial
 /// corners in *corners* are clockwise and false otherwise.
 
-Logical CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners) {
+bool CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners) {
 
     // Extract the three corners:
     CV_Point2D32F corner0 = CV_Point2D32F_Vector__fetch1(corners, 0);
@@ -2012,8 +2011,8 @@ void Fiducials__sample_points_compute(
 /// @param twist is the tag twist in radians.
 /// @param diagonal is the tag diagonal distance.
 /// @param distance_per_pixel is the distance per pixel.
-/// @param visible is (*Logical*)1 if the tag is currently in camera
-///        field of view, and (*Logical*)0 otherwise.
+/// @param visible is (*bool*)1 if the tag is currently in camera
+///        field of view, and (*bool*)0 otherwise.
 /// @param hop_count is the hop count along the spanning tree to the origin.
 ///
 /// *Fiducials_tag_announce*() is a tag announce routine that can be
@@ -2022,7 +2021,7 @@ void Fiducials__sample_points_compute(
 
 void Fiducials__tag_announce(void *announce_object, int id,
   Double x, Double y, Double z, Double twist, Double diagonal,
-  Double distance_per_pixel, Logical visible, int hop_count) {
+  Double distance_per_pixel, bool visible, int hop_count) {
     String visible_text = "";
     if (!visible) {
 	visible_text = "*** No longer visible ***";

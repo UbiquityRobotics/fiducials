@@ -6,7 +6,6 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
-#include "Logical.hpp"
 #include "Double.hpp"
 #include "Memory.hpp"
 #include "String.hpp"
@@ -103,7 +102,7 @@ extern void CV_Point2D32F_Vector__corners_normalize(
 extern CV_Point2D32F_Vector CV_Point2D32F_Vector__create(Unsigned size);
 extern CV_Point2D32F CV_Point2D32F_Vector__fetch1(
   CV_Point2D32F_Vector vector,  Unsigned index);
-extern Logical CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners);
+extern bool CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners);
 
 extern void CV_Point2D32F__point_set(CV_Point2D32F point2d32f, CV_Point point);
 extern Double CV_Point2D32F__x_get(CV_Point2D32F point);
@@ -121,7 +120,7 @@ extern CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
   int parameter1, Double parameter2);
 extern Double CV_Sequence__arc_length(
  CV_Sequence contour, CV_Slice slice, int is_closed);
-extern Logical CV_Sequence__check_contour_convexity(CV_Sequence contour);
+extern bool CV_Sequence__check_contour_convexity(CV_Sequence contour);
 extern Double CV_Sequence__contour_area(
   CV_Sequence contour, CV_Slice slice, int oriented);
 extern CV_Sequence CV_Sequence__next_get(CV_Sequence sequence);

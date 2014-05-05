@@ -4,7 +4,6 @@
 #define TABLE_H_INCLUDED 1
 
 #include "File.hpp"
-#include "Logical.hpp"
 #include "Memory.hpp"
 #include "Unsigned.hpp"
 
@@ -12,7 +11,7 @@ typedef struct Table_Struct *Table;
 typedef struct Table_List_Struct *Table_List;
 typedef struct Table_Triple_Struct *Table_Triple;
 
-typedef Logical (*Table_Equal_Routine)(Memory, Memory);
+typedef bool (*Table_Equal_Routine)(Memory, Memory);
 typedef int (*Table_Hash_Routine)(Memory);
 typedef void (*Table_Key_Show_Routine)(Memory, File);
 typedef void (*Table_Value_Show_Routine)(Memory, File);
@@ -52,7 +51,7 @@ struct Table_List_Struct
 extern Table Table__create(Table_Equal_Routine equal_routine,
   Table_Hash_Routine hash_routine, Memory empty_value, String from);
 extern void Table__free(Table table);
-extern Logical Table__has_key(Table table, Memory key);
+extern bool Table__has_key(Table table, Memory key);
 extern void Table__insert(Table table, Memory key, Memory value);
 extern Memory Table__key_lookup(Table table, Memory key);
 extern Memory Table__lookup(Table table, Memory key);

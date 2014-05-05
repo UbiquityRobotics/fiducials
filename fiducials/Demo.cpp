@@ -12,7 +12,6 @@
 #include "Float.hpp"
 #include "High_GUI2.hpp"
 #include "List.hpp"
-#include "Logical.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Unsigned.hpp"
@@ -34,7 +33,7 @@ int main(int arguments_size, char *arguments[]) {
 
     assert (gettimeofday(start_time_value, (struct timezone *)0) == 0);
 
-    Logical image_log = (Logical)0;
+    bool image_log = (bool)0;
     List /* <String> */ image_file_names =
       List__new("Demo:main:List__new:image_file_names");
     String lens_calibrate_file_name = (String)0;
@@ -47,7 +46,7 @@ int main(int arguments_size, char *arguments[]) {
 	    String argument = arguments[index];
 	    Unsigned size = String__size(argument);
 	    if (String__equal(argument, "--image_log")) {
-		image_log = (Logical)1;
+		image_log = (bool)1;
 	    } else if (size > 4 && String__equal(argument + size - 4, ".txt")) {
 		lens_calibrate_file_name = argument;
 	    } else if (size > 4 && String__equal(argument + size - 4, ".log")) {
@@ -108,7 +107,7 @@ int main(int arguments_size, char *arguments[]) {
 	  size, time, frames_per_second);
 
 	if (size == 1) {
-	    Fiducials__image_show(fiducials, (Logical)1);
+	    Fiducials__image_show(fiducials, (bool)1);
 	} else {
 	    Map map = fiducials->map;
 	    Map__save(map);
@@ -127,7 +126,7 @@ int main(int arguments_size, char *arguments[]) {
 	//  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
 	//  Fiducials__location_announce, Map__tag_announce, log_file_name,
 	//  "Demo.xml");
-	//fiducials->map->is_saved = (Logical)0;
+	//fiducials->map->is_saved = (bool)0;
 	//fiducials->map->file_name = "Demo2.xml";
 	//Fiducials__free(fiducials);
     }

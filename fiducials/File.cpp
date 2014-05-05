@@ -70,8 +70,8 @@ Double File__double_attribute_read(File in_file, String_Const attribute_name) {
     File__string_match(in_file, attribute_name);
     File__string_match(in_file, "=\"");
     Double fraction = (Double)1.0;
-    Logical have_decimal_point = (Logical)0;
-    Logical negative = (Logical)0;
+    bool have_decimal_point = (bool)0;
+    bool negative = (bool)0;
     Double result = (Double)0.0;
     while (1) {
         Character character = File__character_read(in_file);
@@ -85,9 +85,9 @@ Double File__double_attribute_read(File in_file, String_Const attribute_name) {
 	} else if (character == '"') {
 	    break;
 	} else if (character == '.') {
-	    have_decimal_point = (Logical)1;
+	    have_decimal_point = (bool)1;
 	} else if (character == '-') {
-	    negative = (Logical)1;
+	    negative = (bool)1;
 	} else {
 	    assert(0);
 	}
@@ -132,8 +132,8 @@ Float File__float_attribute_read(File in_file, String_Const attribute_name) {
     File__string_match(in_file, attribute_name);
     File__string_match(in_file, "=\"");
     Float fraction = (Float)1.0;
-    Logical have_decimal_point = (Logical)0;
-    Logical negative = (Logical)0;
+    bool have_decimal_point = (bool)0;
+    bool negative = (bool)0;
     Float result = (Float)0.0;
     while (1) {
         Character character = File__character_read(in_file);
@@ -147,9 +147,9 @@ Float File__float_attribute_read(File in_file, String_Const attribute_name) {
 	} else if (character == '"') {
 	    break;
 	} else if (character == '.') {
-	    have_decimal_point = (Logical)1;
+	    have_decimal_point = (bool)1;
 	} else if (character == '-') {
-	    negative = (Logical)1;
+	    negative = (bool)1;
 	} else {
 	    assert(0);
 	}
@@ -187,7 +187,7 @@ int File__integer_attribute_read(
     File__string_match(in_file, " ");
     File__string_match(in_file, attribute_name);
     File__string_match(in_file, "=\"");
-    Logical negative = (Logical)0;
+    bool negative = (bool)0;
     int result = 0;
     while (1) {
         Character character = File__character_read(in_file);
@@ -196,7 +196,7 @@ int File__integer_attribute_read(
 	} else if (character == '"') {
 	    break;
 	} else if (character == '-') {
-	    negative = (Logical)1;
+	    negative = (bool)1;
 	} else {
 	    assert(0);
 	}

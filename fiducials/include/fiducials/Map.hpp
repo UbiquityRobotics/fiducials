@@ -45,13 +45,13 @@ struct Map__Struct {
     String_Const file_path;
 
     /// @brief True if images that change map need to be recorded.
-    Logical image_log;
+    bool image_log;
 
     /// @brief True if map has changed since last update.
-    Logical is_changed;
+    bool is_changed;
 
     /// @brief True if changed map has been saved.
-    Logical is_saved;
+    bool is_saved;
 
     /// @brief List of pending *Arc*'s for map tree extraction.
     List /* <Arc> */ pending_arcs;
@@ -96,7 +96,7 @@ extern void Map__svg_write(
 extern void Map__tag_heights_xml_read(
   Map map, String_Const tag_heights_file_name);
 extern void Map__tag_announce(
-  Map map, Tag tag, Logical visible, CV_Image image, Unsigned sequence_number);
+  Map map, Tag tag, bool visible, CV_Image image, Unsigned sequence_number);
 extern Tag Map__tag_lookup(Map map, Unsigned tag_id);
 extern void Map__update(Map map, CV_Image image, Unsigned sequence_number);
 extern void Map__write(Map map, File out_file);

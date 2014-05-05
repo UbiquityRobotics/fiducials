@@ -2,7 +2,6 @@
 
 #include <assert.h>
 
-#include "Logical.hpp"
 #include "Memory.hpp"
 #include "String.hpp"
 #include "Table.hpp"
@@ -74,7 +73,7 @@ void Table__free(Table table)
 /// *Table__has_key*() returns true if *key* is in *table* and false
 /// otherwise.
 
-Logical Table__has_key(Table table, Memory key)
+bool Table__has_key(Table table, Memory key)
 {
     // Search for the binding:
     Unsigned hash = table->hash_routine(key);

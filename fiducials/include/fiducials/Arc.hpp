@@ -9,7 +9,6 @@ typedef struct Arc__Struct *Arc;
 
 #include "File.hpp"
 #include "Double.hpp"
-#include "Logical.hpp"
 #include "Map.hpp"
 #include "SVG.hpp"
 #include "Tag.hpp"
@@ -70,7 +69,7 @@ struct Arc__Struct {
     Double goodness;
 
     /// @brief Set to true if this *Arc* is part of the map tree.
-    Logical in_tree;
+    bool in_tree;
 
     /// @brief The to *Tag* (has larger id than *from*).
     Tag to_tag;
@@ -86,7 +85,7 @@ struct Arc__Struct {
 
 extern int Arc__compare(Arc arc1, Arc arc2);
 extern int Arc__distance_compare(Arc arc1, Arc arc2);
-extern Logical Arc__equal(Arc arc1, Arc arc2);
+extern bool Arc__equal(Arc arc1, Arc arc2);
 extern Arc Arc__create(Tag from_tag, Double from_twist,
   Double distance, Tag to_tag, Double to_twist, Double goodness);
 extern void Arc__free(Arc arc);

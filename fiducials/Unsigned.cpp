@@ -1,6 +1,5 @@
 // Copyright (c) by Wayne C. Gramlich.  All rights reserved.
 
-#include "Logical.hpp"
 #include "Unsigned.hpp"
 
 /// @brief Return -1, 0, or 1 if depending on sort order.
@@ -27,11 +26,11 @@ int Unsigned__compare(Unsigned unsigned1, Unsigned unsigned2) {
 /// @param unsigned2 is the second *Unsigned* to compare.
 /// @returns true if *unsigned1* is equal to *unsigned2*.
 ///
-/// *Unsigned__equal*() will return true (i.e. (*Logical*)1) if *unsigned1*
-/// is equal to *unsigned2* and false (i.e. (*Logical*)0) otherwise.
+/// *Unsigned__equal*() will return true (i.e. (*bool*)1) if *unsigned1*
+/// is equal to *unsigned2* and false (i.e. (*bool*)0) otherwise.
 
-Logical Unsigned__equal(Unsigned unsigned1, Unsigned unsigned2) {
-    return (Logical)(unsigned1 == unsigned2);
+bool Unsigned__equal(Unsigned unsigned1, Unsigned unsigned2) {
+    return (bool)(unsigned1 == unsigned2);
 }
 
 /// @brief Return a hash of *unsigned1*

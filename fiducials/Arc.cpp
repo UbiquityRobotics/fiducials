@@ -100,8 +100,8 @@ int Arc__distance_compare(Arc arc1, Arc arc2) {
 ///
 /// *Arc__equal*() will return true if *arc1* is equal to *arc2*.
 
-Logical Arc__equal(Arc arc1, Arc arc2) {
-    return (Logical)(Arc__compare(arc1, arc2) == 0);
+bool Arc__equal(Arc arc1, Arc arc2) {
+    return (bool)(Arc__compare(arc1, arc2) == 0);
 }
 
 /// @brief Returns a hash value for *arc*.
@@ -135,7 +135,7 @@ Arc Arc__new(String from) {
     arc->from_tag = (Tag)0;
     arc->from_twist = 0.0;
     arc->goodness = 123456789.0;
-    arc->in_tree = (Logical)0;
+    arc->in_tree = (bool)0;
     arc->to_tag = (Tag)0;
     arc->to_twist = 0.0;
     arc->visit = 0;
@@ -163,7 +163,7 @@ Arc Arc__read(File in_file, Map map) {
        (Unsigned)File__integer_attribute_read(in_file, "To_Tag_Id");
     Double to_twist = File__double_attribute_read(in_file, "To_Twist");
     Double goodness = File__double_attribute_read(in_file, "Goodness");
-    Logical in_tree = (Logical)File__integer_attribute_read(in_file, "In_Tree");
+    bool in_tree = (bool)File__integer_attribute_read(in_file, "In_Tree");
     File__string_match(in_file, "/>\n");
 
     // Convert from degrees to radians:
