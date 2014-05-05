@@ -23,7 +23,7 @@
 int Arc__compare(Arc arc1, Arc arc2) {
     int result = Tag__compare(arc1->from_tag, arc2->from_tag);
     if (result == 0) {
-	result = Tag__compare(arc1->to_tag, arc2->to_tag);
+        result = Tag__compare(arc1->to_tag, arc2->to_tag);
     }
     return result;
 }
@@ -46,13 +46,13 @@ Arc Arc__create(Tag from_tag, Double from_twist,
     // Make sure *from* id is less that *to* id:
     if (from_tag->id > to_tag->id) {
         // Compute the conjugate *Arc* (see Arc.h):
-	Tag temporary_tag = from_tag;
-	from_tag = to_tag;
-	to_tag = temporary_tag;
+        Tag temporary_tag = from_tag;
+        from_tag = to_tag;
+        to_tag = temporary_tag;
 
-	Double temporary_twist = from_twist;
-	from_twist = to_twist;
-	to_twist = temporary_twist;
+        Double temporary_twist = from_twist;
+        from_twist = to_twist;
+        to_twist = temporary_twist;
     }
 
     // Create and load *arc*:
@@ -83,12 +83,12 @@ Arc Arc__create(Tag from_tag, Double from_twist,
 int Arc__distance_compare(Arc arc1, Arc arc2) {
     int result = -Double__compare(arc1->distance, arc2->distance);
     if (result == 0) {
-	Unsigned arc1_lowest_hop_count =
-	  Unsigned__minimum(arc1->from_tag->hop_count, arc1->to_tag->hop_count);
-	Unsigned arc2_lowest_hop_count =
-	  Unsigned__minimum(arc2->from_tag->hop_count, arc2->to_tag->hop_count);
-	result =
-	  -Unsigned__compare(arc1_lowest_hop_count, arc2_lowest_hop_count);
+        Unsigned arc1_lowest_hop_count =
+          std::min(arc1->from_tag->hop_count, arc1->to_tag->hop_count);
+        Unsigned arc2_lowest_hop_count =
+          std::min(arc2->from_tag->hop_count, arc2->to_tag->hop_count);
+        result =
+          -Unsigned__compare(arc1_lowest_hop_count, arc2_lowest_hop_count);
     }
     return result;
 }
@@ -179,9 +179,9 @@ Arc Arc__read(File in_file, Map map) {
     
     // Load the data into *arc*:
     if (arc->goodness > goodness) {
-	Arc__update(arc, from_twist, distance, to_twist, goodness);
-	arc->in_tree = in_tree;
-	Map__arc_announce(map, arc, (CV_Image)0, 0);
+        Arc__update(arc, from_twist, distance, to_twist, goodness);
+        arc->in_tree = in_tree;
+        Map__arc_announce(map, arc, (CV_Image)0, 0);
     }
 
     return arc;
@@ -198,7 +198,7 @@ void Arc__svg_write(Arc arc, SVG svg) {
     Tag to_tag = arc->to_tag;
     String color = "green";
     if (arc->in_tree) {
-	color = "red";
+        color = "red";
     }
     SVG__line(svg, from_tag->x, from_tag->y, to_tag->x, to_tag->y, color);
 }
