@@ -5,7 +5,6 @@
 #include <opencv/highgui.h>
 #include <string.h>
 
-#include "Character.hpp"
 #include "CV.hpp"
 #include "Double.hpp"
 #include "File.hpp"
@@ -224,8 +223,8 @@ void CV__find_extrinsic_camera_params2(
     use_extrinsic_guess);
 }
 
-int CV__fourcc(Character character1, Character character2,
-  Character character3, Character character4) {
+int CV__fourcc(char character1, char character2,
+  char character3, char character4) {
     return CV_FOURCC(character1, character2, character3, character4);
 }
 

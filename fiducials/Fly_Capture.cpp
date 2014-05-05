@@ -3,6 +3,7 @@
 // This program will display a grey scale image on the screen in real time.
 
 #include <assert.h>
+#include <ctype.h>
 
 // If *PTGREY* is not defined, we make sure it is defined as 0:
 #if !defined(PTGREY)
@@ -14,7 +15,6 @@
 #include "C/FlyCapture2_C.h"
 #endif // PTGREY
 
-#include "Character.hpp"
 #include "CV.hpp"
 #include "FC2.hpp"
 #include "File.hpp"
@@ -49,7 +49,7 @@ int main(int arguments_size, char * arguments[]) {
 
 	// Figure whether to open a video file or a camera;
 	Unsigned camera_number = 0;
-	if (Character__is_decimal_digit(argument1[0])) {
+	if (isdigit(argument1[0])) {
 	    // Open the camera:
 	    camera_number = String__to_unsigned(argument1);
 	}
@@ -171,7 +171,7 @@ int main(int arguments_size, char * arguments[]) {
 		CV_Image__show(fiducials->debug_image, window_name);
 
 		// Deal with character input key stroke:
-		Character character = CV__wait_key(1) & 0xff;
+		char character = CV__wait_key(1) & 0xff;
 		if (character == '\033') {
 		    // [Esc] key causes program to escape:
 		    break;

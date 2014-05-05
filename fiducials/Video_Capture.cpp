@@ -1,8 +1,8 @@
 // Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
+#include <ctype.h>
 
-#include "Character.hpp"
 #include "CV.hpp"
 #include "File.hpp"
 #include "High_GUI2.hpp"
@@ -34,7 +34,7 @@ int main(int arguments_size, char * arguments[]) {
 	}
 
 	// Figure whether to open a video file or a camera;
-	if (Character__is_decimal_digit(argument1[0])) {
+	if (isdigit(argument1[0])) {
 	    // Open the camera:
 	    Unsigned camera_number = String__to_unsigned(argument1);
 	    int camera_flags = CV__capture_any + (int)camera_number;
@@ -82,7 +82,7 @@ int main(int arguments_size, char * arguments[]) {
 	CV_Image__show(frame, window_name);
 
 	// Deal with key character:
-	Character character = CV__wait_key(33);
+	char character = CV__wait_key(33);
 	if (character == '\033') {
 	    // [Esc] key causes program to escape:
 	    break;

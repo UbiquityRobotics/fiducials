@@ -36,12 +36,10 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 
 // #include everything else:
 #include "Camera_Tag.hpp"
-#include "Character.hpp"
 #include "CRC.hpp"
 #include "CV.hpp"
 #include "File.hpp"
 #include "FEC.hpp"
-#include "Float.hpp"
 #include "High_GUI2.hpp"
 #include "List.hpp"
 #include "Map.hpp"

@@ -4,8 +4,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
-#include "Character.hpp"
 #include "String.hpp"
 #include "Memory.hpp"
 #include "Unsigned.hpp"
@@ -91,8 +91,8 @@ Unsigned String__size(String_Const string) {
 Unsigned String__to_unsigned(String_Const string) {
     Unsigned result  = 0;
     while (1) {
-	Character character = *string++;
-	if (Character__is_decimal_digit(character)) {
+	char character = *string++;
+	if (isdigit(character)) {
 	    result = result * 10 + (character - '0');
 	} else {
 	    break;

@@ -4,12 +4,10 @@
 #include <assert.h>
 #include <sys/time.h>
 
-#include "Character.hpp"
 #include "CV.hpp"
 #include "Double.hpp"
 #include "File.hpp"
 #include "Fiducials.hpp"
-#include "Float.hpp"
 #include "High_GUI2.hpp"
 #include "List.hpp"
 #include "Map.hpp"

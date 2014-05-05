@@ -6,9 +6,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "Character.hpp"
 #include "Double.hpp"
-#include "Float.hpp"
 #include "String.hpp"
 #include "Unsigned.hpp"
 
@@ -18,11 +16,11 @@ typedef FILE *File;
 // External declarations:
 extern Unsigned File__byte_read(File file);
 extern void File__byte_write(File file, Unsigned byte);
-extern Character File__character_read(File in_file);
+extern int File__character_read(File in_file);
 extern void File__close(File file);
 extern Double File__double_attribute_read(
   File in_file, String_Const attribute_name);
-extern Float File__float_attribute_read(
+extern float File__float_attribute_read(
   File in_file, String_Const attribute_name);
 extern void File__flush(File file);
 extern void File__format(File file, String_Const format, ...);

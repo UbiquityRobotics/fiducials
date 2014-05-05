@@ -4,14 +4,12 @@
 #include <sys/time.h>
 
 #include "Camera_Tag.hpp"
-#include "Character.hpp"
 #include "CRC.hpp"
 #include "CV.hpp"
 #include "Double.hpp"
 #include "File.hpp"
 #include "FEC.hpp"
 #include "Fiducials.hpp"
-#include "Float.hpp"
 #include "High_GUI2.hpp"
 #include "List.hpp"
 #include "Map.hpp"
@@ -531,9 +529,9 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
 	}
 
 	// Get a *control_character* from the user:
-	Character control_character = '\0';
+	char control_character = '\0';
 	if (show) {
-	    control_character = (Character)(CV__wait_key(0) & 0xff);
+	    control_character = (char)(CV__wait_key(0) & 0xff);
 	}
 
 	// Dispatch on *control_character*:

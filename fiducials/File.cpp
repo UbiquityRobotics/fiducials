@@ -1,10 +1,9 @@
 // Copyright (c) 2013-2014 by Wayne C. Gramlich all rights reserved.
 
 #include <assert.h>
+#include <ctype.h>
 
-#include "Character.hpp"
 #include "File.hpp"
-#include "Float.hpp"
 #include "String.hpp"
 #include "Unsigned.hpp"
 
@@ -37,11 +36,11 @@ void File__byte_write(File file, Unsigned byte) {
 /// @returns character read from *in_file*.
 ///
 /// *File__character_read*() will read in and return the next character
-/// from *in_file*.  (*Character*)(-1) is returned when an end of file
+/// from *in_file*.  (*char*)(-1) is returned when an end of file
 /// condition is encountered on *in_file*.
 
-Character File__character_read(File in_file) {
-    return (Character)fgetc(in_file);
+int File__character_read(File in_file) {
+    return fgetc(in_file);
 }
 
 /// @brief Closes *file*.
@@ -74,8 +73,8 @@ Double File__double_attribute_read(File in_file, String_Const attribute_name) {
     bool negative = (bool)0;
     Double result = (Double)0.0;
     while (1) {
-        Character character = File__character_read(in_file);
-	if (Character__is_decimal_digit(character)) {
+        int character = File__character_read(in_file);
+	if (isdigit(character)) {
 	    if (have_decimal_point) {
 		fraction /= (Double)10.0;
 		result += fraction * (Double)(character - '0');
@@ -127,22 +126,22 @@ void File__format(File file, String_Const format, ...) {
 /// really not a very robust XML parser.  An assertion failure occurs if
 /// the input does not parse properly.
 
-Float File__float_attribute_read(File in_file, String_Const attribute_name) {
+float File__float_attribute_read(File in_file, String_Const attribute_name) {
     File__string_match(in_file, " ");
     File__string_match(in_file, attribute_name);
     File__string_match(in_file, "=\"");
-    Float fraction = (Float)1.0;
+    float fraction = (float)1.0;
     bool have_decimal_point = (bool)0;
     bool negative = (bool)0;
-    Float result = (Float)0.0;
+    float result = (float)0.0;
     while (1) {
-        Character character = File__character_read(in_file);
-	if (Character__is_decimal_digit(character)) {
+        char character = File__character_read(in_file);
+	if (isdigit(character)) {
 	    if (have_decimal_point) {
-		fraction /= (Float)10.0;
-		result += fraction * (Float)(character - '0');
+		fraction /= (float)10.0;
+		result += fraction * (float)(character - '0');
 	    } else {
-		result = result * 10.0 + (Float)(character - '0');
+		result = result * 10.0 + (float)(character - '0');
 	    }
 	} else if (character == '"') {
 	    break;
@@ -190,8 +189,8 @@ int File__integer_attribute_read(
     bool negative = (bool)0;
     int result = 0;
     while (1) {
-        Character character = File__character_read(in_file);
-	if (Character__is_decimal_digit(character)) {
+        char character = File__character_read(in_file);
+	if (isdigit(character)) {
 	    result = result * 10 + (character - '0');
 	} else if (character == '"') {
 	    break;
@@ -257,7 +256,7 @@ File File__open(String_Const file_name, String_Const flags) {
 void File__string_match(File in_file, String_Const pattern) {
     Unsigned size = String__size(pattern);
     for (Unsigned index = 0; index < size; index++) {
-        Character character = File__character_read(in_file);
+        char character = File__character_read(in_file);
 	assert(character == pattern[index]);
     }
 }
@@ -273,7 +272,7 @@ void File__string_match(File in_file, String_Const pattern) {
 
 void File__tag_match(File in_file, String_Const tag_name) {
     while (1) {
-        Character character = File__character_read(in_file);
+        char character = File__character_read(in_file);
 	if (character == '<') {
 	    break;
 	} else if (character == ' ') {

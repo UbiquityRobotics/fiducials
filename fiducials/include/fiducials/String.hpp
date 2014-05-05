@@ -8,7 +8,7 @@
 
 /// @brief *String* is a null-terminated string.
 typedef char *String;
-  typedef const char *String_Const;
+typedef const char *String_Const;
 
 // External declarations:
 
