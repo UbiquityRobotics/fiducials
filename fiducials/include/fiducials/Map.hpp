@@ -3,6 +3,8 @@
 #if !defined(MAP_H_INCLUDED)
 #define MAP_H_INCLUDED 1
 
+#include <map>
+
 #include "File.hpp"
 #include "List.hpp"
 #include "Location.hpp"
@@ -33,7 +35,7 @@ struct Map__Struct {
     void *announce_object;
 
     /// @brief An lookup *Arc* table.
-    Table /* <Arc, Arc> */ arcs_table;
+    std::map<std::pair<unsigned int, unsigned int>, Arc> arcs_;
 
     /// @brief Number of map changes:
     Unsigned changes_count;
@@ -64,6 +66,7 @@ struct Map__Struct {
 
     /// @brief Table of all *tags* indexed by *Tag* *id*.
     Table /* <Unsigned, Tag>*/ tags_table;
+    //std::map<unsigned int, Tag> tags_;
 
     /// @brief a te
     Arc temporary_arc;

@@ -75,15 +75,14 @@ Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
     }
 
     // See whether or not an *Arc* with these two tags preexists:
-    Arc temporary_arc = map->temporary_arc;
-    temporary_arc->from_tag = from_tag;
-    temporary_arc->to_tag = to_tag;
-    Table /* <Arc, Arc> */ arcs_table = map->arcs_table;
-    Arc arc = (Arc)Table__lookup(arcs_table, (Memory)temporary_arc);
-    if (arc == (Arc)0) {
+    std::pair<unsigned int, unsigned int> id(from_tag->id, to_tag->id);
+    Arc arc;
+    if( map->arcs_.count(id) == 0 ) {
         // No preexisting *Arc*; create one:
         arc = Arc__create(from_tag, 0.0, 0.0, to_tag, 0.0, 123456789.0);
-        Table__insert(arcs_table, (Memory)arc, (Memory)arc);
+        map->arcs_[id] = arc;
+    } else {
+        arc = map->arcs_[id];
     }
     return arc;
 }
@@ -298,9 +297,6 @@ Map Map__create(String_Const file_path, String_Const file_base,
     map->all_arcs = List__new("Map__new:List_New:all_arcs"); // <Tag>
     map->all_tags = List__new("Map__new:List_New:all_tags"); // <Tag>
     map->announce_object = announce_object;
-    map->arcs_table = Table__create((Table_Equal_Routine)Arc__equal,
-      (Table_Hash_Routine)Arc__hash, (Memory)0,
-      "Map__new:Table__create:map_arcs_table"); // <Arc, Arc>
     map->changes_count = 0;
     map->file_base = file_base;
     map->file_path = file_path;
@@ -384,7 +380,6 @@ void Map__free(Map map) {
     List__free(map->tag_heights);
 
     List__free(map->pending_arcs);
-    Table__free(map->arcs_table);    
     Table__free(map->tags_table);
     Memory__free((Memory)map);
 }
