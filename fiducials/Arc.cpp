@@ -93,27 +93,6 @@ int Arc__distance_compare(Arc arc1, Arc arc2) {
     return result;
 }
 
-/// @brief Return true if *arc1* equals *arc2*.
-/// @param arc1 is the first *Arc* object.
-/// @param arc2 is the first *Arc* object.
-/// @returns true if they are equal.
-///
-/// *Arc__equal*() will return true if *arc1* is equal to *arc2*.
-
-bool Arc__equal(Arc arc1, Arc arc2) {
-    return (bool)(Arc__compare(arc1, arc2) == 0);
-}
-
-/// @brief Returns a hash value for *arc*.
-/// @param arc to hash.
-/// @returns hash value for *arc*.
-///
-/// *Arc__hash*() will return a hash value for *arc*.
-
-Unsigned Arc__hash(Arc arc) {
-    return Tag__hash(arc->from_tag) + Tag__hash(arc->to_tag);
-}
-
 /// @brief Release *arc* storage.
 /// @param arc to release storage of.
 ///

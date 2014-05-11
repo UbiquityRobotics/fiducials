@@ -10,8 +10,5 @@ typedef unsigned int Unsigned;
 // *Unsigned* routines:
 
 extern int Unsigned__compare(Unsigned unsigned1, Unsigned unsigned2);
-extern bool Unsigned__equal(Unsigned unsigned1, Unsigned unsigned2);
-extern Unsigned Unsigned__hash(Unsigned unsigned1);
-extern Unsigned Unsigned__minimum(Unsigned unsigned1, Unsigned unsigned2);
 
 #endif // !defined(UNSIGNED_H_INCLUDE)

@@ -82,18 +82,6 @@ Tag Tag__create(Unsigned id, Map map) {
     return tag;
 }
 
-/// @brief Return true if *tag1* is equal to *tag2*.
-/// @param tag1 is the first *Tag* to compare.
-/// @param tag2 is the second *Tag* to compare.
-/// @returns true if *tag1* equals *tag2*.
-///
-/// *Tag__equal*() will return true if *tag1* is equal to *tag2* and false
-/// otherwise.
-
-bool Tag__equal(Tag tag1, Tag tag2) {
-    return (bool)(tag1->id == tag2->id);
-}
-
 /// @brief Releases *Tag* storage.
 /// @param tag to release storage of.
 ///
@@ -108,16 +96,6 @@ void Tag__free(Tag tag) {
     //}
     List__free(tag->arcs);
     Memory__free((Memory)tag);
-}
-
-/// @brief Return a hash for *tag*.
-/// @param tag to hash.
-/// @returns hash of *tag*.
-///
-/// *Tag__hash*() will return a hash of *tag*.
-
-Unsigned Tag__hash(Tag tag) {
-    return Unsigned__hash(tag->id);
 }
 
 /// @brief Initialize *tag* contents.
