@@ -8,7 +8,6 @@
 #include "File.hpp"
 #include "List.hpp"
 #include "Location.hpp"
-#include "Table.hpp"
 #include "Unsigned.hpp"
 
 /// @brief *Map* is the representation of a fiducial marker map.
@@ -65,8 +64,7 @@ struct Map__Struct {
     List /* <Tag_Height> */ tag_heights;
 
     /// @brief Table of all *tags* indexed by *Tag* *id*.
-    Table /* <Unsigned, Tag>*/ tags_table;
-    //std::map<unsigned int, Tag> tags_;
+    std::map<unsigned int, Tag> tags_;
 
     /// @brief a te
     Arc temporary_arc;

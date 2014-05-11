@@ -19,7 +19,6 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include "Location.hpp"
 #include "Map.hpp"
 #include "Tag.hpp"
-#include "Table.hpp"
 #include "Unsigned.hpp"
 
 // *Map* routines:
@@ -307,10 +306,6 @@ Map Map__create(String_Const file_path, String_Const file_base,
     map->tag_announce_routine = tag_announce_routine;
     map->tag_heights =
       List__new("Map__new:List__new:tag_heights"); // <Tag_Height>
-    map->tags_table = Table__create((Table_Equal_Routine)Unsigned__equal,
-      (Table_Hash_Routine)Unsigned__hash, (Memory)0,
-      "Map__new:Table__create:map_tags_table");
-      // <Unsigned, Tag>
     map->temporary_arc = Arc__new("Map__new:Arc__New:temporary_arc");
     map->visit = 0;
 
@@ -380,7 +375,6 @@ void Map__free(Map map) {
     List__free(map->tag_heights);
 
     List__free(map->pending_arcs);
-    Table__free(map->tags_table);
     Memory__free((Memory)map);
 }
 
@@ -661,19 +655,16 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
 /// encountered, a new *Tag* is created and add to the association in *map*.
 
 Tag Map__tag_lookup(Map map, Unsigned tag_id) {
-    Table tags_table /* <Unsigned, Tag> */ = map->tags_table;
-    Memory memory_tag_id = Unsigned__to_memory(tag_id);
-    Tag tag = (Tag)Table__lookup(tags_table, memory_tag_id);
-    if (tag == (Tag)0) {
-        tag = Tag__create(tag_id, map);
-        Table__insert(tags_table, memory_tag_id, (Memory)tag);
+    if( map->tags_.count(tag_id) == 0 ) {
+        Tag tag = Tag__create(tag_id, map);
+        map->tags_[tag_id] = tag;
         List__append(map->all_tags, tag,
           "Map__tag_lookup:List__append:all_tags");
         map->changes_count += 1;
         map->is_changed = (bool)1;
         map->is_saved = (bool)0;
     }
-    return tag;
+    return map->tags_[tag_id];
 }
 
 /// @brief Writes *map* out to *out_file*.
