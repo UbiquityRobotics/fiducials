@@ -69,9 +69,9 @@ void Map__arc_append(Map map, Arc arc) {
 Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
     // Make sure that *from_tag* has the lower id:
     if (from_tag->id > to_tag->id) {
-	Tag temporary_tag = from_tag;
-	from_tag = to_tag;
-	to_tag = temporary_tag;
+        Tag temporary_tag = from_tag;
+        from_tag = to_tag;
+        to_tag = temporary_tag;
     }
 
     // See whether or not an *Arc* with these two tags preexists:
@@ -81,9 +81,9 @@ Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
     Table /* <Arc, Arc> */ arcs_table = map->arcs_table;
     Arc arc = (Arc)Table__lookup(arcs_table, (Memory)temporary_arc);
     if (arc == (Arc)0) {
-	// No preexisting *Arc*; create one:
+        // No preexisting *Arc*; create one:
         arc = Arc__create(from_tag, 0.0, 0.0, to_tag, 0.0, 123456789.0);
-	Table__insert(arcs_table, (Memory)arc, (Memory)arc);
+        Table__insert(arcs_table, (Memory)arc, (Memory)arc);
     }
     return arc;
 }
@@ -157,69 +157,69 @@ Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
     //  "goodness=%.4f arc_goodness=%.4f\n", goodness, arc->goodness);
     Unsigned changed = 0;
     if (goodness < arc->goodness) {
-	// We have a better *goodness* metric, compute the new values to
-	// load into *arc*:
+        // We have a better *goodness* metric, compute the new values to
+        // load into *arc*:
 
-	// Get two *distance_from_pixel* values which may not be
-	// the same because the fiducials are at different heights:
+        // Get two *distance_from_pixel* values which may not be
+        // the same because the fiducials are at different heights:
         Double from_distance_per_pixel = 
-	  from_tag->world_diagonal / from_tag->diagonal;
+          from_tag->world_diagonal / from_tag->diagonal;
         Double to_distance_per_pixel = 
-	  to_tag->world_diagonal / to_tag->diagonal;
+          to_tag->world_diagonal / to_tag->diagonal;
 
-	// Now compute floor to/from X/Y's that coorrespond to the (X,Y)
-	// projection of each tag center onto the floor as if the camera
-	// is located at the floor origin:
-	Double from_floor_x = from_distance_per_pixel *
-	  camera_from_polar_distance * Double__cosine(camera_from_polar_angle);
-	Double from_floor_y = from_distance_per_pixel *
-	  camera_from_polar_distance * Double__sine(camera_from_polar_angle);
-	Double to_floor_x = to_distance_per_pixel *
-	  camera_to_polar_distance * Double__cosine(camera_to_polar_angle);
-	Double to_floor_y = to_distance_per_pixel *
-	  camera_to_polar_distance * Double__sine(camera_to_polar_angle);
+        // Now compute floor to/from X/Y's that coorrespond to the (X,Y)
+        // projection of each tag center onto the floor as if the camera
+        // is located at the floor origin:
+        Double from_floor_x = from_distance_per_pixel *
+          camera_from_polar_distance * Double__cosine(camera_from_polar_angle);
+        Double from_floor_y = from_distance_per_pixel *
+          camera_from_polar_distance * Double__sine(camera_from_polar_angle);
+        Double to_floor_x = to_distance_per_pixel *
+          camera_to_polar_distance * Double__cosine(camera_to_polar_angle);
+        Double to_floor_y = to_distance_per_pixel *
+          camera_to_polar_distance * Double__sine(camera_to_polar_angle);
 
-	// Now we can compute the floor distance between the two two
-	// projected points:
-	Double floor_dx = from_floor_x - to_floor_x;
-	Double floor_dy = from_floor_y - to_floor_y;
-	Double floor_distance =
-	  Double__square_root(floor_dx * floor_dx + floor_dy * floor_dy);
+        // Now we can compute the floor distance between the two two
+        // projected points:
+        Double floor_dx = from_floor_x - to_floor_x;
+        Double floor_dy = from_floor_y - to_floor_y;
+        Double floor_distance =
+          Double__square_root(floor_dx * floor_dx + floor_dy * floor_dy);
 
-	// Compute *angle* to line segment connecting both tags:
-	Double camera_dx = camera_to_x - camera_from_x;
-	Double camera_dy = camera_to_y - camera_from_y;
- 	Double arc_angle = Double__arc_tangent2(camera_dy, camera_dx);
-	Double from_twist =
-	  Double__angle_normalize(camera_from_twist - arc_angle);
-	Double to_twist =
-	  Double__angle_normalize(camera_to_twist + pi - arc_angle);
+        // Compute *angle* to line segment connecting both tags:
+        Double camera_dx = camera_to_x - camera_from_x;
+        Double camera_dy = camera_to_y - camera_from_y;
+         Double arc_angle = Double__arc_tangent2(camera_dy, camera_dx);
+        Double from_twist =
+          Double__angle_normalize(camera_from_twist - arc_angle);
+        Double to_twist =
+          Double__angle_normalize(camera_to_twist + pi - arc_angle);
 
-	// OLD: Compute the distance between *origin* and *to*:
-	//Double distance_per_pixel = from_tag->distance_per_pixel;
-	//Double camera_distance =
-	//  Double__square_root(camera_dx * camera_dx + camera_dy * camera_dy);
-	//Double old_floor_distance = camera_distance * distance_per_pixel;
-	//File__format(stderr, "floor_distance=%.2f old_floor_distance=%.2f\n",
-	//  floor_distance, old_floor_distance);
+        // OLD: Compute the distance between *origin* and *to*:
+        //Double distance_per_pixel = from_tag->distance_per_pixel;
+        //Double camera_distance =
+        //  Double__square_root(camera_dx * camera_dx + camera_dy * camera_dy);
+        //Double old_floor_distance = camera_distance * distance_per_pixel;
+        //File__format(stderr, "floor_distance=%.2f old_floor_distance=%.2f\n",
+        //  floor_distance, old_floor_distance);
 
-	//File__format(stderr,
-	//  "Map__arc_update: camera_from_twist=%.2f camera_to_twist=%.2f\n",
- 	//  camera_from_twist * r2d, camera_to_twist * r2d);
-	//File__format(stderr,
-	//  "Map__arc_update: arc_angle=%.2f from_twist=%.2f to_twist=%.2f\n",
-	//  arc_angle * r2d, from_twist * r2d, to_twist * r2d);
+        //File__format(stderr,
+        //  "Map__arc_update: camera_from_twist=%.2f camera_to_twist=%.2f\n",
+         //  camera_from_twist * r2d, camera_to_twist * r2d);
+        //File__format(stderr,
+        //  "Map__arc_update: arc_angle=%.2f from_twist=%.2f to_twist=%.2f\n",
+        //  arc_angle * r2d, from_twist * r2d, to_twist * r2d);
 
-	// Finally, upate *arc*:
-	Arc__update(arc, from_twist, floor_distance, to_twist, goodness);
-	map->changes_count += 1;
-	map->is_changed = (bool)1;
-	map->is_saved = (bool)0;
+        // Finally, upate *arc*:
+        Arc__update(arc, from_twist, floor_distance, to_twist, goodness);
+        map->changes_count += 1;
+        map->is_changed = (bool)1;
+        map->is_saved = (bool)0;
 
-	// Let interested parties know that *arc* has been updated:
-	Map__arc_announce(map, arc, image, sequence_number);
+        // Let interested parties know that *arc* has been updated:
+        Map__arc_announce(map, arc, image, sequence_number);
 
-	changed = 1;
+        changed = 1;
     }
     return changed;
 }
@@ -244,15 +244,15 @@ int Map__compare(Map map1, Map map2) {
     Unsigned all_tags2_size = List__size(all_tags2);
     result = Unsigned__compare(all_tags1_size, all_tags2_size);
     if (result == 0) {
-	// Visit each *Tag*:
-	for (Unsigned index = 0; index < all_tags1_size; index++) {
-	    Tag tag1 = (Tag)List__fetch(all_tags1, index);
-	    Tag tag2 = (Tag)List__fetch(all_tags2, index);
-	    result = Tag__compare(tag1, tag2);
-	    if (result != 0) {
-		break;
-	    }
-	}
+        // Visit each *Tag*:
+        for (Unsigned index = 0; index < all_tags1_size; index++) {
+            Tag tag1 = (Tag)List__fetch(all_tags1, index);
+            Tag tag2 = (Tag)List__fetch(all_tags2, index);
+            result = Tag__compare(tag1, tag2);
+            if (result != 0) {
+                break;
+            }
+        }
     }
 
     // Second make sure all of the *Arc*'s match up:
@@ -262,15 +262,15 @@ int Map__compare(Map map1, Map map2) {
     Unsigned all_arcs2_size = List__size(all_arcs2);
     result = Unsigned__compare(all_arcs1_size, all_arcs2_size);
     if (result == 0) {
-	// Visit each *Arc*:
-	for (Unsigned index = 0; index < all_arcs1_size; index++) {
-	    Arc arc1 = (Arc)List__fetch(all_arcs1, index);
-	    Arc arc2 = (Arc)List__fetch(all_arcs2, index);
-	    result = Arc__compare(arc1, arc2);
-	    if (result != 0) {
-		break;
-	    }
-	}
+        // Visit each *Arc*:
+        for (Unsigned index = 0; index < all_arcs1_size; index++) {
+            Arc arc1 = (Arc)List__fetch(all_arcs1, index);
+            Arc arc2 = (Arc)List__fetch(all_arcs2, index);
+            result = Arc__compare(arc1, arc2);
+            if (result != 0) {
+                break;
+            }
+        }
     }
     return result;
 }
@@ -327,21 +327,21 @@ Map Map__create(String_Const file_path, String_Const file_base,
       String__format("%s/%s1.xml", file_path, file_base);
     File in_file = File__open(full_map_file_name, "r");
     if (in_file == (File)0) {
-	// We failed to open "...1.xml"; now try "...0.xml":
-	String__free(full_map_file_name);
-	String full_map_file_name =
-	  String__format("%s/%s0.xml", file_path, file_base);
-	in_file = File__open(full_map_file_name, "r");
-	if (in_file != (File)0) {
-	    // We opened "...0.xml", read it in:
-	    Map__restore(map, in_file);
-	    File__close(in_file);
-	}
+        // We failed to open "...1.xml"; now try "...0.xml":
+        String__free(full_map_file_name);
+        String full_map_file_name =
+          String__format("%s/%s0.xml", file_path, file_base);
+        in_file = File__open(full_map_file_name, "r");
+        if (in_file != (File)0) {
+            // We opened "...0.xml", read it in:
+            Map__restore(map, in_file);
+            File__close(in_file);
+        }
     } else {
-	// We opened "...1.xml", read it in:
+        // We opened "...1.xml", read it in:
         printf("Reading %s\n", full_map_file_name);
         Map__restore(map, in_file);
-	File__close(in_file);
+        File__close(in_file);
     }
     return map;
 }
@@ -359,8 +359,8 @@ void Map__free(Map map) {
     List /* <Arc> */ all_arcs = map->all_arcs;
     Unsigned arcs_size = List__size(all_arcs);
     for (Unsigned index = 0; index < arcs_size; index++) {
-	Arc arc = (Arc)List__fetch(all_arcs, index);
-	Arc__free(arc);
+        Arc arc = (Arc)List__fetch(all_arcs, index);
+        Arc__free(arc);
     }
     List__free(all_arcs);
     Arc__free(map->temporary_arc);
@@ -369,8 +369,8 @@ void Map__free(Map map) {
     List /* <Tap> */ all_tags = map->all_tags;
     Unsigned tags_size = List__size(all_tags);
     for (Unsigned index = 0; index < tags_size; index++) {
-	Tag tag = (Tag)List__fetch(all_tags, index);
-	Tag__free(tag);
+        Tag tag = (Tag)List__fetch(all_tags, index);
+        Tag__free(tag);
     }
     List__free(all_tags);
 
@@ -378,8 +378,8 @@ void Map__free(Map map) {
     List /* <Tag_Height> */ tag_heights = map->tag_heights;
     Unsigned tag_heights_size = List__size(tag_heights);
     for (Unsigned index = 0; index < tag_heights_size; index++) {
-	Tag_Height tag_height = (Tag_Height)List__fetch(tag_heights, index);
-	Tag_Height__free(tag_height);
+        Tag_Height tag_height = (Tag_Height)List__fetch(tag_heights, index);
+        Tag_Height__free(tag_height);
     }
     List__free(map->tag_heights);
 
@@ -400,10 +400,10 @@ static int last_sequence_number = 0xffffffff;
 void Map__image_log(Map map, CV_Image image, Unsigned sequence_number) {
     if (image != (CV_Image)0 && map->image_log &&
       sequence_number != last_sequence_number) {
-	// Log the image here:
-	String file_name = String__format("log%05d.tga", sequence_number);
-	CV_Image__tga_write(image, file_name);
-	last_sequence_number = sequence_number;
+        // Log the image here:
+        String file_name = String__format("log%05d.tga", sequence_number);
+        CV_Image__tga_write(image, file_name);
+        last_sequence_number = sequence_number;
     }
 }
 
@@ -425,9 +425,9 @@ void Map__restore(Map map, File in_file) {
 
     // Read in the *all_tags_size* *Tag* objects:
     for (Unsigned index = 0; index < all_tags_size; index++) {
-	Tag tag = Tag__read(in_file, map);
+        Tag tag = Tag__read(in_file, map);
 
-	fprintf(stderr, "announce %d\n", tag->id);
+        fprintf(stderr, "announce %d\n", tag->id);
         map->tag_announce_routine(map->announce_object,
         tag->id, tag->x, tag->y, tag->z, tag->twist,
         tag->diagonal, tag->world_diagonal/tag->diagonal,
@@ -436,7 +436,7 @@ void Map__restore(Map map, File in_file) {
 
     // Read in the *all_arcs_size* *Arc* objects:
     for (Unsigned index = 0; index < all_arcs_size; index++) {
-	Arc arc = Arc__read(in_file, map);
+        Arc arc = Arc__read(in_file, map);
     }
 
     // Process the final Map XML tag "</MAP>":
@@ -456,14 +456,14 @@ void Map__restore(Map map, File in_file) {
 void Map__save(Map map) {
       File__format(stderr, "**********Map__save************\n");
       if (!map->is_saved) {
-	String full_map_file_name =
-	  String__format("%s/%s1.xml", map->file_path, map->file_base);
-	File out_file = File__open(full_map_file_name, "w");
-	assert (out_file != (File)0);
-	String__free(full_map_file_name);
-	Map__write(map, out_file);
-	File__close(out_file);
-	map->is_saved = (bool)1;
+        String full_map_file_name =
+          String__format("%s/%s1.xml", map->file_path, map->file_base);
+        File out_file = File__open(full_map_file_name, "w");
+        assert (out_file != (File)0);
+        String__free(full_map_file_name);
+        Map__write(map, out_file);
+        File__close(out_file);
+        map->is_saved = (bool)1;
     }
 }
 
@@ -495,8 +495,8 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
     // Compute the *bounding_box*:
     Bounding_Box bounding_box = Bounding_Box__new();
     for (Unsigned index = 0; index < all_tags_size; index++) {
-	Tag tag = (Tag)List__fetch(all_tags, index);
-	Tag__bounding_box_update(tag, bounding_box);
+        Tag tag = (Tag)List__fetch(all_tags, index);
+        Tag__bounding_box_update(tag, bounding_box);
     }
 
     // Open the Scalable Vector Graphics file:
@@ -514,16 +514,16 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
     // Output each *tag in *all_tags*:
     Double world_diagonal = 0.1;
     for (Unsigned index = 0; index < all_tags_size; index++) {
-	Tag tag = (Tag)List__fetch(all_tags, index);
-	world_diagonal = tag->world_diagonal;
-	Tag__svg_write(tag, svg);
+        Tag tag = (Tag)List__fetch(all_tags, index);
+        world_diagonal = tag->world_diagonal;
+        Tag__svg_write(tag, svg);
     }
 
     // Output each *tag in *all_tags*:
     for (Unsigned index = 0; index < all_arcs_size; index++) {
-	Arc arc = (Arc)List__fetch(all_arcs, index);
-	Arc__svg_write(arc, svg);
-	// publish rviz marker here
+        Arc arc = (Arc)List__fetch(all_arcs, index);
+        Arc__svg_write(arc, svg);
+        // publish rviz marker here
 
     }
 
@@ -531,34 +531,33 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
     Double last_x = 0.0;
     Double last_y = 0.0;
     for (Unsigned index = 0; index < locations_size; index++) {
-	Location location = (Location)List__fetch(locations, index);
+        Location location = (Location)List__fetch(locations, index);
         Double x = location->x;
-	Double y = location->y;
-	Double bearing = location->bearing;
-	//File__format(stderr,
-	//  "Map__svg_write:Location[%d]: id:%d x:%f y:%f bearing:%f\n",
-	//  index, location->id, x, y, bearing * 180 / 3.1415926);
+        Double y = location->y;
+        Double bearing = location->bearing;
+        //File__format(stderr, "Location[%d]: id:%d x:%f y:%f bearing:%f\n",
+        //  index, location->id, x, y, bearing * 180 / 3.1415926);
 
-	// Draw a triangle that shows the bearing:
-	Double k1 = world_diagonal / 2.0;
-	Double k2 = k1 / 2.0;
-	Double angle = 3.14159 * 0.75;
-	Double x0 = x + k1 * Double__cosine(bearing);
-	Double y0 = y + k1 * Double__sine(bearing);
-	Double x1 = x + k2 * Double__cosine(bearing + angle);
-	Double y1 = y + k2 * Double__sine(bearing + angle);
-	Double x2 = x + k2 * Double__cosine(bearing - angle);
-	Double y2 = y + k2 * Double__sine(bearing - angle);
-	SVG__line(svg, x0, y0, x1, y1, "black");
-	SVG__line(svg, x1, y1, x2, y2, "black");
-	SVG__line(svg, x2, y2, x0, y0, "black");
+        // Draw a triangle that shows the bearing:
+        Double k1 = world_diagonal / 2.0;
+        Double k2 = k1 / 2.0;
+        Double angle = 3.14159 * 0.75;
+        Double x0 = x + k1 * Double__cosine(bearing);
+        Double y0 = y + k1 * Double__sine(bearing);
+        Double x1 = x + k2 * Double__cosine(bearing + angle);
+        Double y1 = y + k2 * Double__sine(bearing + angle);
+        Double x2 = x + k2 * Double__cosine(bearing - angle);
+        Double y2 = y + k2 * Double__sine(bearing - angle);
+        SVG__line(svg, x0, y0, x1, y1, "black");
+        SVG__line(svg, x1, y1, x2, y2, "black");
+        SVG__line(svg, x2, y2, x0, y0, "black");
 
-	// Draw a line that connects the centers of the triangles:
-	if (index > 0) {
-	    SVG__line(svg, last_x, last_y, x, y, "purple");
-	}
-	last_x = x;
-	last_y = y;
+        // Draw a line that connects the centers of the triangles:
+        if (index > 0) {
+            SVG__line(svg, last_x, last_y, x, y, "purple");
+        }
+        last_x = x;
+        last_y = y;
     }
 
     // Close *svg*:
@@ -584,7 +583,7 @@ void Map__tag_announce(Map map,
       tag->diagonal, tag->world_diagonal/tag->diagonal,
       visible, tag->hop_count);
     if (visible) {
-	//Map__image_log(map, image, sequence_number);
+        //Map__image_log(map, image, sequence_number);
     }
 }
 
@@ -605,13 +604,13 @@ Tag_Height Map__tag_height_lookup(Map map, Unsigned id) {
     assert (tag_heights != (List)0);
     Unsigned size = List__size(tag_heights);
     for (Unsigned index = 0; index < size; index++) {
-	tag_height = (Tag_Height)List__fetch(tag_heights, index);
-	if (tag_height->first_id <= id && id <= tag_height->last_id) {
-	    //distance_per_pixel = tag_height->distance_per_pixel;
+        tag_height = (Tag_Height)List__fetch(tag_heights, index);
+        if (tag_height->first_id <= id && id <= tag_height->last_id) {
+            //distance_per_pixel = tag_height->distance_per_pixel;
           
-	    break;
-	}
-	tag_height = (Tag_Height)0;
+            break;
+        }
+        tag_height = (Tag_Height)0;
     }
     return tag_height;
 }
@@ -627,8 +626,8 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
     // Open *tag_height_file_name* for reading:
     File xml_in_file = File__open(tag_heights_file_name, "r");
     if (xml_in_file == (File)0) {
-	File__format(stderr, "Could not open '%s'\n", tag_heights_file_name);
-	assert(0);
+        File__format(stderr, "Could not open '%s'\n", tag_heights_file_name);
+        assert(0);
     }
 
     // Read in Map XML tag '<Map_Tag_Heights Count="xx">' :
@@ -641,9 +640,9 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
     List tag_heights = map->tag_heights;
     assert (tag_heights != (List)0);
     for (Unsigned index = 0; index < count; index++) {
-	Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
-	List__append(tag_heights, (Memory)tag_height,
-	  "Map__tag_heights_xml_read:List__append, tag_heights");
+        Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
+        List__append(tag_heights, (Memory)tag_height,
+          "Map__tag_heights_xml_read:List__append, tag_heights");
     }
 
     // Process the final Map XML tag "</Map_Tag_Heights>":
@@ -671,13 +670,13 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
     Memory memory_tag_id = Unsigned__to_memory(tag_id);
     Tag tag = (Tag)Table__lookup(tags_table, memory_tag_id);
     if (tag == (Tag)0) {
-	tag = Tag__create(tag_id, map);
-	Table__insert(tags_table, memory_tag_id, (Memory)tag);
-	List__append(map->all_tags, tag,
-	  "Map__tag_lookup:List__append:all_tags");
-	map->changes_count += 1;
-	map->is_changed = (bool)1;
-	map->is_saved = (bool)0;
+        tag = Tag__create(tag_id, map);
+        Table__insert(tags_table, memory_tag_id, (Memory)tag);
+        List__append(map->all_tags, tag,
+          "Map__tag_lookup:List__append:all_tags");
+        map->changes_count += 1;
+        map->is_changed = (bool)1;
+        map->is_saved = (bool)0;
     }
     return tag;
 }
@@ -706,14 +705,14 @@ void Map__write(Map map, File out_file) {
 
     // Output each *tag in *all_tags*:
     for (Unsigned index = 0; index < all_tags_size; index++) {
-	Tag tag = (Tag)List__fetch(all_tags, index);
-	Tag__write(tag, out_file);
+        Tag tag = (Tag)List__fetch(all_tags, index);
+        Tag__write(tag, out_file);
     }
 
     // Output each *tag in *all_tags*:
     for (Unsigned index = 0; index < all_arcs_size; index++) {
-	Arc arc = (Arc)List__fetch(all_arcs, index);
-	Arc__write(arc, out_file);
+        Arc arc = (Arc)List__fetch(all_arcs, index);
+        Arc__write(arc, out_file);
     }
 
     // Output the closing </Map> tag:
@@ -729,103 +728,103 @@ void Map__write(Map map, File out_file) {
 
 void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
     if (map->is_changed) {
-	// Increment *visit* to the next value to use for updating:
-	Unsigned visit = map->visit + 1;
-	map->visit = visit;
+        // Increment *visit* to the next value to use for updating:
+        Unsigned visit = map->visit + 1;
+        map->visit = visit;
 
-	// We want the tag with the lowest id number to be the origin.
-	// Sort *tags* from lowest tag id to greatest:
-	List /* <Tag> */ all_tags = map->all_tags;
-	List__sort(all_tags, (List__Compare__Routine)Tag__compare);
+        // We want the tag with the lowest id number to be the origin.
+        // Sort *tags* from lowest tag id to greatest:
+        List /* <Tag> */ all_tags = map->all_tags;
+        List__sort(all_tags, (List__Compare__Routine)Tag__compare);
 
-	// The first tag in {tags} has the lowest id and is forced to be the
-	// map origin:
-	Tag origin_tag = (Tag)List__fetch(all_tags, 0);
-	origin_tag->visit = visit;
-	origin_tag->hop_count = 0;
-	
-	// The first step is to identify all of the *Arc*'s that make a
-	// spanning tree of the *map* *Tags*'s.
+        // The first tag in {tags} has the lowest id and is forced to be the
+        // map origin:
+        Tag origin_tag = (Tag)List__fetch(all_tags, 0);
+        origin_tag->visit = visit;
+        origin_tag->hop_count = 0;
+        
+        // The first step is to identify all of the *Arc*'s that make a
+        // spanning tree of the *map* *Tags*'s.
 
-	// Initializd *pending_arcs* with the *Arc*'s from *orgin_tag*:
-	List /* <Arc> */ pending_arcs = map->pending_arcs;
-	List__all_append(pending_arcs, origin_tag->arcs);
+        // Initializd *pending_arcs* with the *Arc*'s from *orgin_tag*:
+        List /* <Arc> */ pending_arcs = map->pending_arcs;
+        List__all_append(pending_arcs, origin_tag->arcs);
 
-	// We always want to keep *pending_arcs* sorted from longest to
-	// shortest at the end.  *Arc__distance_compare*() sorts longest first:
-	List__sort(pending_arcs, (List__Compare__Routine)Arc__distance_compare);
+        // We always want to keep *pending_arcs* sorted from longest to
+        // shortest at the end.  *Arc__distance_compare*() sorts longest first:
+        List__sort(pending_arcs, (List__Compare__Routine)Arc__distance_compare);
 
-	// We keep iterating across *pending_arcs* until it goes empty.
-	// since we keep it sorted from longest to shortest (and we always
-	// look at the end), we are building a spanning tree using the shortest
-	// possible *Arc*'s:
-	while (List__size(pending_arcs) != 0) {
-	    // Pop the shortest *arc* off the end of *pending_arcs*:
-	    Arc arc = (Arc)List__pop(pending_arcs);
+        // We keep iterating across *pending_arcs* until it goes empty.
+        // since we keep it sorted from longest to shortest (and we always
+        // look at the end), we are building a spanning tree using the shortest
+        // possible *Arc*'s:
+        while (List__size(pending_arcs) != 0) {
+            // Pop the shortest *arc* off the end of *pending_arcs*:
+            Arc arc = (Arc)List__pop(pending_arcs);
 
-	    // For debugging only:
-	    //File__format(stderr, "----------\n");
-	    //Unsigned size = List__size(pending_arcs);
-	    //for (Unsigned index = 0; index < size; index++) {
-	    //    Arc arc = (Arc)List__fetch(pending_arcs, index);
-	    //    File__format(stderr,
-	    //      "pending_arcs[%d]: Arc[%d,%d] dist=%f\n",
-	    //      index, arc->origin->id, arc->target->id, arc->distance);
-	    //}
+            // For debugging only:
+            //File__format(stderr, "----------\n");
+            //Unsigned size = List__size(pending_arcs);
+            //for (Unsigned index = 0; index < size; index++) {
+            //    Arc arc = (Arc)List__fetch(pending_arcs, index);
+            //    File__format(stderr,
+            //      "pending_arcs[%d]: Arc[%d,%d] dist=%f\n",
+            //      index, arc->origin->id, arc->target->id, arc->distance);
+            //}
 
-	    // If we already visited *arc*, just ignore it:
-	    if (arc->visit != visit) {
-		// We have not visited this *arc* in this cycle, so now we
-		// mark it as being *visit*'ed:
-		arc->visit = visit;
+            // If we already visited *arc*, just ignore it:
+            if (arc->visit != visit) {
+                // We have not visited this *arc* in this cycle, so now we
+                // mark it as being *visit*'ed:
+                arc->visit = visit;
 
-		// Figure out if *origin* or *target* have been added to the
-		// spanning tree yet:
-		Tag from_tag = arc->from_tag;
-		Tag to_tag = arc->to_tag;
-		bool from_is_new = (bool)(from_tag->visit != visit);
-		bool to_is_new = (bool)(to_tag->visit != visit);
+                // Figure out if *origin* or *target* have been added to the
+                // spanning tree yet:
+                Tag from_tag = arc->from_tag;
+                Tag to_tag = arc->to_tag;
+                bool from_is_new = (bool)(from_tag->visit != visit);
+                bool to_is_new = (bool)(to_tag->visit != visit);
 
-		if (from_is_new || to_is_new) {
-		    if (from_is_new) {
-			// Add *to* to spanning tree:
-			assert (!to_is_new);
-			from_tag->hop_count = to_tag->hop_count + 1;
-			List__all_append(pending_arcs, from_tag->arcs);
-			from_tag->visit = visit;
-			Tag__update_via_arc(from_tag,
-			  arc, image, sequence_number);
-		    } else {
-			// Add *from* to spanning tree:
-			assert (!from_is_new);
-			to_tag->hop_count = from_tag->hop_count + 1;
-			List__all_append(pending_arcs, to_tag->arcs);
-			to_tag->visit = visit;
-			Tag__update_via_arc(to_tag,
-			  arc, image, sequence_number);
-		    }
+                if (from_is_new || to_is_new) {
+                    if (from_is_new) {
+                        // Add *to* to spanning tree:
+                        assert (!to_is_new);
+                        from_tag->hop_count = to_tag->hop_count + 1;
+                        List__all_append(pending_arcs, from_tag->arcs);
+                        from_tag->visit = visit;
+                        Tag__update_via_arc(from_tag,
+                          arc, image, sequence_number);
+                    } else {
+                        // Add *from* to spanning tree:
+                        assert (!from_is_new);
+                        to_tag->hop_count = from_tag->hop_count + 1;
+                        List__all_append(pending_arcs, to_tag->arcs);
+                        to_tag->visit = visit;
+                        Tag__update_via_arc(to_tag,
+                          arc, image, sequence_number);
+                    }
 
-		    // Mark that *arc* is part of the spanning tree:
-		    arc->in_tree = (bool)1;
+                    // Mark that *arc* is part of the spanning tree:
+                    arc->in_tree = (bool)1;
 
-		    // Resort *pending_arcs* to that the shortest distance
-		    // sorts to the end:
-		    List__sort(pending_arcs,
-		      (List__Compare__Routine)Arc__distance_compare);
-		} else {
-		    // *arc* connects across two nodes of spanning tree:
-		    arc->in_tree = (bool)0;
-		}
-	    }
-	}
+                    // Resort *pending_arcs* to that the shortest distance
+                    // sorts to the end:
+                    List__sort(pending_arcs,
+                      (List__Compare__Routine)Arc__distance_compare);
+                } else {
+                    // *arc* connects across two nodes of spanning tree:
+                    arc->in_tree = (bool)0;
+                }
+            }
+        }
 
-	if (map->is_changed) {
-	    Map__save(map);
-	}
+        if (map->is_changed) {
+            Map__save(map);
+        }
 
-	// Mark that *map* is fully updated:
+        // Mark that *map* is fully updated:
         map->is_changed = (bool)0;
-	map->is_saved = (bool)0;
+        map->is_saved = (bool)0;
     }
 }
 
