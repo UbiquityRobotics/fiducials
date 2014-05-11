@@ -27,7 +27,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(fiducials_base
   Bounding_Box.cpp CRC.cpp Double.cpp FEC.cpp File.cpp
-  List.cpp Memory.cpp String.cpp SVG.cpp Table.cpp Unsigned.cpp)
+  List.cpp Memory.cpp String.cpp SVG.cpp Unsigned.cpp)
 
 add_library(fiducials_cv CV.cpp High_GUI2.cpp)
 target_link_libraries(fiducials_cv fiducials_base ${OpenCV_LIBS})
