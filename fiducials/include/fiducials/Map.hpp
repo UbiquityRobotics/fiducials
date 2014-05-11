@@ -4,6 +4,7 @@
 #define MAP_H_INCLUDED 1
 
 #include <map>
+#include <vector>
 
 #include "File.hpp"
 #include "List.hpp"
@@ -25,7 +26,7 @@ struct Map__Struct {
     Fiducials_Arc_Announce_Routine arc_announce_routine;
 
     /// @brief All of the *Arc*'s (i.e. measured intertag distances) in the map.
-    List /* <Arc> */ all_arcs;
+    std::vector<Arc> all_arcs;
 
     /// @brief All of the tags (i.e. fiducials) in the map.
     List /* <Tag> */ all_tags;

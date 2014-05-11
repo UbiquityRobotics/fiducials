@@ -50,7 +50,7 @@ void Map__arc_announce(Map map,
 /// *Map__arc_append*() will append *arc* to *map*.
 
 void Map__arc_append(Map map, Arc arc) {
-    List__append(map->all_arcs, arc, "Map__arc_append:List__append:all_arcs");
+    map->all_arcs.push_back(arc);
     map->changes_count += 1;
     map->is_changed = (bool)1;
     map->is_saved = (bool)0;
@@ -254,16 +254,14 @@ int Map__compare(Map map1, Map map2) {
     }
 
     // Second make sure all of the *Arc*'s match up:
-    List /* <Tag> */ all_arcs1 = map1->all_arcs;
-    List /* <Tag> */ all_arcs2 = map2->all_arcs;
-    Unsigned all_arcs1_size = List__size(all_arcs1);
-    Unsigned all_arcs2_size = List__size(all_arcs2);
+    Unsigned all_arcs1_size = map1->all_arcs.size();
+    Unsigned all_arcs2_size = map2->all_arcs.size();
     result = Unsigned__compare(all_arcs1_size, all_arcs2_size);
     if (result == 0) {
         // Visit each *Arc*:
         for (Unsigned index = 0; index < all_arcs1_size; index++) {
-            Arc arc1 = (Arc)List__fetch(all_arcs1, index);
-            Arc arc2 = (Arc)List__fetch(all_arcs2, index);
+            Arc arc1 = map1->all_arcs[index];
+            Arc arc2 = map2->all_arcs[index];
             result = Arc__compare(arc1, arc2);
             if (result != 0) {
                 break;
@@ -293,7 +291,6 @@ Map Map__create(String_Const file_path, String_Const file_base,
     // Create and fill in *map*:
     Map map = Memory__new(Map, from);
     map->arc_announce_routine = arc_announce_routine;
-    map->all_arcs = List__new("Map__new:List_New:all_arcs"); // <Tag>
     map->all_tags = List__new("Map__new:List_New:all_tags"); // <Tag>
     map->announce_object = announce_object;
     map->changes_count = 0;
@@ -347,13 +344,11 @@ void Map__free(Map map) {
     Map__save(map);
 
     // Release all the *Arc*'s:
-    List /* <Arc> */ all_arcs = map->all_arcs;
-    Unsigned arcs_size = List__size(all_arcs);
+    Unsigned arcs_size = map->all_arcs.size();
     for (Unsigned index = 0; index < arcs_size; index++) {
-        Arc arc = (Arc)List__fetch(all_arcs, index);
+        Arc arc = map->all_arcs[index];
         Arc__free(arc);
     }
-    List__free(all_arcs);
     Arc__free(map->temporary_arc);
 
     // Release all the *Tag*'s:
@@ -433,7 +428,7 @@ void Map__restore(Map map, File in_file) {
     File__string_match(in_file, ">\n");
 
     // Do some final checks:
-    assert (List__size(map->all_arcs) == all_arcs_size);
+    assert (map->all_arcs.size() == all_arcs_size);
     assert (List__size(map->all_tags) == all_tags_size);
 }
 
@@ -464,7 +459,7 @@ void Map__save(Map map) {
 
 void Map__sort(Map map) {
     List__sort(map->all_tags, (List__Compare__Routine)Tag__compare);
-    List__sort(map->all_arcs, (List__Compare__Routine)Arc__compare);
+    std::sort(map->all_arcs.begin(), map->all_arcs.end(), Arc__less);
 }
 
 /// @brief Writes *map* out to a file called *svg_base_name*.svg.
@@ -476,10 +471,9 @@ void Map__sort(Map map) {
 
 void Map__svg_write(Map map, const String svg_base_name, List locations) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
-    List all_arcs = map->all_arcs;
     List all_tags = map->all_tags;
     Unsigned all_tags_size = List__size(all_tags);
-    Unsigned all_arcs_size = List__size(all_arcs);
+    Unsigned all_arcs_size = map->all_arcs.size();
 
     // Compute the *bounding_box*:
     Bounding_Box bounding_box = Bounding_Box__new();
@@ -510,7 +504,7 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
 
     // Output each *tag in *all_tags*:
     for (Unsigned index = 0; index < all_arcs_size; index++) {
-        Arc arc = (Arc)List__fetch(all_arcs, index);
+        Arc arc = map->all_arcs[index];
         Arc__svg_write(arc, svg);
         // publish rviz marker here
 
@@ -675,10 +669,9 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
 
 void Map__write(Map map, File out_file) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
-    List all_arcs = map->all_arcs;
     List all_tags = map->all_tags;
     Unsigned all_tags_size = List__size(all_tags);
-    Unsigned all_arcs_size = List__size(all_arcs);
+    Unsigned all_arcs_size = map->all_arcs.size();
 
     // Output <Map ...> tag:
     File__format(out_file, "<Map");
@@ -697,7 +690,7 @@ void Map__write(Map map, File out_file) {
 
     // Output each *tag in *all_tags*:
     for (Unsigned index = 0; index < all_arcs_size; index++) {
-        Arc arc = (Arc)List__fetch(all_arcs, index);
+        Arc arc = map->all_arcs[index];
         Arc__write(arc, out_file);
     }
 
