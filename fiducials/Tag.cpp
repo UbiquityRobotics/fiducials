@@ -53,6 +53,10 @@ int Tag__compare(Tag tag1, Tag tag2) {
     return result;
 }
 
+bool Tag__less(Tag tag1, Tag tag2) {
+  return tag1->id < tag2->id;
+}
+
 /// @brief Create and return a new *Tag*.
 /// @param id is the tag identifier.
 /// @param map is the map associated with the tag.

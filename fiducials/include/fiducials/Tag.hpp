@@ -129,6 +129,7 @@ extern void Tag__arc_append(Tag tag, Arc arc);
 extern void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box);
 extern Tag Tag__create(Unsigned id, Map map);
 extern int Tag__compare(Tag tag1, Tag tag2);
+extern bool Tag__less(Tag tag1, Tag tag2);
 extern void Tag__free(Tag tag);
 extern void Tag__initialize(
   Tag tag, Double angle, Double x, Double y, Double diagonal, Unsigned visit);

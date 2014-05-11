@@ -29,7 +29,7 @@ struct Map__Struct {
     std::vector<Arc> all_arcs;
 
     /// @brief All of the tags (i.e. fiducials) in the map.
-    List /* <Tag> */ all_tags;
+    std::vector<Tag> all_tags;
 
     /// @brief Opaque object passed into announce routines.
     void *announce_object;

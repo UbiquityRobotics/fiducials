@@ -236,16 +236,14 @@ int Map__compare(Map map1, Map map2) {
     int result = 0;
 
     // First make sure all of the *Tag*'s match up:
-    List /* <Tag> */ all_tags1 = map1->all_tags;
-    List /* <Tag> */ all_tags2 = map2->all_tags;
-    Unsigned all_tags1_size = List__size(all_tags1);
-    Unsigned all_tags2_size = List__size(all_tags2);
+    Unsigned all_tags1_size = map1->all_tags.size();
+    Unsigned all_tags2_size = map2->all_tags.size();
     result = Unsigned__compare(all_tags1_size, all_tags2_size);
     if (result == 0) {
         // Visit each *Tag*:
         for (Unsigned index = 0; index < all_tags1_size; index++) {
-            Tag tag1 = (Tag)List__fetch(all_tags1, index);
-            Tag tag2 = (Tag)List__fetch(all_tags2, index);
+            Tag tag1 = map1->all_tags[index];
+            Tag tag2 = map2->all_tags[index];
             result = Tag__compare(tag1, tag2);
             if (result != 0) {
                 break;
@@ -291,7 +289,6 @@ Map Map__create(String_Const file_path, String_Const file_base,
     // Create and fill in *map*:
     Map map = Memory__new(Map, from);
     map->arc_announce_routine = arc_announce_routine;
-    map->all_tags = List__new("Map__new:List_New:all_tags"); // <Tag>
     map->announce_object = announce_object;
     map->changes_count = 0;
     map->file_base = file_base;
@@ -352,13 +349,11 @@ void Map__free(Map map) {
     Arc__free(map->temporary_arc);
 
     // Release all the *Tag*'s:
-    List /* <Tap> */ all_tags = map->all_tags;
-    Unsigned tags_size = List__size(all_tags);
+    Unsigned tags_size = map->all_tags.size();
     for (Unsigned index = 0; index < tags_size; index++) {
-        Tag tag = (Tag)List__fetch(all_tags, index);
+        Tag tag = map->all_tags[index];
         Tag__free(tag);
     }
-    List__free(all_tags);
 
     // Release all the *Tag_Height*'s:
     List /* <Tag_Height> */ tag_heights = map->tag_heights;
@@ -429,7 +424,7 @@ void Map__restore(Map map, File in_file) {
 
     // Do some final checks:
     assert (map->all_arcs.size() == all_arcs_size);
-    assert (List__size(map->all_tags) == all_tags_size);
+    assert (map->all_tags.size() == all_tags_size);
 }
 
 /// @brief Save *map* out to the file named *file_name*.
@@ -458,7 +453,7 @@ void Map__save(Map map) {
 /// to be in a consitent order.
 
 void Map__sort(Map map) {
-    List__sort(map->all_tags, (List__Compare__Routine)Tag__compare);
+    std::sort(map->all_tags.begin(), map->all_tags.end(), Tag__less);
     std::sort(map->all_arcs.begin(), map->all_arcs.end(), Arc__less);
 }
 
@@ -471,14 +466,13 @@ void Map__sort(Map map) {
 
 void Map__svg_write(Map map, const String svg_base_name, List locations) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
-    List all_tags = map->all_tags;
-    Unsigned all_tags_size = List__size(all_tags);
+    Unsigned all_tags_size = map->all_tags.size();
     Unsigned all_arcs_size = map->all_arcs.size();
 
     // Compute the *bounding_box*:
     Bounding_Box bounding_box = Bounding_Box__new();
     for (Unsigned index = 0; index < all_tags_size; index++) {
-        Tag tag = (Tag)List__fetch(all_tags, index);
+        Tag tag = map->all_tags[index];
         Tag__bounding_box_update(tag, bounding_box);
     }
 
@@ -497,7 +491,7 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
     // Output each *tag in *all_tags*:
     Double world_diagonal = 0.1;
     for (Unsigned index = 0; index < all_tags_size; index++) {
-        Tag tag = (Tag)List__fetch(all_tags, index);
+        Tag tag = map->all_tags[index];
         world_diagonal = tag->world_diagonal;
         Tag__svg_write(tag, svg);
     }
@@ -652,8 +646,7 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
     if( map->tags_.count(tag_id) == 0 ) {
         Tag tag = Tag__create(tag_id, map);
         map->tags_[tag_id] = tag;
-        List__append(map->all_tags, tag,
-          "Map__tag_lookup:List__append:all_tags");
+        map->all_tags.push_back(tag);
         map->changes_count += 1;
         map->is_changed = (bool)1;
         map->is_saved = (bool)0;
@@ -669,8 +662,7 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
 
 void Map__write(Map map, File out_file) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
-    List all_tags = map->all_tags;
-    Unsigned all_tags_size = List__size(all_tags);
+    Unsigned all_tags_size = map->all_tags.size();
     Unsigned all_arcs_size = map->all_arcs.size();
 
     // Output <Map ...> tag:
@@ -684,7 +676,7 @@ void Map__write(Map map, File out_file) {
 
     // Output each *tag in *all_tags*:
     for (Unsigned index = 0; index < all_tags_size; index++) {
-        Tag tag = (Tag)List__fetch(all_tags, index);
+        Tag tag = map->all_tags[index];
         Tag__write(tag, out_file);
     }
 
@@ -713,12 +705,11 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 
         // We want the tag with the lowest id number to be the origin.
         // Sort *tags* from lowest tag id to greatest:
-        List /* <Tag> */ all_tags = map->all_tags;
-        List__sort(all_tags, (List__Compare__Routine)Tag__compare);
+        std::sort(map->all_tags.begin(), map->all_tags.end(), Tag__less);
 
         // The first tag in {tags} has the lowest id and is forced to be the
         // map origin:
-        Tag origin_tag = (Tag)List__fetch(all_tags, 0);
+        Tag origin_tag = map->all_tags[0];
         origin_tag->visit = visit;
         origin_tag->hop_count = 0;
         
