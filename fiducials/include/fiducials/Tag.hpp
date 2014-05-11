@@ -42,11 +42,12 @@
 ///
 /// Internally, *twist* is represented in radians.
 
+#include <vector>
+
 #include "Bounding_Box.hpp"
 #include "CV.hpp"
 #include "Double.hpp"
 #include "File.hpp"
-#include "List.hpp"
 #include "SVG.hpp"
 #include "Unsigned.hpp"
 
@@ -64,7 +65,7 @@ typedef struct Tag_Height__Struct *Tag_Height;
 /// ceiling fiducial tag.
 struct Tag__Struct {
     /// @brief List *Arc*'s connected to this *Tag*.
-    List /* <Arc>*/ arcs;
+    std::vector<Arc> arcs_;
 
     /// @brief Fiducial tag diagnal distance in camera pixels.
     Double diagonal;

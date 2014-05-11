@@ -28,6 +28,17 @@ int Arc__compare(Arc arc1, Arc arc2) {
     return result;
 }
 
+// return true if arc1 comees before arc2; else false
+bool Arc__less(Arc arc1, Arc arc2) {
+    int result = Tag__compare(arc1->from_tag, arc2->from_tag);
+    if( -1 == result ) {
+      return true;
+    } else if( 0 == result ) {
+      return Tag__compare(arc1->to_tag, arc2->to_tag) == -1;
+    }
+    return false;
+}
+
 /// @brief Create and return a new *Arc* object.
 /// @param from_tag is the tag with the lower id.
 /// @param from_twist is the amount the *from_tag* is twisted in radians.

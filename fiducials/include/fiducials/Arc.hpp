@@ -84,6 +84,7 @@ struct Arc__Struct {
 // *Arc* routines:
 
 extern int Arc__compare(Arc arc1, Arc arc2);
+extern bool Arc__less(Arc arc1, Arc arc2);
 extern int Arc__distance_compare(Arc arc1, Arc arc2);
 extern Arc Arc__create(Tag from_tag, Double from_twist,
   Double distance, Tag to_tag, Double to_twist, Double goodness);

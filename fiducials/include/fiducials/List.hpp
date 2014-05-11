@@ -41,4 +41,12 @@ extern void List__sort(List list1, List__Compare__Routine compare_routine);
 extern void List__trim(List list, Unsigned new_size);
 extern void List__unique(List list, List__Equal__Routine equal_routine);
 
+// glue STL iterables to old List
+template <class T> void List__all_append(List to_list, T from_list) {
+  typename T::const_iterator itr;
+  for( itr = from_list.begin(); itr != from_list.end(); itr++ ) {
+    List__append(to_list, (Memory)*itr, "List::all_append");
+  }
+}
+
 #endif // !defined(LIST_H_INCLUDED)

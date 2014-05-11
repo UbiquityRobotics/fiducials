@@ -5,7 +5,6 @@
 #include "Arc.hpp"
 #include "Bounding_Box.hpp"
 #include "Double.hpp"
-#include "List.hpp"
 #include "SVG.hpp"
 #include "Tag.hpp"
 #include "Unsigned.hpp"
@@ -20,7 +19,7 @@
 
 void Tag__arc_append(Tag tag, Arc arc) {
     assert(arc->from_tag == tag || arc->to_tag == tag);
-    List__append(tag->arcs, (Memory)arc, "Tag__arc_append:List__append:arcs");
+    tag->arcs_.push_back(arc);
 }
 
 /// @brief Updates *bounding_box* to include the 4 corners of tag.
@@ -67,7 +66,6 @@ Tag Tag__create(Unsigned id, Map map) {
     Tag_Height tag_height = Map__tag_height_lookup(map, id);
     Tag tag =  Memory__new(Tag, "Tag__create");
     tag->twist = (Double)0.0;
-    tag->arcs = List__new("Tag__create:List__new:arcs"); // <Arc>
     tag->diagonal = 0.0;
     tag->hop_count = 0;
     tag->id = id;
@@ -88,13 +86,6 @@ Tag Tag__create(Unsigned id, Map map) {
 /// *Tag__free*() will release the storage of *tag*.
 
 void Tag__free(Tag tag) {
-    //List arcs /* <Arc> */ = tag->arcs;
-    //Unsigned arcs_size = List__size(arcs);
-    //for (Unsigned index = 0; index < arcs_size; index++) {
-    //	Arc arc = (Arc)List__fetch(arcs, index);
-    //	Arc__free(arc);
-    //}
-    List__free(tag->arcs);
     Memory__free((Memory)tag);
 }
 
@@ -166,7 +157,7 @@ Tag Tag__read(File in_file, Map map) {
 /// *Tag__sort*() will cause the contents of *tag*.
 
 void Tag__sort(Tag tag) {
-    List__sort(tag->arcs, (List__Compare__Routine)Arc__compare);
+    std::sort(tag->arcs_.begin(), tag->arcs_.end(), Arc__less);
 }
 
 /// @brief Writes *tag* out to *svg*.

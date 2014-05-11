@@ -734,7 +734,7 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 
         // Initializd *pending_arcs* with the *Arc*'s from *orgin_tag*:
         List /* <Arc> */ pending_arcs = map->pending_arcs;
-        List__all_append(pending_arcs, origin_tag->arcs);
+        List__all_append(pending_arcs, origin_tag->arcs_);
 
         // We always want to keep *pending_arcs* sorted from longest to
         // shortest at the end.  *Arc__distance_compare*() sorts longest first:
@@ -776,7 +776,7 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
                         // Add *to* to spanning tree:
                         assert (!to_is_new);
                         from_tag->hop_count = to_tag->hop_count + 1;
-                        List__all_append(pending_arcs, from_tag->arcs);
+                        List__all_append(pending_arcs, from_tag->arcs_);
                         from_tag->visit = visit;
                         Tag__update_via_arc(from_tag,
                           arc, image, sequence_number);
@@ -784,7 +784,7 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
                         // Add *from* to spanning tree:
                         assert (!from_is_new);
                         to_tag->hop_count = from_tag->hop_count + 1;
-                        List__all_append(pending_arcs, to_tag->arcs);
+                        List__all_append(pending_arcs, to_tag->arcs_);
                         to_tag->visit = visit;
                         Tag__update_via_arc(to_tag,
                           arc, image, sequence_number);
