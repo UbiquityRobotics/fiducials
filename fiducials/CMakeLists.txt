@@ -29,7 +29,7 @@ add_library(fiducials_base
   Bounding_Box.cpp CRC.cpp FEC.cpp File.cpp
   Memory.cpp String.cpp SVG.cpp)
 
-add_library(fiducials_cv CV.cpp High_GUI2.cpp)
+add_library(fiducials_cv CV.cpp)
 target_link_libraries(fiducials_cv fiducials_base ${OpenCV_LIBS})
 
 add_library(fiducials Fiducials.cpp Arc.cpp Camera_Tag.cpp Map.cpp Tag.cpp)

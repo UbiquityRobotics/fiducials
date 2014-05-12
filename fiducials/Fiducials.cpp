@@ -4,13 +4,14 @@
 #include <sys/time.h>
 #include <angles/angles.h>
 
+#include <opencv2/highgui/highgui_c.h>
+
 #include "Camera_Tag.hpp"
 #include "CRC.hpp"
 #include "CV.hpp"
 #include "File.hpp"
 #include "FEC.hpp"
 #include "Fiducials.hpp"
-#include "High_GUI2.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
@@ -509,7 +510,7 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
     // Create the window we need:
     String window_name = "Example1";
     if (show) {
-        CV__named_window(window_name, CV__window_auto_size);
+        cvNamedWindow(window_name, CV__window_auto_size);
     }
 
     // Processing *original_image* with different options
@@ -523,13 +524,13 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
 
         // Display either *original_image* or *debug_image*:
         if (show) {
-            CV_Image__show(debug_image, window_name);
+            cvShowImage(window_name, debug_image);
         }
 
         // Get a *control_character* from the user:
         char control_character = '\0';
         if (show) {
-            control_character = (char)(CV__wait_key(0) & 0xff);
+            control_character = (char)(cvWaitKey(0) & 0xff);
         }
 
         // Dispatch on *control_character*:
@@ -590,7 +591,7 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
     // Release storage:
     CV__release_image(original_image);
     if (show) {
-        CV__destroy_window(window_name);
+        cvDestroyWindow(window_name);
     }
 }
 

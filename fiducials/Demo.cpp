@@ -7,7 +7,6 @@
 #include "CV.hpp"
 #include "File.hpp"
 #include "Fiducials.hpp"
-#include "High_GUI2.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 

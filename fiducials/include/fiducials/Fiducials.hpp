@@ -34,7 +34,6 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 #include "CV.hpp"
 #include "File.hpp"
 #include "FEC.hpp"
-#include "High_GUI2.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"

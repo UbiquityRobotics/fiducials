@@ -19,7 +19,6 @@
 #include "FC2.hpp"
 #include "File.hpp"
 #include "Fiducials.hpp"
-#include "High_GUI2.hpp"
 #include "Memory.hpp"
 #include "String.hpp"
 
