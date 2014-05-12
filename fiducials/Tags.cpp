@@ -82,7 +82,7 @@ void SVG__tag_bits(SVG svg, Double cell_width, Unsigned first_column,
     }
 
     // Output the appropriate rectangle to *svg*:
-    String color = "black";
+    String_Const color = "black";
     SVG__rectangle(svg,
       (Double)(first_column - delta) * cell_width,
       (Double)(first_row - delta) * cell_width,
@@ -153,7 +153,7 @@ void SVG__tag_write(/* Extractor extractor, */
 	Double x_or_y = length + 2.0 * cell_width;
 	Double d = 2.0;
 
-	String color = "black";
+	String_Const color = "black";
 	Double x1 = 0.0;
 	Double x2 = x_or_y;
 

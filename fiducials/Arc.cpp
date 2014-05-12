@@ -145,7 +145,7 @@ void Arc__free(Arc arc) {
 ///
 /// *Arc__new*() will return a new *Arc*.
 
-Arc Arc__new(String from) {
+Arc Arc__new(String_Const from) {
     Arc arc = Memory__new(Arc, from);
     arc->distance = -1.0;
     arc->from_tag = (Tag)0;
@@ -212,7 +212,7 @@ Arc Arc__read(File in_file, Map map) {
 void Arc__svg_write(Arc arc, SVG svg) {
     Tag from_tag = arc->from_tag;
     Tag to_tag = arc->to_tag;
-    String color = "green";
+    String_Const color = "green";
     if (arc->in_tree) {
         color = "red";
     }

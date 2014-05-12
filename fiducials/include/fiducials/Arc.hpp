@@ -90,7 +90,7 @@ extern bool Arc__distance_less(Arc arc1, Arc arc2);
 extern Arc Arc__create(Tag from_tag, Double from_twist,
   Double distance, Tag to_tag, Double to_twist, Double goodness);
 extern void Arc__free(Arc arc);
-extern Arc Arc__new(String from);
+extern Arc Arc__new(String_Const from);
 extern Arc Arc__read(File out_file, Map map);
 extern void Arc__svg_write(Arc arc, SVG svg);
 extern void Arc__update(

@@ -34,9 +34,10 @@ typedef void *Memory;
     extern void Memory__leak_found(Memory memory);
 #endif // defined(MEMORY_LEAK_CHECK)
 
-extern Memory Memory__allocate(Unsigned bytes, String from);
+extern Memory Memory__allocate(Unsigned bytes, String_Const from);
 extern void Memory__free(Memory memory);
-extern Memory Memory__reallocate(Memory memory, Unsigned new_size, String from);
+extern Memory Memory__reallocate(Memory memory, Unsigned new_size,
+    String_Const from);
 extern Memory Unsigned__to_memory(Unsigned unsigned1);
 
 #endif // !defined(MEMORY_H_INCLUDED)

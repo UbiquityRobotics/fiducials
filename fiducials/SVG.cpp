@@ -92,14 +92,14 @@ void SVG__close(SVG svg) {
 /// using *stroke*.
 
 void SVG__line(SVG svg,
-  Double x1, Double y1, Double x2, Double y2, String stroke) {
+  Double x1, Double y1, Double x2, Double y2, String_Const stroke) {
     // Extract some values from *svg*:
     File svg_stream = svg->stream;
     Double x_offset = svg->x_offset;
     Double y_offset = svg->y_offset;
     Double x_scale = svg->x_scale;
     Double y_scale = svg->y_scale;
-    String units = svg->units;
+    String_Const units = svg->units;
 
     // Output "<line ... />" to *svg_stream*:
     File__format(svg_stream,
@@ -124,8 +124,9 @@ void SVG__line(SVG svg,
 /// *SVG__open*() will create and return a new *SVG* for writing out
 /// scable vector graphics.
 
-SVG SVG__open(String base_name,
-  Double width, Double height, Double x_scale, Double y_scale, String units) {
+SVG SVG__open(String_Const base_name,
+  Double width, Double height, Double x_scale, Double y_scale,
+  String_Const units) {
     // Verify that units are OK:
     assert (String__equal(units, "cm") ||
       String__equal(units, "mm") ||
@@ -185,14 +186,15 @@ SVG SVG__open(String base_name,
 /// and internal fill color respectivily.
 
 void SVG__rectangle(SVG svg, Double x, Double y,
-  Double width, Double height, String stroke_color, String fill_color) {
+  Double width, Double height, String_Const stroke_color,
+  String_Const fill_color) {
     // Grab some values from svg:
     File svg_stream = svg->stream;
     Double x_offset = svg->x_offset;
     Double y_offset = svg->y_offset;
     Double x_scale = svg->x_scale;
     Double y_scale = svg->y_scale;
-    String units = svg->units;
+    String_Const units = svg->units;
 
     // Output "<rect ... />" to *svg_stream*:
     Double x_final = (x + x_offset) * x_scale;
@@ -218,14 +220,15 @@ void SVG__rectangle(SVG svg, Double x, Double y,
 /// of type *font_family*.
 
 void SVG__text(SVG svg,
-  String message, Double x, Double y, String font_family, Unsigned font_size) {
+  String_Const message, Double x, Double y, String_Const font_family,
+  Unsigned font_size) {
     // Grab some values from *svg*:
     File svg_stream = svg->stream;
     Double x_offset = svg->x_offset;
     Double y_offset = svg->y_offset;
     Double x_scale = svg->x_scale;
     Double y_scale = svg->y_scale;
-    String units = svg->units;
+    String_Const units = svg->units;
 
     File__format(svg_stream,
       "<text x=\"%f%s\" y=\"%f%s\"",

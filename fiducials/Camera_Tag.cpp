@@ -106,7 +106,7 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
 	    int x = (int)x_corners[index];
 	    int y = (int)y_corners[index];
 	    CV_Scalar color = (CV_Scalar)0;
-	    String text = (String)0;
+	    String_Const text = (String)0;
 	    switch (index) {
 	      case 0:
 		color = CV_Scalar__rgb(255.0, 0.0, 0.0);

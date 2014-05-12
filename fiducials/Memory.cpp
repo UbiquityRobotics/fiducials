@@ -20,7 +20,7 @@
 /// *Memory__allocate*() will allocated and return a pointer to a chunk
 /// of *bytes* memory.
 
-Memory Memory__allocate(Unsigned bytes, String from) {
+Memory Memory__allocate(Unsigned bytes, String_Const from) {
     Memory memory = (Memory)malloc(bytes);
     assert (memory != (Memory)0);
     #if defined(MEMORY_LEAK_CHECK)
@@ -78,7 +78,7 @@ void Memory__free(Memory memory) {
 /// size.  If the later case, the previous contents of memory is copied over
 /// before releasing the original storage.
 
-Memory Memory__reallocate(Memory memory, Unsigned new_size, String from) {
+Memory Memory__reallocate(Memory memory, Unsigned new_size, String_Const from) {
     #if defined(MEMORY_LEAK_CHECK)
 	Memory new_memory = (Memory)malloc(new_size);
 	assert(new_memory != (Memory)0);

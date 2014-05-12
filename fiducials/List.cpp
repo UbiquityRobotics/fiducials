@@ -12,7 +12,7 @@
 ///
 /// *List__append*() will append *item* to the end of *list*.
 
-void List__append(List list, Memory item, String from) {
+void List__append(List list, Memory item, String_Const from) {
     Memory *items = list->items;
     Unsigned size = list->size;
     Unsigned limit = list->limit;
@@ -69,7 +69,7 @@ void List__free(List list) {
 ///
 /// *List__new*() will return a new empty *List* object.
 
-List List__new(String from) {
+List List__new(String_Const from) {
     List list = Memory__new(List, from);
     list->items = (Memory *)Memory__allocate(sizeof(Memory), "List__new");
     list->size = 0;

@@ -1118,7 +1118,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 		    int x = CV_Point__x_get(point);
 		    int y = CV_Point__y_get(point);
 		    CV_Scalar color = (CV_Scalar)0;
-		    String text = (String)0;
+		    String_Const text = (String)0;
 		    switch (index) {
 		      case 0:
 			color = fiducials->red;
@@ -2020,7 +2020,7 @@ void Fiducials__sample_points_compute(
 void Fiducials__tag_announce(void *announce_object, int id,
   Double x, Double y, Double z, Double twist, Double diagonal,
   Double distance_per_pixel, bool visible, int hop_count) {
-    String visible_text = "";
+    String_Const visible_text = "";
     if (!visible) {
 	visible_text = "*** No longer visible ***";
     }

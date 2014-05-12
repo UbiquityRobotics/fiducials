@@ -85,7 +85,7 @@ extern int Map__compare(Map map1, Map map2);
 extern Map Map__create(String_Const map_path, String_Const map_base,
   void *announce_object, Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String_Const tag_heights_file_name, String from);
+  String_Const tag_heights_file_name, String_Const from);
 extern void Map__free(Map map);
 extern Tag_Height Map__tag_height_lookup(Map map, Unsigned id);
 extern void Map__image_log(Map map, CV_Image image, Unsigned sequence_number);

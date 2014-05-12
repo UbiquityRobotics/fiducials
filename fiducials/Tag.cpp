@@ -195,8 +195,8 @@ void Tag__svg_write(Tag tag, SVG svg) {
     double y4 = y + half_diagonal * Double__sine(twist - half_pi);
 
     // Plot the 4 sides:
-    String other_edge = "black";
-    String bottom_edge = "purple";
+    String_Const other_edge = "black";
+    String_Const bottom_edge = "purple";
     SVG__line(svg, x1, y1, x2, y2, other_edge);
     SVG__line(svg, x2, y2, x3, y3, other_edge);
     SVG__line(svg, x3, y3, x4, y4, other_edge);

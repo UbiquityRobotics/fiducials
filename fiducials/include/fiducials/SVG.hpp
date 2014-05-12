@@ -28,7 +28,7 @@ struct SVG__Struct {
     Double width;
 
     /// @brief Units to use for SVG values.
-    String units;
+    String_Const units;
 
     /// @brief Amount to offset X by.
     Double x_offset;
@@ -49,13 +49,16 @@ extern void SVG__cartesian_scale(
   SVG svg, Double x_width, Double y_height, Bounding_Box bounding_box);
 extern void SVG__close(SVG svg);
 extern void SVG__line(SVG svg,
-  Double x1, Double y1, Double x2, Double y2, String stroke);
-extern SVG SVG__open(String base_name,
-  Double width, Double height, Double x_scale, Double y_scale, String units);
+  Double x1, Double y1, Double x2, Double y2, String_Const stroke);
+extern SVG SVG__open(String_Const base_name,
+  Double width, Double height, Double x_scale, Double y_scale,
+  String_Const units);
 extern void SVG__rectangle(SVG svg, Double x, Double y,
-  Double width, Double height, String stroke_color, String fill_color);
+  Double width, Double height, String_Const stroke_color,
+  String_Const fill_color);
 extern void SVG__text(SVG svg,
-  String message, Double x, Double y, String font_family, Unsigned font_size);
+  String_Const message, Double x, Double y, String_Const font_family,
+  Unsigned font_size);
 
 
 #endif // !defined(SVG_H_INCLUDED)

@@ -284,7 +284,7 @@ int Map__compare(Map map1, Map map2) {
 Map Map__create(String_Const file_path, String_Const file_base,
   void *announce_object, Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
-  String_Const tag_heights_file_name, String from) {
+  String_Const tag_heights_file_name, String_Const from) {
     // Create and fill in *map*:
     Map map = Memory__new(Map, from);
     map->arc_announce_routine = arc_announce_routine;
@@ -476,7 +476,7 @@ void Map__svg_write(Map map, const String svg_base_name,
     SVG__cartesian_scale(svg, 8.0, 10.5, bounding_box);
 
     // Draw the X/Y axes:
-    String color = "cyan";
+    String_Const color = "cyan";
     SVG__line(svg,
       bounding_box->minimum_x, 0.0, bounding_box->maximum_x, 0.0, color);
     SVG__line(svg,
