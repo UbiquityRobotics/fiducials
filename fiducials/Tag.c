@@ -34,7 +34,7 @@ void Tag__arc_append(Tag tag, Arc arc) {
 void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box) {
     Double x = tag->x;
     Double y = tag->y;
-    Double half_diagonal = tag->diagonal / 2.0;
+    Double half_diagonal = tag->world_diagonal / 2.0;
     Bounding_Box__update(bounding_box, x - half_diagonal , y - half_diagonal);
     Bounding_Box__update(bounding_box, x + half_diagonal , y + half_diagonal);
 }

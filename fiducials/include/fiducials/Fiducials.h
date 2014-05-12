@@ -80,6 +80,7 @@ struct Fiducials__Struct {
     Fiducials_Location_Announce_Routine location_announce_routine;
     Fiducials_Fiducial_Announce_Routine fiducial_announce_routine;
     List /* <Location> */ locations;
+    List /* <Location> */ locations_path;
     File log_file;
     Map map;
     CV_Point origin;

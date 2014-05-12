@@ -513,8 +513,10 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
       0.0, bounding_box->minimum_y, 0.0, bounding_box->maximum_y, color);
 
     // Output each *tag in *all_tags*:
+    Double world_diagonal = 0.1;
     for (Unsigned index = 0; index < all_tags_size; index++) {
 	Tag tag = (Tag)List__fetch(all_tags, index);
+	world_diagonal = tag->world_diagonal;
 	Tag__svg_write(tag, svg);
     }
 
@@ -534,11 +536,12 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
         Double x = location->x;
 	Double y = location->y;
 	Double bearing = location->bearing;
-	//File__format(stderr, "Location[%d]: id:%d x:%f y:%f bearing:%f\n",
+	//File__format(stderr,
+	//  "Map__svg_write:Location[%d]: id:%d x:%f y:%f bearing:%f\n",
 	//  index, location->id, x, y, bearing * 180 / 3.1415926);
 
 	// Draw a triangle that shows the bearing:
-	Double k1 = 40.0;
+	Double k1 = world_diagonal / 2.0;
 	Double k2 = k1 / 2.0;
 	Double angle = 3.14159 * 0.75;
 	Double x0 = x + k1 * Double__cosine(bearing);

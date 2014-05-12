@@ -211,7 +211,7 @@ review.pdf: ${REVIEW_FILES}
 		echo $$i; \
 		cat -n $$i > ../numbered/$$i ; \
 	    done)
-	(cd /tmp/numbered ; enscript *.h *.c -p review.pdf)
+	(cd /tmp/numbered ; enscript *.h *.c -p - | ps2pdf - review.pdf)
 	cp /tmp/numbered/review.pdf $@
 	rm -rf /tmp/review /tmp/numbered
 

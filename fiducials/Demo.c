@@ -113,10 +113,10 @@ int main(int arguments_size, char *arguments[]) {
 	} else {
 	    Map map = fiducials->map;
 	    Map__save(map);
-	    List /*<Location>*/ locations = fiducials->locations;
+	    List /*<Location>*/ locations_path = fiducials->locations_path;
 	    File__format(stderr,
-	      "Outputing %d locations\n", List__size(locations));
-	    Map__svg_write(map, "Demo", locations);
+	      "Outputing %d locations\n", List__size(locations_path));
+	    Map__svg_write(map, "Demo", locations_path);
 	}
 
 	// Release all the storage associated with *fiducials*:
