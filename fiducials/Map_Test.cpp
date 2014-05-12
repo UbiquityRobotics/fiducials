@@ -90,8 +90,7 @@ int main(int arguments_size, char * arguments[]) {
 
     assert (Map__compare(map1, map2) == 0);
 
-    List /*<Location>*/ locations =
-      List__new("Map_test:main:List__new:locations");
+    std::vector<Location> locations;
     Map__svg_write(map1, "Map_Test", locations);
 
     return 0;

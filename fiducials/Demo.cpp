@@ -112,7 +112,11 @@ int main(int arguments_size, char *arguments[]) {
 	    List /*<Location>*/ locations_path = fiducials->locations_path;
 	    File__format(stderr,
 	      "Outputing %d locations\n", List__size(locations_path));
-	    Map__svg_write(map, "Demo", locations_path);
+      std::vector<Location> location_vec;
+      for( int i=0; i<List__size(locations_path); i++ ) {
+        location_vec.push_back((Location)List__fetch(locations_path, i));
+      }
+	    Map__svg_write(map, "Demo", location_vec);
 	}
 
 	// Release all the storage associated with *fiducials*:

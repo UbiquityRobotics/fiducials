@@ -15,7 +15,6 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include "CV.hpp"
 #include "Camera_Tag.hpp"
 #include "File.hpp"
-#include "List.hpp"
 #include "Location.hpp"
 #include "Map.hpp"
 #include "Tag.hpp"
@@ -458,7 +457,8 @@ void Map__sort(Map map) {
 ///
 /// *Map__svg_write*() will write out *map* out *svg_base_name*.svg.
 
-void Map__svg_write(Map map, const String svg_base_name, List locations) {
+void Map__svg_write(Map map, const String svg_base_name, 
+    std::vector<Location> &locations) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
     Unsigned all_tags_size = map->all_tags.size();
     Unsigned all_arcs_size = map->all_arcs.size();
@@ -498,11 +498,11 @@ void Map__svg_write(Map map, const String svg_base_name, List locations) {
 
     }
 
-    Unsigned locations_size = List__size(locations);
+    Unsigned locations_size = locations.size();
     Double last_x = 0.0;
     Double last_y = 0.0;
     for (Unsigned index = 0; index < locations_size; index++) {
-        Location location = (Location)List__fetch(locations, index);
+        Location location = locations[index];
         Double x = location->x;
         Double y = location->y;
         Double bearing = location->bearing;
