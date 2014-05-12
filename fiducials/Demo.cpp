@@ -109,18 +109,12 @@ int main(int arguments_size, char *arguments[]) {
 	} else {
 	    Map map = fiducials->map;
 	    Map__save(map);
-	    List /*<Location>*/ locations_path = fiducials->locations_path;
 	    File__format(stderr,
-	      "Outputing %d locations\n", List__size(locations_path));
-      std::vector<Location> location_vec;
-      for( int i=0; i<List__size(locations_path); i++ ) {
-        location_vec.push_back((Location)List__fetch(locations_path, i));
-      }
-	    Map__svg_write(map, "Demo", location_vec);
+	      "Outputing %d locations\n", fiducials->locations.size());
+	    Map__svg_write(map, "Demo", fiducials->locations);
 	}
 
 	// Release all the storage associated with *fiducials*:
-	Fiducials__free(fiducials);
 
 	// Some debugging code to make sure that we are reading/writing
 	// map.xml files correctly:

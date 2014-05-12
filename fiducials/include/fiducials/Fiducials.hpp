@@ -41,7 +41,6 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 #include "File.hpp"
 #include "FEC.hpp"
 #include "High_GUI2.hpp"
-#include "List.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
@@ -72,8 +71,8 @@ struct Fiducials__Struct {
     Double last_y;
     Fiducials_Location_Announce_Routine location_announce_routine;
     Fiducials_Fiducial_Announce_Routine fiducial_announce_routine;
-    List /* <Location> */ locations;
-    List /* <Location> */ locations_path;
+    std::vector<Location> locations;
+    std::vector<Location> locations_path;
     File log_file;
     Map map;
     CV_Point origin;

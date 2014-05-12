@@ -11,7 +11,6 @@
 #include "FEC.hpp"
 #include "Fiducials.hpp"
 #include "High_GUI2.hpp"
-#include "List.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
@@ -810,10 +809,6 @@ Fiducials Fiducials__create(
     fiducials->last_x = 0.0;
     fiducials->last_y = 0.0;
     fiducials->location_announce_routine = location_announce_routine;
-    fiducials->locations =
-      List__new("Fiducials__create:List__new:locations"); // <Location>
-    fiducials->locations_path =
-      List__new("Fiducials__create:List__new:locations_path"); // <Location>
     fiducials->log_file = log_file;
     fiducials->map = map;
     fiducials->map_x = map_x;
@@ -865,10 +860,9 @@ void Fiducials__free(Fiducials fiducials) {
     CV_Size__free(fiducials->size_m1xm1);
 
     // Free up the storage associated with *locations*:
-    List /* <Location> */ locations = fiducials->locations;
-    Unsigned locations_size = List__size(locations);
+    Unsigned locations_size = fiducials->locations.size();
     for (Unsigned index = 0; index < locations_size; index++) {
-        Location location = (Location)List__fetch(locations, index);
+        Location location = fiducials->locations[index];
         // Kludge: memory double free?!!!
         //Location__free(location);
     }
@@ -887,10 +881,6 @@ void Fiducials__free(Fiducials fiducials) {
         Camera_Tag camera_tag = fiducials->camera_tags_pool[index];
         Camera_Tag__free(camera_tag);
     }
-
-    // Free up the *List*'s:
-    List__free(locations);
-    List__free(locations_path);
 
     // Relaase the *Map*:
     Map__free(fiducials->map);
@@ -927,7 +917,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     Unsigned debug_index = fiducials->debug_index;
     CV_Image edge_image = fiducials->edge_image;
     CV_Image gray_image = fiducials->gray_image;
-    List /*<Location>*/ locations = fiducials->locations;
     File log_file = fiducials->log_file;
     CV_Image original_image = fiducials->original_image;
     Fiducials_Results results = fiducials->results;
@@ -1372,7 +1361,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
         }
     }
 
-    List__trim(locations, 0);
+    fiducials->locations.clear();
     results->image_interesting = (bool)0;
     if (camera_tags_size > 0) {
         Double pi = 3.14159265358979323846264;
@@ -1418,7 +1407,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
             //File__format(log_file, "[%d]:x=%f:y=%f:bearing=%f\n",
             //  index, x, y, bearing * 180.0 / pi);
-            Unsigned location_index = List__size(locations);
+            Unsigned location_index = fiducials->locations.size();
             Location location = Location__create(tag->id,
               x, y, bearing, floor_distance, location_index);
             List__append(locations,
@@ -1440,15 +1429,12 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
         }
 
         if (closest_location != (Location)0) {
-            List /* <Location> */ locations_path = fiducials->locations_path;
-            List__append(locations_path, (Memory)closest_location,
-             "Fiducials__create:List__append:locations");
-            File__format(log_file,
-              "Fiducials__process:Location: " /* + */
-              "x=%f y=%f bearing=%f goodness=%f index=%d\n",
-              closest_location->x, closest_location->y,
-              closest_location->bearing * 180.0 / pi,
-              closest_location->goodness, closest_location->index);
+            fiducials->locations_path.push_back(closest_location);
+            //File__format(log_file,
+            //  "Location: x=%f y=%f bearing=%f goodness=%f index=%d\n",
+            //  closest_location->x, closest_location->y,
+            //  closest_location->bearing * 180.0 / pi,
+            //  closest_location->goodness, closest_location->index);
 
             Double change_dx = closest_location->x - fiducials->last_x;
             Double change_dy = closest_location->y - fiducials->last_y;
