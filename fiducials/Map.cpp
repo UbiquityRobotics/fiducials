@@ -231,23 +231,24 @@ Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
 /// after *map2*.  Realistically, this routine is only used for testing
 /// equality.
 
-int Map__compare(Map map1, Map map2) {
+bool Map__equals(Map map1, Map map2) {
     int result = 0;
 
     // First make sure all of the *Tag*'s match up:
     Unsigned all_tags1_size = map1->all_tags.size();
     Unsigned all_tags2_size = map2->all_tags.size();
-    result = Unsigned__compare(all_tags1_size, all_tags2_size);
-    if (result == 0) {
+    if (all_tags1_size == all_tags2_size) {
         // Visit each *Tag*:
         for (Unsigned index = 0; index < all_tags1_size; index++) {
             Tag tag1 = map1->all_tags[index];
             Tag tag2 = map2->all_tags[index];
             result = Tag__compare(tag1, tag2);
             if (result != 0) {
-                break;
+              return false;
             }
         }
+    } else {
+        return false;
     }
 
     // Second make sure all of the *Arc*'s match up:
@@ -261,11 +262,13 @@ int Map__compare(Map map1, Map map2) {
             Arc arc2 = map2->all_arcs[index];
             result = Arc__compare(arc1, arc2);
             if (result != 0) {
-                break;
+              return false;
             }
         }
+    } else {
+      return false;
     }
-    return result;
+    return true;
 }
 
 /// @brief Returns a new *Map*.

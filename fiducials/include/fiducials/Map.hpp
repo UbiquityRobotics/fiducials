@@ -81,7 +81,7 @@ extern void Map__arc_append(Map map, Arc arc);
 extern Arc Map__arc_lookup(Map map, Tag from, Tag to);
 extern Unsigned Map__arc_update(Map map, Camera_Tag camera_from,
   Camera_Tag camera_to, CV_Image image, Unsigned sequence_number);
-extern int Map__compare(Map map1, Map map2);
+extern bool Map__equals(Map map1, Map map2);
 extern Map Map__create(String_Const map_path, String_Const map_base,
   void *announce_object, Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,

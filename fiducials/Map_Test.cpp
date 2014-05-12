@@ -87,7 +87,7 @@ int main(int arguments_size, char * arguments[]) {
       (void *)0, Fiducials__arc_announce, Fiducials__tag_announce,
       (String_Const)0, "main:Map__new");
 
-    assert (Map__compare(map1, map2) == 0);
+    assert (Map__equals(map1, map2));
 
     std::vector<Location> locations;
     Map__svg_write(map1, "Map_Test", locations);
