@@ -798,8 +798,6 @@ Fiducials Fiducials__create(
     fiducials->announce_object = announce_object;
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
     fiducials->blur = (bool)1;
-    fiducials->camera_tags_pool =
-      List__new("Fiducials__create:List__new:camera_tags_pool"); // <Camera_Tag>
     fiducials->corners = CV_Point2D32F_Vector__create(4);
     fiducials->current_visibles =
       List__new("Fiducials__create:List_new:current_visibles"); // Tag
@@ -888,16 +886,13 @@ void Fiducials__free(Fiducials fiducials) {
     }
 
     // Free up the storage associated with *camera_tags_pool*:
-    List /* <Camera_Tag> */ camera_tags_pool = fiducials->camera_tags_pool;
-    Unsigned pool_size = List__size(camera_tags_pool);
+    Unsigned pool_size = fiducials->camera_tags_pool.size();
     for (Unsigned index = 0; index < pool_size; index++) {
-	Camera_Tag camera_tag =
-	  (Camera_Tag)List__fetch(camera_tags_pool, index);
+	Camera_Tag camera_tag = fiducials->camera_tags_pool[index];
 	Camera_Tag__free(camera_tag);
     }
 
     // Free up the *List*'s:
-    List__free(camera_tags_pool);
     List__free(fiducials->current_visibles);
     List__free(fiducials->previous_visibles);
     List__free(locations);
@@ -1303,16 +1298,14 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 			    }
 
 			    // Allocate a *camera_tag*:
-			    List /* <Camera_Tag> */ camera_tags_pool =
-			      fiducials->camera_tags_pool;
 			    Camera_Tag camera_tag = (Camera_Tag)0;
-			    if (List__size(camera_tags_pool) == 0) {
+			    if (fiducials->camera_tags_pool.size() == 0) {
 				 // *camera_tags_pool* is empty;
 				// allocate a new one:
 				camera_tag = Camera_Tag__new();
 			    } else {
-				camera_tag =
-				  (Camera_Tag)List__pop(camera_tags_pool);
+				camera_tag = fiducials->camera_tags_pool.back();
+              fiducials->camera_tags_pool.pop_back();
 			    }
 
 			    // Load up *camera_tag* to get center, twist, etc.:
@@ -1546,7 +1539,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     //  current_visibles, previous_visibles);
 
     // Clean out *camera_tags*:
-    List__all_append(fiducials->camera_tags_pool, fiducials->camera_tags);
+    fiducials->camera_tags_pool.insert(fiducials->camera_tags_pool.end(),
+        fiducials->camera_tags.begin(), fiducials->camera_tags.end());
     fiducials->camera_tags.clear();
 
     // Flip the debug image:
