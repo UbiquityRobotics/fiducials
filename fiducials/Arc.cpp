@@ -104,6 +104,32 @@ int Arc__distance_compare(Arc arc1, Arc arc2) {
     return result;
 }
 
+/// @brief Return the distance sort order of *arc1* vs. *arc2*.
+/// @param arc1 is the first *Arc* object.
+/// @param arc2 is the second *Arc* object.
+/// @returns true or false depending upon distance sort order.
+///
+/// *Arc__distance_compare*() will return true if the *arc1* distance is larger
+/// than the *arc2* distance, otherwise false
+
+bool Arc__distance_less(Arc arc1, Arc arc2) {
+    if( arc1->distance > arc2->distance ) {
+      // if arc1 has a greater distance, it should sort first(less)
+      return true;
+    } else if( arc1->distance == arc2->distance ) {
+      unsigned int arc1_lowest_hop_count =
+        std::min(arc1->from_tag->hop_count, arc1->to_tag->hop_count);
+      unsigned int arc2_lowest_hop_count =
+        std::min(arc2->from_tag->hop_count, arc2->to_tag->hop_count);
+      if( arc1_lowest_hop_count > arc2_lowest_hop_count ) {
+        // if distances are equal and arc1 has a greater hop count, it should
+        // sort first(less)
+        return true;
+      }
+    }
+    return false;
+}
+
 /// @brief Release *arc* storage.
 /// @param arc to release storage of.
 ///

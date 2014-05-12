@@ -56,7 +56,7 @@ struct Map__Struct {
     bool is_saved;
 
     /// @brief List of pending *Arc*'s for map tree extraction.
-    List /* <Arc> */ pending_arcs;
+    std::vector<Arc> pending_arcs;
 
     /// @brief Routine that is called each time a tag is changed.
     Fiducials_Tag_Announce_Routine tag_announce_routine;

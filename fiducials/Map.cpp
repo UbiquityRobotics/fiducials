@@ -296,7 +296,6 @@ Map Map__create(String_Const file_path, String_Const file_base,
     map->is_changed = (bool)0;
     map->is_saved = (bool)1;
     map->image_log = (bool)0;
-    map->pending_arcs = List__new("Map__new:List__new:pending_arcs"); // <Tag>
     map->tag_announce_routine = tag_announce_routine;
     map->tag_heights =
       List__new("Map__new:List__new:tag_heights"); // <Tag_Height>
@@ -364,7 +363,6 @@ void Map__free(Map map) {
     }
     List__free(map->tag_heights);
 
-    List__free(map->pending_arcs);
     Memory__free((Memory)map);
 }
 
@@ -717,20 +715,22 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
         // spanning tree of the *map* *Tags*'s.
 
         // Initializd *pending_arcs* with the *Arc*'s from *orgin_tag*:
-        List /* <Arc> */ pending_arcs = map->pending_arcs;
-        List__all_append(pending_arcs, origin_tag->arcs_);
+        map->pending_arcs.insert(map->pending_arcs.end(),
+            origin_tag->arcs_.begin(), origin_tag->arcs_.end());
 
         // We always want to keep *pending_arcs* sorted from longest to
         // shortest at the end.  *Arc__distance_compare*() sorts longest first:
-        List__sort(pending_arcs, (List__Compare__Routine)Arc__distance_compare);
+        std::sort(map->pending_arcs.begin(), map->pending_arcs.end(),
+            Arc__distance_less);
 
         // We keep iterating across *pending_arcs* until it goes empty.
         // since we keep it sorted from longest to shortest (and we always
         // look at the end), we are building a spanning tree using the shortest
         // possible *Arc*'s:
-        while (List__size(pending_arcs) != 0) {
+        while (map->pending_arcs.size() != 0) {
             // Pop the shortest *arc* off the end of *pending_arcs*:
-            Arc arc = (Arc)List__pop(pending_arcs);
+            Arc arc = map->pending_arcs.back();
+            map->pending_arcs.pop_back();
 
             // For debugging only:
             //File__format(stderr, "----------\n");
@@ -760,7 +760,8 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
                         // Add *to* to spanning tree:
                         assert (!to_is_new);
                         from_tag->hop_count = to_tag->hop_count + 1;
-                        List__all_append(pending_arcs, from_tag->arcs_);
+                        map->pending_arcs.insert(map->pending_arcs.end(),
+                            from_tag->arcs_.begin(), from_tag->arcs_.end());
                         from_tag->visit = visit;
                         Tag__update_via_arc(from_tag,
                           arc, image, sequence_number);
@@ -768,7 +769,8 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
                         // Add *from* to spanning tree:
                         assert (!from_is_new);
                         to_tag->hop_count = from_tag->hop_count + 1;
-                        List__all_append(pending_arcs, to_tag->arcs_);
+                        map->pending_arcs.insert(map->pending_arcs.end(),
+                            to_tag->arcs_.begin(), to_tag->arcs_.end());
                         to_tag->visit = visit;
                         Tag__update_via_arc(to_tag,
                           arc, image, sequence_number);
@@ -779,8 +781,8 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 
                     // Resort *pending_arcs* to that the shortest distance
                     // sorts to the end:
-                    List__sort(pending_arcs,
-                      (List__Compare__Routine)Arc__distance_compare);
+                    std::sort(map->pending_arcs.begin(),
+                        map->pending_arcs.end(), Arc__distance_less);
                 } else {
                     // *arc* connects across two nodes of spanning tree:
                     arc->in_tree = (bool)0;
