@@ -13,11 +13,11 @@
 typedef struct Map__Struct *Map;
 
 #include "Arc.hpp"
-#include "Tag.hpp"
 #include "Fiducials.hpp"
 
 class CameraTag;
-
+class Tag;
+class TagHeight;
 
 /// @brief A *Map__Struct* represents the fiducial location map.
 struct Map__Struct {
@@ -61,7 +61,7 @@ struct Map__Struct {
     Fiducials_Tag_Announce_Routine tag_announce_routine;
 
     /// @brief List of all known tag heights:
-    std::vector<Tag_Height> tag_heights;
+    std::vector<TagHeight*> tag_heights;
 
     /// @brief Table of all *tags* indexed by *Tag* *id*.
     std::map<unsigned int, Tag*> tags_;
@@ -87,7 +87,7 @@ extern Map Map__create(String_Const map_path, String_Const map_base,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
   String_Const tag_heights_file_name, String_Const from);
 extern void Map__free(Map map);
-extern Tag_Height Map__tag_height_lookup(Map map, unsigned int id);
+extern TagHeight * Map__tag_height_lookup(Map map, unsigned int id);
 extern void Map__image_log(Map map, CV_Image image, unsigned int sequence_number);
 extern void Map__restore(Map map, File in_file);
 extern void Map__save(Map map);

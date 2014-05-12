@@ -71,7 +71,7 @@ Tag::Tag(unsigned int id, Map map) :
     x(0.0), y(0.0), 
     updated(true)
 {
-    Tag_Height tag_height = Map__tag_height_lookup(map, id);
+    TagHeight * tag_height = Map__tag_height_lookup(map, id);
     world_diagonal = tag_height->world_diagonal;
     z = tag_height->z;
 }
@@ -127,7 +127,7 @@ Tag * Tag::read(File in_file, Map map) {
     twist *= degrees_to_radians;
 
     // Grab some additional information about *tag_id* from *map*:
-    Tag_Height tag_height = Map__tag_height_lookup(map, tag_id);
+    TagHeight * tag_height = Map__tag_height_lookup(map, tag_id);
 
     // Load up *tag*:
     Tag * tag = Map__tag_lookup(map, tag_id);
@@ -294,18 +294,9 @@ void Tag::write(File out_file) {
 /// *Tag_Height__less*() will return true if *tag_height1* sorts before
 /// *tag_height2*, and false otherwise.
 
-bool Tag_Height__less(Tag_Height tag_height1, Tag_Height tag_height2)
+bool TagHeight::less(TagHeight * tag_height1, TagHeight * tag_height2)
 {
     return tag_height1->first_id < tag_height2->last_id;
-}
-
-/// @brief Releases stoarge for *tag_height*.
-/// @param tag_height to release storage of.
-///
-/// *Tag_Height__free*() will release the storate for *tag_height*.
-
-void Tag_Height__free(Tag_Height tag_height) {
-    Memory__free((Memory)tag_height);
 }
 
 /// @brief Reads in an a <Tag_Height .../> from *xml_in_file*.
@@ -315,7 +306,7 @@ void Tag_Height__free(Tag_Height tag_height) {
 /// *Tag_Height__xml_read*() will read in the a <Tag_Height .../> from
 /// *xml_in_file* and return the resulting *Tag_Height* object.
 
-Tag_Height Tag_Height__xml_read(File xml_in_file) {
+TagHeight * TagHeight::xml_read(File xml_in_file) {
     // Read in "<Tag_Height .../>":
     File__tag_match(xml_in_file, "Tag_Height");
     unsigned int first_id =
@@ -331,7 +322,7 @@ Tag_Height Tag_Height__xml_read(File xml_in_file) {
     File__string_match(xml_in_file, "/>\n");
 
     // Load up *tag_height*:
-    Tag_Height tag_height = Memory__new(Tag_Height, "Tag_Height__xml_read");
+    TagHeight * tag_height = new TagHeight();
     tag_height->world_diagonal = World_Diagonal;
     tag_height->first_id = first_id;
     tag_height->last_id = last_id;

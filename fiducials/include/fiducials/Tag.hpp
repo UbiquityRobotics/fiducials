@@ -48,10 +48,6 @@
 #include "CV.hpp"
 #include "File.hpp"
 #include "SVG.hpp"
-
-/// @brief A *Tag_Height* is a point to a *Tag_Height__Struct* object.
-typedef struct Tag_Height__Struct *Tag_Height;
-
 #include "Map.hpp"
 #include "Arc.hpp"
 
@@ -123,7 +119,8 @@ class Tag {
 
 /// @brief A *Tag_Height__Struct* represents a span of tags a the same
 /// ceiling height.
-struct Tag_Height__Struct {
+class TagHeight {
+  public:
     /// @brief Distance along one side of the tag in world units.
     double world_diagonal;
 
@@ -135,13 +132,16 @@ struct Tag_Height__Struct {
 
     /// @brief The fiducial height above the floor.
     double z;
+
+  public:
+    static bool less(TagHeight *tag_height1, TagHeight *tag_height2);
+    static TagHeight *xml_read(File in_file);
+
+  private:
+    TagHeight() {}
 };
 
 // *Tag* routines;
 
-// *Tag_Height* routines:
-extern bool Tag_Height__less(Tag_Height tag_height1, Tag_Height tag_height2);
-extern void Tag_Height__free(Tag_Height tag_height);
-extern Tag_Height Tag_Height__xml_read(File in_file);
 
 #endif // !defined(TAG_H_INCLUDED)
