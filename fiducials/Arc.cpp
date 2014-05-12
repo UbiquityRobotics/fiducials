@@ -167,12 +167,12 @@ Arc * Arc::read(File in_file, Map map) {
 ///
 /// *Arc__svg_write*() will draw *arc* into *svg*.
 
-void Arc::svg_write(SVG svg) {
+void Arc::svg_write(SVG *svg) {
     String_Const color = "green";
     if (in_tree) {
         color = "red";
     }
-    SVG__line(svg, from_tag->x, from_tag->y, to_tag->x, to_tag->y, color);
+    svg->line(from_tag->x, from_tag->y, to_tag->x, to_tag->y, color);
 }
 
 /// @brief Updates the contents of *arc*.

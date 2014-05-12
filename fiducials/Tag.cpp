@@ -145,7 +145,7 @@ Tag * Tag::read(File in_file, Map map) {
 /// *Tag__svg_write*() will write *tag* out to *svg* in scalable vector
 /// graphics format.
 
-void Tag::svg_write(SVG svg) {
+void Tag::svg_write(SVG *svg) {
   // Some constants:
     double pi = (double)3.14159265358979323846264;
     double half_pi = pi / 2.0;
@@ -168,16 +168,16 @@ void Tag::svg_write(SVG svg) {
     // Plot the 4 sides:
     String_Const other_edge = "black";
     String_Const bottom_edge = "purple";
-    SVG__line(svg, x1, y1, x2, y2, other_edge);
-    SVG__line(svg, x2, y2, x3, y3, other_edge);
-    SVG__line(svg, x3, y3, x4, y4, other_edge);
-    SVG__line(svg, x4, y4, x1, y1, bottom_edge);
+    svg->line(x1, y1, x2, y2, other_edge);
+    svg->line(x2, y2, x3, y3, other_edge);
+    svg->line(x3, y3, x4, y4, other_edge);
+    svg->line(x4, y4, x1, y1, bottom_edge);
 
     // Plot the id number:
     //String id_text = String__format("%d", id);
     char id_text[20];
     (void)sprintf(id_text, "%d", id);
-    SVG__text(svg, id_text, x, y, "ariel", 20);
+    svg->text(id_text, x, y, "ariel", 20);
 }
 
 

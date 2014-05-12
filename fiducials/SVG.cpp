@@ -20,8 +20,8 @@
 /// lines, rectangles, etc, in an area bounded by *bounding_box*.
 /// The available graphing area is *x_width* by *y_height*.
 
-void SVG__cartesian_scale(
-  SVG svg, double x_width, double y_height, BoundingBox *bounding_box) {
+void SVG::cartesian_scale(double x_width, double y_height,
+    BoundingBox *bounding_box) {
     // Grab the minimum/maximum values from *bounding_box*.
     double maximum_x = bounding_box->max_x();
     double minimum_x = bounding_box->min_x();
@@ -56,13 +56,13 @@ void SVG__cartesian_scale(
     //File__format(stderr, "X/Y offset=(%.2f, %.2f)\n", x_offset, y_offset);
     
     // Load up *svg*:
-    svg->width = x_width * x_scale;
-    svg->height = y_height * y_scale;
-    svg->x_scale = x_scale;
+    width = x_width * x_scale;
+    height = y_height * y_scale;
+    x_scale = x_scale;
     // Swap Y axis direction by negating *y_scale*:
-    svg->y_scale = -y_scale;
-    svg->x_offset = -x_offset;
-    svg->y_offset = -y_offset;
+    y_scale = -y_scale;
+    x_offset = -x_offset;
+    y_offset = -y_offset;
 }
 
 
@@ -71,13 +71,10 @@ void SVG__cartesian_scale(
 ///
 /// *SVG__close*() will close *svg*.
 
-void SVG__close(SVG svg) {
+SVG::~SVG() {
     // Close *svg*:
-    File svg_stream = svg->stream;
-    File__format(svg_stream, "</svg>\n");
-    File__close(svg_stream);
-    svg->stream = (File)0;
-    Memory__free((Memory)svg);
+    File__format(stream, "</svg>\n");
+    File__close(stream);
 }
 
 /// @brief Draw a line from (*x1*, *y1*) to (*x2*, *y2*) using *stroke*.
@@ -91,24 +88,17 @@ void SVG__close(SVG svg) {
 /// *SVG__line*() will draw a line to *svg* from (*x1*, *y1*) to (*x2*, *y2*)
 /// using *stroke*.
 
-void SVG__line(SVG svg,
-  double x1, double y1, double x2, double y2, String_Const stroke) {
-    // Extract some values from *svg*:
-    File svg_stream = svg->stream;
-    double x_offset = svg->x_offset;
-    double y_offset = svg->y_offset;
-    double x_scale = svg->x_scale;
-    double y_scale = svg->y_scale;
-    String_Const units = svg->units;
+void SVG::line(double x1, double y1, double x2, double y2,
+    String_Const stroke) {
 
     // Output "<line ... />" to *svg_stream*:
-    File__format(svg_stream,
+    File__format(stream,
       "<line x1=\"%f%s\" y1=\"%f%s\"",
       (x1 + x_offset) * x_scale, units, (y1 + y_offset) * y_scale, units);
-    File__format(svg_stream, 
+    File__format(stream, 
       " x2=\"%f%s\" y2=\"%f%s\"", 
       (x2 + x_offset) * x_scale, units, (y2 + y_offset) * y_scale, units);
-    File__format(svg_stream,
+    File__format(stream,
        " style=\"stroke:%s\"/>\n", stroke);
 }
 
@@ -124,7 +114,7 @@ void SVG__line(SVG svg,
 /// *SVG__open*() will create and return a new *SVG* for writing out
 /// scable vector graphics.
 
-SVG SVG__open(String_Const base_name,
+SVG::SVG(String_Const base_name,
   double width, double height, double x_scale, double y_scale,
   String_Const units) {
     // Verify that units are OK:
@@ -133,43 +123,36 @@ SVG SVG__open(String_Const base_name,
       String__equal(units, "in"));
 
     // Get *svg_stream* opened:
-    SVG svg = (SVG)0;
     char file_name[100];
     (void)sprintf(file_name, "%s.svg", base_name);
-    File svg_stream = File__open(file_name, "w");
-    if (svg_stream == (File)0) {
-	File__format(stderr, "Unable to open %s.svg\n", base_name);
+    stream = File__open(file_name, "w");
+    if (stream == (File)0) {
+        File__format(stderr, "Unable to open %s.svg\n", base_name);
     } else {
         // Allocate and load up *svg*:
-	svg = Memory__new(SVG, "SVG__open");
-	svg->height = height;
-	svg->stream = svg_stream;
-	svg->width = width;
-	svg->units = units;
-	svg->x_scale = x_scale;
-	svg->y_scale = y_scale;
-	svg->x_offset = 0.0;
-	svg->y_offset = 0.0;
+        this->height = height;
+        this->width = width;
+        this->units = units;
+        this->x_scale = x_scale;
+        this->y_scale = y_scale;
+        this->x_offset = 0.0;
+        this->y_offset = 0.0;
 
-	// Ouput the header for *svg*:
-	File__format(svg_stream,
-	  "<?xml version=\"1.0\" standalone=\"no\"?>\n\n");
-	File__format(svg_stream,
-	  "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n");
-	File__format(svg_stream,
+        // Ouput the header for *svg*:
+        File__format(stream,
+          "<?xml version=\"1.0\" standalone=\"no\"?>\n\n");
+        File__format(stream,
+          "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n");
+        File__format(stream,
           " \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n\n");
-	File__format(svg_stream,
-	  "<svg width=\"%f%s\" height=\"%f%s\"\n",
-	  width * x_scale, units, height * y_scale, units);
-	File__format(svg_stream,
-	 " version=\"1.1\"\n");
-	File__format(svg_stream,
-	 " xmlns=\"http://www.w3.org/2000/svg\">\n\n");
+        File__format(stream,
+          "<svg width=\"%f%s\" height=\"%f%s\"\n",
+          width * x_scale, units, height * y_scale, units);
+        File__format(stream,
+         " version=\"1.1\"\n");
+        File__format(stream,
+         " xmlns=\"http://www.w3.org/2000/svg\">\n\n");
     }
-
-    // Clean up and return:
-    //String__free(file_name);
-    return svg;
 }
 
 /// @brief Draw a *width* by *height* rectangle at (*x*, *y*).
@@ -185,26 +168,17 @@ SVG SVG__open(String_Const base_name,
 /// with *stroke_color* and *fill_color* specifying the external line color
 /// and internal fill color respectivily.
 
-void SVG__rectangle(SVG svg, double x, double y,
-  double width, double height, String_Const stroke_color,
-  String_Const fill_color) {
-    // Grab some values from svg:
-    File svg_stream = svg->stream;
-    double x_offset = svg->x_offset;
-    double y_offset = svg->y_offset;
-    double x_scale = svg->x_scale;
-    double y_scale = svg->y_scale;
-    String_Const units = svg->units;
-
+void SVG::rectangle(double x, double y, double width, double height,
+    String_Const stroke_color, String_Const fill_color) {
     // Output "<rect ... />" to *svg_stream*:
     double x_final = (x + x_offset) * x_scale;
     double y_final = (y + y_offset) * y_scale;
-    File__format(svg_stream, 
+    File__format(stream, 
       "<rect x=\"%f%s\" y=\"%f%s\"", x_final, units, y_final, units);
-    File__format(svg_stream,
+    File__format(stream,
       " width=\"%f%s\" height=\"%f%s\"",
       width * x_scale,  units, height * y_scale, units);
-    File__format(svg_stream,
+    File__format(stream,
       " style=\"stroke:%s; fill:%s\"/>\n", stroke_color, fill_color);
 }
 
@@ -219,21 +193,18 @@ void SVG__rectangle(SVG svg, double x, double y,
 /// *SVG__text*() will draw *message* at (*x*, *y*) with *font_size* font
 /// of type *font_family*.
 
-void SVG__text(SVG svg,
-  String_Const message, double x, double y, String_Const font_family,
-  unsigned int font_size) {
-    // Grab some values from *svg*:
-    File svg_stream = svg->stream;
-    double x_offset = svg->x_offset;
-    double y_offset = svg->y_offset;
-    double x_scale = svg->x_scale;
-    double y_scale = svg->y_scale;
-    String_Const units = svg->units;
+void SVG::text(String_Const message, double x, double y,
+    String_Const font_family, unsigned int font_size) {
 
-    File__format(svg_stream,
+    File__format(stream,
       "<text x=\"%f%s\" y=\"%f%s\"",
       (x + x_offset) * x_scale, units, (y + y_offset) * y_scale, units);
-    File__format(svg_stream,
+    File__format(stream,
       " style=\"font-family:%s; font-size:%d\">", font_family, font_size);
-    File__format(svg_stream, "%s</text>\n", message);
+    File__format(stream, "%s</text>\n", message);
+}
+
+void SVG::setOffsets(double x, double y) {
+  x_offset = x;
+  y_offset = y;
 }

@@ -107,7 +107,7 @@ class Tag {
     void initialize(double angle, double x, double y, double diagonal,
         unsigned int visit);
 
-    void svg_write(SVG svg);
+    void svg_write(SVG *svg);
     void write(File out_file);
     void update_via_arc(Arc *arc, CV_Image image, unsigned int sequence_number);
 

@@ -460,16 +460,14 @@ void Map__svg_write(Map map, const String svg_base_name,
     }
 
     // Open the Scalable Vector Graphics file:
-    SVG svg = SVG__open(svg_base_name, 8.0, 10.5, 1.0, 1.0, "in");
+    SVG * svg = new SVG(svg_base_name, 8.0, 10.5, 1.0, 1.0, "in");
 
-    SVG__cartesian_scale(svg, 8.0, 10.5, bounding_box);
+    svg->cartesian_scale(8.0, 10.5, bounding_box);
 
     // Draw the X/Y axes:
     String_Const color = "cyan";
-    SVG__line(svg,
-      bounding_box->min_x(), 0.0, bounding_box->max_x(), 0.0, color);
-    SVG__line(svg,
-      0.0, bounding_box->min_y(), 0.0, bounding_box->max_y(), color);
+    svg->line(bounding_box->min_x(), 0.0, bounding_box->max_x(), 0.0, color);
+    svg->line(0.0, bounding_box->min_y(), 0.0, bounding_box->max_y(), color);
 
     // Output each *tag in *all_tags*:
     double world_diagonal = 0.1;
@@ -508,20 +506,20 @@ void Map__svg_write(Map map, const String svg_base_name,
         double y1 = y + k2 * sin(bearing + angle);
         double x2 = x + k2 * cos(bearing - angle);
         double y2 = y + k2 * sin(bearing - angle);
-        SVG__line(svg, x0, y0, x1, y1, "black");
-        SVG__line(svg, x1, y1, x2, y2, "black");
-        SVG__line(svg, x2, y2, x0, y0, "black");
+        svg->line(x0, y0, x1, y1, "black");
+        svg->line(x1, y1, x2, y2, "black");
+        svg->line(x2, y2, x0, y0, "black");
 
         // Draw a line that connects the centers of the triangles:
         if (index > 0) {
-            SVG__line(svg, last_x, last_y, x, y, "purple");
+            svg->line(last_x, last_y, x, y, "purple");
         }
         last_x = x;
         last_y = y;
     }
 
     // Close *svg*:
-    SVG__close(svg);
+    delete svg;
 
     delete bounding_box;
 }

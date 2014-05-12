@@ -85,7 +85,7 @@ class Arc {
     Arc(Tag *from_tag, double from_twist, double distance, Tag *to_tag,
         double to_twist, double goodness);
 
-    void svg_write(SVG svg);
+    void svg_write(SVG *svg);
     void update(double distance, double angle, double twist, double goodness);
     void write(File out_file);
 
