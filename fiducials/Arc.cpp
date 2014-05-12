@@ -18,13 +18,13 @@
 /// *Arc__compare*() will return -1 if *arc1* sorts before *arc2*,
 /// 0 if they are equal, and 1 if *arc1* sorts after *arc2*.
 
-bool Arc__equal(Arc arc1, Arc arc2) {
+bool Arc::equal(Arc *arc1, Arc *arc2) {
     return Tag::equal(arc1->from_tag, arc2->from_tag) && 
       Tag::equal(arc1->to_tag, arc2->to_tag);
 }
 
 // return true if arc1 comees before arc2; else false
-bool Arc__less(Arc arc1, Arc arc2) {
+bool Arc::less(Arc *arc1, Arc *arc2) {
     if( Tag::less(arc1->from_tag, arc2->from_tag) ) {
       return true;
     } else if( Tag::equal(arc1->from_tag, arc2->from_tag) ) {
@@ -46,7 +46,7 @@ bool Arc__less(Arc arc1, Arc arc2) {
 /// contains *from_tag*, *from_twist*, *distance*, *to_tag*, *to_twist*,
 /// and *goodness*.
 
-Arc Arc__create(Tag *from_tag, double from_twist,
+Arc::Arc(Tag *from_tag, double from_twist,
   double distance, Tag *to_tag, double to_twist, double goodness) {
     // Make sure *from* id is less that *to* id:
     if (from_tag->id > to_tag->id) {
@@ -61,20 +61,17 @@ Arc Arc__create(Tag *from_tag, double from_twist,
     }
 
     // Create and load *arc*:
-    Arc arc = Arc__new("Arc__create:Arc__new:arc");
-    arc->distance = distance;
-    arc->from_tag = from_tag;
-    arc->from_twist = from_twist;
-    arc->goodness = goodness;
-    arc->to_tag = to_tag;
-    arc->to_twist = to_twist;
+    this->distance = distance;
+    this->from_tag = from_tag;
+    this->from_twist = from_twist;
+    this->goodness = goodness;
+    this->to_tag = to_tag;
+    this->to_twist = to_twist;
 
     // Append *arc* to *from*, *to*, and *map*:
-    from_tag->arc_append(arc);
-    to_tag->arc_append(arc);
-    Map__arc_append(from_tag->map, arc);
-
-    return arc;
+    from_tag->arc_append(this);
+    to_tag->arc_append(this);
+    Map__arc_append(from_tag->map, this);
 }
 
 /// @brief Return the distance sort order of *arc1* vs. *arc2*.
@@ -85,7 +82,7 @@ Arc Arc__create(Tag *from_tag, double from_twist,
 /// *Arc__distance_compare*() will return true if the *arc1* distance is larger
 /// than the *arc2* distance, otherwise false
 
-bool Arc__distance_less(Arc arc1, Arc arc2) {
+bool Arc::distance_less(Arc *arc1, Arc *arc2) {
     if( arc1->distance > arc2->distance ) {
       // if arc1 has a greater distance, it should sort first(less)
       return true;
@@ -103,32 +100,20 @@ bool Arc__distance_less(Arc arc1, Arc arc2) {
     return false;
 }
 
-/// @brief Release *arc* storage.
-/// @param arc to release storage of.
-///
-/// *Arc__free*() will release the storage of *arc*.
-
-void Arc__free(Arc arc) {
-    Memory__free((Memory)arc);
-}
-
-
 /// @brief Returns a new *Arc* object.
 /// @returns new *Arc* object.
 ///
 /// *Arc__new*() will return a new *Arc*.
 
-Arc Arc__new(String_Const from) {
-    Arc arc = Memory__new(Arc, from);
-    arc->distance = -1.0;
-    arc->from_tag = NULL;
-    arc->from_twist = 0.0;
-    arc->goodness = 123456789.0;
-    arc->in_tree = (bool)0;
-    arc->to_tag = NULL;
-    arc->to_twist = 0.0;
-    arc->visit = 0;
-    return arc;
+Arc::Arc() {
+    distance = -1.0;
+    from_tag = NULL;
+    from_twist = 0.0;
+    goodness = 123456789.0;
+    in_tree = (bool)0;
+    to_tag = NULL;
+    to_twist = 0.0;
+    visit = 0;
 }
 
 /// @brief Read in an XML <Arc.../> tag from *in_file*.
@@ -140,7 +125,7 @@ Arc Arc__new(String_Const from) {
 /// and return the resulting *Arc* object.  *Tag* objects all looked
 /// up using *map*.
 
-Arc Arc__read(File in_file, Map map) {
+Arc * Arc::read(File in_file, Map map) {
     // Read <Arc ... /> tag:
     File__tag_match(in_file, "Arc");
     unsigned int from_tag_id =
@@ -164,11 +149,11 @@ Arc Arc__read(File in_file, Map map) {
     // Create and load *arc*:
     Tag * from_tag = Map__tag_lookup(map, from_tag_id);
     Tag * to_tag = Map__tag_lookup(map, to_tag_id);
-    Arc arc = Map__arc_lookup(map, from_tag, to_tag);
+    Arc * arc = Map__arc_lookup(map, from_tag, to_tag);
     
     // Load the data into *arc*:
     if (arc->goodness > goodness) {
-        Arc__update(arc, from_twist, distance, to_twist, goodness);
+        arc->update(from_twist, distance, to_twist, goodness);
         arc->in_tree = in_tree;
         Map__arc_announce(map, arc, (CV_Image)0, 0);
     }
@@ -182,11 +167,9 @@ Arc Arc__read(File in_file, Map map) {
 ///
 /// *Arc__svg_write*() will draw *arc* into *svg*.
 
-void Arc__svg_write(Arc arc, SVG svg) {
-    Tag * from_tag = arc->from_tag;
-    Tag * to_tag = arc->to_tag;
+void Arc::svg_write(SVG svg) {
     String_Const color = "green";
-    if (arc->in_tree) {
+    if (in_tree) {
         color = "red";
     }
     SVG__line(svg, from_tag->x, from_tag->y, to_tag->x, to_tag->y, color);
@@ -203,15 +186,15 @@ void Arc__svg_write(Arc arc, SVG svg) {
 /// *Arc__update*() will load *from_twist*, *distance*, *to_twist*, and
 /// *goodness* into *arc*.
 
-void Arc__update(Arc arc,
- double from_twist, double distance, double to_twist, double goodness) {
-    // Create and load *arc*:
-    assert (arc->from_tag->id < arc->to_tag->id);
-    arc->from_twist = from_twist;
-    assert (distance > 0.0);
-    arc->distance = distance;
-    arc->goodness = goodness;
-    arc->to_twist = to_twist;
+void Arc::update(double from_twist, double distance, double to_twist,
+    double goodness) {
+  // Create and load *arc*:
+  assert (this->from_tag->id < this->to_tag->id);
+  this->from_twist = from_twist;
+  assert (distance > 0.0);
+  this->distance = distance;
+  this->goodness = goodness;
+  this->to_twist = to_twist;
 }
 
 /// @brief Write *arc* out to *out_file* in XML format.
@@ -221,22 +204,22 @@ void Arc__update(Arc arc,
 /// *Arc__write*() will write *arc* out to *out_file* as an
 /// <Arc .../> tag.
 
-void Arc__write(Arc arc, File out_file) {
+void Arc::write(File out_file) {
     // We need to convert from radians to degrees:
     double pi = (double)3.14159265358979323846264;
     double radians_to_degrees = 180.0 / pi;
-    double from_twist_degrees = arc->from_twist * radians_to_degrees;
-    double to_twist_degrees = arc->to_twist * radians_to_degrees;
+    double from_twist_degrees = from_twist * radians_to_degrees;
+    double to_twist_degrees = to_twist * radians_to_degrees;
 
     // Output <Arc ... /> tag to *out_file*:
     File__format(out_file, " <Arc");
-    File__format(out_file, " From_Tag_Id=\"%d\"", arc->from_tag->id);
+    File__format(out_file, " From_Tag_Id=\"%d\"", from_tag->id);
     File__format(out_file, " From_Twist=\"%f\"", from_twist_degrees);
-    File__format(out_file, " Distance=\"%f\"", arc->distance);
-    File__format(out_file, " To_Tag_Id=\"%d\"", arc->to_tag->id);
+    File__format(out_file, " Distance=\"%f\"", distance);
+    File__format(out_file, " To_Tag_Id=\"%d\"", to_tag->id);
     File__format(out_file, " To_Twist=\"%f\"", to_twist_degrees);
-    File__format(out_file, " Goodness=\"%f\"", arc->goodness);
-    File__format(out_file, " In_Tree=\"%d\"", arc->in_tree);
+    File__format(out_file, " Goodness=\"%f\"", goodness);
+    File__format(out_file, " In_Tree=\"%d\"", in_tree);
     File__format(out_file, "/>\n");
 }
 

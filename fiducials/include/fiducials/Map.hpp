@@ -25,7 +25,7 @@ struct Map__Struct {
     Fiducials_Arc_Announce_Routine arc_announce_routine;
 
     /// @brief All of the *Arc*'s (i.e. measured intertag distances) in the map.
-    std::vector<Arc> all_arcs;
+    std::vector<Arc*> all_arcs;
 
     /// @brief All of the tags (i.e. fiducials) in the map.
     std::vector<Tag*> all_tags;
@@ -34,7 +34,7 @@ struct Map__Struct {
     void *announce_object;
 
     /// @brief An lookup *Arc* table.
-    std::map<std::pair<unsigned int, unsigned int>, Arc> arcs_;
+    std::map<std::pair<unsigned int, unsigned int>, Arc*> arcs_;
 
     /// @brief Number of map changes:
     unsigned int changes_count;
@@ -55,7 +55,7 @@ struct Map__Struct {
     bool is_saved;
 
     /// @brief List of pending *Arc*'s for map tree extraction.
-    std::vector<Arc> pending_arcs;
+    std::vector<Arc*> pending_arcs;
 
     /// @brief Routine that is called each time a tag is changed.
     Fiducials_Tag_Announce_Routine tag_announce_routine;
@@ -67,7 +67,7 @@ struct Map__Struct {
     std::map<unsigned int, Tag*> tags_;
 
     /// @brief a te
-    Arc temporary_arc;
+    Arc *temporary_arc;
 
     /// @brief Increment *visit* each time a map update is propogated.
     unsigned int visit;
@@ -76,9 +76,9 @@ struct Map__Struct {
 // *Map* routines:
 
 extern void Map__arc_announce(
-  Map map, Arc arc, CV_Image image, unsigned int sequence_number);
-extern void Map__arc_append(Map map, Arc arc);
-extern Arc Map__arc_lookup(Map map, Tag *from, Tag *to);
+  Map map, Arc *arc, CV_Image image, unsigned int sequence_number);
+extern void Map__arc_append(Map map, Arc *arc);
+extern Arc * Map__arc_lookup(Map map, Tag *from, Tag *to);
 extern unsigned int Map__arc_update(Map map, CameraTag * camera_from,
   CameraTag * camera_to, CV_Image image, unsigned int sequence_number);
 extern bool Map__equals(Map map1, Map map2);

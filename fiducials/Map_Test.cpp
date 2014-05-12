@@ -60,17 +60,17 @@ int main(int arguments_size, char * arguments[]) {
 
     // Sides:
     double d = 10.0;
-    Arc__create(tag0, 0.0 + 0.0,           d, tag1, -angle180 + angle10, 0.0);
-    Arc__create(tag1, -angle90 + angle10,  d, tag2,  angle90  + angle20, 0.0);
-    Arc__create(tag0, -angle90,            d, tag3,  angle90  + angle30, 0.0);
-    Arc__create(tag2, -angle180 + angle20, d, tag3,  0.0      + angle30, 0.0);
+    new Arc(tag0, 0.0 + 0.0,           d, tag1, -angle180 + angle10, 0.0);
+    new Arc(tag1, -angle90 + angle10,  d, tag2,  angle90  + angle20, 0.0);
+    new Arc(tag0, -angle90,            d, tag3,  angle90  + angle30, 0.0);
+    new Arc(tag2, -angle180 + angle20, d, tag3,  0.0      + angle30, 0.0);
 
     // Arcs to center:
     d = square_root_50;
-    Arc__create(tag0, -angle45,            d, tag4,  angle135 + angle40, 0.0);
-    Arc__create(tag1, -angle135 + angle10, d, tag4,  angle135 + angle40, 0.0);
-    Arc__create(tag2, -angle45  + angle20, d, tag4,  -angle45 + angle40, 0.0);
-    Arc__create(tag3,  angle45  + angle30, d, tag4, -angle135 + angle40, 0.0);
+    new Arc(tag0, -angle45,            d, tag4,  angle135 + angle40, 0.0);
+    new Arc(tag1, -angle135 + angle10, d, tag4,  angle135 + angle40, 0.0);
+    new Arc(tag2, -angle45  + angle20, d, tag4,  -angle45 + angle40, 0.0);
+    new Arc(tag3,  angle45  + angle30, d, tag4, -angle135 + angle40, 0.0);
 
     // Large diagonals:
     d = square_root_200;

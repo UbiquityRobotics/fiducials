@@ -32,7 +32,7 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 /// to be called for *arc*.
 
 void Map__arc_announce(Map map,
-  Arc arc, CV_Image image, unsigned int sequence_number) {
+  Arc *arc, CV_Image image, unsigned int sequence_number) {
    Tag *from_tag = arc->from_tag;
    Tag *to_tag = arc->to_tag;
    map->arc_announce_routine(map->announce_object,
@@ -48,7 +48,7 @@ void Map__arc_announce(Map map,
 ///
 /// *Map__arc_append*() will append *arc* to *map*.
 
-void Map__arc_append(Map map, Arc arc) {
+void Map__arc_append(Map map, Arc *arc) {
     map->all_arcs.push_back(arc);
     map->changes_count += 1;
     map->is_changed = (bool)1;
@@ -64,7 +64,7 @@ void Map__arc_append(Map map, Arc arc) {
 /// *Map__arc_lookup*() will return the *Arc* that contains *from_tag*
 /// and *to_tag*.  If no such *Arc* exists yet, it is created.
 
-Arc Map__arc_lookup(Map map, Tag *from_tag, Tag *to_tag) {
+Arc *Map__arc_lookup(Map map, Tag *from_tag, Tag *to_tag) {
     // Make sure that *from_tag* has the lower id:
     if (from_tag->id > to_tag->id) {
         Tag *temporary_tag = from_tag;
@@ -74,10 +74,10 @@ Arc Map__arc_lookup(Map map, Tag *from_tag, Tag *to_tag) {
 
     // See whether or not an *Arc* with these two tags preexists:
     std::pair<unsigned int, unsigned int> id(from_tag->id, to_tag->id);
-    Arc arc;
+    Arc *arc;
     if( map->arcs_.count(id) == 0 ) {
         // No preexisting *Arc*; create one:
-        arc = Arc__create(from_tag, 0.0, 0.0, to_tag, 0.0, 123456789.0);
+        arc = new Arc(from_tag, 0.0, 0.0, to_tag, 0.0, 123456789.0);
         map->arcs_[id] = arc;
     } else {
         arc = map->arcs_[id];
@@ -123,7 +123,7 @@ unsigned int Map__arc_update(Map map, CameraTag *camera_from, CameraTag *camera_
     double camera_to_y = camera_to->y;
 
     // Find associated *Arc* that contains *from_tag* and *to_tag*:
-    Arc arc = Map__arc_lookup(map, from_tag, to_tag);
+    Arc *arc = Map__arc_lookup(map, from_tag, to_tag);
 
     // Compute the polar distance (in pixels) and angle from the camera
     // center to the *from_tag* center:
@@ -202,7 +202,7 @@ unsigned int Map__arc_update(Map map, CameraTag *camera_from, CameraTag *camera_
         //  arc_angle * r2d, from_twist * r2d, to_twist * r2d);
 
         // Finally, upate *arc*:
-        Arc__update(arc, from_twist, floor_distance, to_twist, goodness);
+        arc->update(from_twist, floor_distance, to_twist, goodness);
         map->changes_count += 1;
         map->is_changed = (bool)1;
         map->is_saved = (bool)0;
@@ -248,9 +248,9 @@ bool Map__equals(Map map1, Map map2) {
     if (all_arcs1_size == all_arcs2_size) {
         // Visit each *Arc*:
         for (unsigned int index = 0; index < all_arcs1_size; index++) {
-            Arc arc1 = map1->all_arcs[index];
-            Arc arc2 = map2->all_arcs[index];
-            if( !Arc__equal(arc1, arc2)) {
+            Arc * arc1 = map1->all_arcs[index];
+            Arc * arc2 = map2->all_arcs[index];
+            if( !Arc::equal(arc1, arc2)) {
               return false;
             }
         }
@@ -288,7 +288,7 @@ Map Map__create(String_Const file_path, String_Const file_base,
     map->is_saved = (bool)1;
     map->image_log = (bool)0;
     map->tag_announce_routine = tag_announce_routine;
-    map->temporary_arc = Arc__new("Map__new:Arc__New:temporary_arc");
+    map->temporary_arc = new Arc();
     map->visit = 0;
 
     // Read in the contents of *map_heights_file_name* into *map*:
@@ -331,10 +331,9 @@ void Map__free(Map map) {
     // Release all the *Arc*'s:
     unsigned int arcs_size = map->all_arcs.size();
     for (unsigned int index = 0; index < arcs_size; index++) {
-        Arc arc = map->all_arcs[index];
-        Arc__free(arc);
+        delete map->all_arcs[index];
     }
-    Arc__free(map->temporary_arc);
+    delete map->temporary_arc;
 
     // Release all the *Tag*'s:
     unsigned int tags_size = map->all_tags.size();
@@ -398,7 +397,7 @@ void Map__restore(Map map, File in_file) {
 
     // Read in the *all_arcs_size* *Arc* objects:
     for (unsigned int index = 0; index < all_arcs_size; index++) {
-        Arc arc = Arc__read(in_file, map);
+        Arc * arc = Arc::read(in_file, map);
     }
 
     // Process the final Map XML tag "</MAP>":
@@ -437,7 +436,7 @@ void Map__save(Map map) {
 
 void Map__sort(Map map) {
     std::sort(map->all_tags.begin(), map->all_tags.end(), Tag::less);
-    std::sort(map->all_arcs.begin(), map->all_arcs.end(), Arc__less);
+    std::sort(map->all_arcs.begin(), map->all_arcs.end(), Arc::less);
 }
 
 /// @brief Writes *map* out to a file called *svg_base_name*.svg.
@@ -482,8 +481,8 @@ void Map__svg_write(Map map, const String svg_base_name,
 
     // Output each *tag in *all_tags*:
     for (unsigned int index = 0; index < all_arcs_size; index++) {
-        Arc arc = map->all_arcs[index];
-        Arc__svg_write(arc, svg);
+        Arc *arc = map->all_arcs[index];
+        arc->svg_write(svg);
         // publish rviz marker here
 
     }
@@ -662,8 +661,7 @@ void Map__write(Map map, File out_file) {
 
     // Output each *tag in *all_tags*:
     for (unsigned int index = 0; index < all_arcs_size; index++) {
-        Arc arc = map->all_arcs[index];
-        Arc__write(arc, out_file);
+        map->all_arcs[index]->write(out_file);
     }
 
     // Output the closing </Map> tag:
@@ -703,7 +701,7 @@ void Map__update(Map map, CV_Image image, unsigned int sequence_number) {
         // We always want to keep *pending_arcs* sorted from longest to
         // shortest at the end.  *Arc__distance_compare*() sorts longest first:
         std::sort(map->pending_arcs.begin(), map->pending_arcs.end(),
-            Arc__distance_less);
+            Arc::distance_less);
 
         // We keep iterating across *pending_arcs* until it goes empty.
         // since we keep it sorted from longest to shortest (and we always
@@ -711,7 +709,7 @@ void Map__update(Map map, CV_Image image, unsigned int sequence_number) {
         // possible *Arc*'s:
         while (map->pending_arcs.size() != 0) {
             // Pop the shortest *arc* off the end of *pending_arcs*:
-            Arc arc = map->pending_arcs.back();
+            Arc * arc = map->pending_arcs.back();
             map->pending_arcs.pop_back();
 
             // For debugging only:
@@ -762,7 +760,7 @@ void Map__update(Map map, CV_Image image, unsigned int sequence_number) {
                     // Resort *pending_arcs* to that the shortest distance
                     // sorts to the end:
                     std::sort(map->pending_arcs.begin(),
-                        map->pending_arcs.end(), Arc__distance_less);
+                        map->pending_arcs.end(), Arc::distance_less);
                 } else {
                     // *arc* connects across two nodes of spanning tree:
                     arc->in_tree = (bool)0;

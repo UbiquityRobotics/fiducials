@@ -49,15 +49,15 @@
 #include "File.hpp"
 #include "SVG.hpp"
 #include "Map.hpp"
-#include "Arc.hpp"
 
+class Arc;
 
 /// @brief A *Tag_Struct* represents the location and orientation of one 
 /// ceiling fiducial tag.
 class Tag {
   public:
     /// @brief List *Arc*'s connected to this *Tag*.
-    std::vector<Arc> arcs_;
+    std::vector<Arc*> arcs_;
 
     /// @brief Fiducial tag diagnal distance in camera pixels.
     double diagonal;
@@ -101,7 +101,7 @@ class Tag {
   public:
     Tag(unsigned int id, Map map);
 
-    void arc_append(Arc arc);
+    void arc_append(Arc *arc);
     void bounding_box_update(BoundingBox *bounding_box);
 
     void initialize(double angle, double x, double y, double diagonal,
@@ -109,7 +109,7 @@ class Tag {
 
     void svg_write(SVG svg);
     void write(File out_file);
-    void update_via_arc(Arc arc, CV_Image image, unsigned int sequence_number);
+    void update_via_arc(Arc *arc, CV_Image image, unsigned int sequence_number);
 
     // static comparisons and file I/O
     static int equal(Tag *tag1, Tag *tag2);

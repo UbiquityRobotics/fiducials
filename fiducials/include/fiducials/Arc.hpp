@@ -5,8 +5,6 @@
 
 /// @brief *Arc* is just a pointer to *Arc__Struct*.
 
-typedef struct Arc__Struct *Arc;
-
 #include "File.hpp"
 #include "Map.hpp"
 #include "SVG.hpp"
@@ -51,7 +49,8 @@ typedef struct Arc__Struct *Arc;
 
 class Tag;
 
-struct Arc__Struct {
+class Arc {
+  public:
     /// @brief The angle in radians from the *origin* center parallel to the
     /// bottom edge to the line that connects the *origin* and *target* centers.
     double angle;
@@ -79,22 +78,27 @@ struct Arc__Struct {
 
     /// @brief The visit number for the arc.
     unsigned int visit;
+
+  public:
+    Arc();
+
+    Arc(Tag *from_tag, double from_twist, double distance, Tag *to_tag,
+        double to_twist, double goodness);
+
+    void svg_write(SVG svg);
+    void update(double distance, double angle, double twist, double goodness);
+    void write(File out_file);
+
+    // static comparisons for sorting
+    static bool equal(Arc *arc1, Arc *arc2);
+    static bool less(Arc *arc1, Arc *arc2);
+    static bool distance_less(Arc *arc1, Arc *arc2);
+
+    static Arc * read(File out_file, Map map);
 };
 
 // *Arc* routines:
 
-extern bool Arc__equal(Arc arc1, Arc arc2);
-extern bool Arc__less(Arc arc1, Arc arc2);
-extern bool Arc__distance_less(Arc arc1, Arc arc2);
-extern Arc Arc__create(Tag *from_tag, double from_twist,
-  double distance, Tag *to_tag, double to_twist, double goodness);
-extern void Arc__free(Arc arc);
-extern Arc Arc__new(String_Const from);
-extern Arc Arc__read(File out_file, Map map);
-extern void Arc__svg_write(Arc arc, SVG svg);
-extern void Arc__update(
-  Arc arc, double distance, double angle, double twist, double goodness);
-extern void Arc__write(Arc arc, File out_file);
 
 #endif // !defined(ARC_H_INCLUDED)
 

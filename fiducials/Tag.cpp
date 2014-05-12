@@ -16,7 +16,7 @@
 ///
 /// *Tag__arc_append*() will append *arc* to *tag*.
 
-void Tag::arc_append(Arc arc) {
+void Tag::arc_append(Arc * arc) {
     assert(arc->from_tag == this || arc->to_tag == this);
     arcs_.push_back(arc);
 }
@@ -191,7 +191,7 @@ void Tag::svg_write(SVG svg) {
 /// the position and oritation of *tag*.  The position is computed using
 /// the "other" end of *arc*.
 
-void Tag::update_via_arc(Arc arc, CV_Image image,
+void Tag::update_via_arc(Arc *arc, CV_Image image,
     unsigned int sequence_number) {
     // Some values to use for radian/degree conversion:
     double pi = (double)3.14159265358979323846264;
