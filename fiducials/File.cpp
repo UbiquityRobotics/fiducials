@@ -63,22 +63,22 @@ void File__close(File file) {
 /// really not a very robust XML parser.  An assertion failure occurs if
 /// the input does not parse properly.
 
-Double File__double_attribute_read(File in_file, String_Const attribute_name) {
+double File__double_attribute_read(File in_file, String_Const attribute_name) {
     File__string_match(in_file, " ");
     File__string_match(in_file, attribute_name);
     File__string_match(in_file, "=\"");
-    Double fraction = (Double)1.0;
+    double fraction = (double)1.0;
     bool have_decimal_point = (bool)0;
     bool negative = (bool)0;
-    Double result = (Double)0.0;
+    double result = (double)0.0;
     while (1) {
         int character = File__character_read(in_file);
 	if (isdigit(character)) {
 	    if (have_decimal_point) {
-		fraction /= (Double)10.0;
-		result += fraction * (Double)(character - '0');
+		fraction /= (double)10.0;
+		result += fraction * (double)(character - '0');
 	    } else {
-		result = result * 10.0 + (Double)(character - '0');
+		result = result * 10.0 + (double)(character - '0');
 	    }
 	} else if (character == '"') {
 	    break;

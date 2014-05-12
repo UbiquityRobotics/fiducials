@@ -8,7 +8,6 @@
 typedef struct Arc__Struct *Arc;
 
 #include "File.hpp"
-#include "Double.hpp"
 #include "Map.hpp"
 #include "SVG.hpp"
 #include "Tag.hpp"
@@ -54,19 +53,19 @@ typedef struct Arc__Struct *Arc;
 struct Arc__Struct {
     /// @brief The angle in radians from the *origin* center parallel to the
     /// bottom edge to the line that connects the *origin* and *target* centers.
-    Double angle;
+    double angle;
 
     /// @brief The distance between the *from* and *to*.
-    Double distance;
+    double distance;
 
     /// @brief The from *Tag*.
     Tag from_tag;
 
     /// @brief The amount *from_tag* is twisted from distance line segment.
-    Double from_twist;
+    double from_twist;
 
     /// @brief Distance between camera center and line connecting both tags.
-    Double goodness;
+    double goodness;
 
     /// @brief Set to true if this *Arc* is part of the map tree.
     bool in_tree;
@@ -75,7 +74,7 @@ struct Arc__Struct {
     Tag to_tag;
 
     /// @brief The amount *to_tag* is twisted from distance line segment.
-    Double to_twist;
+    double to_twist;
 
     /// @brief The visit number for the arc.
     unsigned int visit;
@@ -86,14 +85,14 @@ struct Arc__Struct {
 extern bool Arc__equal(Arc arc1, Arc arc2);
 extern bool Arc__less(Arc arc1, Arc arc2);
 extern bool Arc__distance_less(Arc arc1, Arc arc2);
-extern Arc Arc__create(Tag from_tag, Double from_twist,
-  Double distance, Tag to_tag, Double to_twist, Double goodness);
+extern Arc Arc__create(Tag from_tag, double from_twist,
+  double distance, Tag to_tag, double to_twist, double goodness);
 extern void Arc__free(Arc arc);
 extern Arc Arc__new(String_Const from);
 extern Arc Arc__read(File out_file, Map map);
 extern void Arc__svg_write(Arc arc, SVG svg);
 extern void Arc__update(
-  Arc arc, Double distance, Double angle, Double twist, Double goodness);
+  Arc arc, double distance, double angle, double twist, double goodness);
 extern void Arc__write(Arc arc, File out_file);
 
 #endif // !defined(ARC_H_INCLUDED)

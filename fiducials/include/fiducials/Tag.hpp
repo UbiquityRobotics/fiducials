@@ -46,7 +46,6 @@
 
 #include "Bounding_Box.hpp"
 #include "CV.hpp"
-#include "Double.hpp"
 #include "File.hpp"
 #include "SVG.hpp"
 
@@ -67,10 +66,10 @@ struct Tag__Struct {
     std::vector<Arc> arcs_;
 
     /// @brief Fiducial tag diagnal distance in camera pixels.
-    Double diagonal;
+    double diagonal;
 
     /// @brief Distance along one side of the tag in world units.
-    Double world_diagonal;
+    double world_diagonal;
 
     ///@brief True if rest of *Tag* is initialized.
     bool initialized;
@@ -85,7 +84,7 @@ struct Tag__Struct {
     Map map;
 
     /// @brief The twist from the floor X axis to the tag bottom edge.
-    Double twist;
+    double twist;
 
     /// @brief True if tag is currently visible in camera field of view.
     bool visible;
@@ -94,13 +93,13 @@ struct Tag__Struct {
     unsigned int visit;
 
     /// @brief Absolute X floor coordinate.
-    Double x;
+    double x;
 
     /// @brief Absolute Y floor coordinate.
-    Double y;
+    double y;
 
     /// @brief Absolute Z floor coordinate.
-    Double z;
+    double z;
 
     /// @brief Set if tag was updated
     bool updated;
@@ -110,7 +109,7 @@ struct Tag__Struct {
 /// ceiling height.
 struct Tag_Height__Struct {
     /// @brief Distance along one side of the tag in world units.
-    Double world_diagonal;
+    double world_diagonal;
 
     /// @brief The first tag identifier in the span.
     unsigned int first_id;
@@ -119,7 +118,7 @@ struct Tag_Height__Struct {
     unsigned int last_id;
 
     /// @brief The fiducial height above the floor.
-    Double z;
+    double z;
 };
 
 // *Tag* routines;
@@ -131,7 +130,7 @@ extern int Tag__equal(Tag tag1, Tag tag2);
 extern bool Tag__less(Tag tag1, Tag tag2);
 extern void Tag__free(Tag tag);
 extern void Tag__initialize(
-  Tag tag, Double angle, Double x, Double y, Double diagonal, unsigned int visit);
+  Tag tag, double angle, double x, double y, double diagonal, unsigned int visit);
 extern void Tag__sort(Tag tag);
 extern Tag Tag__read(File in_file, Map map);
 extern void Tag__svg_write(Tag tag, SVG svg);

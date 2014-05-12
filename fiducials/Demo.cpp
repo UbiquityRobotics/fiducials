@@ -5,7 +5,6 @@
 #include <sys/time.h>
 
 #include "CV.hpp"
-#include "Double.hpp"
 #include "File.hpp"
 #include "Fiducials.hpp"
 #include "High_GUI2.hpp"
@@ -89,12 +88,12 @@ int main(int arguments_size, char *arguments[]) {
 
 	assert (gettimeofday(end_time_value, (struct timezone *)0) == 0);
 
-	Double start_time = (Double)start_time_value->tv_usec / 1000000.0;
-	Double end_time =
-	  (Double)(end_time_value->tv_sec - start_time_value->tv_sec) +
-	  (Double)end_time_value->tv_usec / 1000000.0;
-	Double time = end_time - start_time;
-	Double frames_per_second = (Double)size / time;
+	double start_time = (double)start_time_value->tv_usec / 1000000.0;
+	double end_time =
+	  (double)(end_time_value->tv_sec - start_time_value->tv_sec) +
+	  (double)end_time_value->tv_usec / 1000000.0;
+	double time = end_time - start_time;
+	double frames_per_second = (double)size / time;
 
 	File__format(stderr, "%d frames / %f sec = %f Frame/sec\n",
 	  size, time, frames_per_second);

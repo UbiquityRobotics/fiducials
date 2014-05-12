@@ -3,7 +3,6 @@
 #include <assert.h>
 
 #include "Arc.hpp"
-#include "Double.hpp"
 #include "File.hpp"
 #include "Map.hpp"
 #include "SVG.hpp"
@@ -47,8 +46,8 @@ bool Arc__less(Arc arc1, Arc arc2) {
 /// contains *from_tag*, *from_twist*, *distance*, *to_tag*, *to_twist*,
 /// and *goodness*.
 
-Arc Arc__create(Tag from_tag, Double from_twist,
-  Double distance, Tag to_tag, Double to_twist, Double goodness) {
+Arc Arc__create(Tag from_tag, double from_twist,
+  double distance, Tag to_tag, double to_twist, double goodness) {
     // Make sure *from* id is less that *to* id:
     if (from_tag->id > to_tag->id) {
         // Compute the conjugate *Arc* (see Arc.h):
@@ -56,7 +55,7 @@ Arc Arc__create(Tag from_tag, Double from_twist,
         from_tag = to_tag;
         to_tag = temporary_tag;
 
-        Double temporary_twist = from_twist;
+        double temporary_twist = from_twist;
         from_twist = to_twist;
         to_twist = temporary_twist;
     }
@@ -146,19 +145,19 @@ Arc Arc__read(File in_file, Map map) {
     File__tag_match(in_file, "Arc");
     unsigned int from_tag_id =
       (unsigned int)File__integer_attribute_read(in_file, "From_Tag_Id");
-    Double from_twist = File__double_attribute_read(in_file, "From_Twist");
+    double from_twist = File__double_attribute_read(in_file, "From_Twist");
 
-    Double distance = File__double_attribute_read(in_file, "Distance");
+    double distance = File__double_attribute_read(in_file, "Distance");
     unsigned int to_tag_id =
        (unsigned int)File__integer_attribute_read(in_file, "To_Tag_Id");
-    Double to_twist = File__double_attribute_read(in_file, "To_Twist");
-    Double goodness = File__double_attribute_read(in_file, "Goodness");
+    double to_twist = File__double_attribute_read(in_file, "To_Twist");
+    double goodness = File__double_attribute_read(in_file, "Goodness");
     bool in_tree = (bool)File__integer_attribute_read(in_file, "In_Tree");
     File__string_match(in_file, "/>\n");
 
     // Convert from degrees to radians:
-    Double pi = (Double)3.14159265358979323846264;
-    Double degrees_to_radians = pi / 180.0;
+    double pi = (double)3.14159265358979323846264;
+    double degrees_to_radians = pi / 180.0;
     from_twist *= degrees_to_radians;
     to_twist *= degrees_to_radians;
 
@@ -205,7 +204,7 @@ void Arc__svg_write(Arc arc, SVG svg) {
 /// *goodness* into *arc*.
 
 void Arc__update(Arc arc,
- Double from_twist, Double distance, Double to_twist, Double goodness) {
+ double from_twist, double distance, double to_twist, double goodness) {
     // Create and load *arc*:
     assert (arc->from_tag->id < arc->to_tag->id);
     arc->from_twist = from_twist;
@@ -224,10 +223,10 @@ void Arc__update(Arc arc,
 
 void Arc__write(Arc arc, File out_file) {
     // We need to convert from radians to degrees:
-    Double pi = (Double)3.14159265358979323846264;
-    Double radians_to_degrees = 180.0 / pi;
-    Double from_twist_degrees = arc->from_twist * radians_to_degrees;
-    Double to_twist_degrees = arc->to_twist * radians_to_degrees;
+    double pi = (double)3.14159265358979323846264;
+    double radians_to_degrees = 180.0 / pi;
+    double from_twist_degrees = arc->from_twist * radians_to_degrees;
+    double to_twist_degrees = arc->to_twist * radians_to_degrees;
 
     // Output <Arc ... /> tag to *out_file*:
     File__format(out_file, " <Arc");

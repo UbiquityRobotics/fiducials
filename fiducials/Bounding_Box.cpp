@@ -1,8 +1,8 @@
 // Copyright (c) 2013 by Wayne C. Gramlich.  All rights reserved.
 
 #include "Bounding_Box.hpp"
-#include "Double.hpp"
 #include "Memory.hpp"
+#include <algorithm>
 
 /// @brief Release the storage associated with *bounding_box*.
 /// @param bounding_box the *Bounding_Box* object to release storage of.
@@ -31,7 +31,7 @@ Bounding_Box Bounding_Box__new(void) {
 /// *Bounding_Box__reset*() will reset *bounding_box* to the empty state.
 
 void Bounding_Box__reset(Bounding_Box bounding_box) {
-    Double big = 123456789.0;
+    double big = 123456789.0;
     bounding_box->maximum_x = -big;
     bounding_box->minimum_x = big;
     bounding_box->maximum_y = -big;
@@ -46,10 +46,10 @@ void Bounding_Box__reset(Bounding_Box bounding_box) {
 /// *Bounding_Box__update*() will update the contents of *bounding_box* to
 /// enclose (*x*, *y*).
 
-void Bounding_Box__update(Bounding_Box bounding_box, Double x, Double y) {
-    bounding_box->maximum_x = Double__maximum(bounding_box->maximum_x, x);
-    bounding_box->minimum_x = Double__minimum(bounding_box->minimum_x, x);
-    bounding_box->maximum_y = Double__maximum(bounding_box->maximum_y, y);
-    bounding_box->minimum_y = Double__minimum(bounding_box->minimum_y, y);
+void Bounding_Box__update(Bounding_Box bounding_box, double x, double y) {
+    bounding_box->maximum_x = std::max(bounding_box->maximum_x, x);
+    bounding_box->minimum_x = std::min(bounding_box->minimum_x, x);
+    bounding_box->maximum_y = std::max(bounding_box->maximum_y, y);
+    bounding_box->minimum_y = std::min(bounding_box->minimum_y, y);
 }
 

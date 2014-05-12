@@ -46,9 +46,9 @@ int main(int arguments_size, char * arguments[]) {
 
 	    // Set the frame size:
 	    CV_Capture__set_property(capture,
-	      CV_Capture__property_frame_width, (Double)640);
+	      CV_Capture__property_frame_width, (double)640);
 	    CV_Capture__set_property(capture,
-	      CV_Capture__property_frame_height, (Double)480);
+	      CV_Capture__property_frame_height, (double)480);
 	} else {
 	    // Open a video file format:
 	    capture = CV_Capture__create_file(argument1);

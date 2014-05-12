@@ -5,7 +5,6 @@
 #include "Arc.hpp"
 #include "CV.hpp"
 #include "File.hpp"
-#include "Double.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
@@ -18,22 +17,22 @@ int main(int arguments_size, char * arguments[]) {
       (String_Const)0, "main:Map__new");
     unsigned int visit = map1->visit;
 
-    Double pi = 3.14159265358979323846264;
-    Double degrees_to_radians = pi / 180.0;
+    double pi = 3.14159265358979323846264;
+    double degrees_to_radians = pi / 180.0;
 
     // Some angles (in radians) to use:
-    Double angle0   =   0.0 * degrees_to_radians;
-    Double angle10  =  10.0 * degrees_to_radians;
-    Double angle20  =  20.0 * degrees_to_radians;
-    Double angle30  =  30.0 * degrees_to_radians;
-    Double angle40  =  40.0 * degrees_to_radians;
-    Double angle45  =  45.0 * degrees_to_radians;
-    Double angle90  =  90.0 * degrees_to_radians;
-    Double angle135 = 135.0 * degrees_to_radians;
-    Double angle180 = 180.0 * degrees_to_radians;
+    double angle0   =   0.0 * degrees_to_radians;
+    double angle10  =  10.0 * degrees_to_radians;
+    double angle20  =  20.0 * degrees_to_radians;
+    double angle30  =  30.0 * degrees_to_radians;
+    double angle40  =  40.0 * degrees_to_radians;
+    double angle45  =  45.0 * degrees_to_radians;
+    double angle90  =  90.0 * degrees_to_radians;
+    double angle135 = 135.0 * degrees_to_radians;
+    double angle180 = 180.0 * degrees_to_radians;
 
-    Double square_root_200 = Double__square_root(10.0 * 10.0 + 10.0 * 10.0);
-    Double square_root_50 = Double__square_root(5.0 * 5.0 + 5.0 * 5.0);
+    double square_root_200 = hypot(10.0, 10.0);
+    double square_root_50 = hypot(5.0, 5.0);
 
     // The test map looks as follows:
     //
@@ -60,7 +59,7 @@ int main(int arguments_size, char * arguments[]) {
     // 0 has no twist, tag 1 is 10 degerees, ..., and tag 4 is 40 degrees.
 
     // Sides:
-    Double d = 10.0;
+    double d = 10.0;
     Arc__create(tag0, 0.0 + 0.0,           d, tag1, -angle180 + angle10, 0.0);
     Arc__create(tag1, -angle90 + angle10,  d, tag2,  angle90  + angle20, 0.0);
     Arc__create(tag0, -angle90,            d, tag3,  angle90  + angle30, 0.0);

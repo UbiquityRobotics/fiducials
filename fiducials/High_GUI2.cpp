@@ -5,7 +5,6 @@
 #include <opencv2/highgui/highgui_c.h>
 
 #include "CV.hpp"
-#include "Double.hpp"
 #include "High_GUI2.hpp"
 
 int CV_Capture__property_pos_msec = CV_CAP_PROP_POS_MSEC;
@@ -57,7 +56,7 @@ CV_Capture CV_Capture__create_file(String capture_file_name) {
 }
 
 int CV_Capture__set_property(
-  CV_Capture capture, int property_id, Double value) {
+  CV_Capture capture, int property_id, double value) {
     return cvSetCaptureProperty(capture, property_id, value);
 }
 
@@ -65,7 +64,7 @@ CV_Video_Writer
 CV__create_video_writer(
   String out_file_name,
   int four_cc,
-  Double fps,
+  double fps,
   CV_Size size,
   int is_color)
 {

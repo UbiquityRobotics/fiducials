@@ -1,10 +1,10 @@
 // Copyright (c) 2013-2014 by Wayne C. Gramlich.  All rights reserved.
 
 #include <assert.h>
+#include <angles/angles.h>
 
 #include "Arc.hpp"
 #include "Bounding_Box.hpp"
-#include "Double.hpp"
 #include "SVG.hpp"
 #include "Tag.hpp"
 
@@ -30,9 +30,9 @@ void Tag__arc_append(Tag tag, Arc arc) {
 /// graph *tag*.
 
 void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box) {
-    Double x = tag->x;
-    Double y = tag->y;
-    Double half_diagonal = tag->world_diagonal / 2.0;
+    double x = tag->x;
+    double y = tag->y;
+    double half_diagonal = tag->world_diagonal / 2.0;
     Bounding_Box__update(bounding_box, x - half_diagonal , y - half_diagonal);
     Bounding_Box__update(bounding_box, x + half_diagonal , y + half_diagonal);
 }
@@ -65,7 +65,7 @@ bool Tag__less(Tag tag1, Tag tag2) {
 Tag Tag__create(unsigned int id, Map map) {
     Tag_Height tag_height = Map__tag_height_lookup(map, id);
     Tag tag =  Memory__new(Tag, "Tag__create");
-    tag->twist = (Double)0.0;
+    tag->twist = (double)0.0;
     tag->diagonal = 0.0;
     tag->hop_count = 0;
     tag->id = id;
@@ -73,8 +73,8 @@ Tag Tag__create(unsigned int id, Map map) {
     tag->map = map;
     tag->world_diagonal = tag_height->world_diagonal;
     tag->visit = map->visit;
-    tag->x = (Double)0.0;
-    tag->y = (Double)0.0;
+    tag->x = (double)0.0;
+    tag->y = (double)0.0;
     tag->z = tag_height->z;
     tag->updated = (bool)1;
     return tag;
@@ -105,7 +105,7 @@ void Tag__free(Tag tag) {
 /// *diagonal* is in pixels.
 
 void Tag__initialize(
-  Tag tag, Double twist, Double x, Double y, Double diagonal, unsigned int visit) {
+  Tag tag, double twist, double x, double y, double diagonal, unsigned int visit) {
     tag->diagonal = diagonal; 
     tag->initialized = (bool)1;
     tag->twist = twist;
@@ -126,17 +126,17 @@ Tag Tag__read(File in_file, Map map) {
     // Read in "<Tag .../>":
     File__tag_match(in_file, "Tag");
     unsigned int tag_id = (unsigned int)File__integer_attribute_read(in_file, "Id");
-    Double diagonal = File__double_attribute_read(in_file, "Diagonal");
-    Double pi = (Double)3.14159265358979323846264;
-    Double twist = File__double_attribute_read(in_file, "Twist");
-    Double x = File__double_attribute_read(in_file, "X");
-    Double y = File__double_attribute_read(in_file, "Y");
+    double diagonal = File__double_attribute_read(in_file, "Diagonal");
+    double pi = (double)3.14159265358979323846264;
+    double twist = File__double_attribute_read(in_file, "Twist");
+    double x = File__double_attribute_read(in_file, "X");
+    double y = File__double_attribute_read(in_file, "Y");
     unsigned int hop_count =
       (unsigned int)File__integer_attribute_read(in_file, "Hop_Count");
     File__string_match(in_file, "/>\n");
 
     // Convert *twist* from *degrees_to_radians*:
-    Double degrees_to_radians = pi / 180.0;
+    double degrees_to_radians = pi / 180.0;
     twist *= degrees_to_radians;
 
     // Grab some additional information about *tag_id* from *map*:
@@ -169,26 +169,26 @@ void Tag__sort(Tag tag) {
 
 void Tag__svg_write(Tag tag, SVG svg) {
   // Some constants:
-    Double pi = (Double)3.14159265358979323846264;
-    Double half_pi = pi / 2.0;
-    Double quarter_pi = half_pi / 2.0;
+    double pi = (double)3.14159265358979323846264;
+    double half_pi = pi / 2.0;
+    double quarter_pi = half_pi / 2.0;
 
     // Grab some values from *tag*:
     unsigned int id = tag->id;
-    Double half_diagonal = tag->world_diagonal / 2.0;
-    Double x = tag->x;
-    Double y = tag->y;
-    Double twist = tag->twist - quarter_pi;
+    double half_diagonal = tag->world_diagonal / 2.0;
+    double x = tag->x;
+    double y = tag->y;
+    double twist = tag->twist - quarter_pi;
 
     // Compute the 4 corners:
-    double x1 = x + half_diagonal * Double__cosine(twist);
-    double y1 = y + half_diagonal * Double__sine(twist);
-    double x2 = x + half_diagonal * Double__cosine(twist + half_pi);
-    double y2 = y + half_diagonal * Double__sine(twist + half_pi);
-    double x3 = x + half_diagonal * Double__cosine(twist + pi);
-    double y3 = y + half_diagonal * Double__sine(twist + pi);
-    double x4 = x + half_diagonal * Double__cosine(twist - half_pi);
-    double y4 = y + half_diagonal * Double__sine(twist - half_pi);
+    double x1 = x + half_diagonal * cos(twist);
+    double y1 = y + half_diagonal * sin(twist);
+    double x2 = x + half_diagonal * cos(twist + half_pi);
+    double y2 = y + half_diagonal * sin(twist + half_pi);
+    double x3 = x + half_diagonal * cos(twist + pi);
+    double y3 = y + half_diagonal * sin(twist + pi);
+    double x4 = x + half_diagonal * cos(twist - half_pi);
+    double y4 = y + half_diagonal * sin(twist - half_pi);
 
     // Plot the 4 sides:
     String_Const other_edge = "black";
@@ -220,15 +220,15 @@ void Tag__svg_write(Tag tag, SVG svg) {
 void Tag__update_via_arc(
   Tag tag, Arc arc, CV_Image image, unsigned int sequence_number) {
     // Some values to use for radian/degree conversion:
-    Double pi = (Double)3.14159265358979323846264;
-    Double r2d = 180.0 / pi;
+    double pi = (double)3.14159265358979323846264;
+    double r2d = 180.0 / pi;
 
     // Read out *arc* contents:
     Tag from_tag = arc->from_tag;
-    Double arc_from_twist = arc->from_twist;
-    Double distance = arc->distance;
+    double arc_from_twist = arc->from_twist;
+    double distance = arc->distance;
     Tag to_tag = arc->to_tag;
-    Double arc_to_twist = arc->to_twist;
+    double arc_to_twist = arc->to_twist;
 
     // For debugging:
     //File__format(stderr,
@@ -242,7 +242,7 @@ void Tag__update_via_arc(
 	Tag temporary_tag = from_tag;
 	from_tag = to_tag;
 	to_tag = temporary_tag;
-	Double temporary_twist = arc_from_twist;
+	double temporary_twist = arc_from_twist;
 	arc_from_twist = arc_to_twist;
 	arc_to_twist = temporary_twist;
 
@@ -256,18 +256,18 @@ void Tag__update_via_arc(
     assert (tag != from_tag);
 
     // Grab the starting values from *from_tag*:
-    Double from_tag_twist = from_tag->twist;
-    Double from_tag_x = from_tag->x;
-    Double from_tag_y = from_tag->y;
+    double from_tag_twist = from_tag->twist;
+    double from_tag_x = from_tag->x;
+    double from_tag_y = from_tag->y;
     //File__format(stderr,
     //  "Tag__update_via_arc: From: id=%d x=%.2f y=%.2f twist=%.4f\n",
     //  from_tag->id, from_tag_x, from_tag_y, from_tag_twist * r2d);
 
     // Compute the new *Tag* values:
-    Double angle = Double__angle_normalize(-arc_from_twist + from_tag_twist);
-    Double to_tag_x = from_tag_x + distance * Double__cosine(angle);
-    Double to_tag_y = from_tag_y + distance * Double__sine(angle);
-    Double to_tag_twist = Double__angle_normalize(angle - pi + arc_to_twist);
+    double angle = angles::normalize_angle(-arc_from_twist + from_tag_twist);
+    double to_tag_x = from_tag_x + distance * cos(angle);
+    double to_tag_y = from_tag_y + distance * sin(angle);
+    double to_tag_twist = angles::normalize_angle(angle - pi + arc_to_twist);
 
     // If *to_tag* values are to change
     if (to_tag->twist != to_tag_twist ||
@@ -295,8 +295,8 @@ void Tag__update_via_arc(
 
 void Tag__write(Tag tag, File out_file) {
     // We store angles in degress and convert to/from radians.
-    Double pi = (Double)3.14159265358979323846264;
-    Double radians_to_degrees = 180.0 / pi;
+    double pi = (double)3.14159265358979323846264;
+    double radians_to_degrees = 180.0 / pi;
 
     // Write out "<Tag ... >":
     File__format(out_file, " <Tag");
@@ -349,10 +349,10 @@ Tag_Height Tag_Height__xml_read(File xml_in_file) {
     unsigned int last_id =
       (unsigned int)File__integer_attribute_read(xml_in_file, "Last_Id");
 
-    Double World_Diagonal = 
+    double World_Diagonal = 
        File__double_attribute_read(xml_in_file, "World_Diagonal");
 
-    Double z = File__double_attribute_read(xml_in_file, "Z");
+    double z = File__double_attribute_read(xml_in_file, "Z");
 
     File__string_match(xml_in_file, "/>\n");
 

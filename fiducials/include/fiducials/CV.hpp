@@ -6,7 +6,6 @@
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
-#include "Double.hpp"
 #include "Memory.hpp"
 #include "String.hpp"
 
@@ -34,13 +33,13 @@ extern int CV__rgb_to_gray;
 extern int CV__thresh_binary;
 extern int CV__window_auto_size;
 
-extern int CV__round(Double value);
+extern int CV__round(double value);
 extern int CV__undistortion_setup(String_Const calibrate_file_name,
   int width, int height, CV_Image *mapx, CV_Image *mapy);
 
 extern void CV_Image__adaptive_threshold(CV_Image source_image,
-  CV_Image destination_image, Double maximum_value, int adaptive_method,
-  int threshold_type, int block_size, Double parameter1);
+  CV_Image destination_image, double maximum_value, int adaptive_method,
+  int threshold_type, int block_size, double parameter1);
 extern void CV_Image__blob_draw(
   CV_Image image, int x, int y, CV_Scalar color);
 extern int CV_Image__channels_get(CV_Image image);
@@ -78,7 +77,7 @@ extern int CV_Image__save(
   CV_Image image, String_Const file_name, int *parameters);
 extern void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
   int smooth_type, int parameter1, int parameter2,
-  Double parameter3, Double parameter4);
+  double parameter3, double parameter4);
 extern CV_Image CV_Image__pnm_read(String_Const file_base_name);
 extern void CV_Image__pnm_write(CV_Image image, String_Const file_base_name);
 extern CV_Image CV_Image__tga_read(CV_Image image, String_Const file_name);
@@ -88,7 +87,7 @@ extern int CV_Image__width_get(CV_Image image);
 extern int CV__term_criteria_iterations;
 extern int CV__term_criteria_eps;
 extern CV_Term_Criteria CV_Term_Criteria__create(
-  int type, int maximum_iterations, Double epsilon);
+  int type, int maximum_iterations, double epsilon);
 
 extern void CV_Memory_Storage__clear(CV_Memory_Storage storage);
 extern CV_Memory_Storage CV_Memory_Storage__create(int block_size);
@@ -105,23 +104,23 @@ extern CV_Point2D32F CV_Point2D32F_Vector__fetch1(
 extern bool CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners);
 
 extern void CV_Point2D32F__point_set(CV_Point2D32F point2d32f, CV_Point point);
-extern Double CV_Point2D32F__x_get(CV_Point2D32F point);
-extern void CV_Point2D32F__x_set(CV_Point2D32F point, Double x);
-extern Double CV_Point2D32F__y_get(CV_Point2D32F point);
-extern void CV_Point2D32F__y_set(CV_Point2D32F point, Double y);
+extern double CV_Point2D32F__x_get(CV_Point2D32F point);
+extern void CV_Point2D32F__x_set(CV_Point2D32F point, double x);
+extern double CV_Point2D32F__y_get(CV_Point2D32F point);
+extern void CV_Point2D32F__y_set(CV_Point2D32F point, double y);
 
 extern CV_Scalar CV_Scalar__create(
-  Double value0, Double value1, Double value2, Double value3);
+  double value0, double value1, double value2, double value3);
 extern void CV_Scalar__free(CV_Scalar cv_scalar);
-extern CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue);
+extern CV_Scalar CV_Scalar__rgb(double red, double green, double blue);
 
 extern CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
   int header_size, CV_Memory_Storage storage, int method,
-  int parameter1, Double parameter2);
-extern Double CV_Sequence__arc_length(
+  int parameter1, double parameter2);
+extern double CV_Sequence__arc_length(
  CV_Sequence contour, CV_Slice slice, int is_closed);
 extern bool CV_Sequence__check_contour_convexity(CV_Sequence contour);
-extern Double CV_Sequence__contour_area(
+extern double CV_Sequence__contour_area(
   CV_Sequence contour, CV_Slice slice, int oriented);
 extern CV_Sequence CV_Sequence__next_get(CV_Sequence sequence);
 extern CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, unsigned int index);

@@ -3,9 +3,10 @@
 #include <assert.h>
 
 #include "Bounding_Box.hpp"
-#include "Double.hpp"
 #include "String.hpp"
 #include "SVG.hpp"
+
+#include <algorithm>
 
 /// @brief Turns *svg* into a cartesian graphing canvas bounded by
 /// *bounding_box*.
@@ -20,38 +21,38 @@
 /// The available graphing area is *x_width* by *y_height*.
 
 void SVG__cartesian_scale(
-  SVG svg, Double x_width, Double y_height, Bounding_Box bounding_box) {
+  SVG svg, double x_width, double y_height, Bounding_Box bounding_box) {
     // Grab the minimum/maximum values from *bounding_box*.
-    Double maximum_x = bounding_box->maximum_x;
-    Double minimum_x = bounding_box->minimum_x;
-    Double maximum_y = bounding_box->maximum_y;
-    Double minimum_y = bounding_box->minimum_y;
+    double maximum_x = bounding_box->maximum_x;
+    double minimum_x = bounding_box->minimum_x;
+    double maximum_y = bounding_box->maximum_y;
+    double minimum_y = bounding_box->minimum_y;
 
     // Compute the span in x and y:
-    Double x_span = maximum_x - minimum_x;
-    Double y_span = maximum_y - minimum_y;
+    double x_span = maximum_x - minimum_x;
+    double y_span = maximum_y - minimum_y;
     //File__format(stderr, "X/Y span=(%.2f, %.2f)\n", x_span, y_span);
 
     // COmpute the axis independent scale in X and Y:
-    Double x_scale = x_width / x_span;
-    Double y_scale = y_height / y_span;
+    double x_scale = x_width / x_span;
+    double y_scale = y_height / y_span;
     //File__format(stderr, "X/Y scale=(%.6f, %.6f)\n", x_scale, y_scale);
 
     // Take the smaller of the two so that the X and Y scales are equal:
-    x_scale = Double__minimum(x_scale, y_scale);
+    x_scale = std::min(x_scale, y_scale);
     y_scale = x_scale;
     //File__format(stderr, "X/Y scale=(%.6f, %.6f)\n", x_scale, y_scale);
 
     // Compute X/Y spans adjusted by the aspect ratio:
-    Double scaled_x_span = x_span;
-    Double scaled_y_span = y_span;
+    double scaled_x_span = x_span;
+    double scaled_y_span = y_span;
     //File__format(stderr,
     //  "Scaled X/Y span=(%.2f, %.2f)\n", scaled_x_span, scaled_y_span);
     
     // Now compute the X and Y offsets:
-    Double x_offset = (minimum_x + maximum_x) / 2.0 - scaled_x_span / 2.0;
+    double x_offset = (minimum_x + maximum_x) / 2.0 - scaled_x_span / 2.0;
     // Swap Y axis direction by adding *scaled_y_span* instead of subtracting:
-    Double y_offset = (minimum_y + maximum_y) / 2.0 + scaled_y_span / 2.0;
+    double y_offset = (minimum_y + maximum_y) / 2.0 + scaled_y_span / 2.0;
     //File__format(stderr, "X/Y offset=(%.2f, %.2f)\n", x_offset, y_offset);
     
     // Load up *svg*:
@@ -91,13 +92,13 @@ void SVG__close(SVG svg) {
 /// using *stroke*.
 
 void SVG__line(SVG svg,
-  Double x1, Double y1, Double x2, Double y2, String_Const stroke) {
+  double x1, double y1, double x2, double y2, String_Const stroke) {
     // Extract some values from *svg*:
     File svg_stream = svg->stream;
-    Double x_offset = svg->x_offset;
-    Double y_offset = svg->y_offset;
-    Double x_scale = svg->x_scale;
-    Double y_scale = svg->y_scale;
+    double x_offset = svg->x_offset;
+    double y_offset = svg->y_offset;
+    double x_scale = svg->x_scale;
+    double y_scale = svg->y_scale;
     String_Const units = svg->units;
 
     // Output "<line ... />" to *svg_stream*:
@@ -124,7 +125,7 @@ void SVG__line(SVG svg,
 /// scable vector graphics.
 
 SVG SVG__open(String_Const base_name,
-  Double width, Double height, Double x_scale, Double y_scale,
+  double width, double height, double x_scale, double y_scale,
   String_Const units) {
     // Verify that units are OK:
     assert (String__equal(units, "cm") ||
@@ -184,20 +185,20 @@ SVG SVG__open(String_Const base_name,
 /// with *stroke_color* and *fill_color* specifying the external line color
 /// and internal fill color respectivily.
 
-void SVG__rectangle(SVG svg, Double x, Double y,
-  Double width, Double height, String_Const stroke_color,
+void SVG__rectangle(SVG svg, double x, double y,
+  double width, double height, String_Const stroke_color,
   String_Const fill_color) {
     // Grab some values from svg:
     File svg_stream = svg->stream;
-    Double x_offset = svg->x_offset;
-    Double y_offset = svg->y_offset;
-    Double x_scale = svg->x_scale;
-    Double y_scale = svg->y_scale;
+    double x_offset = svg->x_offset;
+    double y_offset = svg->y_offset;
+    double x_scale = svg->x_scale;
+    double y_scale = svg->y_scale;
     String_Const units = svg->units;
 
     // Output "<rect ... />" to *svg_stream*:
-    Double x_final = (x + x_offset) * x_scale;
-    Double y_final = (y + y_offset) * y_scale;
+    double x_final = (x + x_offset) * x_scale;
+    double y_final = (y + y_offset) * y_scale;
     File__format(svg_stream, 
       "<rect x=\"%f%s\" y=\"%f%s\"", x_final, units, y_final, units);
     File__format(svg_stream,
@@ -219,14 +220,14 @@ void SVG__rectangle(SVG svg, Double x, Double y,
 /// of type *font_family*.
 
 void SVG__text(SVG svg,
-  String_Const message, Double x, Double y, String_Const font_family,
+  String_Const message, double x, double y, String_Const font_family,
   unsigned int font_size) {
     // Grab some values from *svg*:
     File svg_stream = svg->stream;
-    Double x_offset = svg->x_offset;
-    Double y_offset = svg->y_offset;
-    Double x_scale = svg->x_scale;
-    Double y_scale = svg->y_scale;
+    double x_offset = svg->x_offset;
+    double y_offset = svg->y_offset;
+    double x_scale = svg->x_scale;
+    double y_scale = svg->y_scale;
     String_Const units = svg->units;
 
     File__format(svg_stream,

@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "Double.hpp"
 #include "String.hpp"
 
 /// @brief *FILE* is a file I/O object.
@@ -17,7 +16,7 @@ extern unsigned int File__byte_read(File file);
 extern void File__byte_write(File file, unsigned int byte);
 extern int File__character_read(File in_file);
 extern void File__close(File file);
-extern Double File__double_attribute_read(
+extern double File__double_attribute_read(
   File in_file, String_Const attribute_name);
 extern float File__float_attribute_read(
   File in_file, String_Const attribute_name);

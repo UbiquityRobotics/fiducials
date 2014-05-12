@@ -10,28 +10,24 @@ typedef struct Fiducials_Results__Struct *Fiducials_Results;
 #include <assert.h>
 #include <sys/time.h>
 
-// #include scalar typedef's first so we can define the announce routine
-// typedef's:
-#include "Double.hpp"
-
 // Define the announce routine typedef's:
 typedef void (*Fiducials_Arc_Announce_Routine)(void *announce_object,
-  int from_id, Double from_x, Double from_y, Double from_z,
-  int to_id, Double to_x, Double to_y, Double to_z,
-  Double goodness, bool in_spanning_tree);
+  int from_id, double from_x, double from_y, double from_z,
+  int to_id, double to_x, double to_y, double to_z,
+  double goodness, bool in_spanning_tree);
 
 typedef void (*Fiducials_Location_Announce_Routine)(void *announce_object,
-  int id, Double x, Double y, Double z, Double bearing);
+  int id, double x, double y, double z, double bearing);
 
 typedef void (*Fiducials_Tag_Announce_Routine)(void *announce_object,
-  int id, Double x, Double y, Double z, Double twist,
-  Double diagonal, Double distance_per_pixel,
+  int id, double x, double y, double z, double twist,
+  double diagonal, double distance_per_pixel,
   bool visible, int hop_count);
 
 typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
-    int id, int direction, Double world_diagonal,
-    Double x1, Double y1, Double x2, Double y2,
-    Double x3, Double y3, Double x4, Double y4);
+    int id, int direction, double world_diagonal,
+    double x1, double y1, double x2, double y2,
+    double x3, double y3, double x4, double y4);
 
 
 // #include everything else:
@@ -66,8 +62,8 @@ struct Fiducials__Struct {
     CV_Image gray_image;
     CV_Scalar green;
     CV_Size image_size;
-    Double last_x;
-    Double last_y;
+    double last_x;
+    double last_y;
     Fiducials_Location_Announce_Routine location_announce_routine;
     Fiducials_Fiducial_Announce_Routine fiducial_announce_routine;
     std::vector<Location> locations;
@@ -117,16 +113,16 @@ struct Fiducials_Results__Struct {
 };
 
 extern void Fiducials__arc_announce(void *announce_object,
-  int from_id, Double from_x, Double from_y, Double from_z,
-  int to_id, Double to_x, Double to_y, Double to_z,
-  Double goodness, bool in_spanning_tree);
+  int from_id, double from_x, double from_y, double from_z,
+  int to_id, double to_x, double to_y, double to_z,
+  double goodness, bool in_spanning_tree);
 extern Fiducials Fiducials__create(
   CV_Image original_image, Fiducials_Create fiducials_create);
 extern void Fiducials__free(Fiducials fiduicals);
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, bool show);
 extern void Fiducials__location_announce(void *object, int id,
-  Double x, Double y, Double z, Double bearing);
+  double x, double y, double z, double bearing);
 extern int Fiducials__point_sample(
   Fiducials fiducials, CV_Point2D32F point);
 extern int Fiducials__points_maximum(Fiducials fiducials,
@@ -141,8 +137,8 @@ extern void Fiducials__sample_points_compute(
 extern void Fiducials__sample_points_helper(
   String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point);
 extern void Fiducials__tag_announce(void *announce_object,
-  int id, Double x, Double y, Double z, Double twist,
-  Double diagonal, Double distance_per_pixel,
+  int id, double x, double y, double z, double twist,
+  double diagonal, double distance_per_pixel,
   bool visible, int hop_count);
 extern Fiducials_Create Fiducials_Create__one_and_only(void);
 

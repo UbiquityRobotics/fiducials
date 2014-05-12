@@ -10,6 +10,7 @@
 typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 
 #include <assert.h>
+#include <angles/angles.h>
 
 #include "Arc.hpp"
 #include "CV.hpp"
@@ -100,53 +101,48 @@ unsigned int Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_
     // Get the *width* and *height*:
     int rows = CV_Image__height_get(image);
     int columns = CV_Image__width_get(image);
-    Double height = (Double)rows;
-    Double width = (Double)columns;
+    double height = (double)rows;
+    double width = (double)columns;
 
     // Compute some constants:
-    Double half_width = width / 2.0;
-    Double half_height = height / 2.0;
-    Double pi = 3.14159265358979323846264;
-    Double r2d = 180.0 / pi;
+    double half_width = width / 2.0;
+    double half_height = height / 2.0;
+    double pi = 3.14159265358979323846264;
+    double r2d = 180.0 / pi;
 
     // Extract some field values from *camera_from*:
     Tag from_tag = camera_from->tag;
-    Double camera_from_twist = camera_from->twist;
-    Double camera_from_x = camera_from->x;
-    Double camera_from_y = camera_from->y;
+    double camera_from_twist = camera_from->twist;
+    double camera_from_x = camera_from->x;
+    double camera_from_y = camera_from->y;
 
     // Extract some values from *from_tag*:
     Tag to_tag = camera_to->tag;
-    Double camera_to_twist = camera_to->twist;
-    Double camera_to_x = camera_to->x;
-    Double camera_to_y = camera_to->y;
+    double camera_to_twist = camera_to->twist;
+    double camera_to_x = camera_to->x;
+    double camera_to_y = camera_to->y;
 
     // Find associated *Arc* that contains *from_tag* and *to_tag*:
     Arc arc = Map__arc_lookup(map, from_tag, to_tag);
 
     // Compute the polar distance (in pixels) and angle from the camera
     // center to the *from_tag* center:
-    Double camera_from_dx = camera_from->x - half_width;
-    Double camera_from_dy = camera_from->y - half_height;
-    Double camera_from_polar_distance = Double__square_root(
-      camera_from_dx * camera_from_dx + camera_from_dy * camera_from_dy);
-    Double camera_from_polar_angle =
-      Double__arc_tangent2(camera_from_dy, camera_from_dx);
+    double camera_from_dx = camera_from->x - half_width;
+    double camera_from_dy = camera_from->y - half_height;
+    double camera_from_polar_distance = hypot(camera_from_dx, camera_from_dy);
+    double camera_from_polar_angle = atan2(camera_from_dy, camera_from_dx);
 
     // Compute the polar_distance (in pixels) and angle from the camera
     // center to the *to_tag* center:
-    Double camera_to_dx = camera_to_x - half_width;
-    Double camera_to_dy = camera_to_y - half_height;
-    Double camera_to_polar_distance = Double__square_root(
-     camera_to_dx * camera_to_dx + camera_to_dy * camera_to_dy);
-    Double camera_to_polar_angle =
-      Double__arc_tangent2(camera_to_dy, camera_to_dx);
+    double camera_to_dx = camera_to_x - half_width;
+    double camera_to_dy = camera_to_y - half_height;
+    double camera_to_polar_distance = hypot(camera_to_dx, camera_to_dy);
+    double camera_to_polar_angle = atan2(camera_to_dy, camera_to_dx);
 
     // To minimize camera distortion effects, we want to use images where
     // *from* and *to* are about equidistant from the image center.  Thus,
     // we want to minimum the absolute value of the distance difference:
-    Double goodness =
-      Double__absolute(camera_from_polar_distance - camera_to_polar_distance);
+    double goodness = abs(camera_from_polar_distance - camera_to_polar_distance);
 
     // Now see if the new *goodness* is better than the previous one:
     //File__format(stderr,
@@ -158,44 +154,43 @@ unsigned int Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_
 
         // Get two *distance_from_pixel* values which may not be
         // the same because the fiducials are at different heights:
-        Double from_distance_per_pixel = 
+        double from_distance_per_pixel = 
           from_tag->world_diagonal / from_tag->diagonal;
-        Double to_distance_per_pixel = 
+        double to_distance_per_pixel = 
           to_tag->world_diagonal / to_tag->diagonal;
 
         // Now compute floor to/from X/Y's that coorrespond to the (X,Y)
         // projection of each tag center onto the floor as if the camera
         // is located at the floor origin:
-        Double from_floor_x = from_distance_per_pixel *
-          camera_from_polar_distance * Double__cosine(camera_from_polar_angle);
-        Double from_floor_y = from_distance_per_pixel *
-          camera_from_polar_distance * Double__sine(camera_from_polar_angle);
-        Double to_floor_x = to_distance_per_pixel *
-          camera_to_polar_distance * Double__cosine(camera_to_polar_angle);
-        Double to_floor_y = to_distance_per_pixel *
-          camera_to_polar_distance * Double__sine(camera_to_polar_angle);
+        double from_floor_x = from_distance_per_pixel *
+          camera_from_polar_distance * cos(camera_from_polar_angle);
+        double from_floor_y = from_distance_per_pixel *
+          camera_from_polar_distance * sin(camera_from_polar_angle);
+        double to_floor_x = to_distance_per_pixel *
+          camera_to_polar_distance * cos(camera_to_polar_angle);
+        double to_floor_y = to_distance_per_pixel *
+          camera_to_polar_distance * sin(camera_to_polar_angle);
 
         // Now we can compute the floor distance between the two two
         // projected points:
-        Double floor_dx = from_floor_x - to_floor_x;
-        Double floor_dy = from_floor_y - to_floor_y;
-        Double floor_distance =
-          Double__square_root(floor_dx * floor_dx + floor_dy * floor_dy);
+        double floor_dx = from_floor_x - to_floor_x;
+        double floor_dy = from_floor_y - to_floor_y;
+        double floor_distance = hypot(floor_dx, floor_dy);
 
         // Compute *angle* to line segment connecting both tags:
-        Double camera_dx = camera_to_x - camera_from_x;
-        Double camera_dy = camera_to_y - camera_from_y;
-         Double arc_angle = Double__arc_tangent2(camera_dy, camera_dx);
-        Double from_twist =
-          Double__angle_normalize(camera_from_twist - arc_angle);
-        Double to_twist =
-          Double__angle_normalize(camera_to_twist + pi - arc_angle);
+        double camera_dx = camera_to_x - camera_from_x;
+        double camera_dy = camera_to_y - camera_from_y;
+         double arc_angle = atan2(camera_dy, camera_dx);
+        double from_twist =
+          angles::normalize_angle(camera_from_twist - arc_angle);
+        double to_twist =
+          angles::normalize_angle(camera_to_twist + pi - arc_angle);
 
         // OLD: Compute the distance between *origin* and *to*:
-        //Double distance_per_pixel = from_tag->distance_per_pixel;
-        //Double camera_distance =
-        //  Double__square_root(camera_dx * camera_dx + camera_dy * camera_dy);
-        //Double old_floor_distance = camera_distance * distance_per_pixel;
+        //double distance_per_pixel = from_tag->distance_per_pixel;
+        //double camera_distance =
+        //  double__square_root(camera_dx * camera_dx + camera_dy * camera_dy);
+        //double old_floor_distance = camera_distance * distance_per_pixel;
         //File__format(stderr, "floor_distance=%.2f old_floor_distance=%.2f\n",
         //  floor_distance, old_floor_distance);
 
@@ -496,26 +491,26 @@ void Map__svg_write(Map map, const String svg_base_name,
     }
 
     unsigned int locations_size = locations.size();
-    Double last_x = 0.0;
-    Double last_y = 0.0;
+    double last_x = 0.0;
+    double last_y = 0.0;
     for (unsigned int index = 0; index < locations_size; index++) {
         Location location = locations[index];
-        Double x = location->x;
-        Double y = location->y;
-        Double bearing = location->bearing;
+        double x = location->x;
+        double y = location->y;
+        double bearing = location->bearing;
         //File__format(stderr, "Location[%d]: id:%d x:%f y:%f bearing:%f\n",
         //  index, location->id, x, y, bearing * 180 / 3.1415926);
 
         // Draw a triangle that shows the bearing:
-        Double k1 = world_diagonal / 2.0;
-        Double k2 = k1 / 2.0;
-        Double angle = 3.14159 * 0.75;
-        Double x0 = x + k1 * Double__cosine(bearing);
-        Double y0 = y + k1 * Double__sine(bearing);
-        Double x1 = x + k2 * Double__cosine(bearing + angle);
-        Double y1 = y + k2 * Double__sine(bearing + angle);
-        Double x2 = x + k2 * Double__cosine(bearing - angle);
-        Double y2 = y + k2 * Double__sine(bearing - angle);
+        double k1 = world_diagonal / 2.0;
+        double k2 = k1 / 2.0;
+        double angle = 3.14159 * 0.75;
+        double x0 = x + k1 * cos(bearing);
+        double y0 = y + k1 * sin(bearing);
+        double x1 = x + k2 * cos(bearing + angle);
+        double y1 = y + k2 * sin(bearing + angle);
+        double x2 = x + k2 * cos(bearing - angle);
+        double y2 = y + k2 * sin(bearing - angle);
         SVG__line(svg, x0, y0, x1, y1, "black");
         SVG__line(svg, x1, y1, x2, y2, "black");
         SVG__line(svg, x2, y2, x0, y0, "black");
@@ -566,7 +561,7 @@ void Map__tag_announce(Map map,
 /// light seconds, etc.)
 
 Tag_Height Map__tag_height_lookup(Map map, unsigned int id) {
-    //Double distance_per_pixel = 0.0;
+    //double distance_per_pixel = 0.0;
     Tag_Height tag_height = (Tag_Height)0;
     unsigned int size = map->tag_heights.size();
     for (unsigned int index = 0; index < size; index++) {

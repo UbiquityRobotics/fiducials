@@ -2,11 +2,11 @@
 
 #include <assert.h>
 #include <sys/time.h>
+#include <angles/angles.h>
 
 #include "Camera_Tag.hpp"
 #include "CRC.hpp"
 #include "CV.hpp"
-#include "Double.hpp"
 #include "File.hpp"
 #include "FEC.hpp"
 #include "Fiducials.hpp"
@@ -411,9 +411,9 @@
 // FIXME: Why don't we just pass the *Arc* object???!!!
 
 void Fiducials__arc_announce(void *announce_object,
-  int from_id, Double from_x, Double from_y, Double from_z,
-  int to_id, Double to_x, Double to_y, Double to_z,
-  Double goodness, bool in_spanning_tree) {
+  int from_id, double from_x, double from_y, double from_z,
+  int to_id, double to_x, double to_y, double to_z,
+  double goodness, bool in_spanning_tree) {
     File__format(stderr,
       "Arc: from=(%d, %f, %f, %f,) to=(%d, %f, %f, %f) %f %d\n",
       from_id, from_x, from_y, from_z,
@@ -436,7 +436,7 @@ void Fiducials__arc_announce(void *announce_object,
 //FIXME: Why don't we just pass in a *Location* object???!!!
 
 void Fiducials__location_announce(void *announce_object, int id,
-  Double x, Double y, Double z, Double bearing) {
+  double x, double y, double z, double bearing) {
     File__format(stderr,
       "Location: id=%d x=%f y=%f bearing=%f\n", id, x, y, bearing);
 }
@@ -461,9 +461,9 @@ void Fiducials__location_announce(void *announce_object, int id,
 /// argument to *Fiducials__create*().
 
 void Fiducials__fiducial_announce(void *announce_object,
-    int id, int direction, Double world_diagonal,
-    Double x1, Double y1, Double x2, Double y2,
-    Double x3, Double y3, Double x4, Double y4) {
+    int id, int direction, double world_diagonal,
+    double x1, double y1, double x2, double y2,
+    double x3, double y3, double x4, double y4) {
     File__format(stderr,
        "Fiducial: id=%d dir=%d diag=%.2f (%.2f,%.2f), " /* + */
        "(%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
@@ -1317,8 +1317,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                               tag->id, tag->x, tag->y);
 
                             // Record the maximum *camera_diagonal*:
-                            Double camera_diagonal = camera_tag->diagonal;
-                            Double diagonal =
+                            double camera_diagonal = camera_tag->diagonal;
+                            double diagonal =
                               camera_diagonal;
                             if (diagonal  > tag->diagonal) {
                                 tag->diagonal = diagonal;
@@ -1363,7 +1363,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     fiducials->locations.clear();
     results->image_interesting = (bool)0;
     if (camera_tags_size > 0) {
-        Double pi = 3.14159265358979323846264;
+        double pi = 3.14159265358979323846264;
         unsigned int half_width = CV_Image__width_get(gray_image) >> 1;
         unsigned int half_height = CV_Image__height_get(gray_image) >> 1;
         //File__format(log_file,
@@ -1374,35 +1374,34 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
             //File__format(log_file,
             //  "[%d]:tag_id=%d tag_x=%f tag_y=%f tag_twist=%f\n",
             //  index, tag->id, tag->x, tag->y, tag->twist * 180.0 / pi);
-            Double camera_dx = camera_tag->x - half_width;
-            Double camera_dy = camera_tag->y - half_height;
+            double camera_dx = camera_tag->x - half_width;
+            double camera_dy = camera_tag->y - half_height;
             //File__format(log_file,
             //  "[%d]:camera_dx=%f camera_dy=%f camera_twist=%f\n",
             //  index, camera_dx, camera_dy, camera_tag->twist * 180.0 / pi);
-            Double polar_distance = Double__square_root(
-              camera_dx * camera_dx + camera_dy * camera_dy);
-            Double polar_angle = Double__arc_tangent2(camera_dy, camera_dx);
+            double polar_distance = hypot(camera_dx, camera_dy);
+            double polar_angle = atan2(camera_dy, camera_dx);
             //File__format(log_file,
             //  "[%d]:polar_distance=%f polar_angle=%f\n", index,
             //  polar_distance, polar_angle * 180.0 / pi);
-            Double floor_distance = 
+            double floor_distance = 
               polar_distance * tag->world_diagonal / tag->diagonal;
-            Double angle =
-              Double__angle_normalize(polar_angle + pi - camera_tag->twist);
+            double angle =
+              angles::normalize_angle(polar_angle + pi - camera_tag->twist);
             //File__format(log_file,
             //  "[%d]:floor_distance=%f angle=%f\n",
             //  index, floor_distance, angle * 180.0 / pi);
-            Double x = tag->x + floor_distance * Double__cosine(angle);
-            Double y = tag->y + floor_distance * Double__sine(angle);
-            Double bearing =
-              Double__angle_normalize(camera_tag->twist + tag->twist);
+            double x = tag->x + floor_distance * cos(angle);
+            double y = tag->y + floor_distance * sin(angle);
+            double bearing =
+              angles::normalize_angle(camera_tag->twist + tag->twist);
 
             // FIXME: Kludge,  There is a sign error somewhere in the code
             // causes the "sign" on the X axis to be inverted.  We kludge
             // around the problem with the following disgusting code:
-            bearing = Double__angle_normalize(bearing - pi / 2.0);
+            bearing = angles::normalize_angle(bearing - pi / 2.0);
             bearing = -bearing;
-            bearing = Double__angle_normalize(bearing + pi / 2.0);
+            bearing = angles::normalize_angle(bearing + pi / 2.0);
 
             //File__format(log_file, "[%d]:x=%f:y=%f:bearing=%f\n",
             //  index, x, y, bearing * 180.0 / pi);
@@ -1435,10 +1434,9 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
             //  closest_location->bearing * 180.0 / pi,
             //  closest_location->goodness, closest_location->index);
 
-            Double change_dx = closest_location->x - fiducials->last_x;
-            Double change_dy = closest_location->y - fiducials->last_y;
-            Double change = Double__square_root(
-              change_dx * change_dx + change_dy * change_dy);
+            double change_dx = closest_location->x - fiducials->last_x;
+            double change_dy = closest_location->y - fiducials->last_y;
+            double change = hypot(change_dx, change_dy);
             if (change > 0.1) {
                 results->image_interesting = (bool)1;
             }
@@ -1630,10 +1628,10 @@ void CV_Point2D32F_Vector__corners_normalize(CV_Point2D32F_Vector corners) {
         CV_Point2D32F corner3 = CV_Point2D32F_Vector__fetch1(corners, 3);
 
         // Extract X and Y for both corners:
-        Double x1 = CV_Point2D32F__x_get(corner1);
-        Double y1 = CV_Point2D32F__y_get(corner1);
-        Double x3 = CV_Point2D32F__x_get(corner3);
-        Double y3 = CV_Point2D32F__y_get(corner3);
+        double x1 = CV_Point2D32F__x_get(corner1);
+        double y1 = CV_Point2D32F__y_get(corner1);
+        double x3 = CV_Point2D32F__x_get(corner3);
+        double y3 = CV_Point2D32F__y_get(corner3);
 
         // Swap contents of {corner1} and {corner3}:
         CV_Point2D32F__x_set(corner1, x3);
@@ -1658,21 +1656,21 @@ bool CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners) {
     CV_Point2D32F corner2 = CV_Point2D32F_Vector__fetch1(corners, 2);
 
     // Extract X and Y for all four corners:
-    Double x0 = CV_Point2D32F__x_get(corner0);
-    Double y0 = CV_Point2D32F__y_get(corner0);
-    Double x1 = CV_Point2D32F__x_get(corner1);
-    Double y1 = CV_Point2D32F__y_get(corner1);
-    Double x2 = CV_Point2D32F__x_get(corner2);
-    Double y2 = CV_Point2D32F__y_get(corner2);
+    double x0 = CV_Point2D32F__x_get(corner0);
+    double y0 = CV_Point2D32F__y_get(corner0);
+    double x1 = CV_Point2D32F__x_get(corner1);
+    double y1 = CV_Point2D32F__y_get(corner1);
+    double x2 = CV_Point2D32F__x_get(corner2);
+    double y2 = CV_Point2D32F__y_get(corner2);
 
     // Create two vectors from the first two lines of the polygon:
-    Double v1x = x1 - x0;
-    Double v1y = y1 - y0;
-    Double v2x = x2 - x1;
-    Double v2y = y2 - y1;
+    double v1x = x1 - x0;
+    double v1y = y1 - y0;
+    double v2x = x2 - x1;
+    double v2y = y2 - y1;
 
     // Determine the sign of the Z coordinate of the cross product:
-    Double z = v1x * v2y - v2x * v1y;
+    double z = v1x * v2y - v2x * v1y;
 
     // If the Z coordinate is negative, to reverse the sequence of the corners:
     return z < 0.0;
@@ -1713,31 +1711,31 @@ CV_Point2D32F_Vector Fiducials__references_compute(
     CV_Point2D32F corner3 = CV_Point2D32F_Vector__fetch1(corners, 3);
 
     // Extract the x and y references from {corner0} through {corner3}:
-    Double x0 = CV_Point2D32F__x_get(corner0);
-    Double y0 = CV_Point2D32F__y_get(corner0);
-    Double x1 = CV_Point2D32F__x_get(corner1);
-    Double y1 = CV_Point2D32F__y_get(corner1);
-    Double x2 = CV_Point2D32F__x_get(corner2);
-    Double y2 = CV_Point2D32F__y_get(corner2);
-    Double x3 = CV_Point2D32F__x_get(corner3);
-    Double y3 = CV_Point2D32F__y_get(corner3);
+    double x0 = CV_Point2D32F__x_get(corner0);
+    double y0 = CV_Point2D32F__y_get(corner0);
+    double x1 = CV_Point2D32F__x_get(corner1);
+    double y1 = CV_Point2D32F__y_get(corner1);
+    double x2 = CV_Point2D32F__x_get(corner2);
+    double y2 = CV_Point2D32F__y_get(corner2);
+    double x3 = CV_Point2D32F__x_get(corner3);
+    double y3 = CV_Point2D32F__y_get(corner3);
 
-    Double dx21 = x2 - x1;
-    Double dy21 = y2 - y1;
-    Double dx30 = x3 - x0;
-    Double dy30 = y3 - y0;
+    double dx21 = x2 - x1;
+    double dy21 = y2 - y1;
+    double dx30 = x3 - x0;
+    double dy30 = y3 - y0;
 
     // Determine the points ({xx0, yy0}) and ({xx1, yy1}) that determine
     // a line parrallel to one side of the quadralatal:
-    Double xx0 = x1 + dx21 * 5.0 / 20.0;
-    Double yy0 = y1 + dy21 * 5.0 / 20.0;
-    Double xx1 = x0 + dx30 * 5.0 / 20.0;
-    Double yy1 = y0 + dy30 * 5.0 / 20.0;
+    double xx0 = x1 + dx21 * 5.0 / 20.0;
+    double yy0 = y1 + dy21 * 5.0 / 20.0;
+    double xx1 = x0 + dx30 * 5.0 / 20.0;
+    double yy1 = y0 + dy30 * 5.0 / 20.0;
 
     // Set the outside and inside reference points along the line
     // through points ({xx0, yy0}) and ({xx1, yy1}):
-    Double dxx10 = xx1 - xx0;
-    Double dyy10 = yy1 - yy0;
+    double dxx10 = xx1 - xx0;
+    double dyy10 = yy1 - yy0;
     CV_Point2D32F__x_set(reference0, xx0 + dxx10 * -1.0 / 20.0);
     CV_Point2D32F__y_set(reference0, yy0 + dyy10 * -1.0 / 20.0);
     CV_Point2D32F__x_set(reference4, xx0 + dxx10 * 1.0 / 20.0);
@@ -1749,15 +1747,15 @@ CV_Point2D32F_Vector Fiducials__references_compute(
 
     // Determine the points ({xx2, yy2}) and ({xx3, yy3}) that determine
     // a line parrallel to the other side of the quadralatal:
-    Double xx2 = x1 + dx21 * 15.0 / 20.0;
-    Double yy2 = y1 + dy21 * 15.0 / 20.0;
-    Double xx3 = x0 + dx30 * 15.0 / 20.0;
-    Double yy3 = y0 + dy30 * 15.0 / 20.0;
+    double xx2 = x1 + dx21 * 15.0 / 20.0;
+    double yy2 = y1 + dy21 * 15.0 / 20.0;
+    double xx3 = x0 + dx30 * 15.0 / 20.0;
+    double yy3 = y0 + dy30 * 15.0 / 20.0;
 
     // Set the outside and inside reference points along the line
     // through points ({xx2, yy2}) and ({xx3, yy3}):
-    Double dxx32 = xx3 - xx2;
-    Double dyy32 = yy3 - yy2;
+    double dxx32 = xx3 - xx2;
+    double dyy32 = yy3 - yy2;
     CV_Point2D32F__x_set(reference2, xx2 + dxx32 * -1.0 / 20.0);
     CV_Point2D32F__y_set(reference2, yy2 + dyy32 * -1.0 / 20.0);
     CV_Point2D32F__x_set(reference6, xx2 + dxx32 * 1.0 / 20.0);
@@ -1858,22 +1856,22 @@ void Fiducials__sample_points_compute(
     CV_Point2D32F corner3 = CV_Point2D32F_Vector__fetch1(corners, 3);
 
     // Extract the x and y references from {corner0} through {corner3}:
-    Double x0 = CV_Point2D32F__x_get(corner0);
-    Double y0 = CV_Point2D32F__y_get(corner0);
-    Double x1 = CV_Point2D32F__x_get(corner1);
-    Double y1 = CV_Point2D32F__y_get(corner1);
-    Double x2 = CV_Point2D32F__x_get(corner2);
-    Double y2 = CV_Point2D32F__y_get(corner2);
-    Double x3 = CV_Point2D32F__x_get(corner3);
-    Double y3 = CV_Point2D32F__y_get(corner3);
+    double x0 = CV_Point2D32F__x_get(corner0);
+    double y0 = CV_Point2D32F__y_get(corner0);
+    double x1 = CV_Point2D32F__x_get(corner1);
+    double y1 = CV_Point2D32F__y_get(corner1);
+    double x2 = CV_Point2D32F__x_get(corner2);
+    double y2 = CV_Point2D32F__y_get(corner2);
+    double x3 = CV_Point2D32F__x_get(corner3);
+    double y3 = CV_Point2D32F__y_get(corner3);
 
     // Figure out the vector directions {corner1} to {corner2}, as well as,
     // the vector from {corner3} to {corner0}.  If {corners} specify a
     // quadralateral, these vectors should be approximately parallel:
-    Double dx21 = x2 - x1;
-    Double dy21 = y2 - y1;
-    Double dx30 = x3 - x0;
-    Double dy30 = y3 - y0;
+    double dx21 = x2 - x1;
+    double dy21 = y2 - y1;
+    double dx30 = x3 - x0;
+    double dy30 = y3 - y0;
 
     // {index} will cycle through the 64 sample points in {sample_points}:
     unsigned int index = 0;
@@ -1884,8 +1882,8 @@ void Fiducials__sample_points_compute(
     // columns), We want a fraction that goes from 3/20, 5/20, ..., 17/20.
     // The fractions 1/20 and 19/20 would correspond to a black border,
     // which we do not care about:
-    Double i_fraction = 3.0 / 20.0;
-    Double i_increment = 2.0 / 20.0;
+    double i_fraction = 3.0 / 20.0;
+    double i_increment = 2.0 / 20.0;
 
     // Loop over the first axis of the grid:
     unsigned int i = 0;
@@ -1894,20 +1892,20 @@ void Fiducials__sample_points_compute(
         // Compute ({xx1},{yy1}) which is a point that is {i_fraction} between
         // ({x1},{y1}) and ({x2},{y2}), as well as, ({xx2},{yy2}) which is a
         // point that is {i_fraction} between ({x0},{y0}) and ({x3},{y3}).
-        Double xx1 = x1 + dx21 * i_fraction;
-        Double yy1 = y1 + dy21 * i_fraction;
-        Double xx2 = x0 + dx30 * i_fraction;
-        Double yy2 = y0 + dy30 * i_fraction;
+        double xx1 = x1 + dx21 * i_fraction;
+        double yy1 = y1 + dy21 * i_fraction;
+        double xx2 = x0 + dx30 * i_fraction;
+        double yy2 = y0 + dy30 * i_fraction;
 
         // Compute the vector from ({xx1},{yy1}) to ({xx2},{yy2}):
-        Double dxx21 = xx2 - xx1;
-        Double dyy21 = yy2 - yy1;
+        double dxx21 = xx2 - xx1;
+        double dyy21 = yy2 - yy1;
 
         // As with {i_fraction}, {j_fraction} needs to sample the
         // the data stripes through the quadralateral with values
         // that range from 3/20 through 17/20:
-        Double j_fraction = 3.0 / 20.0;
-        Double j_increment = 2.0 / 20.0;
+        double j_fraction = 3.0 / 20.0;
+        double j_increment = 2.0 / 20.0;
 
         // Loop over the second axis of the grid:
         unsigned int j = 0;
@@ -1954,10 +1952,10 @@ void Fiducials__sample_points_compute(
 //
 //void Fiducials__sample_points_helper(
 //  String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point) {
-//    Double corner_x = CV_Point2D32F__x_get(corner);
-//    Double corner_y = CV_Point2D32F__y_get(corner);
-//    Double sample_point_x = CV_Point2D32F__x_get(sample_point);
-//    Double sample_point_y = CV_Point2D32F__y_get(sample_point);
+//    double corner_x = CV_Point2D32F__x_get(corner);
+//    double corner_y = CV_Point2D32F__y_get(corner);
+//    double sample_point_x = CV_Point2D32F__x_get(sample_point);
+//    double sample_point_y = CV_Point2D32F__y_get(sample_point);
 //    File__format(stderr, "Label: %s corner: %f:%f sample_point %f:%f\n",
 //      label, (int)corner_x, (int)corner_y,
 //      (int)sample_point_x, (int)sample_point_y);
@@ -1981,8 +1979,8 @@ void Fiducials__sample_points_compute(
 /// tag is updated.
 
 void Fiducials__tag_announce(void *announce_object, int id,
-  Double x, Double y, Double z, Double twist, Double diagonal,
-  Double distance_per_pixel, bool visible, int hop_count) {
+  double x, double y, double z, double twist, double diagonal,
+  double distance_per_pixel, bool visible, int hop_count) {
     String_Const visible_text = "";
     if (!visible) {
         visible_text = "*** No longer visible ***";

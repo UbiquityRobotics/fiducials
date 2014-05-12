@@ -7,14 +7,13 @@
 typedef struct Camera_Tag__Struct *Camera_Tag;
 
 #include "CV.hpp"
-#include "Double.hpp"
 #include "Tag.hpp"
 
 /// @brief *Camera_Tag* represents information about a fiducial tag in
 /// a camera frame.
 struct Camera_Tag__Struct {
     /// @brief The average diagonal of the tag measured in camera pixels.
-    Double diagonal;
+    double diagonal;
 
     /// @brief The direction (0-3) that matched the fiducial tag.
     unsigned int direction;
@@ -24,13 +23,13 @@ struct Camera_Tag__Struct {
 
     /// @brief The amount the fiducial tag is twisted from the camera x axis
     /// measured in radians.
-    Double twist;
+    double twist;
 
     /// @brief The X coordinate of the fiducial tag center in camera pixels.
-    Double x;
+    double x;
 
     /// @brief The Y coordinate of the fiducial tag center in camera pixels.
-    Double y;
+    double y;
 };
 
 // *Camera_Tag* routines:

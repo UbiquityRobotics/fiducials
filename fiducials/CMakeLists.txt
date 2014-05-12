@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(fiducials)
 
-find_package(catkin REQUIRED COMPONENTS)
+find_package(catkin REQUIRED COMPONENTS angles)
 
 find_package(OpenCV REQUIRED)
 
@@ -26,7 +26,7 @@ include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(fiducials_base
-  Bounding_Box.cpp CRC.cpp Double.cpp FEC.cpp File.cpp
+  Bounding_Box.cpp CRC.cpp FEC.cpp File.cpp
   Memory.cpp String.cpp SVG.cpp)
 
 add_library(fiducials_cv CV.cpp High_GUI2.cpp)

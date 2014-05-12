@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Double.hpp"
 #include "CRC.hpp"
 #include "FEC.hpp"
 #include "String.hpp"
@@ -13,7 +12,7 @@
 extern void SVG__tag_write(/* Extractor extractor, */
   unsigned int tag_id, unsigned int tag_size, bool border);
 extern void SVG__tag_bit(SVG svg,
-  Double cell_width, unsigned int row, unsigned int column, bool border);
+  double cell_width, unsigned int row, unsigned int column, bool border);
 extern void SVG__tag_write(/* Extractor extractor, */
   unsigned int tag_id, unsigned int tag_size, bool border);
 
@@ -52,7 +51,7 @@ int main(int arguments_size, char * arguments[]) {
 /// the 12 x 12 matrix that makes up a tag to *svg*.  If *border*
 /// *false*, the matrix is offset by the left by one.
 
-void SVG__tag_bits(SVG svg, Double cell_width, unsigned int first_column,
+void SVG__tag_bits(SVG svg, double cell_width, unsigned int first_column,
   unsigned int first_row, unsigned int last_column, unsigned int last_row, bool border) {
 
     // Deal with *border*:
@@ -83,10 +82,10 @@ void SVG__tag_bits(SVG svg, Double cell_width, unsigned int first_column,
     // Output the appropriate rectangle to *svg*:
     String_Const color = "black";
     SVG__rectangle(svg,
-      (Double)(first_column - delta) * cell_width,
-      (Double)(first_row - delta) * cell_width,
-      (Double)(last_column - first_column + 1) * cell_width,
-      (Double)(last_row - first_row + 1) * cell_width,
+      (double)(first_column - delta) * cell_width,
+      (double)(first_row - delta) * cell_width,
+      (double)(last_column - first_column + 1) * cell_width,
+      (double)(last_row - first_row + 1) * cell_width,
       color, color);
 }
 
@@ -102,7 +101,7 @@ void SVG__tag_bits(SVG svg, Double cell_width, unsigned int first_column,
 /// the matrix is offset to the left by one.
 
 void SVG__tag_bit(SVG svg,
-  Double cell_width, unsigned int row, unsigned int column, bool border) {
+  double cell_width, unsigned int row, unsigned int column, bool border) {
     SVG__tag_bits(svg, cell_width, row, column, row, column, border);
 }
 
@@ -113,11 +112,11 @@ void SVG__tag_bit(SVG svg,
 void SVG__tag_write(/* Extractor extractor, */
   unsigned int tag_id, unsigned int tag_size, bool border) {
 
-    Double cell_width = (Double)(tag_size) / 10.0;
-    //Double offset = cell_width / 2.0;
-    Double offset = 5.0;
-    Double length = 10.0 * cell_width;
-    Double length_plus = length + 5.0 * cell_width;
+    double cell_width = (double)(tag_size) / 10.0;
+    //double offset = cell_width / 2.0;
+    double offset = 5.0;
+    double length = 10.0 * cell_width;
+    double length_plus = length + 5.0 * cell_width;
 
     // Open the file for writing:
     String base_name = String__format("tag%d", tag_id);
@@ -149,15 +148,15 @@ void SVG__tag_write(/* Extractor extractor, */
 
     // Print a line border around everything:
     if (border) {
-	Double x_or_y = length + 2.0 * cell_width;
-	Double d = 2.0;
+	double x_or_y = length + 2.0 * cell_width;
+	double d = 2.0;
 
 	String_Const color = "black";
-	Double x1 = 0.0;
-	Double x2 = x_or_y;
+	double x1 = 0.0;
+	double x2 = x_or_y;
 
 	//  +--                                   --+
-	Double y = -cell_width;
+	double y = -cell_width;
 	SVG__line(svg, x1, y, x1 + d, y,     color);
 	SVG__line(svg, x2, y, x2 - d, y,     color);
 

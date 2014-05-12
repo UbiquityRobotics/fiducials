@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "CV.hpp"
-#include "Double.hpp"
 #include "File.hpp"
 #include "String.hpp"
 
@@ -238,7 +237,7 @@ void CV__gemm(CV_Matrix a, CV_Matrix b, double alpha, CV_Matrix c, double beta,
 }
 
 
-Double CV__get_real_2d(CV_Matrix matrix, int row, int column) {
+double CV__get_real_2d(CV_Matrix matrix, int row, int column) {
     return cvGetReal2D(matrix, row, column);
 }
 
@@ -280,7 +279,7 @@ void CV__set_identity(CV_Matrix matrix, CV_Scalar scalar) {
 }
 
 void CV__set_real_2d(
-  CV_Matrix matrix, int row, int column, Double value) {
+  CV_Matrix matrix, int row, int column, double value) {
     cvSetReal2D(matrix, row, column, value);
 }
 
@@ -288,7 +287,7 @@ void CV__set_zero(CV_Matrix matrix) {
     cvSetZero(matrix);
 }
 
-int CV__round(Double value) {
+int CV__round(double value) {
     return cvRound(value);
 }
 
@@ -301,8 +300,8 @@ int CV__round(Double value) {
 
 int CV__undistortion_setup(String_Const calibrate_file_name,
  int width, int height, CV_Image *mapx, CV_Image *mapy) {
-    Double fcx, fcy, ccx, ccy;
-    Double kc[4];
+    double fcx, fcy, ccx, ccy;
+    double kc[4];
   
     // Open *calibrate_file_name*:
     File file = File__open(calibrate_file_name, "r");
@@ -346,8 +345,8 @@ int CV__undistortion_setup(String_Const calibrate_file_name,
 // *CV_Image* routines:
 
 void CV_Image__adaptive_threshold(CV_Image source_image,
-  CV_Image destination_image, Double maximum_value, int adaptive_method,
-  int threshold_type, int block_size, Double parameter1) {
+  CV_Image destination_image, double maximum_value, int adaptive_method,
+  int threshold_type, int block_size, double parameter1) {
     cvAdaptiveThreshold(source_image, destination_image, maximum_value,
       adaptive_method, threshold_type, block_size, parameter1);
 }
@@ -539,7 +538,7 @@ void CV_Image__remap(CV_Image source_image, CV_Image destination_image,
 
 void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
   int smooth_type, int parameter1, int parameter2,
-  Double parameter3, Double parameter4) {
+  double parameter3, double parameter4) {
     cvSmooth(source_image, destination_image, smooth_type, parameter1,
       parameter2, parameter3, parameter4);
 }
@@ -801,7 +800,7 @@ void CV_Point__y_set(CV_Point point, int y) {
 
 // *CV_Point2D32F* routines:
 
-CV_Point2D32F CV_Point2D32F__create(Double x, Double y) {
+CV_Point2D32F CV_Point2D32F__create(double x, double y) {
     unsigned int malloc_bytes = sizeof *((CV_Point2D32F)0);
     // (void)printf("CV_Point2D32F__create: malloc_bytes=%d\n",
     //     malloc_bytes);
@@ -812,19 +811,19 @@ CV_Point2D32F CV_Point2D32F__create(Double x, Double y) {
     return point;
 }
 
-Double CV_Point2D32F__x_get(CV_Point2D32F point) {
+double CV_Point2D32F__x_get(CV_Point2D32F point) {
     return point->x;
 }
 
-void CV_Point2D32F__x_set(CV_Point2D32F point, Double x) {
+void CV_Point2D32F__x_set(CV_Point2D32F point, double x) {
     point->x = x;
 }
 
-Double CV_Point2D32F__y_get(CV_Point2D32F point) {
+double CV_Point2D32F__y_get(CV_Point2D32F point) {
     return point->y;
 }
 
-void CV_Point2D32F__y_set(CV_Point2D32F point, Double y) {
+void CV_Point2D32F__y_set(CV_Point2D32F point, double y) {
     point->y = y;
 }
 
@@ -859,7 +858,7 @@ CV_Point2D32F CV_Point2D32F_Vector__fetch1(
 // CV_Scalar *routines*:
 
 CV_Scalar CV_Scalar__create(
-  Double value0, Double value1, Double value2, Double value3) {
+  double value0, double value1, double value2, double value3) {
     CV_Scalar scalar = Memory__new(CV_Scalar, "CV_Scalar__create");
     scalar->val[0] = value0;
     scalar->val[1] = value1;
@@ -875,7 +874,7 @@ void CV_Scalar__free(CV_Scalar cv_scalar) {
 // This routine will return a {CV_Scalar} that encodes {red}, {green},
 // and {blue} as a color.
 
-CV_Scalar CV_Scalar__rgb(Double red, Double green, Double blue) {
+CV_Scalar CV_Scalar__rgb(double red, double green, double blue) {
     return CV_Scalar__create(blue, green, red, 0.0);
 }
 
@@ -885,14 +884,14 @@ int CV__poly_approx_dp = CV_POLY_APPROX_DP;
 
 CV_Sequence CV_Sequence__approximate_polygon(CV_Sequence contour,
   int header_size, CV_Memory_Storage storage, int method,
-  int parameter1, Double parameter2) {
+  int parameter1, double parameter2) {
     //(void)printf("sizeof=%d method=%d param1=%d\n",
     //  sizeof(CvContour), method, parameter1);
     return cvApproxPoly(contour,
       sizeof(CvContour), storage, method, parameter1, parameter2);
 }
 
-Double CV_Sequence__arc_length(
+double CV_Sequence__arc_length(
   CV_Sequence contour, CV_Slice slice, int is_closed) {
     return cvArcLength(contour, *slice, is_closed);
 }    
@@ -901,7 +900,7 @@ bool CV_Sequence__check_contour_convexity(CV_Sequence contour) {
     return (bool)(cvCheckContourConvexity(contour) ? 1 : 0);
 }
 
-Double CV_Sequence__contour_area(
+double CV_Sequence__contour_area(
   CV_Sequence contour, CV_Slice slice, int oriented) {
     return cvContourArea(contour, *slice, oriented);
 }
@@ -947,7 +946,7 @@ int CV__term_criteria_iterations = CV_TERMCRIT_ITER;
 int CV__term_criteria_eps = CV_TERMCRIT_EPS;
 
 CV_Term_Criteria CV_Term_Criteria__create(
-  int type, int maximum_iterations, Double epsilon) {
+  int type, int maximum_iterations, double epsilon) {
     unsigned int malloc_bytes = sizeof *((CV_Term_Criteria)0);
     // (void)printf("CV_Term_Criteria__create: malloc_bytes=%d\n",
     //   malloc_bytes);

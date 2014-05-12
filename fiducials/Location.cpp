@@ -3,7 +3,6 @@
 #include <assert.h>
 
 #include "Location.hpp"
-#include "Double.hpp"
 #include "Memory.hpp"
 
 // *Location* routines:
@@ -21,7 +20,7 @@
 /// contains *id*, *x*, *y*, *bearing*, *goodness*, and *index*.
 
 Location Location__create(unsigned int id,
-  Double x, Double y, Double bearing, Double goodness, unsigned int index) {
+  double x, double y, double bearing, double goodness, unsigned int index) {
     Location location = Memory__new(Location, "Location__create");
     location->bearing = bearing;
     location->goodness = goodness;
