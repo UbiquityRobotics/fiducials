@@ -66,8 +66,8 @@ struct Fiducials__Struct {
     double last_y;
     Fiducials_Location_Announce_Routine location_announce_routine;
     Fiducials_Fiducial_Announce_Routine fiducial_announce_routine;
-    std::vector<Location> locations;
-    std::vector<Location> locations_path;
+    std::vector<Location*> locations;
+    std::vector<Location*> locations_path;
     File log_file;
     Map map;
     CV_Point origin;

@@ -450,7 +450,7 @@ void Map__sort(Map map) {
 /// *Map__svg_write*() will write out *map* out *svg_base_name*.svg.
 
 void Map__svg_write(Map map, const String svg_base_name, 
-    std::vector<Location> &locations) {
+    std::vector<Location*> &locations) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
     unsigned int all_tags_size = map->all_tags.size();
     unsigned int all_arcs_size = map->all_arcs.size();
@@ -494,7 +494,7 @@ void Map__svg_write(Map map, const String svg_base_name,
     double last_x = 0.0;
     double last_y = 0.0;
     for (unsigned int index = 0; index < locations_size; index++) {
-        Location location = locations[index];
+        Location * location = locations[index];
         double x = location->x;
         double y = location->y;
         double bearing = location->bearing;

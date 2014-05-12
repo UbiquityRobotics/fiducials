@@ -5,10 +5,9 @@
 
 /// @brief *Location* represents an X/Y/Bearing location.
 
-typedef struct Location__Struct *Location;
-
 /// @brief A *Location_Struct* represents an X/Y/Bearing location.
-struct Location__Struct {
+class Location {
+  public:
     /// @brief Goodness coefficient of location (closer to 0.0 is better.)
     double goodness;
 
@@ -27,10 +26,9 @@ struct Location__Struct {
     /// @brief Y coordinate.
     double y;
 
+    Location(unsigned int _id, double _x, double _y, double _bearing, 
+        double _goodness, unsigned int _index) : goodness(_goodness),
+      id(_id), index(_index), bearing(_bearing), x(_x), y(_y) {}
 };
-
-extern void Location__free(Location location);
-extern Location Location__create(unsigned int id,
-  double x, double y, double bearing, double goodness, unsigned int index);
 
 #endif // !defined(LOCATION_H_INCLUDED)

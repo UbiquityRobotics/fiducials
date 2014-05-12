@@ -87,7 +87,7 @@ int main(int arguments_size, char * arguments[]) {
 
     assert (Map__equals(map1, map2));
 
-    std::vector<Location> locations;
+    std::vector<Location*> locations;
     Map__svg_write(map1, "Map_Test", locations);
 
     return 0;

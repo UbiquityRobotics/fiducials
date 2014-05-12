@@ -92,7 +92,7 @@ extern void Map__restore(Map map, File in_file);
 extern void Map__save(Map map);
 extern void Map__sort(Map map);
 extern void Map__svg_write(
-  Map map, const String svg_base_name, std::vector<Location> &locations);
+  Map map, const String svg_base_name, std::vector<Location*> &locations);
 extern void Map__tag_heights_xml_read(
   Map map, String_Const tag_heights_file_name);
 extern void Map__tag_announce(

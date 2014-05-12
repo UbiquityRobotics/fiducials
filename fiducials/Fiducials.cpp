@@ -861,15 +861,14 @@ void Fiducials__free(Fiducials fiducials) {
     // Free up the storage associated with *locations*:
     unsigned int locations_size = fiducials->locations.size();
     for (unsigned int index = 0; index < locations_size; index++) {
-        Location location = fiducials->locations[index];
+        Location * location = fiducials->locations[index];
         // Kludge: memory double free?!!!
-        //Location__free(location);
+        // delete location;
     }
 
-    List /* <Location> */ locations_path = fiducials->locations_path;
-    Unsigned locations_path_size = List__size(locations_path);
-    for (Unsigned index = 0; index < locations_path_size; index++) {
-        Location location = List__fetch(locations_path, index);
+    unsigned int locations_path_size = fiducials->locations_path.size();
+    for (unsigned int index = 0; index < locations_path_size; index++) {
+        Location * location = fiducials->locations_path[index];
         // Kludge: memory double free?!!!
         //Location__free(location);
     }
@@ -1406,18 +1405,17 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
             //File__format(log_file, "[%d]:x=%f:y=%f:bearing=%f\n",
             //  index, x, y, bearing * 180.0 / pi);
             unsigned int location_index = fiducials->locations.size();
-            Location location = Location__create(tag->id,
+            Location * location = new Location(tag->id,
               x, y, bearing, floor_distance, location_index);
-            List__append(locations,
-              (Memory)location, "Fiducials__process:locations");
+            fiducials->locations.push_back(location);
         }
 
         // Compute closest location:
-        Location closest_location = (Location)0;
-        Unsigned locations_size = List__size(locations);
-        for (Unsigned index = 0; index < locations_size; index++) {
-          Location location = (Location)List__fetch(locations, index);
-            if (closest_location == (Location)0) {
+        Location * closest_location = NULL;
+        unsigned int locations_size = fiducials->locations.size();
+        for (unsigned int index = 0; index < locations_size; index++) {
+          Location * location = fiducials->locations[index];
+            if (closest_location == NULL) {
                 closest_location = location;
             } else {
                 if (location->goodness < closest_location->goodness) {
@@ -1426,7 +1424,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
             }
         }
 
-        if (closest_location != (Location)0) {
+        if (closest_location != NULL) {
             fiducials->locations_path.push_back(closest_location);
             //File__format(log_file,
             //  "Location: x=%f y=%f bearing=%f goodness=%f index=%d\n",

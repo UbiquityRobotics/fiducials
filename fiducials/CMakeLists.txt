@@ -32,7 +32,7 @@ add_library(fiducials_base
 add_library(fiducials_cv CV.cpp High_GUI2.cpp)
 target_link_libraries(fiducials_cv fiducials_base ${OpenCV_LIBS})
 
-add_library(fiducials Fiducials.cpp Location.cpp Arc.cpp Camera_Tag.cpp Map.cpp Tag.cpp)
+add_library(fiducials Fiducials.cpp Arc.cpp Camera_Tag.cpp Map.cpp Tag.cpp)
 target_link_libraries(fiducials fiducials_base fiducials_cv)
 
 add_executable(Demo Demo.cpp)
