@@ -44,7 +44,7 @@ struct SVG__Struct {
 // External declarations:
 
 extern void SVG__cartesian_scale(
-  SVG svg, double x_width, double y_height, Bounding_Box bounding_box);
+  SVG svg, double x_width, double y_height, BoundingBox *bounding_box);
 extern void SVG__close(SVG svg);
 extern void SVG__line(SVG svg,
   double x1, double y1, double x2, double y2, String_Const stroke);

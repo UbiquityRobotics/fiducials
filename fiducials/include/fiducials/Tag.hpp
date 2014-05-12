@@ -124,7 +124,7 @@ struct Tag_Height__Struct {
 // *Tag* routines;
 
 extern void Tag__arc_append(Tag tag, Arc arc);
-extern void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box);
+extern void Tag__bounding_box_update(Tag tag, BoundingBox *bounding_box);
 extern Tag Tag__create(unsigned int id, Map map);
 extern int Tag__equal(Tag tag1, Tag tag2);
 extern bool Tag__less(Tag tag1, Tag tag2);

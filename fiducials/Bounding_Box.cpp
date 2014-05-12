@@ -4,25 +4,8 @@
 #include "Memory.hpp"
 #include <algorithm>
 
-/// @brief Release the storage associated with *bounding_box*.
-/// @param bounding_box the *Bounding_Box* object to release storage of.
-///
-/// *Bounding_Box__free*() will release the storage associated with
-/// *bounding_box*.
-
-void Bounding_Box__free(Bounding_Box bounding_box) {
-    Memory__free((Memory)bounding_box);
-}
-
-/// @brief Returns a new empty *Bounding_Box* object.
-/// @returns an empty *Bounding_Box* object.
-///
-/// *Bounding_Box__new*() will return a new empty *Bounding_Box* object.
-
-Bounding_Box Bounding_Box__new(void) {
-    Bounding_Box bounding_box = Memory__new(Bounding_Box, "Bounding_Box__new");
-    Bounding_Box__reset(bounding_box);
-    return bounding_box;
+BoundingBox::BoundingBox() {
+  reset();
 }
 
 /// @brief Resets the contents of *bounding_box* to empty.
@@ -30,12 +13,12 @@ Bounding_Box Bounding_Box__new(void) {
 ///
 /// *Bounding_Box__reset*() will reset *bounding_box* to the empty state.
 
-void Bounding_Box__reset(Bounding_Box bounding_box) {
+void BoundingBox::reset() {
     double big = 123456789.0;
-    bounding_box->maximum_x = -big;
-    bounding_box->minimum_x = big;
-    bounding_box->maximum_y = -big;
-    bounding_box->minimum_y = big;
+    maximum_x = -big;
+    minimum_x = big;
+    maximum_y = -big;
+    minimum_y = big;
 }
 
 /// @brief Adds the point (*x*, *y) to *bounding_box*.
@@ -46,10 +29,10 @@ void Bounding_Box__reset(Bounding_Box bounding_box) {
 /// *Bounding_Box__update*() will update the contents of *bounding_box* to
 /// enclose (*x*, *y*).
 
-void Bounding_Box__update(Bounding_Box bounding_box, double x, double y) {
-    bounding_box->maximum_x = std::max(bounding_box->maximum_x, x);
-    bounding_box->minimum_x = std::min(bounding_box->minimum_x, x);
-    bounding_box->maximum_y = std::max(bounding_box->maximum_y, y);
-    bounding_box->minimum_y = std::min(bounding_box->minimum_y, y);
+void BoundingBox::update(double x, double y) {
+    maximum_x = std::max(maximum_x, x);
+    minimum_x = std::min(minimum_x, x);
+    maximum_y = std::max(maximum_y, y);
+    minimum_y = std::min(minimum_y, y);
 }
 

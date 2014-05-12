@@ -29,12 +29,12 @@ void Tag__arc_append(Tag tag, Arc arc) {
 /// *tag* will be enclosed by *bounding_box* when it comes time to
 /// graph *tag*.
 
-void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box) {
+void Tag__bounding_box_update(Tag tag, BoundingBox *bounding_box) {
     double x = tag->x;
     double y = tag->y;
     double half_diagonal = tag->world_diagonal / 2.0;
-    Bounding_Box__update(bounding_box, x - half_diagonal , y - half_diagonal);
-    Bounding_Box__update(bounding_box, x + half_diagonal , y + half_diagonal);
+    bounding_box->update(x - half_diagonal , y - half_diagonal);
+    bounding_box->update(x + half_diagonal , y + half_diagonal);
 }
 
 /// @brief Returns the sort order of *tag1* to *tag2*.

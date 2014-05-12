@@ -456,7 +456,7 @@ void Map__svg_write(Map map, const String svg_base_name,
     unsigned int all_arcs_size = map->all_arcs.size();
 
     // Compute the *bounding_box*:
-    Bounding_Box bounding_box = Bounding_Box__new();
+    BoundingBox * bounding_box = new BoundingBox();
     for (unsigned int index = 0; index < all_tags_size; index++) {
         Tag tag = map->all_tags[index];
         Tag__bounding_box_update(tag, bounding_box);
@@ -470,9 +470,9 @@ void Map__svg_write(Map map, const String svg_base_name,
     // Draw the X/Y axes:
     String_Const color = "cyan";
     SVG__line(svg,
-      bounding_box->minimum_x, 0.0, bounding_box->maximum_x, 0.0, color);
+      bounding_box->min_x(), 0.0, bounding_box->max_x(), 0.0, color);
     SVG__line(svg,
-      0.0, bounding_box->minimum_y, 0.0, bounding_box->maximum_y, color);
+      0.0, bounding_box->min_y(), 0.0, bounding_box->max_y(), color);
 
     // Output each *tag in *all_tags*:
     double world_diagonal = 0.1;
@@ -526,7 +526,7 @@ void Map__svg_write(Map map, const String svg_base_name,
     // Close *svg*:
     SVG__close(svg);
 
-    Bounding_Box__free(bounding_box);
+    delete bounding_box;
 }
 
 /// @brief Causes an arc announce callback routine to be called.

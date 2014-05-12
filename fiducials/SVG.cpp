@@ -13,7 +13,7 @@
 /// @param svg is the *SVG* object to modify.
 /// @param x_width is the available width graph on.
 /// @param y_height is the available height graph on.
-/// @param bounding_box specifies the *Bounding_Box* of the values
+/// @param bounding_box specifies the *BoundingBox* of the values
 /// to be graphed.
 ///
 /// *SVG__cartesian_scale*() will modifiy *svg* so that it can graph
@@ -21,12 +21,12 @@
 /// The available graphing area is *x_width* by *y_height*.
 
 void SVG__cartesian_scale(
-  SVG svg, double x_width, double y_height, Bounding_Box bounding_box) {
+  SVG svg, double x_width, double y_height, BoundingBox *bounding_box) {
     // Grab the minimum/maximum values from *bounding_box*.
-    double maximum_x = bounding_box->maximum_x;
-    double minimum_x = bounding_box->minimum_x;
-    double maximum_y = bounding_box->maximum_y;
-    double minimum_y = bounding_box->minimum_y;
+    double maximum_x = bounding_box->max_x();
+    double minimum_x = bounding_box->min_x();
+    double maximum_y = bounding_box->max_y();
+    double minimum_y = bounding_box->min_y();
 
     // Compute the span in x and y:
     double x_span = maximum_x - minimum_x;
