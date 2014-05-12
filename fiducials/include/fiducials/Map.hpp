@@ -14,8 +14,9 @@ typedef struct Map__Struct *Map;
 
 #include "Arc.hpp"
 #include "Tag.hpp"
-#include "Camera_Tag.hpp"
 #include "Fiducials.hpp"
+
+class CameraTag;
 
 
 /// @brief A *Map__Struct* represents the fiducial location map.
@@ -78,8 +79,8 @@ extern void Map__arc_announce(
   Map map, Arc arc, CV_Image image, unsigned int sequence_number);
 extern void Map__arc_append(Map map, Arc arc);
 extern Arc Map__arc_lookup(Map map, Tag from, Tag to);
-extern unsigned int Map__arc_update(Map map, Camera_Tag camera_from,
-  Camera_Tag camera_to, CV_Image image, unsigned int sequence_number);
+extern unsigned int Map__arc_update(Map map, CameraTag * camera_from,
+  CameraTag * camera_to, CV_Image image, unsigned int sequence_number);
 extern bool Map__equals(Map map1, Map map2);
 extern Map Map__create(String_Const map_path, String_Const map_base,
   void *announce_object, Fiducials_Arc_Announce_Routine arc_announce_routine,

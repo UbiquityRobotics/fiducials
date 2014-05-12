@@ -14,17 +14,8 @@
 /// *Camera_Tag__compare*() will return the -1 if *camera_tag1* is less
 /// than *camera_tag2*, 0 if they are equal, and 1 otherwise.
 
-bool Camera_Tag__less(Camera_Tag camera_tag1, Camera_Tag camera_tag2) {
-    return Tag__less(camera_tag1->tag, camera_tag2->tag);
-}
-
-/// @brief Release *camera_tag* storage.
-/// @param camera_tag to release storage of.
-///
-/// *Camera_Tag__free*() will release the storage for *camera_tag*.
-
-void Camera_Tag__free(Camera_Tag camera_tag) {
-    Memory__free((Memory)camera_tag);
+bool CameraTag::less(CameraTag * tag1, CameraTag * tag2) {
+  return Tag__less(tag1->tag, tag2->tag);
 }
 
 /// @brief Initializes *camara_tag* from *tag_id*, *direction*, and *corners*
@@ -41,8 +32,8 @@ void Camera_Tag__free(Camera_Tag camera_tag) {
 /// *camara_tag* has its diagonal, twist and center X/Y coordiante filled
 /// from this routine.
 
-void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
-  unsigned int direction, CV_Point2D32F_Vector corners, CV_Image debug_image) {
+void CameraTag::initialize(Tag tag, unsigned int direction,
+    CV_Point2D32F_Vector corners, CV_Image debug_image) {
     // We need to remap the 4 corners in *corners* to be oriented as
     // in the crude ASCII art shown below:
     //
@@ -66,28 +57,28 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
     double x_corners[4];
     double y_corners[4];
     for (unsigned int index = 0; index < 4; index++) {
-	unsigned corner_index = 0;
-	switch (direction) {
-	  case 0:
-	    corner_index = (3 - index + 2) & 3;
-	    break;
-	  case 1:
-	    corner_index = (3 - index + 1) & 3;
-	    break;
-	  case 2:
-	    corner_index = (3 - index + 0) & 3;
-	    break;
-	  case 3:
-	    corner_index = (3 - index + 3) & 3;
-	    break;
-	  default:
-	    assert(0);
-	    break;
-	}
-	CV_Point2D32F corner =
-	  CV_Point2D32F_Vector__fetch1(corners, corner_index);
-	x_corners[index] = CV_Point2D32F__x_get(corner);
-	y_corners[index] = CV_Point2D32F__y_get(corner);
+        unsigned corner_index = 0;
+        switch (direction) {
+          case 0:
+            corner_index = (3 - index + 2) & 3;
+            break;
+          case 1:
+            corner_index = (3 - index + 1) & 3;
+            break;
+          case 2:
+            corner_index = (3 - index + 0) & 3;
+            break;
+          case 3:
+            corner_index = (3 - index + 3) & 3;
+            break;
+          default:
+            assert(0);
+            break;
+        }
+        CV_Point2D32F corner =
+          CV_Point2D32F_Vector__fetch1(corners, corner_index);
+        x_corners[index] = CV_Point2D32F__x_get(corner);
+        y_corners[index] = CV_Point2D32F__y_get(corner);
     }
 
     // Pull out the X and Y coordinates into separate variables:
@@ -102,35 +93,35 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
 
     // For debugging plot the for colors
     if (debug_image != (CV_Image)0) {
-	for (unsigned int index = 0; index < 4; index++) {
-	    int x = (int)x_corners[index];
-	    int y = (int)y_corners[index];
-	    CV_Scalar color = (CV_Scalar)0;
-	    String_Const text = (String)0;
-	    switch (index) {
-	      case 0:
-		color = CV_Scalar__rgb(255.0, 0.0, 0.0);
-		text = "red";
-		break;
-	      case 1:
-		color = CV_Scalar__rgb(0.0, 255.0, 0.0);
-		text = "green";
-		break;
-	      case 2:
-		color = CV_Scalar__rgb(0.0, 0.0, 255.0);
-		text = "blue";
-		break;
-	      case 3:
-		color = CV_Scalar__rgb(0.0, 255.0, 255.0);
-		text = "cyan";
-		break;
-	      default:
-		assert(0);
-	    }
-	    CV_Image__blob_draw(debug_image, x, y, color);
-	    File__format(stderr,
-	      "Corner[%d]=(%d:%d) %s\n", index, x, y, text);
-	}
+        for (unsigned int index = 0; index < 4; index++) {
+            int x = (int)x_corners[index];
+            int y = (int)y_corners[index];
+            CV_Scalar color = (CV_Scalar)0;
+            String_Const text = (String)0;
+            switch (index) {
+              case 0:
+                color = CV_Scalar__rgb(255.0, 0.0, 0.0);
+                text = "red";
+                break;
+              case 1:
+                color = CV_Scalar__rgb(0.0, 255.0, 0.0);
+                text = "green";
+                break;
+              case 2:
+                color = CV_Scalar__rgb(0.0, 0.0, 255.0);
+                text = "blue";
+                break;
+              case 3:
+                color = CV_Scalar__rgb(0.0, 255.0, 255.0);
+                text = "cyan";
+                break;
+              default:
+                assert(0);
+            }
+            CV_Image__blob_draw(debug_image, x, y, color);
+            File__format(stderr,
+              "Corner[%d]=(%d:%d) %s\n", index, x, y, text);
+        }
     }
 
     // Compute the angle of the tag bottom edge relative to the camera X axis:
@@ -171,12 +162,12 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
     double center_y = (y0 + y1 + y2 + y2) / 4.0;
 
     // Load up *carmera_tag*:
-    camera_tag->diagonal = diagonal;
-    camera_tag->direction = direction;
-    camera_tag->tag = tag;
-    camera_tag->twist = twist;
-    camera_tag->x = center_x;
-    camera_tag->y = center_y;
+    this->diagonal = diagonal;
+    this->direction = direction;
+    this->tag = tag;
+    this->twist = twist;
+    this->x = center_x;
+    this->y = center_y;
 }
 
 /// @brief Return a new *Camera_Tag* object.
@@ -184,17 +175,28 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
 ///
 /// *Camera_Tag__new*() will return a new *Camera_Tag* object.
 
-Camera_Tag Camera_Tag__new(void) {
-    Camera_Tag camera_tag = Memory__new(Camera_Tag, "Camera_Tag__new");
-    camera_tag->diagonal = 0.0;
-    camera_tag->direction = 0;
-    camera_tag->tag = (Tag)0;
-    camera_tag->twist = 0.0;
-    camera_tag->x = 0.0;
-    camera_tag->y = 0.0;
-    return camera_tag;
+CameraTag::CameraTag() : diagonal(0.0), direction(0), tag(NULL),
+    twist(0.0), x(0.0), y(0.0)
+{
 }
 
+std::vector<CameraTag*> CameraTag::free_pool;
 
+void* CameraTag::operator new(size_t sz) {
+  if(sz == sizeof(CameraTag)) {
+    if(free_pool.size() > 0) {
+      void * tmp = free_pool.back();
+      free_pool.pop_back();
+      return tmp;
+    } else {
+      return ::new char[sz];
+    }
+  } else {
+    assert(0 == sz%sizeof(CameraTag) );
+    return ::new char[sz];
+  }
+}
 
-
+void CameraTag::operator delete(void *p) {
+  free_pool.push_back((CameraTag*)p);
+}

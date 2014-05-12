@@ -96,7 +96,7 @@ Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
 /// *Map__arc_update*() will create or update the *Arc* in *map* associated
 /// with *from* and *to*.  *image* used to determine the frame size.
 
-unsigned int Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
+unsigned int Map__arc_update(Map map, CameraTag *camera_from, CameraTag *camera_to,
   CV_Image image, unsigned int sequence_number) {
     // Get the *width* and *height*:
     int rows = CV_Image__height_get(image);

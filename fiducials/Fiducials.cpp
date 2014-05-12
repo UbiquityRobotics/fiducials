@@ -873,13 +873,6 @@ void Fiducials__free(Fiducials fiducials) {
         //Location__free(location);
     }
 
-    // Free up the storage associated with *camera_tags_pool*:
-    unsigned int pool_size = fiducials->camera_tags_pool.size();
-    for (unsigned int index = 0; index < pool_size; index++) {
-        Camera_Tag camera_tag = fiducials->camera_tags_pool[index];
-        Camera_Tag__free(camera_tag);
-    }
-
     // Relaase the *Map*:
     Map__free(fiducials->map);
 
@@ -1277,15 +1270,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                             }
 
                             // Allocate a *camera_tag*:
-                            Camera_Tag camera_tag = (Camera_Tag)0;
-                            if (fiducials->camera_tags_pool.size() == 0) {
-                                 // *camera_tags_pool* is empty;
-                                // allocate a new one:
-                                camera_tag = Camera_Tag__new();
-                            } else {
-                                camera_tag = fiducials->camera_tags_pool.back();
-              fiducials->camera_tags_pool.pop_back();
-                            }
+                            CameraTag * camera_tag = new CameraTag();
 
                             // Load up *camera_tag* to get center, twist, etc.:
                             Tag tag = Map__tag_lookup(map, tag_id);
@@ -1305,10 +1290,10 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                                 vertices[3][0], vertices[3][1]);
 
                             if (debug_index == 11) {
-                                Camera_Tag__initialize(camera_tag, tag,
+                                camera_tag->initialize(tag,
                                   direction_index, corners, debug_image);
                             } else {
-                                Camera_Tag__initialize(camera_tag, tag,
+                                camera_tag->initialize(tag,
                                   direction_index, corners, (CV_Image)0);
                             }
                             fiducials->current_visibles.push_back(tag);
@@ -1325,7 +1310,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                             }
 
                             // Append *camera_tag* to *camera_tags*:
-          fiducials->camera_tags.push_back(camera_tag);
+                            fiducials->camera_tags.push_back(camera_tag);
                             //File__format(log_file,
                             //  "Found %d\n", camera_tag->tag->id);
                         }
@@ -1337,7 +1322,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
     // Just for consistency sort *camera_tags*:
     std::sort(fiducials->camera_tags.begin(), fiducials->camera_tags.end(),
-        Camera_Tag__less);
+        CameraTag::less);
 
     // Sweep through all *camera_tag* pairs to generate associated *Arc*'s:
     unsigned int camera_tags_size = fiducials->camera_tags.size();
@@ -1345,11 +1330,11 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
         // Iterate through all pairs, using a "triangle" scan:
         for (unsigned int tag1_index = 0;
           tag1_index < camera_tags_size - 1; tag1_index++) {
-            Camera_Tag camera_tag1 = fiducials->camera_tags[tag1_index];
+            CameraTag * camera_tag1 = fiducials->camera_tags[tag1_index];
         
             for (unsigned int tag2_index = tag1_index + 1;
               tag2_index < camera_tags_size; tag2_index++) {
-                Camera_Tag camera_tag2 = fiducials->camera_tags[tag2_index];
+                CameraTag * camera_tag2 = fiducials->camera_tags[tag2_index];
                 assert (camera_tag1->tag->id != camera_tag2->tag->id);
                 if (Map__arc_update(map,
                   camera_tag1, camera_tag2, gray_image, sequence_number) > 0) {
@@ -1368,7 +1353,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
         //File__format(log_file,
         //  "half_width=%d half_height=%d\n", half_width, half_height);
         for (unsigned int index = 0; index < camera_tags_size; index++) {
-            Camera_Tag camera_tag = fiducials->camera_tags[index];
+            CameraTag * camera_tag = fiducials->camera_tags[index];
             Tag tag = camera_tag->tag;
             //File__format(log_file,
             //  "[%d]:tag_id=%d tag_x=%f tag_y=%f tag_twist=%f\n",
@@ -1510,8 +1495,9 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     //  current_visibles, previous_visibles);
 
     // Clean out *camera_tags*:
-    fiducials->camera_tags_pool.insert(fiducials->camera_tags_pool.end(),
-        fiducials->camera_tags.begin(), fiducials->camera_tags.end());
+    for( unsigned int i=0; i<fiducials->camera_tags.size(); i++ ) {
+      delete fiducials->camera_tags[i];
+    }
     fiducials->camera_tags.clear();
 
     // Flip the debug image:

@@ -10,7 +10,6 @@ typedef struct Fiducials_Results__Struct *Fiducials_Results;
 #include <assert.h>
 #include <sys/time.h>
 
-// Define the announce routine typedef's:
 typedef void (*Fiducials_Arc_Announce_Routine)(void *announce_object,
   int from_id, double from_x, double from_y, double from_z,
   int to_id, double to_x, double to_y, double to_z,
@@ -31,7 +30,6 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 
 
 // #include everything else:
-#include "Camera_Tag.hpp"
 #include "CRC.hpp"
 #include "CV.hpp"
 #include "File.hpp"
@@ -40,6 +38,8 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
+
+class CameraTag;
 
 typedef bool Mapping[64];
 typedef struct timeval *Time_Value;
@@ -50,8 +50,7 @@ struct Fiducials__Struct {
     CV_Scalar black;
     CV_Scalar blue;
     bool blur;
-    std::vector<Camera_Tag> camera_tags;
-    std::vector<Camera_Tag> camera_tags_pool;
+    std::vector<CameraTag * > camera_tags;
     CV_Point2D32F_Vector corners;
     std::vector<Tag> current_visibles;
     CV_Scalar cyan;
