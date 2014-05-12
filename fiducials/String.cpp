@@ -8,7 +8,6 @@
 
 #include "String.hpp"
 #include "Memory.hpp"
-#include "Unsigned.hpp"
 
 /// @brief Allocate and return for *size* characters.
 /// @param size is the maximum string size excluding trailing null.
@@ -17,7 +16,7 @@
 /// *String__allocate*() will return a string that can conatain
 /// *size* characters excluding trailing null.
 
-String String__allocate(Unsigned size) {
+String String__allocate(unsigned int size) {
     return (String)Memory__allocate(size + 1, "String__allocate");
 }
 
@@ -48,7 +47,7 @@ String String__format(String_Const format, ...) {
 
     // Compute *formatted_size*:
     char buffer[2];
-    Unsigned formatted_size = vsnprintf(buffer, 0, format, variadic_arguments);
+    unsigned int formatted_size = vsnprintf(buffer, 0, format, variadic_arguments);
     // Allocated *formatted*:
     String formatted =
       (String)Memory__allocate(formatted_size + 1, "String__format");
@@ -73,8 +72,8 @@ void String__free(String_Const string) {
 ///
 /// *String__size*() will return the size size of *string*.
 
-Unsigned String__size(String_Const string) {
-    Unsigned size = 0;
+unsigned int String__size(String_Const string) {
+    unsigned int size = 0;
     while (*string++ != '\0') {
 	size += 1;
     }
@@ -88,8 +87,8 @@ Unsigned String__size(String_Const string) {
 /// *String__to_unsigned*() will convert from decimal string into a
 /// number and return it.
 
-Unsigned String__to_unsigned(String_Const string) {
-    Unsigned result  = 0;
+unsigned int String__to_unsigned(String_Const string) {
+    unsigned int result  = 0;
     while (1) {
 	char character = *string++;
 	if (isdigit(character)) {

@@ -40,8 +40,6 @@ typedef struct _rvFec rvFec;
 
 typedef struct _rvFec *FEC;
 
-#include "Unsigned.hpp"
-
 // Forward error correcting structures.
 struct _rvFec
 {
@@ -70,8 +68,8 @@ rvInt16 rvFec_Correct(rvFec* self, rvUint8* blockBuffer);
 
 // External declarations:
 
-bool FEC__correct(FEC fec, Unsigned *data, Unsigned size);
-void FEC__parity(FEC fec, Unsigned *data, Unsigned size);
-FEC FEC__create(Unsigned symbol_size, Unsigned data_size, Unsigned parity_size);
+bool FEC__correct(FEC fec, unsigned int *data, unsigned int size);
+void FEC__parity(FEC fec, unsigned int *data, unsigned int size);
+FEC FEC__create(unsigned int symbol_size, unsigned int data_size, unsigned int parity_size);
 
 #endif // !defined(FEC_C_H_INCLUDED)

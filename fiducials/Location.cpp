@@ -4,7 +4,6 @@
 
 #include "Location.hpp"
 #include "Double.hpp"
-#include "Unsigned.hpp"
 #include "Memory.hpp"
 
 // *Location* routines:
@@ -21,8 +20,8 @@
 /// *Location__create*() create and initialize a new *Location* object that
 /// contains *id*, *x*, *y*, *bearing*, *goodness*, and *index*.
 
-Location Location__create(Unsigned id,
-  Double x, Double y, Double bearing, Double goodness, Unsigned index) {
+Location Location__create(unsigned int id,
+  Double x, Double y, Double bearing, Double goodness, unsigned int index) {
     Location location = Memory__new(Location, "Location__create");
     location->bearing = bearing;
     location->goodness = goodness;

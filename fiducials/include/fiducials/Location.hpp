@@ -4,7 +4,6 @@
 #define LOCATION_H_INCLUDED 1
 
 #include "Double.hpp"
-#include "Unsigned.hpp"
 
 /// @brief *Location* represents an X/Y/Bearing location.
 
@@ -16,10 +15,10 @@ struct Location__Struct {
     Double goodness;
 
     /// @brief Tag identifier.
-    Unsigned id;
+    unsigned int id;
 
     /// @brief Index counter.
-    Unsigned index;
+    unsigned int index;
 
     /// @brief Bearing in radians.
     Double bearing;
@@ -33,7 +32,7 @@ struct Location__Struct {
 };
 
 extern void Location__free(Location location);
-extern Location Location__create(Unsigned id,
-  Double x, Double y, Double bearing, Double goodness, Unsigned index);
+extern Location Location__create(unsigned int id,
+  Double x, Double y, Double bearing, Double goodness, unsigned int index);
 
 #endif // !defined(LOCATION_H_INCLUDED)

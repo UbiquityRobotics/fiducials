@@ -6,7 +6,6 @@
 // #include's:
 #include "C/FlyCapture2_C.h"
 #include "Memory.hpp"
-#include "Unsigned.hpp"
 
 /// @brief FC2 package overview documenation is here (please click).
 ///
@@ -51,10 +50,10 @@ extern FC2_Camera FC2_Camera__create(void);
 extern void FC2_Camera__connect(
   FC2_Camera camera, FC2_Camera_Identifier camera_indentifier);
 extern FC2_Camera_Identifier FC2_Camera__identifier_fetch(
-  FC2_Camera camera, Unsigned index);
+  FC2_Camera camera, unsigned int index);
 extern void FC2_Camera__image_retrieve(FC2_Camera camera, FC2_Image image);
 extern FC2_Camera_Information FC2_Camera__information_get(FC2_Camera camera);
-extern Unsigned FC2_Camera__number_of_cameras_get(FC2_Camera camera);
+extern unsigned int FC2_Camera__number_of_cameras_get(FC2_Camera camera);
 
 // *FC2_Image* routines:
 extern void FC2_Image__convert(

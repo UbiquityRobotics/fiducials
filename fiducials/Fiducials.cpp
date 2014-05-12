@@ -14,7 +14,6 @@
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
-#include "Unsigned.hpp"
 
 // Introduction:
 //
@@ -515,8 +514,8 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
 
     // Processing *original_image* with different options
     // for each time through the loop:
-    Unsigned debug_index = 0;
-    Unsigned previous_debug_index = debug_index;
+    unsigned int debug_index = 0;
+    unsigned int previous_debug_index = debug_index;
     bool done = (bool)0;
     while (!done) {
         // Process {gray_image}; a debug image lands in {debug_image}:
@@ -570,7 +569,7 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
             break;
           default:
             // Deal with unknown {control_character}:
-            if ((Unsigned)control_character <= 127) {
+            if ((unsigned int)control_character <= 127) {
                 File__format(stderr,
                   "Unknown control character %d\n", control_character);
             }
@@ -611,8 +610,8 @@ Fiducials Fiducials__create(
   CV_Image original_image, Fiducials_Create fiducials_create)
 {
     // Create *image_size*:
-    Unsigned width = CV_Image__width_get(original_image);
-    Unsigned height = CV_Image__height_get(original_image);
+    unsigned int width = CV_Image__width_get(original_image);
+    unsigned int height = CV_Image__height_get(original_image);
     CV_Size image_size = CV_Size__create(width, height);
     CV_Memory_Storage storage = CV_Memory_Storage__create(0);
 
@@ -764,7 +763,7 @@ Fiducials Fiducials__create(
         &east_mapping_flipped[0],
     };
 
-    //for (Unsigned index = 0; index < 4; index++) {
+    //for (unsigned int index = 0; index < 4; index++) {
     //        File__format(log_file, "mappings[%d]=0x%x\n", index, mappings[index]);
     //}
 
@@ -860,8 +859,8 @@ void Fiducials__free(Fiducials fiducials) {
     CV_Size__free(fiducials->size_m1xm1);
 
     // Free up the storage associated with *locations*:
-    Unsigned locations_size = fiducials->locations.size();
-    for (Unsigned index = 0; index < locations_size; index++) {
+    unsigned int locations_size = fiducials->locations.size();
+    for (unsigned int index = 0; index < locations_size; index++) {
         Location location = fiducials->locations[index];
         // Kludge: memory double free?!!!
         //Location__free(location);
@@ -876,8 +875,8 @@ void Fiducials__free(Fiducials fiducials) {
     }
 
     // Free up the storage associated with *camera_tags_pool*:
-    Unsigned pool_size = fiducials->camera_tags_pool.size();
-    for (Unsigned index = 0; index < pool_size; index++) {
+    unsigned int pool_size = fiducials->camera_tags_pool.size();
+    for (unsigned int index = 0; index < pool_size; index++) {
         Camera_Tag camera_tag = fiducials->camera_tags_pool[index];
         Camera_Tag__free(camera_tag);
     }
@@ -914,7 +913,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
     // Grab some values from *fiducials*:
     CV_Image debug_image = fiducials->debug_image;
-    Unsigned debug_index = fiducials->debug_index;
+    unsigned int debug_index = fiducials->debug_index;
     CV_Image edge_image = fiducials->edge_image;
     CV_Image gray_image = fiducials->gray_image;
     File log_file = fiducials->log_file;
@@ -923,7 +922,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     CV_Image temporary_gray_image = fiducials->temporary_gray_image;
     Fiducials_Location_Announce_Routine location_announce_routine =
       fiducials->location_announce_routine;
-    Unsigned sequence_number = fiducials->sequence_number++;
+    unsigned int sequence_number = fiducials->sequence_number++;
 
     // For *debug_level* 0, we show the original image in color:
     if (debug_index == 0) {
@@ -1018,7 +1017,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
     // Iterate over all of the *contours*:
     Map map = fiducials->map;
-    Unsigned contours_count = 0;
+    unsigned int contours_count = 0;
     for (CV_Sequence contour = contours; contour != (CV_Sequence)0;
       contour = CV_Sequence__next_get(contour)) {
         // Keep a count of total countours:
@@ -1060,7 +1059,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
             // Copy the 4 corners from {poly_contour} to {corners}:
             CV_Point2D32F_Vector corners = fiducials->corners;
-            for (Unsigned index = 0; index < 4; index++) {
+            for (unsigned int index = 0; index < 4; index++) {
                 CV_Point2D32F corner =
                   CV_Point2D32F_Vector__fetch1(corners, index);
                 CV_Point point =
@@ -1084,7 +1083,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
             // For debugging show the 4 corners of the possible tag where
             //corner0=red, corner1=green, corner2=blue, corner3=purple:
             if (debug_index == 8) {
-                for (Unsigned index = 0; index < 4; index++) {
+                for (unsigned int index = 0; index < 4; index++) {
                     CV_Point point =
                       CV_Sequence__point_fetch1(polygon_contour, index);
                     int x = CV_Point__x_get(point);
@@ -1143,7 +1142,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
             if (debug_index == 9) {
                 CV_Scalar red = fiducials->red;
                 CV_Scalar green = fiducials->green;
-                for (Unsigned index = 0; index < 8; index++) {
+                for (unsigned int index = 0; index < 8; index++) {
                     CV_Point2D32F reference =
                       CV_Point2D32F_Vector__fetch1(references, index);
                     int x = CV__round(CV_Point2D32F__x_get(reference));
@@ -1173,7 +1172,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
                 // Extract all 64 tag bit values:
                 bool *tag_bits = &fiducials->tag_bits[0];
-                for (Unsigned index = 0; index < 64; index++) {
+                for (unsigned int index = 0; index < 64; index++) {
                     // Grab the pixel value and convert into a {bit}:
                     CV_Point2D32F sample_point =
                       CV_Point2D32F_Vector__fetch1(sample_points, index);
@@ -1223,8 +1222,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                 // Now we iterate through the 4 different mapping
                 // orientations to see if any one of the 4 mappings match:
                 bool **mappings = fiducials->mappings;
-                Unsigned mappings_size = 4;
-                for (Unsigned direction_index = 0;
+                unsigned int mappings_size = 4;
+                for (unsigned int direction_index = 0;
                   direction_index < mappings_size; direction_index++) {
                     // Grab the mapping:
                     bool *mapping = mappings[direction_index];
@@ -1233,15 +1232,15 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
 
                     bool mapped_bits[64];
-                    for (Unsigned i = 0; i < 64; i++) {
+                    for (unsigned int i = 0; i < 64; i++) {
                          mapped_bits[mapping[i]] = tag_bits[i];
                     }
 
                     // Fill in tag bytes;
-                    Unsigned tag_bytes[8];
-                    for (Unsigned i = 0; i < 8; i++) {
-                        Unsigned byte = 0;
-                        for (Unsigned j = 0; j < 8; j++) {
+                    unsigned int tag_bytes[8];
+                    for (unsigned int i = 0; i < 8; i++) {
+                        unsigned int byte = 0;
+                        for (unsigned int j = 0; j < 8; j++) {
                             if (mapped_bits[(i<<3) + j]) {
                                 //byte |= 1 << j;
                                 byte |= 1 << (7 - j);
@@ -1264,13 +1263,13 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                         }
 
                         // Now see if the two CRC's match:
-                        Unsigned computed_crc = CRC__compute(tag_bytes, 2);
-                        Unsigned tag_crc = (tag_bytes[3] << 8) | tag_bytes[2];
+                        unsigned int computed_crc = CRC__compute(tag_bytes, 2);
+                        unsigned int tag_crc = (tag_bytes[3] << 8) | tag_bytes[2];
                         if (computed_crc == tag_crc) {
                             // Yippee!!! We have a tag:
                             // Compute {tag_id} from the the first two bytes
                             // of {tag_bytes}:
-                            Unsigned tag_id =
+                            unsigned int tag_id =
                               (tag_bytes[1] << 8) | tag_bytes[0];
 
                             if (debug_index == 11) {
@@ -1293,7 +1292,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                             Tag tag = Map__tag_lookup(map, tag_id);
 
                             double vertices[4][2];
-                            for (Unsigned index = 0; index < 4; index++) {
+                            for (unsigned int index = 0; index < 4; index++) {
                               CV_Point2D32F pt = CV_Point2D32F_Vector__fetch1(corners, index);
                               vertices[index][0] = pt->x;
                               vertices[index][1] = pt->y;
@@ -1342,14 +1341,14 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
         Camera_Tag__less);
 
     // Sweep through all *camera_tag* pairs to generate associated *Arc*'s:
-    Unsigned camera_tags_size = fiducials->camera_tags.size();
+    unsigned int camera_tags_size = fiducials->camera_tags.size();
     if (camera_tags_size >= 2) {
         // Iterate through all pairs, using a "triangle" scan:
-        for (Unsigned tag1_index = 0;
+        for (unsigned int tag1_index = 0;
           tag1_index < camera_tags_size - 1; tag1_index++) {
             Camera_Tag camera_tag1 = fiducials->camera_tags[tag1_index];
         
-            for (Unsigned tag2_index = tag1_index + 1;
+            for (unsigned int tag2_index = tag1_index + 1;
               tag2_index < camera_tags_size; tag2_index++) {
                 Camera_Tag camera_tag2 = fiducials->camera_tags[tag2_index];
                 assert (camera_tag1->tag->id != camera_tag2->tag->id);
@@ -1365,11 +1364,11 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     results->image_interesting = (bool)0;
     if (camera_tags_size > 0) {
         Double pi = 3.14159265358979323846264;
-        Unsigned half_width = CV_Image__width_get(gray_image) >> 1;
-        Unsigned half_height = CV_Image__height_get(gray_image) >> 1;
+        unsigned int half_width = CV_Image__width_get(gray_image) >> 1;
+        unsigned int half_height = CV_Image__height_get(gray_image) >> 1;
         //File__format(log_file,
         //  "half_width=%d half_height=%d\n", half_width, half_height);
-        for (Unsigned index = 0; index < camera_tags_size; index++) {
+        for (unsigned int index = 0; index < camera_tags_size; index++) {
             Camera_Tag camera_tag = fiducials->camera_tags[index];
             Tag tag = camera_tag->tag;
             //File__format(log_file,
@@ -1407,7 +1406,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
             //File__format(log_file, "[%d]:x=%f:y=%f:bearing=%f\n",
             //  index, x, y, bearing * 180.0 / pi);
-            Unsigned location_index = fiducials->locations.size();
+            unsigned int location_index = fiducials->locations.size();
             Location location = Location__create(tag->id,
               x, y, bearing, floor_distance, location_index);
             List__append(locations,
@@ -1458,8 +1457,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     }
 
     // Visit each *current_tag* in *current_visibles*:
-    Unsigned current_visibles_size = fiducials->current_visibles.size();
-    for (Unsigned current_visibles_index = 0;
+    unsigned int current_visibles_size = fiducials->current_visibles.size();
+    for (unsigned int current_visibles_index = 0;
       current_visibles_index < current_visibles_size;
       current_visibles_index++) {
         Tag current_visible =
@@ -1477,8 +1476,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     }
 
     // Identifiy tags that are no longer visible:
-    Unsigned previous_visibles_size = fiducials->previous_visibles.size();
-    for (Unsigned previous_visibles_index = 0;
+    unsigned int previous_visibles_size = fiducials->previous_visibles.size();
+    for (unsigned int previous_visibles_index = 0;
        previous_visibles_index < previous_visibles_size;
        previous_visibles_index++) {
         Tag previous_visible =
@@ -1488,7 +1487,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
         // Now look to see if *previous_visible* is in *current_visibles*:
         Tag current_visible = (Tag)0;
-        for (Unsigned current_visibles_index = 0;
+        for (unsigned int current_visibles_index = 0;
           current_visibles_index < current_visibles_size;
           current_visibles_index++) {
             current_visible = 
@@ -1785,13 +1784,13 @@ CV_Point2D32F_Vector Fiducials__references_compute(
 /// sampled point is returned.
 
 int Fiducials__points_maximum(Fiducials fiducials,
-  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index) {
+  CV_Point2D32F_Vector points, unsigned int start_index, unsigned int end_index) {
 
     // Start with a big value move it down:
     int result = 0;
 
     // Iterate across the {points} from {start_index} to {end_index}:
-    for (Unsigned index = start_index; index <= end_index; index++) {
+    for (unsigned int index = start_index; index <= end_index; index++) {
         CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
         int value = Fiducials__point_sample(fiducials, point);
         //call d@(form@("max[%f%:%f%]:%d%\n\") %
@@ -1817,13 +1816,13 @@ int Fiducials__points_maximum(Fiducials fiducials,
 /// sampled point is returned.
 
 int Fiducials__points_minimum(Fiducials fiducials,
-  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index) {
+  CV_Point2D32F_Vector points, unsigned int start_index, unsigned int end_index) {
 
     // Start with a big value move it down:
     int result = 0x7fffffff;
 
     // Iterate across the {points} from {start_index} to {end_index}:
-    for (Unsigned index = start_index; index <= end_index; index++) {
+    for (unsigned int index = start_index; index <= end_index; index++) {
         CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
         int value = Fiducials__point_sample(fiducials, point);
         if (value < result) {
@@ -1877,7 +1876,7 @@ void Fiducials__sample_points_compute(
     Double dy30 = y3 - y0;
 
     // {index} will cycle through the 64 sample points in {sample_points}:
-    Unsigned index = 0;
+    unsigned int index = 0;
 
     // There are ten rows (or columns) enclosed by the quadralateral.
     // (The outermost "white" rows and columns are not enclosed by the
@@ -1889,7 +1888,7 @@ void Fiducials__sample_points_compute(
     Double i_increment = 2.0 / 20.0;
 
     // Loop over the first axis of the grid:
-    Unsigned i = 0;
+    unsigned int i = 0;
     while (i < 8) {
 
         // Compute ({xx1},{yy1}) which is a point that is {i_fraction} between
@@ -1911,7 +1910,7 @@ void Fiducials__sample_points_compute(
         Double j_increment = 2.0 / 20.0;
 
         // Loop over the second axis of the grid:
-        Unsigned j = 0;
+        unsigned int j = 0;
         while (j < 8) {
             // Fetch next {sample_point}:
             CV_Point2D32F sample_point =

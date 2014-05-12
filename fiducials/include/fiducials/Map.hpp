@@ -8,7 +8,6 @@
 
 #include "File.hpp"
 #include "Location.hpp"
-#include "Unsigned.hpp"
 
 /// @brief *Map* is the representation of a fiducial marker map.
 typedef struct Map__Struct *Map;
@@ -37,7 +36,7 @@ struct Map__Struct {
     std::map<std::pair<unsigned int, unsigned int>, Arc> arcs_;
 
     /// @brief Number of map changes:
-    Unsigned changes_count;
+    unsigned int changes_count;
 
     /// @brief Base name of map file name.
     String_Const file_base;
@@ -70,25 +69,25 @@ struct Map__Struct {
     Arc temporary_arc;
 
     /// @brief Increment *visit* each time a map update is propogated.
-    Unsigned visit;
+    unsigned int visit;
 };
 
 // *Map* routines:
 
 extern void Map__arc_announce(
-  Map map, Arc arc, CV_Image image, Unsigned sequence_number);
+  Map map, Arc arc, CV_Image image, unsigned int sequence_number);
 extern void Map__arc_append(Map map, Arc arc);
 extern Arc Map__arc_lookup(Map map, Tag from, Tag to);
-extern Unsigned Map__arc_update(Map map, Camera_Tag camera_from,
-  Camera_Tag camera_to, CV_Image image, Unsigned sequence_number);
+extern unsigned int Map__arc_update(Map map, Camera_Tag camera_from,
+  Camera_Tag camera_to, CV_Image image, unsigned int sequence_number);
 extern bool Map__equals(Map map1, Map map2);
 extern Map Map__create(String_Const map_path, String_Const map_base,
   void *announce_object, Fiducials_Arc_Announce_Routine arc_announce_routine,
   Fiducials_Tag_Announce_Routine tag_announce_routine,
   String_Const tag_heights_file_name, String_Const from);
 extern void Map__free(Map map);
-extern Tag_Height Map__tag_height_lookup(Map map, Unsigned id);
-extern void Map__image_log(Map map, CV_Image image, Unsigned sequence_number);
+extern Tag_Height Map__tag_height_lookup(Map map, unsigned int id);
+extern void Map__image_log(Map map, CV_Image image, unsigned int sequence_number);
 extern void Map__restore(Map map, File in_file);
 extern void Map__save(Map map);
 extern void Map__sort(Map map);
@@ -97,9 +96,9 @@ extern void Map__svg_write(
 extern void Map__tag_heights_xml_read(
   Map map, String_Const tag_heights_file_name);
 extern void Map__tag_announce(
-  Map map, Tag tag, bool visible, CV_Image image, Unsigned sequence_number);
-extern Tag Map__tag_lookup(Map map, Unsigned tag_id);
-extern void Map__update(Map map, CV_Image image, Unsigned sequence_number);
+  Map map, Tag tag, bool visible, CV_Image image, unsigned int sequence_number);
+extern Tag Map__tag_lookup(Map map, unsigned int tag_id);
+extern void Map__update(Map map, CV_Image image, unsigned int sequence_number);
 extern void Map__write(Map map, File out_file);
 
 #endif // !defined(MAP_H_INCLUDED)

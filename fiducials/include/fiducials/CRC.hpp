@@ -3,9 +3,7 @@
 #if !defined(CRC_H_INCLUDED)
 #define CRC_H_INCLUDED 1
 
-#include "Unsigned.hpp"
-
-extern Unsigned CRC__compute(Unsigned *buffer, Unsigned size);
+extern unsigned int CRC__compute(unsigned int *buffer, unsigned int size);
 
 #endif // !defined(CRC_H_INCLUDED)
 

@@ -7,7 +7,6 @@
 #include "Double.hpp"
 #include "SVG.hpp"
 #include "Tag.hpp"
-#include "Unsigned.hpp"
 
 // *Tag* routines:
 
@@ -63,7 +62,7 @@ bool Tag__less(Tag tag1, Tag tag2) {
 /// of *id*.  This returned *Tag* is not *initialized* until *Tag__initialize*()
 /// is called.
 
-Tag Tag__create(Unsigned id, Map map) {
+Tag Tag__create(unsigned int id, Map map) {
     Tag_Height tag_height = Map__tag_height_lookup(map, id);
     Tag tag =  Memory__new(Tag, "Tag__create");
     tag->twist = (Double)0.0;
@@ -106,7 +105,7 @@ void Tag__free(Tag tag) {
 /// *diagonal* is in pixels.
 
 void Tag__initialize(
-  Tag tag, Double twist, Double x, Double y, Double diagonal, Unsigned visit) {
+  Tag tag, Double twist, Double x, Double y, Double diagonal, unsigned int visit) {
     tag->diagonal = diagonal; 
     tag->initialized = (bool)1;
     tag->twist = twist;
@@ -126,14 +125,14 @@ void Tag__initialize(
 Tag Tag__read(File in_file, Map map) {
     // Read in "<Tag .../>":
     File__tag_match(in_file, "Tag");
-    Unsigned tag_id = (Unsigned)File__integer_attribute_read(in_file, "Id");
+    unsigned int tag_id = (unsigned int)File__integer_attribute_read(in_file, "Id");
     Double diagonal = File__double_attribute_read(in_file, "Diagonal");
     Double pi = (Double)3.14159265358979323846264;
     Double twist = File__double_attribute_read(in_file, "Twist");
     Double x = File__double_attribute_read(in_file, "X");
     Double y = File__double_attribute_read(in_file, "Y");
-    Unsigned hop_count =
-      (Unsigned)File__integer_attribute_read(in_file, "Hop_Count");
+    unsigned int hop_count =
+      (unsigned int)File__integer_attribute_read(in_file, "Hop_Count");
     File__string_match(in_file, "/>\n");
 
     // Convert *twist* from *degrees_to_radians*:
@@ -175,7 +174,7 @@ void Tag__svg_write(Tag tag, SVG svg) {
     Double quarter_pi = half_pi / 2.0;
 
     // Grab some values from *tag*:
-    Unsigned id = tag->id;
+    unsigned int id = tag->id;
     Double half_diagonal = tag->world_diagonal / 2.0;
     Double x = tag->x;
     Double y = tag->y;
@@ -219,7 +218,7 @@ void Tag__svg_write(Tag tag, SVG svg) {
 /// the "other" end of *arc*.
 
 void Tag__update_via_arc(
-  Tag tag, Arc arc, CV_Image image, Unsigned sequence_number) {
+  Tag tag, Arc arc, CV_Image image, unsigned int sequence_number) {
     // Some values to use for radian/degree conversion:
     Double pi = (Double)3.14159265358979323846264;
     Double r2d = 180.0 / pi;
@@ -345,10 +344,10 @@ void Tag_Height__free(Tag_Height tag_height) {
 Tag_Height Tag_Height__xml_read(File xml_in_file) {
     // Read in "<Tag_Height .../>":
     File__tag_match(xml_in_file, "Tag_Height");
-    Unsigned first_id =
-      (Unsigned)File__integer_attribute_read(xml_in_file, "First_Id");
-    Unsigned last_id =
-      (Unsigned)File__integer_attribute_read(xml_in_file, "Last_Id");
+    unsigned int first_id =
+      (unsigned int)File__integer_attribute_read(xml_in_file, "First_Id");
+    unsigned int last_id =
+      (unsigned int)File__integer_attribute_read(xml_in_file, "Last_Id");
 
     Double World_Diagonal = 
        File__double_attribute_read(xml_in_file, "World_Diagonal");

@@ -9,7 +9,6 @@
 #include "Double.hpp"
 #include "File.hpp"
 #include "Memory.hpp"
-#include "Unsigned.hpp"
 
 /// @brief *SVG* is a Scalable Vector Graphics object.
 typedef struct SVG__Struct *SVG;
@@ -58,7 +57,7 @@ extern void SVG__rectangle(SVG svg, Double x, Double y,
   String_Const fill_color);
 extern void SVG__text(SVG svg,
   String_Const message, Double x, Double y, String_Const font_family,
-  Unsigned font_size);
+  unsigned int font_size);
 
 
 #endif // !defined(SVG_H_INCLUDED)

@@ -55,10 +55,10 @@ static unsigned short ccitt[256] = {
 /// for the computation.  The result is returned as a 32-bit quantity
 /// of which only the low 16-bit matter; the high 16-bits are masked to 0.
 
-Unsigned CRC__compute(Unsigned *buffer, Unsigned size) {
-    Unsigned crc = 0xffff;
-    for (Unsigned index = 0; index < size; index++) {
-	Unsigned byte = buffer[index] & 0xff;
+unsigned int CRC__compute(unsigned int *buffer, unsigned int size) {
+    unsigned int crc = 0xffff;
+    for (unsigned int index = 0; index < size; index++) {
+	unsigned int byte = buffer[index] & 0xff;
 	crc = (crc >> 8) ^ ccitt[(crc ^ byte) & 0xff];
     }
     return crc & 0xffff;

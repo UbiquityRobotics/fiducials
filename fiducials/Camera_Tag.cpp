@@ -4,7 +4,6 @@
 #include "Double.hpp"
 #include "Memory.hpp"
 #include "Tag.hpp"
-#include "Unsigned.hpp"
 
 /// @brief Return the sort order of *camera_tag1* to *camera_tag2*.
 /// @param camera_tag1 is the first *Camera_Tag* to compare.
@@ -42,7 +41,7 @@ void Camera_Tag__free(Camera_Tag camera_tag) {
 /// from this routine.
 
 void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
-  Unsigned direction, CV_Point2D32F_Vector corners, CV_Image debug_image) {
+  unsigned int direction, CV_Point2D32F_Vector corners, CV_Image debug_image) {
     // We need to remap the 4 corners in *corners* to be oriented as
     // in the crude ASCII art shown below:
     //
@@ -65,7 +64,7 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
     // correct 4 corners:
     Double x_corners[4];
     Double y_corners[4];
-    for (Unsigned index = 0; index < 4; index++) {
+    for (unsigned int index = 0; index < 4; index++) {
 	unsigned corner_index = 0;
 	switch (direction) {
 	  case 0:
@@ -102,7 +101,7 @@ void Camera_Tag__initialize(Camera_Tag camera_tag, Tag tag,
 
     // For debugging plot the for colors
     if (debug_image != (CV_Image)0) {
-	for (Unsigned index = 0; index < 4; index++) {
+	for (unsigned int index = 0; index < 4; index++) {
 	    int x = (int)x_corners[index];
 	    int y = (int)y_corners[index];
 	    CV_Scalar color = (CV_Scalar)0;

@@ -43,7 +43,6 @@
 #include <alloca.h>
 
 #include "FEC.hpp"
-#include "Unsigned.hpp"
 
 // No legal value in index form represents zero, so
 // we use nn as a special value for this purpose.
@@ -604,11 +603,11 @@ rvInt16 rvFec_Correct(rvFec* self, rvUint8* blockBuffer)
 bool
 FEC__correct(
     FEC fec,
-    Unsigned *data,
-    Unsigned size)
+    unsigned int *data,
+    unsigned int size)
 {
     unsigned char data_bytes[8];
-    Unsigned index;
+    unsigned int index;
     bool result;
 
     /* Load {data} into {data_bytes}: */
@@ -630,11 +629,11 @@ FEC__correct(
 void
 FEC__parity(
   FEC fec,
-  Unsigned *data,
-  Unsigned size)
+  unsigned int *data,
+  unsigned int size)
 {
     unsigned char data_bytes[8];
-    Unsigned index;
+    unsigned int index;
 
     /* Load {data} into {data_bytes}: */
     for (index = 0; index < 8; index++) {
@@ -652,9 +651,9 @@ FEC__parity(
 
 FEC
 FEC__create(
-  Unsigned symbol_size,
-  Unsigned data_size,
-  Unsigned parity_size)
+  unsigned int symbol_size,
+  unsigned int data_size,
+  unsigned int parity_size)
 {
     return rvFec_New(symbol_size, data_size, parity_size);
 }

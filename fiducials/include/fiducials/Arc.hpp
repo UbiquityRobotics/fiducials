@@ -78,7 +78,7 @@ struct Arc__Struct {
     Double to_twist;
 
     /// @brief The visit number for the arc.
-    Unsigned visit;
+    unsigned int visit;
 };
 
 // *Arc* routines:

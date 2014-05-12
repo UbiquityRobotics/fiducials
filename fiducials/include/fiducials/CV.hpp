@@ -49,9 +49,9 @@ extern void CV_Image__convert_color(
 extern void CV_Image__copy(
   CV_Image source_image, CV_Image destination_image, CV_Image mask);
 extern CV_Image CV_Image__create(
-  CV_Size size, Unsigned depth, Unsigned channels);
+  CV_Size size, unsigned int depth, unsigned int channels);
 extern CV_Image CV_Image__header_create(
-  CV_Size size, Unsigned depth, Unsigned channels);
+  CV_Size size, unsigned int depth, unsigned int channels);
 extern void CV_Image__cross_draw(
   CV_Image image, int x, int y, CV_Scalar color);
 extern void CV_Image__draw_contours(CV_Image image, CV_Sequence contour,
@@ -68,9 +68,9 @@ extern void CV_Image__flip(
 extern int CV_Image__gray_fetch(CV_Image image, int x, int y);
 extern int CV_Image__height_get(CV_Image image);
 extern int CV_Image__points_maximum(CV_Image image,
-  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+  CV_Point2D32F_Vector points, unsigned int start_index, unsigned int end_index);
 extern int CV_Image__points_minimum(CV_Image image,
-  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+  CV_Point2D32F_Vector points, unsigned int start_index, unsigned int end_index);
 extern int CV_Image__point_sample(CV_Image image, CV_Point2D32F point);
 extern void CV_Image__remap(CV_Image source_image, CV_Image destination_image,
   CV_Image map_x, CV_Image map_y, int flags, CV_Scalar fill_value);
@@ -99,9 +99,9 @@ extern int CV_Point__x_get(CV_Point point);
 
 extern void CV_Point2D32F_Vector__corners_normalize(
   CV_Point2D32F_Vector corners);
-extern CV_Point2D32F_Vector CV_Point2D32F_Vector__create(Unsigned size);
+extern CV_Point2D32F_Vector CV_Point2D32F_Vector__create(unsigned int size);
 extern CV_Point2D32F CV_Point2D32F_Vector__fetch1(
-  CV_Point2D32F_Vector vector,  Unsigned index);
+  CV_Point2D32F_Vector vector,  unsigned int index);
 extern bool CV_Point2D32F_Vector__is_clockwise(CV_Point2D32F_Vector corners);
 
 extern void CV_Point2D32F__point_set(CV_Point2D32F point2d32f, CV_Point point);
@@ -124,7 +124,7 @@ extern bool CV_Sequence__check_contour_convexity(CV_Sequence contour);
 extern Double CV_Sequence__contour_area(
   CV_Sequence contour, CV_Slice slice, int oriented);
 extern CV_Sequence CV_Sequence__next_get(CV_Sequence sequence);
-extern CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, Unsigned index);
+extern CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, unsigned int index);
 extern int CV_Sequence__total_get(CV_Sequence sequence);
 
 extern CV_Size CV_Size__create(int width, int height);

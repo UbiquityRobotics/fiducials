@@ -22,7 +22,6 @@
 #include "High_GUI2.hpp"
 #include "Memory.hpp"
 #include "String.hpp"
-#include "Unsigned.hpp"
 
 /// @brief A video display routine that can capture images.
 /// @param arguments_size is the number of command line arguments (plus 1.)
@@ -48,7 +47,7 @@ int main(int arguments_size, char * arguments[]) {
 	}
 
 	// Figure whether to open a video file or a camera;
-	Unsigned camera_number = 0;
+	unsigned int camera_number = 0;
 	if (isdigit(argument1[0])) {
 	    // Open the camera:
 	    camera_number = String__to_unsigned(argument1);
@@ -63,7 +62,7 @@ int main(int arguments_size, char * arguments[]) {
 	FC2_Camera camera = FC2_Camera__create();
 
 	// Figure out how many cameras are connected:
-	Unsigned number_of_cameras = FC2_Camera__number_of_cameras_get(camera);
+	unsigned int number_of_cameras = FC2_Camera__number_of_cameras_get(camera);
 
 	// Make sure we have enough cameras:
 	if (camera_number < number_of_cameras) {
@@ -108,7 +107,7 @@ int main(int arguments_size, char * arguments[]) {
 
 	    // Do a video loop:
 	    CV_Image display_image = (CV_Image)0;
-	    Unsigned capture_number = 0;
+	    unsigned int capture_number = 0;
 	    while (1) {
 		// Retrieve *camera_image* from *camera*:
 		FC2_Camera__image_retrieve(camera, camera_image);
@@ -122,10 +121,10 @@ int main(int arguments_size, char * arguments[]) {
 		// The first time through, we allocate *display_image*:
 		if (display_image == (CV_Image)0){
 		    // Grab some values out of *camera_image*:
-		    Unsigned columns = converted_image->cols;
-		    Unsigned rows = converted_image->rows;
-		    Unsigned stride = converted_image->stride;
-		    Unsigned data_size = converted_image->dataSize;
+		    unsigned int columns = converted_image->cols;
+		    unsigned int rows = converted_image->rows;
+		    unsigned int stride = converted_image->stride;
+		    unsigned int data_size = converted_image->dataSize;
 		    Memory image_data = FC2_Image__data_get(converted_image);
 
 		    // Print some stuff for debugging:

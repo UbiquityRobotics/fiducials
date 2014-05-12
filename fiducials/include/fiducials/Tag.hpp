@@ -49,7 +49,6 @@
 #include "Double.hpp"
 #include "File.hpp"
 #include "SVG.hpp"
-#include "Unsigned.hpp"
 
 /// @brief A *Tag* is a pointer to a *Tag_Struct* object.
 typedef struct Tag__Struct *Tag;
@@ -77,10 +76,10 @@ struct Tag__Struct {
     bool initialized;
 
     /// @brief Distance from origin in hops:
-    Unsigned hop_count;
+    unsigned int hop_count;
 
     /// @brief Tag identifier.
-    Unsigned id;
+    unsigned int id;
 
     /// @brief Parent *Map* object.
     Map map;
@@ -92,7 +91,7 @@ struct Tag__Struct {
     bool visible;
 
     /// @brief Visit counter.
-    Unsigned visit;
+    unsigned int visit;
 
     /// @brief Absolute X floor coordinate.
     Double x;
@@ -114,10 +113,10 @@ struct Tag_Height__Struct {
     Double world_diagonal;
 
     /// @brief The first tag identifier in the span.
-    Unsigned first_id;
+    unsigned int first_id;
 
     /// @brief The last tag identifier in the span.
-    Unsigned last_id;
+    unsigned int last_id;
 
     /// @brief The fiducial height above the floor.
     Double z;
@@ -127,18 +126,18 @@ struct Tag_Height__Struct {
 
 extern void Tag__arc_append(Tag tag, Arc arc);
 extern void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box);
-extern Tag Tag__create(Unsigned id, Map map);
+extern Tag Tag__create(unsigned int id, Map map);
 extern int Tag__equal(Tag tag1, Tag tag2);
 extern bool Tag__less(Tag tag1, Tag tag2);
 extern void Tag__free(Tag tag);
 extern void Tag__initialize(
-  Tag tag, Double angle, Double x, Double y, Double diagonal, Unsigned visit);
+  Tag tag, Double angle, Double x, Double y, Double diagonal, unsigned int visit);
 extern void Tag__sort(Tag tag);
 extern Tag Tag__read(File in_file, Map map);
 extern void Tag__svg_write(Tag tag, SVG svg);
 extern void Tag__write(Tag tag, File out_file);
 extern void Tag__update_via_arc(
-  Tag tag, Arc arc, CV_Image image, Unsigned sequence_number);
+  Tag tag, Arc arc, CV_Image image, unsigned int sequence_number);
 
 // *Tag_Height* routines:
 extern bool Tag_Height__less(Tag_Height tag_height1, Tag_Height tag_height2);

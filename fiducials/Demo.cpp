@@ -11,7 +11,6 @@
 #include "High_GUI2.hpp"
 #include "Map.hpp"
 #include "String.hpp"
-#include "Unsigned.hpp"
 
 /// @brief Run the demo code.
 /// @param arguments_size is the number of arguments
@@ -38,9 +37,9 @@ int main(int arguments_size, char *arguments[]) {
     if (arguments_size <= 1) {
 	File__format(stderr, "Usage: Demo lens.txt *.pnm\n");
     } else {
-	for (Unsigned index = 1; index < arguments_size; index++) {
+	for (unsigned int index = 1; index < arguments_size; index++) {
 	    String argument = arguments[index];
-	    Unsigned size = String__size(argument);
+	    unsigned int size = String__size(argument);
 	    if (String__equal(argument, "--image_log")) {
 		image_log = (bool)1;
 	    } else if (size > 4 && String__equal(argument + size - 4, ".txt")) {
@@ -57,7 +56,7 @@ int main(int arguments_size, char *arguments[]) {
 	}
     }
 
-    Unsigned size = image_file_names.size();
+    unsigned int size = image_file_names.size();
     if (size > 0) {
 	String image_file_name0 = image_file_names[0];
 	CV_Image image = (CV_Image)0;
@@ -81,7 +80,7 @@ int main(int arguments_size, char *arguments[]) {
 	Fiducials fiducials = Fiducials__create(image, fiducials_create);
 	fiducials->map->image_log = image_log;
 
-	for (Unsigned index = 0; index < size; index++) {
+	for (unsigned int index = 0; index < size; index++) {
 	    String image_file_name = image_file_names[index];
 	    image = CV_Image__pnm_read(image_file_name);
 	    Fiducials__image_set(fiducials, image);

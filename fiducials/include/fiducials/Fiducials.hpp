@@ -44,7 +44,6 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
-#include "Unsigned.hpp"
 
 typedef bool Mapping[64];
 typedef struct timeval *Time_Value;
@@ -61,7 +60,7 @@ struct Fiducials__Struct {
     std::vector<Tag> current_visibles;
     CV_Scalar cyan;
     CV_Image debug_image;
-    Unsigned debug_index;
+    unsigned int debug_index;
     CV_Image edge_image;
     FEC fec;
     CV_Image gray_image;
@@ -87,7 +86,7 @@ struct Fiducials__Struct {
     CV_Point2D32F_Vector references;
     Fiducials_Results results;
     CV_Point2D32F_Vector sample_points;
-    Unsigned sequence_number;
+    unsigned int sequence_number;
     CV_Size size_5x5;
     CV_Size size_m1xm1;
     CV_Memory_Storage storage;
@@ -95,7 +94,7 @@ struct Fiducials__Struct {
     bool tag_bits[64];        // FIXME: Make this bool *tag_bits;
     CV_Image temporary_gray_image;
     CV_Term_Criteria term_criteria;
-    Unsigned weights_index;
+    unsigned int weights_index;
     bool y_flip;
 };
 
@@ -131,9 +130,9 @@ extern void Fiducials__location_announce(void *object, int id,
 extern int Fiducials__point_sample(
   Fiducials fiducials, CV_Point2D32F point);
 extern int Fiducials__points_maximum(Fiducials fiducials,
-  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+  CV_Point2D32F_Vector points, unsigned int start_index, unsigned int end_index);
 extern int Fiducials__points_minimum(Fiducials fiducials,
-  CV_Point2D32F_Vector points, Unsigned start_index, Unsigned end_index);
+  CV_Point2D32F_Vector points, unsigned int start_index, unsigned int end_index);
 extern Fiducials_Results Fiducials__process(Fiducials fiducials);
 extern CV_Point2D32F_Vector Fiducials__references_compute(
   Fiducials fiducials, CV_Point2D32F_Vector corners);

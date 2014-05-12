@@ -5,7 +5,6 @@
 
 #include "File.hpp"
 #include "String.hpp"
-#include "Unsigned.hpp"
 
 // *File* routines:
 
@@ -15,10 +14,10 @@
 ///
 /// *File__byte_read*() will read a byte from *file* and return it.
 
-Unsigned File__byte_read(File file) {
+unsigned int File__byte_read(File file) {
     int byte = fgetc(file);
     assert (byte >= 0);
-    return (Unsigned)byte;
+    return (unsigned int)byte;
 }
 
 /// @brief Write *byte* ot *file*.
@@ -27,7 +26,7 @@ Unsigned File__byte_read(File file) {
 ///
 /// *File__byte_write*() will write *byte* to *file*.
 
-void File__byte_write(File file, Unsigned byte) {
+void File__byte_write(File file, unsigned int byte) {
     fputc(byte, file);
 }
 
@@ -111,7 +110,7 @@ void File__format(File file, String_Const format, ...) {
     va_start(variadic_arguments, format);
 
     // Perform the format:
-    Unsigned formatted_size = vfprintf(file, format, variadic_arguments);
+    unsigned int formatted_size = vfprintf(file, format, variadic_arguments);
 }
 
 /// @brief Reads in an XML attribute with a floating point value.
@@ -213,12 +212,12 @@ int File__integer_attribute_read(
 /// *File__little_endian_short_read*() will read a 16-bit unsigned integer
 /// from *file* and return it.
 
-Unsigned File__little_endian_short_read(File file) {
+unsigned int File__little_endian_short_read(File file) {
     int low_byte = fgetc(file);
     assert (low_byte >= 0);
     int high_byte = fgetc(file);
     assert (high_byte >= 0);
-    Unsigned result = ((Unsigned)high_byte << 8) | (Unsigned)low_byte;
+    unsigned int result = ((unsigned int)high_byte << 8) | (unsigned int)low_byte;
     return result;
 }
 
@@ -229,7 +228,7 @@ Unsigned File__little_endian_short_read(File file) {
 /// *File__little_endian_short_write*() will write write *xshort* to *file*
 /// as a little endian 16-bit unsigned integer.
 
-void File__little_endian_short_write(File file, Unsigned xshort) {
+void File__little_endian_short_write(File file, unsigned int xshort) {
     fputc(xshort & 0xff, file);
     fputc((xshort >> 8) & 0xff, file);
 }
@@ -254,8 +253,8 @@ File File__open(String_Const file_name, String_Const flags) {
 /// does not match exactly.
 
 void File__string_match(File in_file, String_Const pattern) {
-    Unsigned size = String__size(pattern);
-    for (Unsigned index = 0; index < size; index++) {
+    unsigned int size = String__size(pattern);
+    for (unsigned int index = 0; index < size; index++) {
         char character = File__character_read(in_file);
 	assert(character == pattern[index]);
     }

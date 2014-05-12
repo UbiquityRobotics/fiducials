@@ -74,7 +74,7 @@ void FC2_Camera__connect(
 /// the returned *FC2_Camera_Identifier* object.
 
 FC2_Camera_Identifier FC2_Camera__identifier_fetch(
-  FC2_Camera camera, Unsigned index) {
+  FC2_Camera camera, unsigned int index) {
     FC2_Camera_Identifier camera_identifier =
       Memory__new(FC2_Camera_Identifier, "FC2_Camera__identifier_fetch");
     FC2_Error error = fc2GetCameraFromIndex(camera, index, camera_identifier);
@@ -129,8 +129,8 @@ FC2_Camera_Information FC2_Camera__information_get(FC2_Camera camera) {
 /// *FC2_Camera__number_of_cameras_get*() will return the total number of
 /// accessible cameras.  An assertion failure occurs for any error.
 
-Unsigned FC2_Camera__number_of_cameras_get(FC2_Camera camera) {
-    Unsigned number_of_cameras = 0;
+unsigned int FC2_Camera__number_of_cameras_get(FC2_Camera camera) {
+    unsigned int number_of_cameras = 0;
     if (fc2GetNumOfCameras(camera, &number_of_cameras) != FC2_ERROR_OK) {
 	number_of_cameras = -1;
     }

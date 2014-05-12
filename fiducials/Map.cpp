@@ -18,7 +18,6 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 #include "Location.hpp"
 #include "Map.hpp"
 #include "Tag.hpp"
-#include "Unsigned.hpp"
 
 // *Map* routines:
 
@@ -32,7 +31,7 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 /// to be called for *arc*.
 
 void Map__arc_announce(Map map,
-  Arc arc, CV_Image image, Unsigned sequence_number) {
+  Arc arc, CV_Image image, unsigned int sequence_number) {
    Tag from_tag = arc->from_tag;
    Tag to_tag = arc->to_tag;
    map->arc_announce_routine(map->announce_object,
@@ -96,8 +95,8 @@ Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
 /// *Map__arc_update*() will create or update the *Arc* in *map* associated
 /// with *from* and *to*.  *image* used to determine the frame size.
 
-Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
-  CV_Image image, Unsigned sequence_number) {
+unsigned int Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
+  CV_Image image, unsigned int sequence_number) {
     // Get the *width* and *height*:
     int rows = CV_Image__height_get(image);
     int columns = CV_Image__width_get(image);
@@ -152,7 +151,7 @@ Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
     // Now see if the new *goodness* is better than the previous one:
     //File__format(stderr,
     //  "goodness=%.4f arc_goodness=%.4f\n", goodness, arc->goodness);
-    Unsigned changed = 0;
+    unsigned int changed = 0;
     if (goodness < arc->goodness) {
         // We have a better *goodness* metric, compute the new values to
         // load into *arc*:
@@ -233,11 +232,11 @@ Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
 
 bool Map__equals(Map map1, Map map2) {
     // First make sure all of the *Tag*'s match up:
-    Unsigned all_tags1_size = map1->all_tags.size();
-    Unsigned all_tags2_size = map2->all_tags.size();
+    unsigned int all_tags1_size = map1->all_tags.size();
+    unsigned int all_tags2_size = map2->all_tags.size();
     if (all_tags1_size == all_tags2_size) {
         // Visit each *Tag*:
-        for (Unsigned index = 0; index < all_tags1_size; index++) {
+        for (unsigned int index = 0; index < all_tags1_size; index++) {
             Tag tag1 = map1->all_tags[index];
             Tag tag2 = map2->all_tags[index];
             if (!Tag__equal(tag1, tag2)) {
@@ -249,11 +248,11 @@ bool Map__equals(Map map1, Map map2) {
     }
 
     // Second make sure all of the *Arc*'s match up:
-    Unsigned all_arcs1_size = map1->all_arcs.size();
-    Unsigned all_arcs2_size = map2->all_arcs.size();
+    unsigned int all_arcs1_size = map1->all_arcs.size();
+    unsigned int all_arcs2_size = map2->all_arcs.size();
     if (all_arcs1_size == all_arcs2_size) {
         // Visit each *Arc*:
-        for (Unsigned index = 0; index < all_arcs1_size; index++) {
+        for (unsigned int index = 0; index < all_arcs1_size; index++) {
             Arc arc1 = map1->all_arcs[index];
             Arc arc2 = map2->all_arcs[index];
             if( !Arc__equal(arc1, arc2)) {
@@ -335,23 +334,23 @@ void Map__free(Map map) {
     Map__save(map);
 
     // Release all the *Arc*'s:
-    Unsigned arcs_size = map->all_arcs.size();
-    for (Unsigned index = 0; index < arcs_size; index++) {
+    unsigned int arcs_size = map->all_arcs.size();
+    for (unsigned int index = 0; index < arcs_size; index++) {
         Arc arc = map->all_arcs[index];
         Arc__free(arc);
     }
     Arc__free(map->temporary_arc);
 
     // Release all the *Tag*'s:
-    Unsigned tags_size = map->all_tags.size();
-    for (Unsigned index = 0; index < tags_size; index++) {
+    unsigned int tags_size = map->all_tags.size();
+    for (unsigned int index = 0; index < tags_size; index++) {
         Tag tag = map->all_tags[index];
         Tag__free(tag);
     }
 
     // Release all the *Tag_Height*'s:
-    Unsigned tag_heights_size = map->tag_heights.size();
-    for (Unsigned index = 0; index < tag_heights_size; index++) {
+    unsigned int tag_heights_size = map->tag_heights.size();
+    for (unsigned int index = 0; index < tag_heights_size; index++) {
         Tag_Height tag_height = map->tag_heights[index];
         Tag_Height__free(tag_height);
     }
@@ -367,7 +366,7 @@ void Map__free(Map map) {
 
 static int last_sequence_number = 0xffffffff;
 
-void Map__image_log(Map map, CV_Image image, Unsigned sequence_number) {
+void Map__image_log(Map map, CV_Image image, unsigned int sequence_number) {
     if (image != (CV_Image)0 && map->image_log &&
       sequence_number != last_sequence_number) {
         // Log the image here:
@@ -387,14 +386,14 @@ void Map__image_log(Map map, CV_Image image, Unsigned sequence_number) {
 void Map__restore(Map map, File in_file) {
     // Read in Map XML tag '<Map Tags_Count="xx" Arcs_Count="xx">' :
     File__tag_match(in_file, "Map");
-    Unsigned all_tags_size =
-      (Unsigned)File__integer_attribute_read(in_file, "Tags_Count");
-    Unsigned all_arcs_size =
-      (Unsigned)File__integer_attribute_read(in_file, "Arcs_Count");
+    unsigned int all_tags_size =
+      (unsigned int)File__integer_attribute_read(in_file, "Tags_Count");
+    unsigned int all_arcs_size =
+      (unsigned int)File__integer_attribute_read(in_file, "Arcs_Count");
     File__string_match(in_file, ">\n");
 
     // Read in the *all_tags_size* *Tag* objects:
-    for (Unsigned index = 0; index < all_tags_size; index++) {
+    for (unsigned int index = 0; index < all_tags_size; index++) {
         Tag tag = Tag__read(in_file, map);
 
         fprintf(stderr, "announce %d\n", tag->id);
@@ -405,7 +404,7 @@ void Map__restore(Map map, File in_file) {
     }
 
     // Read in the *all_arcs_size* *Arc* objects:
-    for (Unsigned index = 0; index < all_arcs_size; index++) {
+    for (unsigned int index = 0; index < all_arcs_size; index++) {
         Arc arc = Arc__read(in_file, map);
     }
 
@@ -458,12 +457,12 @@ void Map__sort(Map map) {
 void Map__svg_write(Map map, const String svg_base_name, 
     std::vector<Location> &locations) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
-    Unsigned all_tags_size = map->all_tags.size();
-    Unsigned all_arcs_size = map->all_arcs.size();
+    unsigned int all_tags_size = map->all_tags.size();
+    unsigned int all_arcs_size = map->all_arcs.size();
 
     // Compute the *bounding_box*:
     Bounding_Box bounding_box = Bounding_Box__new();
-    for (Unsigned index = 0; index < all_tags_size; index++) {
+    for (unsigned int index = 0; index < all_tags_size; index++) {
         Tag tag = map->all_tags[index];
         Tag__bounding_box_update(tag, bounding_box);
     }
@@ -481,25 +480,25 @@ void Map__svg_write(Map map, const String svg_base_name,
       0.0, bounding_box->minimum_y, 0.0, bounding_box->maximum_y, color);
 
     // Output each *tag in *all_tags*:
-    Double world_diagonal = 0.1;
-    for (Unsigned index = 0; index < all_tags_size; index++) {
+    double world_diagonal = 0.1;
+    for (unsigned int index = 0; index < all_tags_size; index++) {
         Tag tag = map->all_tags[index];
         world_diagonal = tag->world_diagonal;
         Tag__svg_write(tag, svg);
     }
 
     // Output each *tag in *all_tags*:
-    for (Unsigned index = 0; index < all_arcs_size; index++) {
+    for (unsigned int index = 0; index < all_arcs_size; index++) {
         Arc arc = map->all_arcs[index];
         Arc__svg_write(arc, svg);
         // publish rviz marker here
 
     }
 
-    Unsigned locations_size = locations.size();
+    unsigned int locations_size = locations.size();
     Double last_x = 0.0;
     Double last_y = 0.0;
-    for (Unsigned index = 0; index < locations_size; index++) {
+    for (unsigned int index = 0; index < locations_size; index++) {
         Location location = locations[index];
         Double x = location->x;
         Double y = location->y;
@@ -546,7 +545,7 @@ void Map__svg_write(Map map, const String svg_base_name,
 /// to be called for *arc*.
 
 void Map__tag_announce(Map map,
-  Tag tag, bool visible, CV_Image image, Unsigned sequence_number) {
+  Tag tag, bool visible, CV_Image image, unsigned int sequence_number) {
     map->tag_announce_routine(map->announce_object,
       tag->id, tag->x, tag->y, tag->z, tag->twist,
       tag->diagonal, tag->world_diagonal/tag->diagonal,
@@ -566,11 +565,11 @@ void Map__tag_announce(Map map,
 /// (millimeters, centimeters, meters, kilometers, inches, feet, miles,
 /// light seconds, etc.)
 
-Tag_Height Map__tag_height_lookup(Map map, Unsigned id) {
+Tag_Height Map__tag_height_lookup(Map map, unsigned int id) {
     //Double distance_per_pixel = 0.0;
     Tag_Height tag_height = (Tag_Height)0;
-    Unsigned size = map->tag_heights.size();
-    for (Unsigned index = 0; index < size; index++) {
+    unsigned int size = map->tag_heights.size();
+    for (unsigned int index = 0; index < size; index++) {
         tag_height = map->tag_heights[index];
         if (tag_height->first_id <= id && id <= tag_height->last_id) {
             //distance_per_pixel = tag_height->distance_per_pixel;
@@ -599,12 +598,12 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
 
     // Read in Map XML tag '<Map_Tag_Heights Count="xx">' :
     File__tag_match(xml_in_file, "Map_Tag_Heights");
-    Unsigned count =
-      (Unsigned)File__integer_attribute_read(xml_in_file, "Count");
+    unsigned int count =
+      (unsigned int)File__integer_attribute_read(xml_in_file, "Count");
     File__string_match(xml_in_file, ">\n");
 
     // Read in the *count* *Tag_Height* objects into *tag_heights*:
-    for (Unsigned index = 0; index < count; index++) {
+    for (unsigned int index = 0; index < count; index++) {
         Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
         map->tag_heights.push_back(tag_height);
     }
@@ -630,7 +629,7 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
 /// *tag_id* using *map.  If no previous instance of *tag_id* has been
 /// encountered, a new *Tag* is created and add to the association in *map*.
 
-Tag Map__tag_lookup(Map map, Unsigned tag_id) {
+Tag Map__tag_lookup(Map map, unsigned int tag_id) {
     if( map->tags_.count(tag_id) == 0 ) {
         Tag tag = Tag__create(tag_id, map);
         map->tags_[tag_id] = tag;
@@ -650,8 +649,8 @@ Tag Map__tag_lookup(Map map, Unsigned tag_id) {
 
 void Map__write(Map map, File out_file) {
     // Figure out how many *Arc*'s and *Tag*'s we have:
-    Unsigned all_tags_size = map->all_tags.size();
-    Unsigned all_arcs_size = map->all_arcs.size();
+    unsigned int all_tags_size = map->all_tags.size();
+    unsigned int all_arcs_size = map->all_arcs.size();
 
     // Output <Map ...> tag:
     File__format(out_file, "<Map");
@@ -663,13 +662,13 @@ void Map__write(Map map, File out_file) {
     Map__sort(map);
 
     // Output each *tag in *all_tags*:
-    for (Unsigned index = 0; index < all_tags_size; index++) {
+    for (unsigned int index = 0; index < all_tags_size; index++) {
         Tag tag = map->all_tags[index];
         Tag__write(tag, out_file);
     }
 
     // Output each *tag in *all_tags*:
-    for (Unsigned index = 0; index < all_arcs_size; index++) {
+    for (unsigned int index = 0; index < all_arcs_size; index++) {
         Arc arc = map->all_arcs[index];
         Arc__write(arc, out_file);
     }
@@ -685,10 +684,10 @@ void Map__write(Map map, File out_file) {
 ///
 /// *Map__update*() will update the location of all the *Tag*'s in *map*.
 
-void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
+void Map__update(Map map, CV_Image image, unsigned int sequence_number) {
     if (map->is_changed) {
         // Increment *visit* to the next value to use for updating:
-        Unsigned visit = map->visit + 1;
+        unsigned int visit = map->visit + 1;
         map->visit = visit;
 
         // We want the tag with the lowest id number to be the origin.
@@ -724,8 +723,8 @@ void Map__update(Map map, CV_Image image, Unsigned sequence_number) {
 
             // For debugging only:
             //File__format(stderr, "----------\n");
-            //Unsigned size = List__size(pending_arcs);
-            //for (Unsigned index = 0; index < size; index++) {
+            //unsigned int size = List__size(pending_arcs);
+            //for (unsigned int index = 0; index < size; index++) {
             //    Arc arc = (Arc)List__fetch(pending_arcs, index);
             //    File__format(stderr,
             //      "pending_arcs[%d]: Arc[%d,%d] dist=%f\n",

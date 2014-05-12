@@ -3,8 +3,6 @@
 #if !defined(STRING_H_INCLUDED)
 #define STRING_H_INCLUDED 1
 
-#include "Unsigned.hpp"
-
 
 /// @brief *String* is a null-terminated string.
 typedef char *String;
@@ -13,11 +11,11 @@ typedef const char *String_Const;
 // External declarations:
 
 extern bool String__equal(String_Const string1, String_Const string2);
-extern String String__allocate(Unsigned size);
+extern String String__allocate(unsigned int size);
 extern String String__format(String_Const format, ...);
 extern void String__free(String_Const string);
-extern Unsigned String__size(String_Const string);
-extern Unsigned String__to_unsigned(String_Const string);
+extern unsigned int String__size(String_Const string);
+extern unsigned int String__to_unsigned(String_Const string);
 
 #endif // !defined(STRING_H_INCLUDED)
 

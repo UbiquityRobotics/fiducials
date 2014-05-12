@@ -375,7 +375,7 @@ void CV_Image__blob_draw(
     }
 }
 
-CV_Image CV_Image__create(CV_Size size, Unsigned depth, Unsigned channels) {
+CV_Image CV_Image__create(CV_Size size, unsigned int depth, unsigned int channels) {
     return cvCreateImage(*size, depth, channels);
 }
 
@@ -463,12 +463,12 @@ CV_Sequence CV_Image__find_contours(CV_Image image, CV_Memory_Storage storage,
     return contours;
 }  
 
-Unsigned CV_Image__depth_get(CV_Image image) {
+unsigned int CV_Image__depth_get(CV_Image image) {
     return image->depth;
 }
 
-Unsigned CV_Image__fetch3(
-  CV_Image image, Unsigned x, Unsigned y, Unsigned channel) {
+unsigned int CV_Image__fetch3(
+  CV_Image image, unsigned int x, unsigned int y, unsigned int channel) {
     unsigned char *pointer = cvPtr2D(image, y, x, (int *)0);
     return pointer[channel];
 }
@@ -492,7 +492,7 @@ void CV_Image__flip(CV_Image from_image, CV_Image to_image, int flip_code) {
 }
 
 CV_Image CV_Image__header_create(
-  CV_Size size, Unsigned depth, Unsigned channels) {
+  CV_Size size, unsigned int depth, unsigned int channels) {
     return cvCreateImageHeader(*size, depth, channels);
 }
 
@@ -508,7 +508,7 @@ int CV_Image__height_get(CV_Image image) {
 /// the file .pnm file named *file_name*.
 
 CV_Image CV_Image__pnm_read(String_Const file_name) {
-    Unsigned size = String__size(file_name);
+    unsigned int size = String__size(file_name);
     assert (String__equal(file_name + size - 4, ".pnm"));
     CV_Image image = cvLoadImage(file_name, CV_LOAD_IMAGE_UNCHANGED);
     if (image == (CV_Image)0) {
@@ -526,7 +526,7 @@ CV_Image CV_Image__pnm_read(String_Const file_name) {
 /// *file_base_name.pnm.
 
 void CV_Image__pnm_write(CV_Image image, String_Const file_name) {
-    Unsigned size = String__size(file_name);
+    unsigned int size = String__size(file_name);
     assert (String__equal(file_name + size - 4, ".pnm"));
     cvSaveImage(file_name, image, (int *)0);
 }
@@ -545,7 +545,7 @@ void CV_Image__smooth(CV_Image source_image, CV_Image destination_image,
 }
 
 void CV_Image__store3(
-  CV_Image image, Unsigned x, Unsigned y, Unsigned channel, Unsigned value) {
+  CV_Image image, unsigned int x, unsigned int y, unsigned int channel, unsigned int value) {
     unsigned char *pointer = cvPtr2D(image, y, x, (int *)0);
     pointer[channel] = (unsigned char)value;
 }
@@ -573,25 +573,25 @@ CV_Image CV_Image__tga_read(CV_Image image, String_Const tga_file_name) {
     // Read .tga header from *tga_in_file*:
     File__byte_read(tga_in_file);			// identsize
     File__byte_read(tga_in_file);			// colourmaptype
-    Unsigned image_type =
+    unsigned int image_type =
       File__byte_read(tga_in_file);		       // imagetype (3=>raw b&w)
     File__little_endian_short_read(tga_in_file);	// colourmapstart
     File__little_endian_short_read(tga_in_file);	// colourmaplength
     File__byte_read(tga_in_file);			// colourmapbits
     File__little_endian_short_read(tga_in_file);	// xstart
     File__little_endian_short_read(tga_in_file);	// ystart
-    Unsigned width =
+    unsigned int width =
       File__little_endian_short_read(tga_in_file);	// width
-    Unsigned height =
+    unsigned int height =
       File__little_endian_short_read(tga_in_file);	// height
-    Unsigned bpp = File__byte_read(tga_in_file);	// bits per pixel
+    unsigned int bpp = File__byte_read(tga_in_file);	// bits per pixel
     File__byte_read(tga_in_file);			// descriptor
 
     // Compare {image_type}, {bpp}, {width} and {height} with {image}.
-    if (image != (CV_Image)0 && (Unsigned)image->width == width &&
-      (Unsigned)image->height == height && (Unsigned)image->depth == 8) {
+    if (image != (CV_Image)0 && (unsigned int)image->width == width &&
+      (unsigned int)image->height == height && (unsigned int)image->depth == 8) {
 	// {width}, {height}, and {depth} match {image}:
-	Unsigned channels = (Unsigned)image->nChannels;
+	unsigned int channels = (unsigned int)image->nChannels;
 	if (image_type == 3 && channels == 1 && bpp == 8) {
 	    // We have a gray mode .tga match; do nothing:
 	} else if (image_type == 2 && channels == 3 && bpp == 24) {
@@ -632,20 +632,20 @@ CV_Image CV_Image__tga_read(CV_Image image, String_Const tga_file_name) {
     }
 
     // Read the .tga data into {image}:
-    for (Unsigned row = 0; row < height; row++) {
-	Unsigned j = height - row - 1;
-	for (Unsigned column = 0; column < width; column++) {
-	    Unsigned i = column;
+    for (unsigned int row = 0; row < height; row++) {
+	unsigned int j = height - row - 1;
+	for (unsigned int column = 0; column < width; column++) {
+	    unsigned int i = column;
 	    if (gray_mode) {
-		Unsigned gray = fgetc(tga_in_file);
+		unsigned int gray = fgetc(tga_in_file);
 		CV_Image__store3(image, column, row, 0, gray);
 	    } else {
-	        //Unsigned red = File__byte_read(tga_in_file);
-		//Unsigned green = File__byte_read(tga_in_file);
-		//Unsigned blue = File__byte_read(tga_in_file);
-		Unsigned red = fgetc(tga_in_file);
-		Unsigned green = fgetc(tga_in_file);
-		Unsigned blue = fgetc(tga_in_file);
+	        //unsigned int red = File__byte_read(tga_in_file);
+		//unsigned int green = File__byte_read(tga_in_file);
+		//unsigned int blue = File__byte_read(tga_in_file);
+		unsigned int red = fgetc(tga_in_file);
+		unsigned int green = fgetc(tga_in_file);
+		unsigned int blue = fgetc(tga_in_file);
 		unsigned char *pointer = cvPtr2D(image, row, column, (int *)0);
 		pointer[0] = red;
 		pointer[1] = green;
@@ -671,14 +671,14 @@ CV_Image CV_Image__tga_read(CV_Image image, String_Const tga_file_name) {
 /// .tga format.
 
 void CV_Image__tga_write(CV_Image image, String_Const file_name) {
-    Unsigned channels = (Unsigned)image->nChannels;
-    Unsigned depth = (Unsigned)image->depth;
-    Unsigned height = (Unsigned)image->height;
-    Unsigned width = (Unsigned)image->width;
+    unsigned int channels = (unsigned int)image->nChannels;
+    unsigned int depth = (unsigned int)image->depth;
+    unsigned int height = (unsigned int)image->height;
+    unsigned int width = (unsigned int)image->width;
     assert (depth == 8);
 
-    Unsigned bpp = 0;
-    Unsigned image_type = 0;	// 2=>color; 3=>b&w:
+    unsigned int bpp = 0;
+    unsigned int image_type = 0;	// 2=>color; 3=>b&w:
     bool gray_mode = (bool)0;
     if (channels == 1) {
 	// Gray scale:
@@ -716,18 +716,18 @@ void CV_Image__tga_write(CV_Image image, String_Const file_name) {
     File__byte_write(tga_out_file, 0);			// descriptor
 
     // Write out the .tga file data:
-    for (Unsigned row = 0; row < height; row++) {
-	Unsigned j = height - row - 1;
-	for (Unsigned column = 0; column < width; column++) {
-	    Unsigned i = column;
+    for (unsigned int row = 0; row < height; row++) {
+	unsigned int j = height - row - 1;
+	for (unsigned int column = 0; column < width; column++) {
+	    unsigned int i = column;
 	    if (gray_mode) {
-	        Unsigned gray = CV_Image__fetch3(image, i, j, 0);
+	        unsigned int gray = CV_Image__fetch3(image, i, j, 0);
 		File__byte_write(tga_out_file, gray);
 	    } else {
-		Unsigned index = height - row - 1;
-		Unsigned red = CV_Image__fetch3(image, i, j, 0);
-		Unsigned green = CV_Image__fetch3(image, i, j, 1);
-		Unsigned blue = CV_Image__fetch3(image, i, j, 2);
+		unsigned int index = height - row - 1;
+		unsigned int red = CV_Image__fetch3(image, i, j, 0);
+		unsigned int green = CV_Image__fetch3(image, i, j, 1);
+		unsigned int blue = CV_Image__fetch3(image, i, j, 2);
 		File__byte_write(tga_out_file, red);
 		File__byte_write(tga_out_file, green);
 		File__byte_write(tga_out_file, blue);
@@ -740,7 +740,7 @@ void CV_Image__tga_write(CV_Image image, String_Const file_name) {
 }
 
 int CV_Image__width_get(CV_Image image) {
-    return (Unsigned)image->width;
+    return (unsigned int)image->width;
 }
 
 // *CV_Matrix* routines:
@@ -774,7 +774,7 @@ CV_Memory_Storage CV_Memory_Storage__create(int block_size) {
 // *CV_Point* routines:
 
 CV_Point CV_Point__create(int x, int y) {
-    Unsigned malloc_bytes = sizeof *((CV_Point)0);
+    unsigned int malloc_bytes = sizeof *((CV_Point)0);
     // (void)printf("CV_Point__create: malloc_bytes=%d\n", malloc_bytes);
     CV_Point point = (CV_Point) malloc(sizeof *((CV_Point *)0) );
 
@@ -802,7 +802,7 @@ void CV_Point__y_set(CV_Point point, int y) {
 // *CV_Point2D32F* routines:
 
 CV_Point2D32F CV_Point2D32F__create(Double x, Double y) {
-    Unsigned malloc_bytes = sizeof *((CV_Point2D32F)0);
+    unsigned int malloc_bytes = sizeof *((CV_Point2D32F)0);
     // (void)printf("CV_Point2D32F__create: malloc_bytes=%d\n",
     //     malloc_bytes);
     CV_Point2D32F point = (CV_Point2D32F)malloc(malloc_bytes);
@@ -837,12 +837,12 @@ void CV_Point2D32F__point_set(CV_Point2D32F point2d32f, CV_Point point) {
 
 // *CV_Point2D32F_Vector* routines:
 
-CV_Point2D32F_Vector CV_Point2D32F_Vector__create(Unsigned size) {
-    Unsigned malloc_bytes = size * sizeof *((CV_Point2D32F)0);
+CV_Point2D32F_Vector CV_Point2D32F_Vector__create(unsigned int size) {
+    unsigned int malloc_bytes = size * sizeof *((CV_Point2D32F)0);
     // (void)printf("CV_Point2D32F_Vector__create: size=%d malloc_bytes=%d\n",
     //   size, malloc_bytes);
     CV_Point2D32F vector = (CV_Point2D32F)malloc(malloc_bytes);
-    Unsigned index;
+    unsigned int index;
 
     for (index = 0; index < size; index++) {
         vector[index].x = 0.0;
@@ -852,7 +852,7 @@ CV_Point2D32F_Vector CV_Point2D32F_Vector__create(Unsigned size) {
 }
 
 CV_Point2D32F CV_Point2D32F_Vector__fetch1(
-  CV_Point2D32F_Vector vector,  Unsigned index) {
+  CV_Point2D32F_Vector vector,  unsigned int index) {
     return &vector[index];
 }
 
@@ -910,7 +910,7 @@ CV_Sequence CV_Sequence__next_get(CV_Sequence sequence) {
     return sequence->h_next;
 }
 
-CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, Unsigned index) {
+CV_Point CV_Sequence__point_fetch1(CV_Sequence sequence, unsigned int index) {
     return (CV_Point)cvGetSeqElem(sequence, index);
 }
 
@@ -933,7 +933,7 @@ extern void CV_Size__free(CV_Size cv_size) {
 
 // *CV_Slice* routines:
 CV_Slice CV_Slice__create(int start_index, int end_index) {
-    Unsigned malloc_bytes = sizeof *((CV_Slice)0);
+    unsigned int malloc_bytes = sizeof *((CV_Slice)0);
     // (void)printf("CV_Slice__create: malloc_bytes=%d\n", malloc_bytes);
     CV_Slice slice = (CV_Slice)malloc(malloc_bytes);
 
@@ -948,7 +948,7 @@ int CV__term_criteria_eps = CV_TERMCRIT_EPS;
 
 CV_Term_Criteria CV_Term_Criteria__create(
   int type, int maximum_iterations, Double epsilon) {
-    Unsigned malloc_bytes = sizeof *((CV_Term_Criteria)0);
+    unsigned int malloc_bytes = sizeof *((CV_Term_Criteria)0);
     // (void)printf("CV_Term_Criteria__create: malloc_bytes=%d\n",
     //   malloc_bytes);
     CV_Term_Criteria term_criteria = (CV_Term_Criteria)malloc(malloc_bytes);

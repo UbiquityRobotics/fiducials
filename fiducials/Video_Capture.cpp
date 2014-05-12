@@ -7,7 +7,6 @@
 #include "File.hpp"
 #include "High_GUI2.hpp"
 #include "String.hpp"
-#include "Unsigned.hpp"
 
 /// @brief A video display routine that can capture images.
 /// @param arguments_size is the number of command line arguments (plus 1.)
@@ -36,7 +35,7 @@ int main(int arguments_size, char * arguments[]) {
 	// Figure whether to open a video file or a camera;
 	if (isdigit(argument1[0])) {
 	    // Open the camera:
-	    Unsigned camera_number = String__to_unsigned(argument1);
+	    unsigned int camera_number = String__to_unsigned(argument1);
 	    int camera_flags = CV__capture_any + (int)camera_number;
 	    capture = CV_Capture__create_camera(camera_flags);
 	    if (capture == (CV_Capture)0) {
@@ -68,7 +67,7 @@ int main(int arguments_size, char * arguments[]) {
     CV__named_window(window_name, CV__window_auto_size);
 
     // Do a video loop:
-    Unsigned capture_number = 0;
+    unsigned int capture_number = 0;
     while (1) {
         // Grab a frame from the video source:
 	CV_Image frame = CV_Capture__query_frame(capture);

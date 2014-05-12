@@ -9,7 +9,6 @@
 #include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
-#include "Unsigned.hpp"
 
 extern void Map__build(Map map);
 
@@ -17,7 +16,7 @@ int main(int arguments_size, char * arguments[]) {
     Map map1 = Map__create(".", "Map_Test_Map",
       (void *)0, Fiducials__arc_announce, Fiducials__tag_announce,
       (String_Const)0, "main:Map__new");
-    Unsigned visit = map1->visit;
+    unsigned int visit = map1->visit;
 
     Double pi = 3.14159265358979323846264;
     Double degrees_to_radians = pi / 180.0;
@@ -45,7 +44,7 @@ int main(int arguments_size, char * arguments[]) {
     //  |/ \|
     //  0---1
 
-    Unsigned tag_size = 1.0;
+    unsigned int tag_size = 1.0;
     Tag tag0 = Map__tag_lookup(map1, 0);
     Tag__initialize(tag0, 0.0, 0.0, 0.0, tag_size, visit);
     Tag tag1 = Map__tag_lookup(map1, 1);

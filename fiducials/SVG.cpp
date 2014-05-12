@@ -6,7 +6,6 @@
 #include "Double.hpp"
 #include "String.hpp"
 #include "SVG.hpp"
-#include "Unsigned.hpp"
 
 /// @brief Turns *svg* into a cartesian graphing canvas bounded by
 /// *bounding_box*.
@@ -221,7 +220,7 @@ void SVG__rectangle(SVG svg, Double x, Double y,
 
 void SVG__text(SVG svg,
   String_Const message, Double x, Double y, String_Const font_family,
-  Unsigned font_size) {
+  unsigned int font_size) {
     // Grab some values from *svg*:
     File svg_stream = svg->stream;
     Double x_offset = svg->x_offset;

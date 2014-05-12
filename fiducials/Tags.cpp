@@ -9,27 +9,26 @@
 #include "FEC.hpp"
 #include "String.hpp"
 #include "SVG.hpp"
-#include "Unsigned.hpp"
 
 extern void SVG__tag_write(/* Extractor extractor, */
-  Unsigned tag_id, Unsigned tag_size, bool border);
+  unsigned int tag_id, unsigned int tag_size, bool border);
 extern void SVG__tag_bit(SVG svg,
-  Double cell_width, Unsigned row, Unsigned column, bool border);
+  Double cell_width, unsigned int row, unsigned int column, bool border);
 extern void SVG__tag_write(/* Extractor extractor, */
-  Unsigned tag_id, Unsigned tag_size, bool border);
+  unsigned int tag_id, unsigned int tag_size, bool border);
 
 int main(int arguments_size, char * arguments[]) {
     if (arguments_size <= 1) {
         File__format(stderr, "Usage: tag_id...\n");
     } else {
 	bool border = 1;
-	Unsigned tag_size = 160;
-	for (Unsigned index = 1; index < arguments_size; index++) {
+	unsigned int tag_size = 160;
+	for (unsigned int index = 1; index < arguments_size; index++) {
 	    String tag_name = arguments[index];
 	    if (String__equal(tag_name, "-L")) {
-	      tag_size = (Unsigned)(160.0 * 11.0 / 8.5);
+	      tag_size = (unsigned int)(160.0 * 11.0 / 8.5);
 	    } else {
-		Unsigned tag_number = String__to_unsigned(tag_name);
+		unsigned int tag_number = String__to_unsigned(tag_name);
 		//File__format(stdout,
 		//  "[%d]: '%s' %d\n", index, tag_name, tag_number);
 	        SVG__tag_write(tag_number, tag_size, border);
@@ -53,11 +52,11 @@ int main(int arguments_size, char * arguments[]) {
 /// the 12 x 12 matrix that makes up a tag to *svg*.  If *border*
 /// *false*, the matrix is offset by the left by one.
 
-void SVG__tag_bits(SVG svg, Double cell_width, Unsigned first_column,
-  Unsigned first_row, Unsigned last_column, Unsigned last_row, bool border) {
+void SVG__tag_bits(SVG svg, Double cell_width, unsigned int first_column,
+  unsigned int first_row, unsigned int last_column, unsigned int last_row, bool border) {
 
     // Deal with *border*:
-    Unsigned delta = 0;
+    unsigned int delta = 0;
     if (!border) {
 	delta = 1;
     }
@@ -69,14 +68,14 @@ void SVG__tag_bits(SVG svg, Double cell_width, Unsigned first_column,
 
     // Make sure *first_column* < *last_column*:
     if (first_column > last_column) {
-	Unsigned temporary_column = first_column;
+	unsigned int temporary_column = first_column;
 	first_column = last_column;
 	last_column = temporary_column;
 	}
 
     // Make sure *first_row* < *last_row*:
     if (first_row > last_row) {
-	Unsigned temporary_row = first_row;
+	unsigned int temporary_row = first_row;
 	first_row = last_row;
 	last_row = temporary_row;
     }
@@ -103,7 +102,7 @@ void SVG__tag_bits(SVG svg, Double cell_width, Unsigned first_column,
 /// the matrix is offset to the left by one.
 
 void SVG__tag_bit(SVG svg,
-  Double cell_width, Unsigned row, Unsigned column, bool border) {
+  Double cell_width, unsigned int row, unsigned int column, bool border) {
     SVG__tag_bits(svg, cell_width, row, column, row, column, border);
 }
 
@@ -112,7 +111,7 @@ void SVG__tag_bit(SVG svg,
 // is a black line drawn around the "white" border of the tag.
 
 void SVG__tag_write(/* Extractor extractor, */
-  Unsigned tag_id, Unsigned tag_size, bool border) {
+  unsigned int tag_id, unsigned int tag_size, bool border) {
 
     Double cell_width = (Double)(tag_size) / 10.0;
     //Double offset = cell_width / 2.0;
@@ -129,18 +128,18 @@ void SVG__tag_write(/* Extractor extractor, */
     svg->y_offset = offset + cell_width;
 
     // Initialize {tag_bytes} to contain 8 bytes of 0:
-    Unsigned tag_bytes[8];
-    for (Unsigned index = 0; index < 8; index++) {
+    unsigned int tag_bytes[8];
+    for (unsigned int index = 0; index < 8; index++) {
 	tag_bytes[index] = 0;
     }
 
     // Place the tag id into the tag id buffer.
-    Unsigned id = tag_id;
+    unsigned int id = tag_id;
     tag_bytes[1] = (id >> 8) & 0xff;
     tag_bytes[0] = id & 0xff;
 
     // Calculate the 16-bit CCITT CRC portion of the tag id buffer:
-    Unsigned crc = CRC__compute(tag_bytes, 2);
+    unsigned int crc = CRC__compute(tag_bytes, 2);
     tag_bytes[3] = (crc >> 8) & 0xff;
     tag_bytes[2] = crc & 0xff;
 
@@ -195,10 +194,10 @@ void SVG__tag_write(/* Extractor extractor, */
     SVG__tag_bits(svg, cell_width, 1, 2, 1, 10, border);
 
     // Print the tag data:
-    for (Unsigned index = 0; index < 64; index++) {
-	Unsigned row = (index >> 3) & 7;
-	Unsigned column  = index & 7;
-	Unsigned tag_byte = tag_bytes[row];
+    for (unsigned int index = 0; index < 64; index++) {
+	unsigned int row = (index >> 3) & 7;
+	unsigned int column  = index & 7;
+	unsigned int tag_byte = tag_bytes[row];
 	if ((tag_byte & (1 << column)) != 0) {
 	    SVG__tag_bit(svg, cell_width, column + 2, row + 2, border);
 	}
@@ -209,11 +208,11 @@ void SVG__tag_write(/* Extractor extractor, */
     if (border) {
 	SVG__text(svg, tag_name,
 	  6.0 * cell_width, 12.25 * cell_width,
-	  "ariel", (Unsigned)(cell_width) / 2);
+	  "ariel", (unsigned int)(cell_width) / 2);
     } else {
 	SVG__text(svg, tag_name,
 	  5.0 * cell_width, 12.25 * cell_width,
-	  "ariel", (Unsigned)(cell_width) / 2);
+	  "ariel", (unsigned int)(cell_width) / 2);
     }
     String__free(tag_name);
 

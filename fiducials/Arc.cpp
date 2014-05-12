@@ -8,7 +8,6 @@
 #include "Map.hpp"
 #include "SVG.hpp"
 #include "Tag.hpp"
-#include "Unsigned.hpp"
 
 // *Arc* routines:
 
@@ -145,13 +144,13 @@ Arc Arc__new(String_Const from) {
 Arc Arc__read(File in_file, Map map) {
     // Read <Arc ... /> tag:
     File__tag_match(in_file, "Arc");
-    Unsigned from_tag_id =
-      (Unsigned)File__integer_attribute_read(in_file, "From_Tag_Id");
+    unsigned int from_tag_id =
+      (unsigned int)File__integer_attribute_read(in_file, "From_Tag_Id");
     Double from_twist = File__double_attribute_read(in_file, "From_Twist");
 
     Double distance = File__double_attribute_read(in_file, "Distance");
-    Unsigned to_tag_id =
-       (Unsigned)File__integer_attribute_read(in_file, "To_Tag_Id");
+    unsigned int to_tag_id =
+       (unsigned int)File__integer_attribute_read(in_file, "To_Tag_Id");
     Double to_twist = File__double_attribute_read(in_file, "To_Twist");
     Double goodness = File__double_attribute_read(in_file, "Goodness");
     bool in_tree = (bool)File__integer_attribute_read(in_file, "In_Tree");

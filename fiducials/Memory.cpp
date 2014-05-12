@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include "File.hpp"
 #include "Memory.hpp"
-#include "Unsigned.hpp"
 
 #if defined(MEMORY_LEAK_CHECK)
     static File Memory__allocate_file = (File)0;
@@ -20,7 +19,7 @@
 /// *Memory__allocate*() will allocated and return a pointer to a chunk
 /// of *bytes* memory.
 
-Memory Memory__allocate(Unsigned bytes, String_Const from) {
+Memory Memory__allocate(unsigned int bytes, String_Const from) {
     Memory memory = (Memory)malloc(bytes);
     assert (memory != (Memory)0);
     #if defined(MEMORY_LEAK_CHECK)
@@ -78,7 +77,7 @@ void Memory__free(Memory memory) {
 /// size.  If the later case, the previous contents of memory is copied over
 /// before releasing the original storage.
 
-Memory Memory__reallocate(Memory memory, Unsigned new_size, String_Const from) {
+Memory Memory__reallocate(Memory memory, unsigned int new_size, String_Const from) {
     #if defined(MEMORY_LEAK_CHECK)
 	Memory new_memory = (Memory)malloc(new_size);
 	assert(new_memory != (Memory)0);
@@ -90,7 +89,7 @@ Memory Memory__reallocate(Memory memory, Unsigned new_size, String_Const from) {
 	// of *memory*, but it is unlikely that we cause a memory fault.
 	String new_string = (String)new_memory;
 	String old_string = (String)memory;
-	for (Unsigned index = 0; index < new_size; index++) {
+	for (unsigned int index = 0; index < new_size; index++) {
 	    new_string[index] = old_string[index];
 	}
 
@@ -118,11 +117,11 @@ Memory Memory__reallocate(Memory memory, Unsigned new_size, String_Const from) {
 /// @param unsigned1 is the value to be treated as *Memory*
 /// @returns *unsigned1* as a *Memory* pointer.
 ///
-/// *Unsigned__to_memory*() returns *unsigned1* as a *Memory* pointer.
+/// *unsigned int__to_memory*() returns *unsigned1* as a *Memory* pointer.
 
-Memory Unsigned__to_memory(Unsigned unsigned1) {
+Memory unsigned__to_memory(unsigned int unsigned1) {
     union {
-        Unsigned unsigned1;
+        unsigned int unsigned1;
         Memory memory;
     } convert;
     convert.unsigned1 = unsigned1;
