@@ -143,6 +143,7 @@ extern void Tag__update_via_arc(
 // *Tag_Height* routines:
 extern int Tag_Height__compare(
   Tag_Height tag_height1, Tag_Height tag_height2);
+extern bool Tag_Height__less(Tag_Height tag_height1, Tag_Height tag_height2);
 extern void Tag_Height__free(Tag_Height tag_height);
 extern Tag_Height Tag_Height__xml_read(File in_file);
 

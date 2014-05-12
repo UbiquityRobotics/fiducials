@@ -297,8 +297,6 @@ Map Map__create(String_Const file_path, String_Const file_base,
     map->is_saved = (bool)1;
     map->image_log = (bool)0;
     map->tag_announce_routine = tag_announce_routine;
-    map->tag_heights =
-      List__new("Map__new:List__new:tag_heights"); // <Tag_Height>
     map->temporary_arc = Arc__new("Map__new:Arc__New:temporary_arc");
     map->visit = 0;
 
@@ -355,13 +353,11 @@ void Map__free(Map map) {
     }
 
     // Release all the *Tag_Height*'s:
-    List /* <Tag_Height> */ tag_heights = map->tag_heights;
-    Unsigned tag_heights_size = List__size(tag_heights);
+    Unsigned tag_heights_size = map->tag_heights.size();
     for (Unsigned index = 0; index < tag_heights_size; index++) {
-        Tag_Height tag_height = (Tag_Height)List__fetch(tag_heights, index);
+        Tag_Height tag_height = map->tag_heights[index];
         Tag_Height__free(tag_height);
     }
-    List__free(map->tag_heights);
 
     Memory__free((Memory)map);
 }
@@ -574,12 +570,10 @@ void Map__tag_announce(Map map,
 
 Tag_Height Map__tag_height_lookup(Map map, Unsigned id) {
     //Double distance_per_pixel = 0.0;
-    List /* Tag_Height */ tag_heights = map->tag_heights;
     Tag_Height tag_height = (Tag_Height)0;
-    assert (tag_heights != (List)0);
-    Unsigned size = List__size(tag_heights);
+    Unsigned size = map->tag_heights.size();
     for (Unsigned index = 0; index < size; index++) {
-        tag_height = (Tag_Height)List__fetch(tag_heights, index);
+        tag_height = map->tag_heights[index];
         if (tag_height->first_id <= id && id <= tag_height->last_id) {
             //distance_per_pixel = tag_height->distance_per_pixel;
           
@@ -612,12 +606,9 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
     File__string_match(xml_in_file, ">\n");
 
     // Read in the *count* *Tag_Height* objects into *tag_heights*:
-    List tag_heights = map->tag_heights;
-    assert (tag_heights != (List)0);
     for (Unsigned index = 0; index < count; index++) {
         Tag_Height tag_height = Tag_Height__xml_read(xml_in_file);
-        List__append(tag_heights, (Memory)tag_height,
-          "Map__tag_heights_xml_read:List__append, tag_heights");
+        map->tag_heights.push_back(tag_height);
     }
 
     // Process the final Map XML tag "</Map_Tag_Heights>":
@@ -628,7 +619,8 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
     File__close(xml_in_file);
 
     // Sort *tag_heights*:
-    List__sort(tag_heights, (List__Compare__Routine)Tag_Height__compare);
+    std::sort(map->tag_heights.begin(), map->tag_heights.end(),
+        Tag_Height__less);
 }
 
 /// @brief Return the *Tag* associated with *tag_id* from *map*.

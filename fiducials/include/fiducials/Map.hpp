@@ -62,7 +62,7 @@ struct Map__Struct {
     Fiducials_Tag_Announce_Routine tag_announce_routine;
 
     /// @brief List of all known tag heights:
-    List /* <Tag_Height> */ tag_heights;
+    std::vector<Tag_Height> tag_heights;
 
     /// @brief Table of all *tags* indexed by *Tag* *id*.
     std::map<unsigned int, Tag> tags_;

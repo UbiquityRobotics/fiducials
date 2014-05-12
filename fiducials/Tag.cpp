@@ -332,6 +332,19 @@ int Tag_Height__compare(Tag_Height tag_height1, Tag_Height tag_height2)
     return result;
 }
 
+/// @brief Compares *tag_height1* with *tag_height2*.
+/// @param tag_height1 is the first *Tag_Height* object to compare.
+/// @param tag_height2 is the second *Tag_Height* object to compare.
+/// @returns true or false depending upon the comparison.
+///
+/// *Tag_Height__less*() will return true if *tag_height1* sorts before
+/// *tag_height2*, and false otherwise.
+
+bool Tag_Height__less(Tag_Height tag_height1, Tag_Height tag_height2)
+{
+    return tag_height1->first_id < tag_height2->last_id;
+}
+
 /// @brief Releases stoarge for *tag_height*.
 /// @param tag_height to release storage of.
 ///
