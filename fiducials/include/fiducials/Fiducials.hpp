@@ -56,7 +56,7 @@ struct Fiducials__Struct {
     CV_Scalar black;
     CV_Scalar blue;
     bool blur;
-    List /* <Camera_Tag> */ camera_tags;
+    std::vector<Camera_Tag> camera_tags;
     List /* <Camera_Tag> */ camera_tags_pool;
     CV_Point2D32F_Vector corners;
     List /* <Tag> */current_visibles;
