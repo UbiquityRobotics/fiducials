@@ -799,8 +799,6 @@ Fiducials Fiducials__create(
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
     fiducials->blur = (bool)1;
     fiducials->corners = CV_Point2D32F_Vector__create(4);
-    fiducials->current_visibles =
-      List__new("Fiducials__create:List_new:current_visibles"); // Tag
     fiducials->cyan = CV_Scalar__rgb(0.0, 1.0, 1.0);
     fiducials->debug_image = CV_Image__create(image_size, CV__depth_8u, 3);
     fiducials->debug_index = 0;
@@ -824,8 +822,6 @@ Fiducials Fiducials__create(
     fiducials->origin = CV_Point__create(0, 0);
     fiducials->original_image = original_image;
     fiducials->path = fiducials_path;
-    fiducials->previous_visibles =
-      List__new("Fiducials__create:List__new:previous_visibles"); // Tag
     fiducials->purple = CV_Scalar__rgb(255.0, 0.0, 255.0);
     fiducials->red = CV_Scalar__rgb(255.0, 0.0, 0.0);
     fiducials->references = CV_Point2D32F_Vector__create(8);
@@ -893,8 +889,6 @@ void Fiducials__free(Fiducials fiducials) {
     }
 
     // Free up the *List*'s:
-    List__free(fiducials->current_visibles);
-    List__free(fiducials->previous_visibles);
     List__free(locations);
     List__free(locations_path);
 
@@ -929,7 +923,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     CV_Memory_Storage__clear(storage);
 
     // Grab some values from *fiducials*:
-    List /*<Tag>*/ current_visibles = fiducials->current_visibles;
     CV_Image debug_image = fiducials->debug_image;
     Unsigned debug_index = fiducials->debug_index;
     CV_Image edge_image = fiducials->edge_image;
@@ -937,7 +930,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     List /*<Location>*/ locations = fiducials->locations;
     File log_file = fiducials->log_file;
     CV_Image original_image = fiducials->original_image;
-    List /*<Tag>*/ previous_visibles = fiducials->previous_visibles;
     Fiducials_Results results = fiducials->results;
     CV_Image temporary_gray_image = fiducials->temporary_gray_image;
     Fiducials_Location_Announce_Routine location_announce_routine =
@@ -1332,8 +1324,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                                 Camera_Tag__initialize(camera_tag, tag,
                                   direction_index, corners, (CV_Image)0);
                             }
-                            List__append(current_visibles, (Memory)tag,
-                              "Fiduicals__create:List_append:current_visibles");
+                            fiducials->current_visibles.push_back(tag);
                             File__format(log_file, "Tag: %d x=%f y=%f\n",
                               tag->id, tag->x, tag->y);
 
@@ -1481,12 +1472,12 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     }
 
     // Visit each *current_tag* in *current_visibles*:
-    Unsigned current_visibles_size = List__size(current_visibles);
+    Unsigned current_visibles_size = fiducials->current_visibles.size();
     for (Unsigned current_visibles_index = 0;
       current_visibles_index < current_visibles_size;
       current_visibles_index++) {
         Tag current_visible =
-          (Tag)List__fetch(current_visibles, current_visibles_index);
+          fiducials->current_visibles[current_visibles_index];
         //File__format(log_file, "Current[%d]:%d\n",
         //  current_visibles_index, current_visible->id);
 
@@ -1500,12 +1491,12 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     }
 
     // Identifiy tags that are no longer visible:
-    Unsigned previous_visibles_size = List__size(previous_visibles);
+    Unsigned previous_visibles_size = fiducials->previous_visibles.size();
     for (Unsigned previous_visibles_index = 0;
        previous_visibles_index < previous_visibles_size;
        previous_visibles_index++) {
         Tag previous_visible =
-          (Tag)List__fetch(previous_visibles, previous_visibles_index);
+          fiducials->previous_visibles[previous_visibles_index];
         //File__format(log_file, "Previous[%d]:%d\n",
         //  previous_visibles_index, previous_visible->id);
 
@@ -1515,7 +1506,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
           current_visibles_index < current_visibles_size;
           current_visibles_index++) {
             current_visible = 
-              (Tag)List__fetch(current_visibles, current_visibles_index);
+              fiducials->current_visibles[current_visibles_index];
             if (current_visible == previous_visible) {
                 break;
             }
@@ -1532,9 +1523,8 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     }
     // Clear *previous_visibles* and swap *current_visible* with
     // *previous_visibles*:
-    List__trim(previous_visibles, 0);
-    fiducials->current_visibles = previous_visibles;
-    fiducials->previous_visibles = current_visibles;
+    fiducials->current_visibles = fiducials->previous_visibles;
+    fiducials->previous_visibles.clear();
     //File__format(log_file, "current_visibles=0x%x previous_visibles=0x%x\n",
     //  current_visibles, previous_visibles);
 

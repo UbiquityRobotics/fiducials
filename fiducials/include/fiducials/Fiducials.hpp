@@ -59,7 +59,7 @@ struct Fiducials__Struct {
     std::vector<Camera_Tag> camera_tags;
     std::vector<Camera_Tag> camera_tags_pool;
     CV_Point2D32F_Vector corners;
-    List /* <Tag> */current_visibles;
+    std::vector<Tag> current_visibles;
     CV_Scalar cyan;
     CV_Image debug_image;
     Unsigned debug_index;
@@ -82,7 +82,7 @@ struct Fiducials__Struct {
     CV_Image map_x;
     CV_Image map_y;
     String_Const path;
-    List /* <Tag> */ previous_visibles;
+    std::vector<Tag> previous_visibles;
     CV_Scalar purple;
     CV_Scalar red;
     CV_Point2D32F_Vector references;
