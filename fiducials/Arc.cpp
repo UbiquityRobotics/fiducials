@@ -19,16 +19,16 @@
 /// 0 if they are equal, and 1 if *arc1* sorts after *arc2*.
 
 bool Arc__equal(Arc arc1, Arc arc2) {
-    return Tag__equal(arc1->from_tag, arc2->from_tag) && 
-      Tag__equal(arc1->to_tag, arc2->to_tag);
+    return Tag::equal(arc1->from_tag, arc2->from_tag) && 
+      Tag::equal(arc1->to_tag, arc2->to_tag);
 }
 
 // return true if arc1 comees before arc2; else false
 bool Arc__less(Arc arc1, Arc arc2) {
-    if( Tag__less(arc1->from_tag, arc2->from_tag) ) {
+    if( Tag::less(arc1->from_tag, arc2->from_tag) ) {
       return true;
-    } else if( Tag__equal(arc1->from_tag, arc2->from_tag) ) {
-      return Tag__less(arc1->to_tag, arc2->to_tag);
+    } else if( Tag::equal(arc1->from_tag, arc2->from_tag) ) {
+      return Tag::less(arc1->to_tag, arc2->to_tag);
     }
     return false;
 }
@@ -46,12 +46,12 @@ bool Arc__less(Arc arc1, Arc arc2) {
 /// contains *from_tag*, *from_twist*, *distance*, *to_tag*, *to_twist*,
 /// and *goodness*.
 
-Arc Arc__create(Tag from_tag, double from_twist,
-  double distance, Tag to_tag, double to_twist, double goodness) {
+Arc Arc__create(Tag *from_tag, double from_twist,
+  double distance, Tag *to_tag, double to_twist, double goodness) {
     // Make sure *from* id is less that *to* id:
     if (from_tag->id > to_tag->id) {
         // Compute the conjugate *Arc* (see Arc.h):
-        Tag temporary_tag = from_tag;
+        Tag *temporary_tag = from_tag;
         from_tag = to_tag;
         to_tag = temporary_tag;
 
@@ -70,8 +70,8 @@ Arc Arc__create(Tag from_tag, double from_twist,
     arc->to_twist = to_twist;
 
     // Append *arc* to *from*, *to*, and *map*:
-    Tag__arc_append(from_tag, arc);
-    Tag__arc_append(to_tag, arc);
+    from_tag->arc_append(arc);
+    to_tag->arc_append(arc);
     Map__arc_append(from_tag->map, arc);
 
     return arc;
@@ -121,11 +121,11 @@ void Arc__free(Arc arc) {
 Arc Arc__new(String_Const from) {
     Arc arc = Memory__new(Arc, from);
     arc->distance = -1.0;
-    arc->from_tag = (Tag)0;
+    arc->from_tag = NULL;
     arc->from_twist = 0.0;
     arc->goodness = 123456789.0;
     arc->in_tree = (bool)0;
-    arc->to_tag = (Tag)0;
+    arc->to_tag = NULL;
     arc->to_twist = 0.0;
     arc->visit = 0;
     return arc;
@@ -162,8 +162,8 @@ Arc Arc__read(File in_file, Map map) {
     to_twist *= degrees_to_radians;
 
     // Create and load *arc*:
-    Tag from_tag = Map__tag_lookup(map, from_tag_id);
-    Tag to_tag = Map__tag_lookup(map, to_tag_id);
+    Tag * from_tag = Map__tag_lookup(map, from_tag_id);
+    Tag * to_tag = Map__tag_lookup(map, to_tag_id);
     Arc arc = Map__arc_lookup(map, from_tag, to_tag);
     
     // Load the data into *arc*:
@@ -183,8 +183,8 @@ Arc Arc__read(File in_file, Map map) {
 /// *Arc__svg_write*() will draw *arc* into *svg*.
 
 void Arc__svg_write(Arc arc, SVG svg) {
-    Tag from_tag = arc->from_tag;
-    Tag to_tag = arc->to_tag;
+    Tag * from_tag = arc->from_tag;
+    Tag * to_tag = arc->to_tag;
     String_Const color = "green";
     if (arc->in_tree) {
         color = "red";

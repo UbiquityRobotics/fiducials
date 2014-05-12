@@ -50,9 +50,9 @@ struct Fiducials__Struct {
     CV_Scalar black;
     CV_Scalar blue;
     bool blur;
-    std::vector<CameraTag * > camera_tags;
+    std::vector<CameraTag*> camera_tags;
     CV_Point2D32F_Vector corners;
-    std::vector<Tag> current_visibles;
+    std::vector<Tag*> current_visibles;
     CV_Scalar cyan;
     CV_Image debug_image;
     unsigned int debug_index;
@@ -75,7 +75,7 @@ struct Fiducials__Struct {
     CV_Image map_x;
     CV_Image map_y;
     String_Const path;
-    std::vector<Tag> previous_visibles;
+    std::vector<Tag*> previous_visibles;
     CV_Scalar purple;
     CV_Scalar red;
     CV_Point2D32F_Vector references;

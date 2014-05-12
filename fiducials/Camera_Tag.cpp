@@ -15,7 +15,7 @@
 /// than *camera_tag2*, 0 if they are equal, and 1 otherwise.
 
 bool CameraTag::less(CameraTag * tag1, CameraTag * tag2) {
-  return Tag__less(tag1->tag, tag2->tag);
+  return Tag::less(tag1->tag, tag2->tag);
 }
 
 /// @brief Initializes *camara_tag* from *tag_id*, *direction*, and *corners*
@@ -32,7 +32,7 @@ bool CameraTag::less(CameraTag * tag1, CameraTag * tag2) {
 /// *camara_tag* has its diagonal, twist and center X/Y coordiante filled
 /// from this routine.
 
-void CameraTag::initialize(Tag tag, unsigned int direction,
+void CameraTag::initialize(Tag * tag, unsigned int direction,
     CV_Point2D32F_Vector corners, CV_Image debug_image) {
     // We need to remap the 4 corners in *corners* to be oriented as
     // in the crude ASCII art shown below:

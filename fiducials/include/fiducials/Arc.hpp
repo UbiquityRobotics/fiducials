@@ -10,7 +10,6 @@ typedef struct Arc__Struct *Arc;
 #include "File.hpp"
 #include "Map.hpp"
 #include "SVG.hpp"
-#include "Tag.hpp"
 
 /// @brief An *Arc_Struct* represents arc from the *from* *Tag* to the
 /// *to* *Tag*.
@@ -50,6 +49,8 @@ typedef struct Arc__Struct *Arc;
 ///      |           |                       |           |
 ///      +-----------+                       +-----------+
 
+class Tag;
+
 struct Arc__Struct {
     /// @brief The angle in radians from the *origin* center parallel to the
     /// bottom edge to the line that connects the *origin* and *target* centers.
@@ -59,7 +60,7 @@ struct Arc__Struct {
     double distance;
 
     /// @brief The from *Tag*.
-    Tag from_tag;
+    Tag * from_tag;
 
     /// @brief The amount *from_tag* is twisted from distance line segment.
     double from_twist;
@@ -71,7 +72,7 @@ struct Arc__Struct {
     bool in_tree;
 
     /// @brief The to *Tag* (has larger id than *from*).
-    Tag to_tag;
+    Tag * to_tag;
 
     /// @brief The amount *to_tag* is twisted from distance line segment.
     double to_twist;
@@ -85,8 +86,8 @@ struct Arc__Struct {
 extern bool Arc__equal(Arc arc1, Arc arc2);
 extern bool Arc__less(Arc arc1, Arc arc2);
 extern bool Arc__distance_less(Arc arc1, Arc arc2);
-extern Arc Arc__create(Tag from_tag, double from_twist,
-  double distance, Tag to_tag, double to_twist, double goodness);
+extern Arc Arc__create(Tag *from_tag, double from_twist,
+  double distance, Tag *to_tag, double to_twist, double goodness);
 extern void Arc__free(Arc arc);
 extern Arc Arc__new(String_Const from);
 extern Arc Arc__read(File out_file, Map map);

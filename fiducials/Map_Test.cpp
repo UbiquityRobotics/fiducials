@@ -44,16 +44,16 @@ int main(int arguments_size, char * arguments[]) {
     //  0---1
 
     unsigned int tag_size = 1.0;
-    Tag tag0 = Map__tag_lookup(map1, 0);
-    Tag__initialize(tag0, 0.0, 0.0, 0.0, tag_size, visit);
-    Tag tag1 = Map__tag_lookup(map1, 1);
-    Tag__initialize(tag1, 0.0, 0.0, 0.0, tag_size, visit);
-    Tag tag2 = Map__tag_lookup(map1, 2);
-    Tag__initialize(tag2, 0.0, 0.0, 0.0, tag_size, visit);
-    Tag tag3 = Map__tag_lookup(map1, 3);
-    Tag__initialize(tag3, 0.0, 0.0, 0.0, tag_size, visit);
-    Tag tag4 = Map__tag_lookup(map1, 4);
-    Tag__initialize(tag4, 0.0, 0.0, 0.0, tag_size, visit);
+    Tag * tag0 = Map__tag_lookup(map1, 0);
+    tag0->initialize(0.0, 0.0, 0.0, tag_size, visit);
+    Tag * tag1 = Map__tag_lookup(map1, 1);
+    tag1->initialize(0.0, 0.0, 0.0, tag_size, visit);
+    Tag * tag2 = Map__tag_lookup(map1, 2);
+    tag2->initialize(0.0, 0.0, 0.0, tag_size, visit);
+    Tag * tag3 = Map__tag_lookup(map1, 3);
+    tag3->initialize(0.0, 0.0, 0.0, tag_size, visit);
+    Tag * tag4 = Map__tag_lookup(map1, 4);
+    tag4->initialize(0.0, 0.0, 0.0, tag_size, visit);
 
     // The tags are twisted by the tag id x 10 degerees.  Thus, tag
     // 0 has no twist, tag 1 is 10 degerees, ..., and tag 4 is 40 degrees.

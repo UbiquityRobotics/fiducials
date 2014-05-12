@@ -28,7 +28,7 @@ struct Map__Struct {
     std::vector<Arc> all_arcs;
 
     /// @brief All of the tags (i.e. fiducials) in the map.
-    std::vector<Tag> all_tags;
+    std::vector<Tag*> all_tags;
 
     /// @brief Opaque object passed into announce routines.
     void *announce_object;
@@ -64,7 +64,7 @@ struct Map__Struct {
     std::vector<Tag_Height> tag_heights;
 
     /// @brief Table of all *tags* indexed by *Tag* *id*.
-    std::map<unsigned int, Tag> tags_;
+    std::map<unsigned int, Tag*> tags_;
 
     /// @brief a te
     Arc temporary_arc;
@@ -78,7 +78,7 @@ struct Map__Struct {
 extern void Map__arc_announce(
   Map map, Arc arc, CV_Image image, unsigned int sequence_number);
 extern void Map__arc_append(Map map, Arc arc);
-extern Arc Map__arc_lookup(Map map, Tag from, Tag to);
+extern Arc Map__arc_lookup(Map map, Tag *from, Tag *to);
 extern unsigned int Map__arc_update(Map map, CameraTag * camera_from,
   CameraTag * camera_to, CV_Image image, unsigned int sequence_number);
 extern bool Map__equals(Map map1, Map map2);
@@ -97,8 +97,9 @@ extern void Map__svg_write(
 extern void Map__tag_heights_xml_read(
   Map map, String_Const tag_heights_file_name);
 extern void Map__tag_announce(
-  Map map, Tag tag, bool visible, CV_Image image, unsigned int sequence_number);
-extern Tag Map__tag_lookup(Map map, unsigned int tag_id);
+  Map map, Tag *tag, bool visible, CV_Image image,
+  unsigned int sequence_number);
+extern Tag * Map__tag_lookup(Map map, unsigned int tag_id);
 extern void Map__update(Map map, CV_Image image, unsigned int sequence_number);
 extern void Map__write(Map map, File out_file);
 

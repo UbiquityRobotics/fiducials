@@ -4,7 +4,8 @@
 #define CAMERA_TAG_H_INCLUDED 1
 
 #include "CV.hpp"
-#include "Tag.hpp"
+
+class Tag;
 
 /// @brief *Camera_Tag* represents information about a fiducial tag in
 /// a camera frame.
@@ -17,7 +18,7 @@ class CameraTag {
     unsigned int direction;
 
     /// @brief The tag associated with *id*.
-    Tag tag;
+    Tag *tag;
 
     /// @brief The amount the fiducial tag is twisted from the camera x axis
     /// measured in radians.
@@ -35,7 +36,7 @@ class CameraTag {
 
     CameraTag();
 
-    void initialize(Tag tag, unsigned int direction,
+    void initialize(Tag * tag, unsigned int direction,
         CV_Point2D32F_Vector corners, CV_Image debug_image);
 
     void* operator new(size_t sz);

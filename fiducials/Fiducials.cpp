@@ -1273,7 +1273,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                             CameraTag * camera_tag = new CameraTag();
 
                             // Load up *camera_tag* to get center, twist, etc.:
-                            Tag tag = Map__tag_lookup(map, tag_id);
+                            Tag * tag = Map__tag_lookup(map, tag_id);
 
                             double vertices[4][2];
                             for (unsigned int index = 0; index < 4; index++) {
@@ -1354,7 +1354,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
         //  "half_width=%d half_height=%d\n", half_width, half_height);
         for (unsigned int index = 0; index < camera_tags_size; index++) {
             CameraTag * camera_tag = fiducials->camera_tags[index];
-            Tag tag = camera_tag->tag;
+            Tag * tag = camera_tag->tag;
             //File__format(log_file,
             //  "[%d]:tag_id=%d tag_x=%f tag_y=%f tag_twist=%f\n",
             //  index, tag->id, tag->x, tag->y, tag->twist * 180.0 / pi);
@@ -1442,7 +1442,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     for (unsigned int current_visibles_index = 0;
       current_visibles_index < current_visibles_size;
       current_visibles_index++) {
-        Tag current_visible =
+        Tag * current_visible =
           fiducials->current_visibles[current_visibles_index];
         //File__format(log_file, "Current[%d]:%d\n",
         //  current_visibles_index, current_visible->id);
@@ -1461,13 +1461,13 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     for (unsigned int previous_visibles_index = 0;
        previous_visibles_index < previous_visibles_size;
        previous_visibles_index++) {
-        Tag previous_visible =
+        Tag * previous_visible =
           fiducials->previous_visibles[previous_visibles_index];
         //File__format(log_file, "Previous[%d]:%d\n",
         //  previous_visibles_index, previous_visible->id);
 
         // Now look to see if *previous_visible* is in *current_visibles*:
-        Tag current_visible = (Tag)0;
+        Tag * current_visible = NULL;
         for (unsigned int current_visibles_index = 0;
           current_visibles_index < current_visibles_size;
           current_visibles_index++) {
@@ -1476,11 +1476,11 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
             if (current_visible == previous_visible) {
                 break;
             }
-            current_visible = (Tag)0;
+            current_visible = NULL;
         }        
 
         // *current_visible* is null if it was not found:
-        if (current_visible == (Tag)0) {
+        if (current_visible == NULL) {
             // Not found => announce the tag as no longer visible:
             previous_visible->visible = (bool)0;
             Map__tag_announce(map,

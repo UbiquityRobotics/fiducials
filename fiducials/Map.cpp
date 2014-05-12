@@ -33,8 +33,8 @@ typedef struct Map__Struct *Map_Doxygen_Fake_Out;
 
 void Map__arc_announce(Map map,
   Arc arc, CV_Image image, unsigned int sequence_number) {
-   Tag from_tag = arc->from_tag;
-   Tag to_tag = arc->to_tag;
+   Tag *from_tag = arc->from_tag;
+   Tag *to_tag = arc->to_tag;
    map->arc_announce_routine(map->announce_object,
      from_tag->id, from_tag->x, from_tag->y, from_tag->z,
      to_tag->id, to_tag->x, to_tag->y, to_tag->z,
@@ -64,10 +64,10 @@ void Map__arc_append(Map map, Arc arc) {
 /// *Map__arc_lookup*() will return the *Arc* that contains *from_tag*
 /// and *to_tag*.  If no such *Arc* exists yet, it is created.
 
-Arc Map__arc_lookup(Map map, Tag from_tag, Tag to_tag) {
+Arc Map__arc_lookup(Map map, Tag *from_tag, Tag *to_tag) {
     // Make sure that *from_tag* has the lower id:
     if (from_tag->id > to_tag->id) {
-        Tag temporary_tag = from_tag;
+        Tag *temporary_tag = from_tag;
         from_tag = to_tag;
         to_tag = temporary_tag;
     }
@@ -111,13 +111,13 @@ unsigned int Map__arc_update(Map map, CameraTag *camera_from, CameraTag *camera_
     double r2d = 180.0 / pi;
 
     // Extract some field values from *camera_from*:
-    Tag from_tag = camera_from->tag;
+    Tag *from_tag = camera_from->tag;
     double camera_from_twist = camera_from->twist;
     double camera_from_x = camera_from->x;
     double camera_from_y = camera_from->y;
 
     // Extract some values from *from_tag*:
-    Tag to_tag = camera_to->tag;
+    Tag *to_tag = camera_to->tag;
     double camera_to_twist = camera_to->twist;
     double camera_to_x = camera_to->x;
     double camera_to_y = camera_to->y;
@@ -232,9 +232,9 @@ bool Map__equals(Map map1, Map map2) {
     if (all_tags1_size == all_tags2_size) {
         // Visit each *Tag*:
         for (unsigned int index = 0; index < all_tags1_size; index++) {
-            Tag tag1 = map1->all_tags[index];
-            Tag tag2 = map2->all_tags[index];
-            if (!Tag__equal(tag1, tag2)) {
+            Tag *tag1 = map1->all_tags[index];
+            Tag *tag2 = map2->all_tags[index];
+            if (!Tag::equal(tag1, tag2)) {
               return false;
             }
         }
@@ -339,8 +339,7 @@ void Map__free(Map map) {
     // Release all the *Tag*'s:
     unsigned int tags_size = map->all_tags.size();
     for (unsigned int index = 0; index < tags_size; index++) {
-        Tag tag = map->all_tags[index];
-        Tag__free(tag);
+        delete map->all_tags[index];
     }
 
     // Release all the *Tag_Height*'s:
@@ -389,7 +388,7 @@ void Map__restore(Map map, File in_file) {
 
     // Read in the *all_tags_size* *Tag* objects:
     for (unsigned int index = 0; index < all_tags_size; index++) {
-        Tag tag = Tag__read(in_file, map);
+        Tag * tag = Tag::read(in_file, map);
 
         fprintf(stderr, "announce %d\n", tag->id);
         map->tag_announce_routine(map->announce_object,
@@ -438,7 +437,7 @@ void Map__save(Map map) {
 /// to be in a consitent order.
 
 void Map__sort(Map map) {
-    std::sort(map->all_tags.begin(), map->all_tags.end(), Tag__less);
+    std::sort(map->all_tags.begin(), map->all_tags.end(), Tag::less);
     std::sort(map->all_arcs.begin(), map->all_arcs.end(), Arc__less);
 }
 
@@ -458,8 +457,8 @@ void Map__svg_write(Map map, const String svg_base_name,
     // Compute the *bounding_box*:
     BoundingBox * bounding_box = new BoundingBox();
     for (unsigned int index = 0; index < all_tags_size; index++) {
-        Tag tag = map->all_tags[index];
-        Tag__bounding_box_update(tag, bounding_box);
+        Tag * tag = map->all_tags[index];
+        tag->bounding_box_update(bounding_box);
     }
 
     // Open the Scalable Vector Graphics file:
@@ -477,9 +476,9 @@ void Map__svg_write(Map map, const String svg_base_name,
     // Output each *tag in *all_tags*:
     double world_diagonal = 0.1;
     for (unsigned int index = 0; index < all_tags_size; index++) {
-        Tag tag = map->all_tags[index];
+        Tag * tag = map->all_tags[index];
         world_diagonal = tag->world_diagonal;
-        Tag__svg_write(tag, svg);
+        tag->svg_write(svg);
     }
 
     // Output each *tag in *all_tags*:
@@ -540,7 +539,7 @@ void Map__svg_write(Map map, const String svg_base_name,
 /// to be called for *arc*.
 
 void Map__tag_announce(Map map,
-  Tag tag, bool visible, CV_Image image, unsigned int sequence_number) {
+  Tag * tag, bool visible, CV_Image image, unsigned int sequence_number) {
     map->tag_announce_routine(map->announce_object,
       tag->id, tag->x, tag->y, tag->z, tag->twist,
       tag->diagonal, tag->world_diagonal/tag->diagonal,
@@ -624,9 +623,9 @@ void Map__tag_heights_xml_read(Map map, String_Const tag_heights_file_name) {
 /// *tag_id* using *map.  If no previous instance of *tag_id* has been
 /// encountered, a new *Tag* is created and add to the association in *map*.
 
-Tag Map__tag_lookup(Map map, unsigned int tag_id) {
+Tag * Map__tag_lookup(Map map, unsigned int tag_id) {
     if( map->tags_.count(tag_id) == 0 ) {
-        Tag tag = Tag__create(tag_id, map);
+        Tag * tag = new Tag(tag_id, map);
         map->tags_[tag_id] = tag;
         map->all_tags.push_back(tag);
         map->changes_count += 1;
@@ -658,8 +657,8 @@ void Map__write(Map map, File out_file) {
 
     // Output each *tag in *all_tags*:
     for (unsigned int index = 0; index < all_tags_size; index++) {
-        Tag tag = map->all_tags[index];
-        Tag__write(tag, out_file);
+        Tag * tag = map->all_tags[index];
+        tag->write(out_file);
     }
 
     // Output each *tag in *all_tags*:
@@ -687,11 +686,11 @@ void Map__update(Map map, CV_Image image, unsigned int sequence_number) {
 
         // We want the tag with the lowest id number to be the origin.
         // Sort *tags* from lowest tag id to greatest:
-        std::sort(map->all_tags.begin(), map->all_tags.end(), Tag__less);
+        std::sort(map->all_tags.begin(), map->all_tags.end(), Tag::less);
 
         // The first tag in {tags} has the lowest id and is forced to be the
         // map origin:
-        Tag origin_tag = map->all_tags[0];
+        Tag * origin_tag = map->all_tags[0];
         origin_tag->visit = visit;
         origin_tag->hop_count = 0;
         
@@ -734,8 +733,8 @@ void Map__update(Map map, CV_Image image, unsigned int sequence_number) {
 
                 // Figure out if *origin* or *target* have been added to the
                 // spanning tree yet:
-                Tag from_tag = arc->from_tag;
-                Tag to_tag = arc->to_tag;
+                Tag * from_tag = arc->from_tag;
+                Tag * to_tag = arc->to_tag;
                 bool from_is_new = (bool)(from_tag->visit != visit);
                 bool to_is_new = (bool)(to_tag->visit != visit);
 
@@ -747,8 +746,7 @@ void Map__update(Map map, CV_Image image, unsigned int sequence_number) {
                         map->pending_arcs.insert(map->pending_arcs.end(),
                             from_tag->arcs_.begin(), from_tag->arcs_.end());
                         from_tag->visit = visit;
-                        Tag__update_via_arc(from_tag,
-                          arc, image, sequence_number);
+                        from_tag->update_via_arc(arc, image, sequence_number);
                     } else {
                         // Add *from* to spanning tree:
                         assert (!from_is_new);
@@ -756,8 +754,7 @@ void Map__update(Map map, CV_Image image, unsigned int sequence_number) {
                         map->pending_arcs.insert(map->pending_arcs.end(),
                             to_tag->arcs_.begin(), to_tag->arcs_.end());
                         to_tag->visit = visit;
-                        Tag__update_via_arc(to_tag,
-                          arc, image, sequence_number);
+                        to_tag->update_via_arc(arc, image, sequence_number);
                     }
 
                     // Mark that *arc* is part of the spanning tree:

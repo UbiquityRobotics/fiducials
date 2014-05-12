@@ -49,9 +49,6 @@
 #include "File.hpp"
 #include "SVG.hpp"
 
-/// @brief A *Tag* is a pointer to a *Tag_Struct* object.
-typedef struct Tag__Struct *Tag;
-
 /// @brief A *Tag_Height* is a point to a *Tag_Height__Struct* object.
 typedef struct Tag_Height__Struct *Tag_Height;
 
@@ -61,7 +58,8 @@ typedef struct Tag_Height__Struct *Tag_Height;
 
 /// @brief A *Tag_Struct* represents the location and orientation of one 
 /// ceiling fiducial tag.
-struct Tag__Struct {
+class Tag {
+  public:
     /// @brief List *Arc*'s connected to this *Tag*.
     std::vector<Arc> arcs_;
 
@@ -103,6 +101,24 @@ struct Tag__Struct {
 
     /// @brief Set if tag was updated
     bool updated;
+
+  public:
+    Tag(unsigned int id, Map map);
+
+    void arc_append(Arc arc);
+    void bounding_box_update(BoundingBox *bounding_box);
+
+    void initialize(double angle, double x, double y, double diagonal,
+        unsigned int visit);
+
+    void svg_write(SVG svg);
+    void write(File out_file);
+    void update_via_arc(Arc arc, CV_Image image, unsigned int sequence_number);
+
+    // static comparisons and file I/O
+    static int equal(Tag *tag1, Tag *tag2);
+    static bool less(Tag *tag1, Tag *tag2);
+    static Tag * read(File in_file, Map map);
 };
 
 /// @brief A *Tag_Height__Struct* represents a span of tags a the same
@@ -122,21 +138,6 @@ struct Tag_Height__Struct {
 };
 
 // *Tag* routines;
-
-extern void Tag__arc_append(Tag tag, Arc arc);
-extern void Tag__bounding_box_update(Tag tag, BoundingBox *bounding_box);
-extern Tag Tag__create(unsigned int id, Map map);
-extern int Tag__equal(Tag tag1, Tag tag2);
-extern bool Tag__less(Tag tag1, Tag tag2);
-extern void Tag__free(Tag tag);
-extern void Tag__initialize(
-  Tag tag, double angle, double x, double y, double diagonal, unsigned int visit);
-extern void Tag__sort(Tag tag);
-extern Tag Tag__read(File in_file, Map map);
-extern void Tag__svg_write(Tag tag, SVG svg);
-extern void Tag__write(Tag tag, File out_file);
-extern void Tag__update_via_arc(
-  Tag tag, Arc arc, CV_Image image, unsigned int sequence_number);
 
 // *Tag_Height* routines:
 extern bool Tag_Height__less(Tag_Height tag_height1, Tag_Height tag_height2);

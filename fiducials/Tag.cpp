@@ -16,9 +16,9 @@
 ///
 /// *Tag__arc_append*() will append *arc* to *tag*.
 
-void Tag__arc_append(Tag tag, Arc arc) {
-    assert(arc->from_tag == tag || arc->to_tag == tag);
-    tag->arcs_.push_back(arc);
+void Tag::arc_append(Arc arc) {
+    assert(arc->from_tag == this || arc->to_tag == this);
+    arcs_.push_back(arc);
 }
 
 /// @brief Updates *bounding_box* to include the 4 corners of tag.
@@ -29,10 +29,8 @@ void Tag__arc_append(Tag tag, Arc arc) {
 /// *tag* will be enclosed by *bounding_box* when it comes time to
 /// graph *tag*.
 
-void Tag__bounding_box_update(Tag tag, BoundingBox *bounding_box) {
-    double x = tag->x;
-    double y = tag->y;
-    double half_diagonal = tag->world_diagonal / 2.0;
+void Tag::bounding_box_update(BoundingBox *bounding_box) {
+    double half_diagonal = world_diagonal / 2.0;
     bounding_box->update(x - half_diagonal , y - half_diagonal);
     bounding_box->update(x + half_diagonal , y + half_diagonal);
 }
@@ -45,11 +43,11 @@ void Tag__bounding_box_update(Tag tag, BoundingBox *bounding_box) {
 /// *Tag__compare*() will return -1 if *tag1* sorts before *tag2*, 0 if they
 /// are equal, and 1 if *tag1* sorts after *tag2*.
 
-int Tag__equal(Tag tag1, Tag tag2) {
+int Tag::equal(Tag *tag1, Tag *tag2) {
   return tag1->id == tag2->id;
 }
 
-bool Tag__less(Tag tag1, Tag tag2) {
+bool Tag::less(Tag *tag1, Tag *tag2) {
   return tag1->id < tag2->id;
 }
 
@@ -62,31 +60,20 @@ bool Tag__less(Tag tag1, Tag tag2) {
 /// of *id*.  This returned *Tag* is not *initialized* until *Tag__initialize*()
 /// is called.
 
-Tag Tag__create(unsigned int id, Map map) {
+Tag::Tag(unsigned int id, Map map) :
+    twist(0.0),
+    diagonal(0.0),
+    hop_count(0),
+    id(id),
+    initialized(false),
+    map(map),
+    visit(map->visit),
+    x(0.0), y(0.0), 
+    updated(true)
+{
     Tag_Height tag_height = Map__tag_height_lookup(map, id);
-    Tag tag =  Memory__new(Tag, "Tag__create");
-    tag->twist = (double)0.0;
-    tag->diagonal = 0.0;
-    tag->hop_count = 0;
-    tag->id = id;
-    tag->initialized = (bool)0;
-    tag->map = map;
-    tag->world_diagonal = tag_height->world_diagonal;
-    tag->visit = map->visit;
-    tag->x = (double)0.0;
-    tag->y = (double)0.0;
-    tag->z = tag_height->z;
-    tag->updated = (bool)1;
-    return tag;
-}
-
-/// @brief Releases *Tag* storage.
-/// @param tag to release storage of.
-///
-/// *Tag__free*() will release the storage of *tag*.
-
-void Tag__free(Tag tag) {
-    Memory__free((Memory)tag);
+    world_diagonal = tag_height->world_diagonal;
+    z = tag_height->z;
 }
 
 /// @brief Initialize *tag* contents.
@@ -104,14 +91,14 @@ void Tag__free(Tag tag) {
 /// light years, etc.)  *visit* is used for the tree walker.
 /// *diagonal* is in pixels.
 
-void Tag__initialize(
-  Tag tag, double twist, double x, double y, double diagonal, unsigned int visit) {
-    tag->diagonal = diagonal; 
-    tag->initialized = (bool)1;
-    tag->twist = twist;
-    tag->x = x;
-    tag->y = y;
-    tag->visit = visit;
+void Tag::initialize(double twist, double x, double y, double diagonal,
+    unsigned int visit) {
+    this->diagonal = diagonal; 
+    this->initialized = (bool)1;
+    this->twist = twist;
+    this->x = x;
+    this->y = y;
+    this->visit = visit;
 }
 
 /// @brief Read in an XML <Tag ...> from *in_file* using *map*.
@@ -122,7 +109,7 @@ void Tag__initialize(
 /// *Tag__read*() will read in an XML <Tag ...> from *in_file* using *map*
 /// for *Tag* assoiciations.  The resulting *Tag* is returned.
 
-Tag Tag__read(File in_file, Map map) {
+Tag * Tag::read(File in_file, Map map) {
     // Read in "<Tag .../>":
     File__tag_match(in_file, "Tag");
     unsigned int tag_id = (unsigned int)File__integer_attribute_read(in_file, "Id");
@@ -143,21 +130,12 @@ Tag Tag__read(File in_file, Map map) {
     Tag_Height tag_height = Map__tag_height_lookup(map, tag_id);
 
     // Load up *tag*:
-    Tag tag = Map__tag_lookup(map, tag_id);
-    Tag__initialize(tag, twist, x, y, diagonal, map->visit);
+    Tag * tag = Map__tag_lookup(map, tag_id);
+    tag->initialize(twist, x, y, diagonal, map->visit);
     tag->hop_count = hop_count;
     tag->z = tag_height->z;
 
     return tag;
-}
-
-/// @brief Sorts the contents of *tag*
-/// @param tag to sort.
-///
-/// *Tag__sort*() will cause the contents of *tag*.
-
-void Tag__sort(Tag tag) {
-    std::sort(tag->arcs_.begin(), tag->arcs_.end(), Arc__less);
 }
 
 /// @brief Writes *tag* out to *svg*.
@@ -167,18 +145,15 @@ void Tag__sort(Tag tag) {
 /// *Tag__svg_write*() will write *tag* out to *svg* in scalable vector
 /// graphics format.
 
-void Tag__svg_write(Tag tag, SVG svg) {
+void Tag::svg_write(SVG svg) {
   // Some constants:
     double pi = (double)3.14159265358979323846264;
     double half_pi = pi / 2.0;
     double quarter_pi = half_pi / 2.0;
 
     // Grab some values from *tag*:
-    unsigned int id = tag->id;
-    double half_diagonal = tag->world_diagonal / 2.0;
-    double x = tag->x;
-    double y = tag->y;
-    double twist = tag->twist - quarter_pi;
+    double half_diagonal = world_diagonal / 2.0;
+    double twist = this->twist - quarter_pi;
 
     // Compute the 4 corners:
     double x1 = x + half_diagonal * cos(twist);
@@ -203,7 +178,6 @@ void Tag__svg_write(Tag tag, SVG svg) {
     char id_text[20];
     (void)sprintf(id_text, "%d", id);
     SVG__text(svg, id_text, x, y, "ariel", 20);
-    //String__free(id_text);
 }
 
 
@@ -217,17 +191,17 @@ void Tag__svg_write(Tag tag, SVG svg) {
 /// the position and oritation of *tag*.  The position is computed using
 /// the "other" end of *arc*.
 
-void Tag__update_via_arc(
-  Tag tag, Arc arc, CV_Image image, unsigned int sequence_number) {
+void Tag::update_via_arc(Arc arc, CV_Image image,
+    unsigned int sequence_number) {
     // Some values to use for radian/degree conversion:
     double pi = (double)3.14159265358979323846264;
     double r2d = 180.0 / pi;
 
     // Read out *arc* contents:
-    Tag from_tag = arc->from_tag;
+    Tag * from_tag = arc->from_tag;
     double arc_from_twist = arc->from_twist;
     double distance = arc->distance;
-    Tag to_tag = arc->to_tag;
+    Tag * to_tag = arc->to_tag;
     double arc_to_twist = arc->to_twist;
 
     // For debugging:
@@ -237,23 +211,23 @@ void Tag__update_via_arc(
     //  distance, arc_from_twist * r2d, arc_to_twist * r2d);
 
     // Figure out whether *tag* is the *from* or *to* and conjugate if needed:
-    if (tag == from_tag) {
-	// Compute the conjugate of *Arc* (see Arc.h for conjugate discussion):
-	Tag temporary_tag = from_tag;
-	from_tag = to_tag;
-	to_tag = temporary_tag;
-	double temporary_twist = arc_from_twist;
-	arc_from_twist = arc_to_twist;
-	arc_to_twist = temporary_twist;
+    if (this == from_tag) {
+        // Compute the conjugate of *Arc* (see Arc.h for conjugate discussion):
+        Tag * temporary_tag = from_tag;
+        from_tag = to_tag;
+        to_tag = temporary_tag;
+        double temporary_twist = arc_from_twist;
+        arc_from_twist = arc_to_twist;
+        arc_to_twist = temporary_twist;
 
-	// For debugging show the conjucate:
-	//File__format(stderr,
-	//  "Tag__update_via_arc: Arc'[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
-	//  from_tag->id, from_tag->id,
-	//  distance, arc_from_twist * r2d, arc_to_twist * r2d);
+        // For debugging show the conjucate:
+        //File__format(stderr,
+        //  "Tag__update_via_arc: Arc'[%d, %d]: (d=%.4f, a=%.1f, t=%.1f)\n",
+        //  from_tag->id, from_tag->id,
+        //  distance, arc_from_twist * r2d, arc_to_twist * r2d);
     }
-    assert (tag == to_tag);
-    assert (tag != from_tag);
+    assert (this == to_tag);
+    assert (this != from_tag);
 
     // Grab the starting values from *from_tag*:
     double from_tag_twist = from_tag->twist;
@@ -272,15 +246,15 @@ void Tag__update_via_arc(
     // If *to_tag* values are to change
     if (to_tag->twist != to_tag_twist ||
       to_tag->x != to_tag_x || to_tag->y != to_tag_y) {
-	// Load new values into *to_tag*:
-	to_tag->twist = to_tag_twist;
-	to_tag->x = to_tag_x;
-	to_tag->y = to_tag_y;
+        // Load new values into *to_tag*:
+        to_tag->twist = to_tag_twist;
+        to_tag->x = to_tag_x;
+        to_tag->y = to_tag_y;
         to_tag->updated = (bool)1;
 
-	// Let any interested party know that tag values changed.
-	Map map = to_tag->map;
-	Map__tag_announce(map, to_tag, (bool)1, image, sequence_number);
+        // Let any interested party know that tag values changed.
+        Map map = to_tag->map;
+        Map__tag_announce(map, to_tag, (bool)1, image, sequence_number);
     }
 
     //File__format(stderr, "To_Tag[id:%d x:%.2f y:%.2f tw:%.4f] angle=%.4f\n",
@@ -293,20 +267,20 @@ void Tag__update_via_arc(
 ///
 /// *Tag__write*() will write *tag* out to *out_file* in XML format.
 
-void Tag__write(Tag tag, File out_file) {
+void Tag::write(File out_file) {
     // We store angles in degress and convert to/from radians.
     double pi = (double)3.14159265358979323846264;
     double radians_to_degrees = 180.0 / pi;
 
     // Write out "<Tag ... >":
     File__format(out_file, " <Tag");
-    File__format(out_file, " Id=\"%d\"", tag->id);
-    File__format(out_file, " Diagonal=\"%f\"", tag->diagonal);
+    File__format(out_file, " Id=\"%d\"", id);
+    File__format(out_file, " Diagonal=\"%f\"", diagonal);
     File__format(out_file,
-      " Twist=\"%f\"", tag->twist * radians_to_degrees);
-    File__format(out_file, " X=\"%f\"", tag->x);
-    File__format(out_file, " Y=\"%f\"", tag->y);
-    File__format(out_file, " Hop_Count=\"%d\"", tag->hop_count);
+      " Twist=\"%f\"", twist * radians_to_degrees);
+    File__format(out_file, " X=\"%f\"", x);
+    File__format(out_file, " Y=\"%f\"", y);
+    File__format(out_file, " Hop_Count=\"%d\"", hop_count);
     File__format(out_file, "/>\n");
 }
 
