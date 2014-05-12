@@ -20,21 +20,17 @@
 /// *Arc__compare*() will return -1 if *arc1* sorts before *arc2*,
 /// 0 if they are equal, and 1 if *arc1* sorts after *arc2*.
 
-int Arc__compare(Arc arc1, Arc arc2) {
-    int result = Tag__compare(arc1->from_tag, arc2->from_tag);
-    if (result == 0) {
-        result = Tag__compare(arc1->to_tag, arc2->to_tag);
-    }
-    return result;
+bool Arc__equal(Arc arc1, Arc arc2) {
+    return Tag__equal(arc1->from_tag, arc2->from_tag) && 
+      Tag__equal(arc1->to_tag, arc2->to_tag);
 }
 
 // return true if arc1 comees before arc2; else false
 bool Arc__less(Arc arc1, Arc arc2) {
-    int result = Tag__compare(arc1->from_tag, arc2->from_tag);
-    if( -1 == result ) {
+    if( Tag__less(arc1->from_tag, arc2->from_tag) ) {
       return true;
-    } else if( 0 == result ) {
-      return Tag__compare(arc1->to_tag, arc2->to_tag) == -1;
+    } else if( Tag__equal(arc1->from_tag, arc2->from_tag) ) {
+      return Tag__less(arc1->to_tag, arc2->to_tag);
     }
     return false;
 }
@@ -81,27 +77,6 @@ Arc Arc__create(Tag from_tag, Double from_twist,
     Map__arc_append(from_tag->map, arc);
 
     return arc;
-}
-
-/// @brief Return the distance sort order of *arc1* vs. *arc2*.
-/// @param arc1 is the first *Arc* object.
-/// @param arc2 is the second *Arc* object.
-/// @returns -1, 0, or 1 depending upon distance sort order.
-///
-/// *Arc__distance_compare*() will return -1 if the *arc1* distance is larger
-/// than the *arc2* distance, 0 if they are equal, and 1 otherwize.
-
-int Arc__distance_compare(Arc arc1, Arc arc2) {
-    int result = -Double__compare(arc1->distance, arc2->distance);
-    if (result == 0) {
-        Unsigned arc1_lowest_hop_count =
-          std::min(arc1->from_tag->hop_count, arc1->to_tag->hop_count);
-        Unsigned arc2_lowest_hop_count =
-          std::min(arc2->from_tag->hop_count, arc2->to_tag->hop_count);
-        result =
-          -Unsigned__compare(arc1_lowest_hop_count, arc2_lowest_hop_count);
-    }
-    return result;
 }
 
 /// @brief Return the distance sort order of *arc1* vs. *arc2*.

@@ -36,8 +36,6 @@ struct Camera_Tag__Struct {
 
 // *Camera_Tag* routines:
 
-extern int Camera_Tag__compare(
-  Camera_Tag camera_tag1, Camera_Tag camera_tag2);
 extern bool Camera_Tag__less(Camera_Tag camera_tag1, Camera_Tag camera_tag2);
 extern void Camera_Tag__free(Camera_Tag camera_tag);
 extern Camera_Tag Camera_Tag__new(void);

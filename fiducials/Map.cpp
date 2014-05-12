@@ -232,8 +232,6 @@ Unsigned Map__arc_update(Map map, Camera_Tag camera_from, Camera_Tag camera_to,
 /// equality.
 
 bool Map__equals(Map map1, Map map2) {
-    int result = 0;
-
     // First make sure all of the *Tag*'s match up:
     Unsigned all_tags1_size = map1->all_tags.size();
     Unsigned all_tags2_size = map2->all_tags.size();
@@ -242,8 +240,7 @@ bool Map__equals(Map map1, Map map2) {
         for (Unsigned index = 0; index < all_tags1_size; index++) {
             Tag tag1 = map1->all_tags[index];
             Tag tag2 = map2->all_tags[index];
-            result = Tag__compare(tag1, tag2);
-            if (result != 0) {
+            if (!Tag__equal(tag1, tag2)) {
               return false;
             }
         }
@@ -254,14 +251,12 @@ bool Map__equals(Map map1, Map map2) {
     // Second make sure all of the *Arc*'s match up:
     Unsigned all_arcs1_size = map1->all_arcs.size();
     Unsigned all_arcs2_size = map2->all_arcs.size();
-    result = Unsigned__compare(all_arcs1_size, all_arcs2_size);
-    if (result == 0) {
+    if (all_arcs1_size == all_arcs2_size) {
         // Visit each *Arc*:
         for (Unsigned index = 0; index < all_arcs1_size; index++) {
             Arc arc1 = map1->all_arcs[index];
             Arc arc2 = map2->all_arcs[index];
-            result = Arc__compare(arc1, arc2);
-            if (result != 0) {
+            if( !Arc__equal(arc1, arc2)) {
               return false;
             }
         }

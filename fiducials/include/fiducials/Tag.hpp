@@ -128,7 +128,7 @@ struct Tag_Height__Struct {
 extern void Tag__arc_append(Tag tag, Arc arc);
 extern void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box);
 extern Tag Tag__create(Unsigned id, Map map);
-extern int Tag__compare(Tag tag1, Tag tag2);
+extern int Tag__equal(Tag tag1, Tag tag2);
 extern bool Tag__less(Tag tag1, Tag tag2);
 extern void Tag__free(Tag tag);
 extern void Tag__initialize(
@@ -141,8 +141,6 @@ extern void Tag__update_via_arc(
   Tag tag, Arc arc, CV_Image image, Unsigned sequence_number);
 
 // *Tag_Height* routines:
-extern int Tag_Height__compare(
-  Tag_Height tag_height1, Tag_Height tag_height2);
 extern bool Tag_Height__less(Tag_Height tag_height1, Tag_Height tag_height2);
 extern void Tag_Height__free(Tag_Height tag_height);
 extern Tag_Height Tag_Height__xml_read(File in_file);

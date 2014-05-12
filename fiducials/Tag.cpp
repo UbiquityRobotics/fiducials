@@ -46,11 +46,8 @@ void Tag__bounding_box_update(Tag tag, Bounding_Box bounding_box) {
 /// *Tag__compare*() will return -1 if *tag1* sorts before *tag2*, 0 if they
 /// are equal, and 1 if *tag1* sorts after *tag2*.
 
-int Tag__compare(Tag tag1, Tag tag2) {
-    Unsigned id1 = tag1->id;
-    Unsigned id2 = tag2->id;
-    int result = Unsigned__compare(id1, id2);
-    return result;
+int Tag__equal(Tag tag1, Tag tag2) {
+  return tag1->id == tag2->id;
 }
 
 bool Tag__less(Tag tag1, Tag tag2) {
@@ -315,22 +312,6 @@ void Tag__write(Tag tag, File out_file) {
 }
 
 // *Tag_Height* routines:
-
-/// @brief Compares *tag_height1* with *tag_height2*.
-/// @param tag_height1 is the first *Tag_Height* object to compare.
-/// @param tag_height2 is the second *Tag_Height* object to compare.
-/// @returns -1, 0, or 1 depending upon the comparison.
-///
-/// *Tag_Height__compare*() will return -1 if *tag_height1* sorts before
-/// *tag_height2*, 0 if they are equal, and 1 otherwise.
-
-int Tag_Height__compare(Tag_Height tag_height1, Tag_Height tag_height2)
-{
-    int result =
-      Unsigned__compare(tag_height1->first_id, tag_height2->last_id);
-    assert (result != 0);
-    return result;
-}
 
 /// @brief Compares *tag_height1* with *tag_height2*.
 /// @param tag_height1 is the first *Tag_Height* object to compare.

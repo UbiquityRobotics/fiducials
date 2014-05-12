@@ -14,10 +14,6 @@
 /// *Camera_Tag__compare*() will return the -1 if *camera_tag1* is less
 /// than *camera_tag2*, 0 if they are equal, and 1 otherwise.
 
-int Camera_Tag__compare(Camera_Tag camera_tag1, Camera_Tag camera_tag2) {
-    return Tag__compare(camera_tag1->tag, camera_tag2->tag);
-}
-
 bool Camera_Tag__less(Camera_Tag camera_tag1, Camera_Tag camera_tag2) {
     return Tag__less(camera_tag1->tag, camera_tag2->tag);
 }
