@@ -9,7 +9,6 @@
 #include "File.hpp"
 #include "Fiducials.hpp"
 #include "High_GUI2.hpp"
-#include "List.hpp"
 #include "Map.hpp"
 #include "String.hpp"
 #include "Unsigned.hpp"
@@ -32,8 +31,7 @@ int main(int arguments_size, char *arguments[]) {
     assert (gettimeofday(start_time_value, (struct timezone *)0) == 0);
 
     bool image_log = (bool)0;
-    List /* <String> */ image_file_names =
-      List__new("Demo:main:List__new:image_file_names");
+    std::vector<String> image_file_names;
     String lens_calibrate_file_name = (String)0;
     String log_file_name = (String)0;
     //File__format(stdout, "Hello\n");
@@ -50,8 +48,7 @@ int main(int arguments_size, char *arguments[]) {
 	    } else if (size > 4 && String__equal(argument + size - 4, ".log")) {
 		log_file_name = argument;
 	    } else if (size > 4 && String__equal(argument + size - 4, ".pnm")) {
-		List__append(image_file_names,
-		  argument, "Demo:main:List__append:image_file_names");
+        image_file_names.push_back(argument);
 	    } else if (size > 4 && String__equal(argument + size - 4, ".chk")) {
 		// Do nothing:
 	    } else {
@@ -60,9 +57,9 @@ int main(int arguments_size, char *arguments[]) {
 	}
     }
 
-    Unsigned size = List__size(image_file_names);
+    Unsigned size = image_file_names.size();
     if (size > 0) {
-	String image_file_name0 = (String)List__fetch(image_file_names, 0);
+	String image_file_name0 = image_file_names[0];
 	CV_Image image = (CV_Image)0;
 	image = CV_Image__pnm_read(image_file_name0);
 	assert (image != (CV_Image)0);
@@ -85,8 +82,7 @@ int main(int arguments_size, char *arguments[]) {
 	fiducials->map->image_log = image_log;
 
 	for (Unsigned index = 0; index < size; index++) {
-	    String image_file_name = 
-	      (String)List__fetch(image_file_names, index);
+	    String image_file_name = image_file_names[index];
 	    image = CV_Image__pnm_read(image_file_name);
 	    Fiducials__image_set(fiducials, image);
 	    Fiducials__process(fiducials);
@@ -126,8 +122,6 @@ int main(int arguments_size, char *arguments[]) {
 	//fiducials->map->file_name = "Demo2.xml";
 	//Fiducials__free(fiducials);
     }
-
-    List__free(image_file_names);
 
     return 0;
 }
