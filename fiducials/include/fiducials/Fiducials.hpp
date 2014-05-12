@@ -93,7 +93,7 @@ struct Fiducials__Struct {
     CV_Size size_m1xm1;
     CV_Memory_Storage storage;
     Fiducials_Tag_Announce_Routine tag_announce_routine;
-    bool tag_bits[64];	// FIXME: Make this bool *tag_bits;
+    bool tag_bits[64];        // FIXME: Make this bool *tag_bits;
     CV_Image temporary_gray_image;
     CV_Term_Criteria term_criteria;
     Unsigned weights_index;

@@ -84,37 +84,37 @@
 // compute image camera location and twist there are three coordinate
 // systems to consider -- the floor, camera, and robot coordinate systems:
 //
-//    -	The floor coordinate system is a right handed cartesian
-//	coordinate system where one point on the floor is the
-//	origin.  The X and Y axes are separated by a 90 degree
-//	angle and X axis can be oriented to aligned with either a
-//	building feature or an east-west line of latitude or
-//	whatever the user chooses.  Conceptually, the floor is
-//	viewed from the top looking down.  As long as all length
-//	measurements are performed using the same units, the
-//	choice of length unit does not actually matter (e.g.
-//	meter, centimeter, millimeter, inch, foot, etc.)
+//    -        The floor coordinate system is a right handed cartesian
+//        coordinate system where one point on the floor is the
+//        origin.  The X and Y axes are separated by a 90 degree
+//        angle and X axis can be oriented to aligned with either a
+//        building feature or an east-west line of latitude or
+//        whatever the user chooses.  Conceptually, the floor is
+//        viewed from the top looking down.  As long as all length
+//        measurements are performed using the same units, the
+//        choice of length unit does not actually matter (e.g.
+//        meter, centimeter, millimeter, inch, foot, etc.)
 //
-//    -	The image coordinate system is another right handed cartesian
-//	coordinate system that is used to locate the individual
-//	pixels in the image.  The image is one of the common image
-//	format sizes (320 x 240, 640 x 480, etc.)  For this system,
-//	the origin is selected to be the lower left pixel of the
-//	image.  For 640 x 480 image, the lower left coordinate is
-//	(0, 0) and the upper right pixel coordinate is (639, 479).
+//    -        The image coordinate system is another right handed cartesian
+//        coordinate system that is used to locate the individual
+//        pixels in the image.  The image is one of the common image
+//        format sizes (320 x 240, 640 x 480, etc.)  For this system,
+//        the origin is selected to be the lower left pixel of the
+//        image.  For 640 x 480 image, the lower left coordinate is
+//        (0, 0) and the upper right pixel coordinate is (639, 479).
 //
-//	While most computer imaging packages (e.g. OpenCV) typically
+//        While most computer imaging packages (e.g. OpenCV) typically
 //      use a left-handed coordinate system where the origin is in
-//      the upper left,	we will apply a transformation that causes
+//      the upper left,        we will apply a transformation that causes
 //      the origin to be placed in the lower left.  All distances are
 //      measured in units of pixels.  The reason for using a right
 //      handed coordinate system is because trigonometric functions
 //      are implicitly right-handed.
 //
-//    -	The robot coordinate system is another right handed cartesian
-//	coordinate system where the origin is located in the center
-//	between the two drive wheels.  The X axis of the robot
-//	coordinate system goes through the front of the robot.
+//    -        The robot coordinate system is another right handed cartesian
+//        coordinate system where the origin is located in the center
+//        between the two drive wheels.  The X axis of the robot
+//        coordinate system goes through the front of the robot.
 //      Realistically, the robot coordinate system is not part
 //      of the algorithms, instead this coordinate system is called
 //      out just to point out that it is there.
@@ -131,15 +131,15 @@
 //
 // where:
 //
-//    mtid	(Map Tag IDentifier) is the tag identifier (a number between
+//    mtid        (Map Tag IDentifier) is the tag identifier (a number between
 //              0 and 2^16-1),
-//    mtx	(Map Tag X) is the x coordinate of the tag center in
+//    mtx        (Map Tag X) is the x coordinate of the tag center in
 //              floor coordinates,
-//    mty	(Map Tag Y) is the y coordinate of the tag center in
+//    mty        (Map Tag Y) is the y coordinate of the tag center in
 //              floor coordinates,
-//    mttw	(Map Tag TWist) is the angle (twist) of the bottom
+//    mttw        (Map Tag TWist) is the angle (twist) of the bottom
 //              tag edge and the floor X axis, and
-//    mtdiag	(Map Tag DIAGonal) is the length of a tag diagonal
+//    mtdiag        (Map Tag DIAGonal) is the length of a tag diagonal
 //              (both diagonals of a square have the same length) in
 //              in floor coordinates.
 //
@@ -165,16 +165,16 @@
 // For each tag in the image, the image processing algorithm
 // computes the following:
 //
-//	(camx, camy, camtw)
+//        (camx, camy, camtw)
 //
 // where:
 //
-//    camx	(CAMera X) is the camera center X coordinate in the
-//		floor coordinate system,
-//    camy	(CAMera Y) is the camera center Y coordinate in the
+//    camx        (CAMera X) is the camera center X coordinate in the
+//                floor coordinate system,
+//    camy        (CAMera Y) is the camera center Y coordinate in the
 //              floor coordinate system, and
-//    camtw	(CAMera TWist) is the angle (twist) of the rectangle bottom
-//		tag edge with respect to the floor coordinate system X axis.
+//    camtw        (CAMera TWist) is the angle (twist) of the rectangle bottom
+//                tag edge with respect to the floor coordinate system X axis.
 //
 // If there are multiple tags present in the image, there will be
 // multiple (camx, camy, camtw) triples computed.  These triples
@@ -191,7 +191,7 @@
 //
 //    (tid, tc0, tc1, tc2, tc3)
 //
-//    tid	(Tag IDentifier) is the tag identifier,
+//    tid        (Tag IDentifier) is the tag identifier,
 //    tc0       (Tag Corner 0) is actually (tc0x, tc0y) the location
 //              if the tag corner 0 in image coordinated,
 //    tc1       (Tag Corner 1) is actually (tc0x, tc0y) the location
@@ -234,13 +234,13 @@
 //
 // Using (tc0, tc1, tc2, tc3), we compute the following:
 //
-//    tagctrx	(TAG CenTeR X) is the tag center X coordinate in
+//    tagctrx        (TAG CenTeR X) is the tag center X coordinate in
 //              image coordinates,
-//    tagctry	(TAG CenTeR y) is the tag center X coordinate in
+//    tagctry        (TAG CenTeR y) is the tag center X coordinate in
 //              image coordinates,
-//    tagdiag	(TAG DIAGonal) is the average diagonal length in image
+//    tagdiag        (TAG DIAGonal) is the average diagonal length in image
 //              coordinates,
-//    tagtw	(TAG TWist) is the angle of the lower tag edge with
+//    tagtw        (TAG TWist) is the angle of the lower tag edge with
 //              respect to the image coordinate X axis.
 //
 // These values are computed as follows:
@@ -254,13 +254,13 @@
 //
 // The image center is defined as:
 //
-//	(imgctrx, imgctry)
+//        (imgctrx, imgctry)
 //
 // where
 //
-//    imgctrx	(IMG CenTeR X) is the image center X coordinate in image
+//    imgctrx        (IMG CenTeR X) is the image center X coordinate in image
 //              coordinates, and
-//    imgctry	(IMG CenTeR Y) is the image center Y coordinate in image
+//    imgctry        (IMG CenTeR Y) is the image center Y coordinate in image
 //              coordinates.
 //
 // for an image that is 640 x 480, the image center is (320, 240).
@@ -268,7 +268,7 @@
 //
 // Using the image center the following values are computed:
 //
-//    tagdist	   (TAG DISTance) is the distance from the tag center to
+//    tagdist           (TAG DISTance) is the distance from the tag center to
 //                 image center in image coordinates, and
 //    tagbear      (TAG BEARing) is the angle from the tag center to the
 //                 image center in image coordinates.
@@ -289,10 +289,10 @@
 // Now we need to compute to angles that are measured relative to the
 // floor X axis:
 //
-//    camtw	(CAMera TWist) is the direction that the camera X axis points
-//		relative to the floor X Axis, and
-//    cambear	(CAMera BEARing) is the direction to the camera center relative
-//		to the floor X Axis.
+//    camtw        (CAMera TWist) is the direction that the camera X axis points
+//                relative to the floor X Axis, and
+//    cambear        (CAMera BEARing) is the direction to the camera center relative
+//                to the floor X Axis.
 //
 // camtw and cambear are computed as:
 //
@@ -316,11 +316,11 @@
 //
 // where
 //
-//    rx	(Robot X) is the X coordinate of the robot center in
+//    rx        (Robot X) is the X coordinate of the robot center in
 //              floor coordinates,
-//    ry	(Robot Y) is the Y coordinate of the robot center in
+//    ry        (Robot Y) is the Y coordinate of the robot center in
 //              floor coordinates, and
-//    rbear	(Robot BEARing) is the bearing angle of the robot X axis
+//    rbear        (Robot BEARing) is the bearing angle of the robot X axis
 //              to the floor coordinate X axis.
 //
 // These values are computed as a function:
@@ -329,9 +329,9 @@
 //
 // There are two constants needed to do this computation:
 //
-//    robdist	(ROBot DISTance) is the distance from the camera
+//    robdist        (ROBot DISTance) is the distance from the camera
 //              center to the robot center in floor coordinates, and
-//    robcamtw	(ROBot CAMera TWist) is the angle from the angle from
+//    robcamtw        (ROBot CAMera TWist) is the angle from the angle from
 //              camera X axis to the robot X axis.
 //
 // Both robdist and robcamtw are constants that can be directly measured
@@ -355,9 +355,9 @@
 //
 // where
 //
-//    ex	(Encoder X) is the robot X coordinate in floor coordinates,
-//    ey	(Encoder Y) is the robot Y coordinate in floor coordinates, and
-//    etw	(Encoder TWist) is the robot X axis twist relative to the
+//    ex        (Encoder X) is the robot X coordinate in floor coordinates,
+//    ey        (Encoder Y) is the robot Y coordinate in floor coordinates, and
+//    etw        (Encoder TWist) is the robot X axis twist relative to the
 //              floor coordinate X axis.
 //
 // (rx, ry, rtw) and (ex, ey, etw) are supposed to be the same.  Over
@@ -371,21 +371,21 @@
 // What remains is to do the transformations that place the tags
 // on the ceiling.  There are three transformations.
 //
-//    tags lift		The tags are lifted straight up from the floor
-//			to the ceiling.  The person looking on down
-//			from above would see no changes in tag position
-//			or orientation (ignoring parallax issues.)
+//    tags lift                The tags are lifted straight up from the floor
+//                        to the ceiling.  The person looking on down
+//                        from above would see no changes in tag position
+//                        or orientation (ignoring parallax issues.)
 //
-//    camera flip	The camera is rotated 180 degrees around the
-//			camera X axis.  The causes the Y axis to change
-//			its sign.
+//    camera flip        The camera is rotated 180 degrees around the
+//                        camera X axis.  The causes the Y axis to change
+//                        its sign.
 //
-//    image framing	For historical reasons, the camera image API
-//			provides the camera image with the image origin
-//			in upper left hand corner, whereas the all of
-//			the math above assumes that image origin is
-//			in the lower left corner.  It turns out this
-//			is just changes the Y axis sign again.
+//    image framing        For historical reasons, the camera image API
+//                        provides the camera image with the image origin
+//                        in upper left hand corner, whereas the all of
+//                        the math above assumes that image origin is
+//                        in the lower left corner.  It turns out this
+//                        is just changes the Y axis sign again.
 //
 // The bottom line is that the "camera flip" and the "image framing"
 // transformation cancel one another out.  Thus, the there is no
@@ -511,7 +511,7 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
     // Create the window we need:
     String window_name = "Example1";
     if (show) {
-	CV__named_window(window_name, CV__window_auto_size);
+        CV__named_window(window_name, CV__window_auto_size);
     }
 
     // Processing *original_image* with different options
@@ -520,79 +520,79 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
     Unsigned previous_debug_index = debug_index;
     bool done = (bool)0;
     while (!done) {
-	// Process {gray_image}; a debug image lands in {debug_image}:
-	Fiducials__process(fiducials);
+        // Process {gray_image}; a debug image lands in {debug_image}:
+        Fiducials__process(fiducials);
 
-	// Display either *original_image* or *debug_image*:
-	if (show) {
-	    CV_Image__show(debug_image, window_name);
-	}
+        // Display either *original_image* or *debug_image*:
+        if (show) {
+            CV_Image__show(debug_image, window_name);
+        }
 
-	// Get a *control_character* from the user:
-	char control_character = '\0';
-	if (show) {
-	    control_character = (char)(CV__wait_key(0) & 0xff);
-	}
+        // Get a *control_character* from the user:
+        char control_character = '\0';
+        if (show) {
+            control_character = (char)(CV__wait_key(0) & 0xff);
+        }
 
-	// Dispatch on *control_character*:
-	switch (control_character) {
-	  case '\33':
-	    //# Exit program:
-	    done = (bool)1;
-	    File__format(stderr, "done\n");
-	    break;
-	  case '+':
-	    //# Increment {debug_index}:
-	    debug_index += 1;
-	    break;
-	  case '-':
-	    // Decrement {debug_index}:
-	    if (debug_index > 0) {
-		debug_index -= 1;
-	    }
-	    break;
-	  case '<':
-	    // Set {debug_index} to beginning:
-	    debug_index = 0;
-	    break;
-	  case '>':
-	    // Set {debug_index} to end:
-	    debug_index = 100;
-	    break;
-	  case 'b':
-	    // Toggle image blur:
-	    fiducials->blur = !fiducials->blur;
-	    File__format(stderr, "blur = %d\n", fiducials->blur);
-	    break;
-	  case 'f':
-	    // Toggle image blur:
-	    fiducials->y_flip = !fiducials->y_flip;
-	    File__format(stderr, "y_flip = %d\n", fiducials->y_flip);
-	    break;
-	  default:
-	    // Deal with unknown {control_character}:
-	    if ((Unsigned)control_character <= 127) {
-		File__format(stderr,
-		  "Unknown control character %d\n", control_character);
-	    }
-	    break;
-	}
+        // Dispatch on *control_character*:
+        switch (control_character) {
+          case '\33':
+            //# Exit program:
+            done = (bool)1;
+            File__format(stderr, "done\n");
+            break;
+          case '+':
+            //# Increment {debug_index}:
+            debug_index += 1;
+            break;
+          case '-':
+            // Decrement {debug_index}:
+            if (debug_index > 0) {
+                debug_index -= 1;
+            }
+            break;
+          case '<':
+            // Set {debug_index} to beginning:
+            debug_index = 0;
+            break;
+          case '>':
+            // Set {debug_index} to end:
+            debug_index = 100;
+            break;
+          case 'b':
+            // Toggle image blur:
+            fiducials->blur = !fiducials->blur;
+            File__format(stderr, "blur = %d\n", fiducials->blur);
+            break;
+          case 'f':
+            // Toggle image blur:
+            fiducials->y_flip = !fiducials->y_flip;
+            File__format(stderr, "y_flip = %d\n", fiducials->y_flip);
+            break;
+          default:
+            // Deal with unknown {control_character}:
+            if ((Unsigned)control_character <= 127) {
+                File__format(stderr,
+                  "Unknown control character %d\n", control_character);
+            }
+            break;
+        }
 
-	// Update *debug_index* in *fiducials*:
-	fiducials->debug_index = debug_index;
+        // Update *debug_index* in *fiducials*:
+        fiducials->debug_index = debug_index;
 
-	// Show user *debug_index* if it has changed:
-	if (debug_index != previous_debug_index) {
-	  File__format(stderr,
-	    "****************************debug_index = %d\n", debug_index);
-	  previous_debug_index = debug_index;
-	}
+        // Show user *debug_index* if it has changed:
+        if (debug_index != previous_debug_index) {
+          File__format(stderr,
+            "****************************debug_index = %d\n", debug_index);
+          previous_debug_index = debug_index;
+        }
     }
 
     // Release storage:
     CV__release_image(original_image);
     if (show) {
-	CV__destroy_window(window_name);
+        CV__destroy_window(window_name);
     }
 }
 
@@ -638,10 +638,10 @@ Fiducials Fiducials__create(
     // Get *log_file* open if *log_file_name* is not null:
     File log_file = stderr;
     if (log_file_name != (String_Const)0) {
-	String full_log_file_name =
-	  String__format("%s/%s", fiducials_path, log_file_name);
-	log_file = File__open(log_file_name, "w");
-	String__free(full_log_file_name);
+        String full_log_file_name =
+          String__format("%s/%s", fiducials_path, log_file_name);
+        log_file = File__open(log_file_name, "w");
+        String__free(full_log_file_name);
     }
     File__format(log_file, "CV width=%d CV height = %d\n", width, height);
 
@@ -652,131 +652,131 @@ Fiducials Fiducials__create(
     // memory rather than on the stack:
 
     static bool north_mapping[64] = {
-	//corner1	      corner0
-	 0,  1,  2,  3,  4,  5,  6,  7,
-	 8,  9, 10, 11, 12, 13, 14, 15,
-	16, 17, 18, 19, 20, 21, 22, 23,
-	24, 25, 26, 27, 28, 29, 30, 31,
-	32, 33, 34, 35, 36, 37, 38, 39,
-	40, 41, 42, 43, 44, 45, 46, 47,
-	48, 49, 50, 51, 52, 53, 54, 55,
-	56, 57, 58, 59, 60, 61, 62, 63,
-	//corner2	      corner3
+        //corner1              corner0
+         0,  1,  2,  3,  4,  5,  6,  7,
+         8,  9, 10, 11, 12, 13, 14, 15,
+        16, 17, 18, 19, 20, 21, 22, 23,
+        24, 25, 26, 27, 28, 29, 30, 31,
+        32, 33, 34, 35, 36, 37, 38, 39,
+        40, 41, 42, 43, 44, 45, 46, 47,
+        48, 49, 50, 51, 52, 53, 54, 55,
+        56, 57, 58, 59, 60, 61, 62, 63,
+        //corner2              corner3
     };
 
     static bool west_mapping[64] = {
-	//corner1	      corner0
-	 7, 15, 23, 31, 39, 47, 55, 63,
-	 6, 14, 22, 30, 38, 46, 54, 62,
-	 5, 13, 21, 29, 37, 45, 53, 61,
-	 4, 12, 20, 28, 36, 44, 52, 60,
-	 3, 11, 19, 27, 35, 43, 51, 59,
-	 2, 10, 18, 26, 34, 42, 50, 58,
-	 1,  9, 17, 25, 33, 41, 49, 57,
-	 0,  8, 16, 24, 32, 40, 48, 56,
-	//corner2	      corner3
+        //corner1              corner0
+         7, 15, 23, 31, 39, 47, 55, 63,
+         6, 14, 22, 30, 38, 46, 54, 62,
+         5, 13, 21, 29, 37, 45, 53, 61,
+         4, 12, 20, 28, 36, 44, 52, 60,
+         3, 11, 19, 27, 35, 43, 51, 59,
+         2, 10, 18, 26, 34, 42, 50, 58,
+         1,  9, 17, 25, 33, 41, 49, 57,
+         0,  8, 16, 24, 32, 40, 48, 56,
+        //corner2              corner3
     };
 
     static bool south_mapping[64] = {
-	//corner1	      corner0
-	63, 62, 61, 60, 59, 58, 57, 56,
-	55, 54, 53, 52, 51, 50, 49, 48,
-	47, 46, 45, 44, 43, 42, 41, 40,
-	39, 38, 37, 36, 35, 34, 33, 32,
-	31, 30, 29, 28, 27, 26, 25, 24,
-	23, 22, 21, 20, 19, 18, 17, 16,
-	15, 14, 13, 12, 11, 10,  9,  8,
-	 7,  6,  5,  4,  3,  2,  1,  0,
-	//corner2	      corner3
+        //corner1              corner0
+        63, 62, 61, 60, 59, 58, 57, 56,
+        55, 54, 53, 52, 51, 50, 49, 48,
+        47, 46, 45, 44, 43, 42, 41, 40,
+        39, 38, 37, 36, 35, 34, 33, 32,
+        31, 30, 29, 28, 27, 26, 25, 24,
+        23, 22, 21, 20, 19, 18, 17, 16,
+        15, 14, 13, 12, 11, 10,  9,  8,
+         7,  6,  5,  4,  3,  2,  1,  0,
+        //corner2              corner3
     };
 
     static bool east_mapping[64] = {
-	//corner1	      corner0
-	56, 48, 40, 32, 24, 16,  8,  0,
-	57, 49, 41, 33, 25, 17,  9,  1,
-	58, 50, 42, 34, 26, 18, 10,  2,
-	59, 51, 43, 35, 27, 19, 11,  3,
-	60, 52, 44, 36, 28, 20, 12,  4,
-	61, 53, 45, 37, 29, 21, 13,  5,
-	62, 54, 46, 38, 30, 22, 14,  6,
-	63, 55, 47, 39, 31, 23, 15,  7,
-	//corner2	      corner3
+        //corner1              corner0
+        56, 48, 40, 32, 24, 16,  8,  0,
+        57, 49, 41, 33, 25, 17,  9,  1,
+        58, 50, 42, 34, 26, 18, 10,  2,
+        59, 51, 43, 35, 27, 19, 11,  3,
+        60, 52, 44, 36, 28, 20, 12,  4,
+        61, 53, 45, 37, 29, 21, 13,  5,
+        62, 54, 46, 38, 30, 22, 14,  6,
+        63, 55, 47, 39, 31, 23, 15,  7,
+        //corner2              corner3
     };
 
     static bool north_mapping_flipped[64] = {
-	//corner1	      corner0
-	 7,  6,  5,  4,  3,  2,  1,  0,
-	15, 14, 13, 12, 11, 10,  9,  8,
-	23, 22, 21, 20, 19, 18, 17, 16,
-	31, 30, 29, 28, 27, 26, 25, 24,
-	39, 38, 37, 36, 35, 34, 33, 32,
-	47, 46, 45, 44, 43, 42, 41, 40,
-	55, 54, 53, 52, 51, 50, 49, 48,
-	63, 62, 61, 60, 59, 58, 57, 56,
-	 //corner2	      corner3
+        //corner1              corner0
+         7,  6,  5,  4,  3,  2,  1,  0,
+        15, 14, 13, 12, 11, 10,  9,  8,
+        23, 22, 21, 20, 19, 18, 17, 16,
+        31, 30, 29, 28, 27, 26, 25, 24,
+        39, 38, 37, 36, 35, 34, 33, 32,
+        47, 46, 45, 44, 43, 42, 41, 40,
+        55, 54, 53, 52, 51, 50, 49, 48,
+        63, 62, 61, 60, 59, 58, 57, 56,
+         //corner2              corner3
     };
 
     static bool west_mapping_flipped[64] = {
-	//corner1	      corner0
-	63, 55, 47, 39, 31, 23, 15, 7,
-	62, 54, 46, 38, 30, 22, 14, 6,
-	61, 53, 45, 37, 29, 21, 13, 5,
-	60, 52, 44, 36, 28, 20, 12, 4,
-	59, 51, 43, 35, 27, 19, 11, 3,
-	58, 50, 42, 34, 26, 18, 10, 2,
-	57, 49, 41, 33, 25, 17,  9, 1,
-	56, 48, 40, 32, 24, 16,  8, 0,
-	//corner2	      corner3
+        //corner1              corner0
+        63, 55, 47, 39, 31, 23, 15, 7,
+        62, 54, 46, 38, 30, 22, 14, 6,
+        61, 53, 45, 37, 29, 21, 13, 5,
+        60, 52, 44, 36, 28, 20, 12, 4,
+        59, 51, 43, 35, 27, 19, 11, 3,
+        58, 50, 42, 34, 26, 18, 10, 2,
+        57, 49, 41, 33, 25, 17,  9, 1,
+        56, 48, 40, 32, 24, 16,  8, 0,
+        //corner2              corner3
     };
 
     static bool south_mapping_flipped[64] = {
-	//corner1	      corner0
-	56, 57, 58, 59, 60, 61, 62, 63, 
-	48, 49, 50, 51, 52, 53, 54, 55,
-	40, 41, 42, 43, 44, 45, 46, 47,
-	32, 33, 34, 35, 36, 37, 38, 39,
-	24, 25, 26, 27, 28, 29, 30, 31,
-	16, 17, 18, 19, 20, 21, 22, 23,
-	 8,  9, 10, 11, 12, 13, 14, 15, 
-	 0,  1,  2,  3,  4,  5,  6,  7,
-	//corner2	      corner3
+        //corner1              corner0
+        56, 57, 58, 59, 60, 61, 62, 63, 
+        48, 49, 50, 51, 52, 53, 54, 55,
+        40, 41, 42, 43, 44, 45, 46, 47,
+        32, 33, 34, 35, 36, 37, 38, 39,
+        24, 25, 26, 27, 28, 29, 30, 31,
+        16, 17, 18, 19, 20, 21, 22, 23,
+         8,  9, 10, 11, 12, 13, 14, 15, 
+         0,  1,  2,  3,  4,  5,  6,  7,
+        //corner2              corner3
     };
 
     static bool east_mapping_flipped[64] = {
-	//corner1	      corner0
-	 0,  8, 16, 24, 32, 40, 48, 56,
-	 1,  9, 17, 25, 33, 41, 49, 57,
-	 2, 10, 18, 26, 34, 42, 50, 58,
-	 3, 11, 19, 27, 35, 43, 51, 59,
-	 4, 13, 20, 28, 36, 44, 52, 60,
-	 5, 13, 21, 29, 37, 45, 53, 61,
-	 6, 14, 22, 30, 38, 46, 54, 62,
-	 7, 15, 23, 31, 39, 47, 55, 63,
-	 //corner2	      corner3
+        //corner1              corner0
+         0,  8, 16, 24, 32, 40, 48, 56,
+         1,  9, 17, 25, 33, 41, 49, 57,
+         2, 10, 18, 26, 34, 42, 50, 58,
+         3, 11, 19, 27, 35, 43, 51, 59,
+         4, 13, 20, 28, 36, 44, 52, 60,
+         5, 13, 21, 29, 37, 45, 53, 61,
+         6, 14, 22, 30, 38, 46, 54, 62,
+         7, 15, 23, 31, 39, 47, 55, 63,
+         //corner2              corner3
     };
 
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
 
     static bool *mappings[4] = {
-	&north_mapping_flipped[0],
-	&west_mapping_flipped[0],
-	&south_mapping_flipped[0],
-	&east_mapping_flipped[0],
+        &north_mapping_flipped[0],
+        &west_mapping_flipped[0],
+        &south_mapping_flipped[0],
+        &east_mapping_flipped[0],
     };
 
     //for (Unsigned index = 0; index < 4; index++) {
-    //	File__format(log_file, "mappings[%d]=0x%x\n", index, mappings[index]);
+    //        File__format(log_file, "mappings[%d]=0x%x\n", index, mappings[index]);
     //}
 
     CV_Image map_x = (CV_Image)0;
     CV_Image map_y = (CV_Image)0;
     if (lens_calibrate_file_name != (String)0) {
-	String full_lens_calibrate_file_name =
-	  String__format("%s/%s", fiducials_path, lens_calibrate_file_name);
-	assert (CV__undistortion_setup(
-	  full_lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
-	String__free(full_lens_calibrate_file_name);
+        String full_lens_calibrate_file_name =
+          String__format("%s/%s", fiducials_path, lens_calibrate_file_name);
+        assert (CV__undistortion_setup(
+          full_lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
+        String__free(full_lens_calibrate_file_name);
     }
 
     // Create the *map*:
@@ -872,24 +872,24 @@ void Fiducials__free(Fiducials fiducials) {
     List /* <Location> */ locations = fiducials->locations;
     Unsigned locations_size = List__size(locations);
     for (Unsigned index = 0; index < locations_size; index++) {
-	Location location = (Location)List__fetch(locations, index);
-	// Kludge: memory double free?!!!
-	//Location__free(location);
+        Location location = (Location)List__fetch(locations, index);
+        // Kludge: memory double free?!!!
+        //Location__free(location);
     }
 
     List /* <Location> */ locations_path = fiducials->locations_path;
     Unsigned locations_path_size = List__size(locations_path);
     for (Unsigned index = 0; index < locations_path_size; index++) {
-	Location location = List__fetch(locations_path, index);
-	// Kludge: memory double free?!!!
-	//Location__free(location);
+        Location location = List__fetch(locations_path, index);
+        // Kludge: memory double free?!!!
+        //Location__free(location);
     }
 
     // Free up the storage associated with *camera_tags_pool*:
     Unsigned pool_size = fiducials->camera_tags_pool.size();
     for (Unsigned index = 0; index < pool_size; index++) {
-	Camera_Tag camera_tag = fiducials->camera_tags_pool[index];
-	Camera_Tag__free(camera_tag);
+        Camera_Tag camera_tag = fiducials->camera_tags_pool[index];
+        Camera_Tag__free(camera_tag);
     }
 
     // Free up the *List*'s:
@@ -946,7 +946,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
     // For *debug_level* 0, we show the original image in color:
     if (debug_index == 0) {
-	CV_Image__copy(original_image, debug_image, (CV_Image)0);
+        CV_Image__copy(original_image, debug_image, (CV_Image)0);
     }
 
     // Convert from color to gray scale:
@@ -954,53 +954,53 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
     // Deal with *debug_index* 0:
     if (debug_index == 0) {
-	if (channels == 3) {
-	    // Original image is color, so a simple copy will work:
-	    CV_Image__copy(original_image, debug_image, (CV_Image)0);
-	} else if (channels == 1) {
-	    // Original image is gray, so we have to convert back to "color":
-	    CV_Image__convert_color(original_image,
-	      debug_image, CV__gray_to_rgb);
-	}
+        if (channels == 3) {
+            // Original image is color, so a simple copy will work:
+            CV_Image__copy(original_image, debug_image, (CV_Image)0);
+        } else if (channels == 1) {
+            // Original image is gray, so we have to convert back to "color":
+            CV_Image__convert_color(original_image,
+              debug_image, CV__gray_to_rgb);
+        }
     }
 
     // Convert *original_image* to gray scale:
     if (channels == 3) {
-	// Original image is color, so we need to convert to gray scale:
-	CV_Image__convert_color(original_image, gray_image, CV__rgb_to_gray);
+        // Original image is color, so we need to convert to gray scale:
+        CV_Image__convert_color(original_image, gray_image, CV__rgb_to_gray);
     } else if (channels == 1) {
-	// Original image is gray, so a simple copy will work:
-	CV_Image__copy(original_image, gray_image, (CV_Image)0);
+        // Original image is gray, so a simple copy will work:
+        CV_Image__copy(original_image, gray_image, (CV_Image)0);
     } else {
-	assert(0);
+        assert(0);
     }
 
     // Show results of gray scale converion for *debug_index* 1:
     if (debug_index == 1) {
-	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
+        CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
     }
     
     // Preform undistort if available:
     if (fiducials->map_x != (CV_Image)0) {
-	int flags = CV_INTER_NN | CV_WARP_FILL_OUTLIERS;
-	CV_Image__copy(gray_image, temporary_gray_image, (CV_Image)0);
-	CV_Image__remap(temporary_gray_image, gray_image,
-	  fiducials->map_x, fiducials->map_y, flags, fiducials->black);
+        int flags = CV_INTER_NN | CV_WARP_FILL_OUTLIERS;
+        CV_Image__copy(gray_image, temporary_gray_image, (CV_Image)0);
+        CV_Image__remap(temporary_gray_image, gray_image,
+          fiducials->map_x, fiducials->map_y, flags, fiducials->black);
     }
 
     // Show results of undistort:
     if (debug_index == 2) {
-	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
+        CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
     }
 
     // Perform Gaussian blur if requested:
     if (fiducials->blur) {
-	CV_Image__smooth(gray_image, gray_image, CV__gaussian, 3, 0, 0.0, 0.0);
+        CV_Image__smooth(gray_image, gray_image, CV__gaussian, 3, 0, 0.0, 0.0);
     }
 
     // Show results of Gaussian blur for *debug_index* 2:
     if (debug_index == 3) {
-	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
+        CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
     }
 
     // Perform adpative threshold:
@@ -1009,7 +1009,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
     // Show results of adaptive threshold for *debug_index* 3:
     if (debug_index == 4) {
-	CV_Image__convert_color(edge_image, debug_image, CV__gray_to_rgb);
+        CV_Image__convert_color(edge_image, debug_image, CV__gray_to_rgb);
     }
 
     // Find the *edge_image* *contours*:
@@ -1018,21 +1018,21 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     CV_Sequence contours = CV_Image__find_contours(edge_image, storage,
       header_size, CV__retr_list, CV__chain_approx_simple, origin);
     if (contours == (CV_Sequence)0) {
-	File__format(log_file, "no contours found\n");
+        File__format(log_file, "no contours found\n");
     }
 
     // For *debug_index* 4, show the *edge_image* *contours*:
     if (debug_index == 5) {
-	//File__format(log_file, "Draw red contours\n");
-	CV_Scalar red = fiducials->red;
-	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
-	CV_Image__draw_contours(debug_image,
-	  contours, red, red, 2, 2, 8, origin);
+        //File__format(log_file, "Draw red contours\n");
+        CV_Scalar red = fiducials->red;
+        CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
+        CV_Image__draw_contours(debug_image,
+          contours, red, red, 2, 2, 8, origin);
     }
 
     // For the remaining debug steps, we use the original *gray_image*:
     if (debug_index >= 5) {
-	CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
+        CV_Image__convert_color(gray_image, debug_image, CV__gray_to_rgb);
     }
 
     // Iterate over all of the *contours*:
@@ -1040,321 +1040,321 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     Unsigned contours_count = 0;
     for (CV_Sequence contour = contours; contour != (CV_Sequence)0;
       contour = CV_Sequence__next_get(contour)) {
-	// Keep a count of total countours:
-	contours_count += 1;
-	//File__format(log_file, "contours_count=%d\n", contours_count);
+        // Keep a count of total countours:
+        contours_count += 1;
+        //File__format(log_file, "contours_count=%d\n", contours_count);
 
-	static CvSlice whole_sequence;
-	CV_Slice CV__whole_seq = &whole_sequence;
-	whole_sequence = CV_WHOLE_SEQ;
+        static CvSlice whole_sequence;
+        CV_Slice CV__whole_seq = &whole_sequence;
+        whole_sequence = CV_WHOLE_SEQ;
 
-	// Perform a polygon approximation of {contour}:
-	int arc_length =
-	  (int)(CV_Sequence__arc_length(contour, CV__whole_seq, 1) * 0.02);
-	CV_Sequence polygon_contour =
-	  CV_Sequence__approximate_polygon(contour,
-	  header_size, storage, CV__poly_approx_dp, arc_length, 0.0);
-	if (debug_index == 6) {
-	    //File__format(log_file, "Draw green contours\n");
-	    CV_Scalar green = fiducials->green;
-	    CV_Image__draw_contours(debug_image,
-	      polygon_contour, green, green, 2, 2, 1, origin);
-	}
+        // Perform a polygon approximation of {contour}:
+        int arc_length =
+          (int)(CV_Sequence__arc_length(contour, CV__whole_seq, 1) * 0.02);
+        CV_Sequence polygon_contour =
+          CV_Sequence__approximate_polygon(contour,
+          header_size, storage, CV__poly_approx_dp, arc_length, 0.0);
+        if (debug_index == 6) {
+            //File__format(log_file, "Draw green contours\n");
+            CV_Scalar green = fiducials->green;
+            CV_Image__draw_contours(debug_image,
+              polygon_contour, green, green, 2, 2, 1, origin);
+        }
 
-	// If we have a 4-sided polygon with an area greater than 500 square
-	// pixels, we can explore to see if we have a tag:
-	if (CV_Sequence__total_get(polygon_contour) == 4 &&
-	  fabs(CV_Sequence__contour_area(polygon_contour,
-	  CV__whole_seq, 0)) > 500.0 &&
-	  CV_Sequence__check_contour_convexity(polygon_contour)) {
-	    // For debugging, display the polygons in red:
-	    //File__format(log_file, "Have 4 sides > 500i\n");
+        // If we have a 4-sided polygon with an area greater than 500 square
+        // pixels, we can explore to see if we have a tag:
+        if (CV_Sequence__total_get(polygon_contour) == 4 &&
+          fabs(CV_Sequence__contour_area(polygon_contour,
+          CV__whole_seq, 0)) > 500.0 &&
+          CV_Sequence__check_contour_convexity(polygon_contour)) {
+            // For debugging, display the polygons in red:
+            //File__format(log_file, "Have 4 sides > 500i\n");
 
-	    // Just show the fiducial outlines for *debug_index* of 6:
-	    if (debug_index == 7) {
-		CV_Scalar red = fiducials->red;
-		CV_Image__draw_contours(debug_image,
-		  polygon_contour, red, red, 2, 2, 1, origin);
-	    }
+            // Just show the fiducial outlines for *debug_index* of 6:
+            if (debug_index == 7) {
+                CV_Scalar red = fiducials->red;
+                CV_Image__draw_contours(debug_image,
+                  polygon_contour, red, red, 2, 2, 1, origin);
+            }
 
-	    // Copy the 4 corners from {poly_contour} to {corners}:
-	    CV_Point2D32F_Vector corners = fiducials->corners;
-	    for (Unsigned index = 0; index < 4; index++) {
-		CV_Point2D32F corner =
-		  CV_Point2D32F_Vector__fetch1(corners, index);
-		CV_Point point =
-		  CV_Sequence__point_fetch1(polygon_contour, index);
-		CV_Point2D32F__point_set(corner, point);
+            // Copy the 4 corners from {poly_contour} to {corners}:
+            CV_Point2D32F_Vector corners = fiducials->corners;
+            for (Unsigned index = 0; index < 4; index++) {
+                CV_Point2D32F corner =
+                  CV_Point2D32F_Vector__fetch1(corners, index);
+                CV_Point point =
+                  CV_Sequence__point_fetch1(polygon_contour, index);
+                CV_Point2D32F__point_set(corner, point);
 
-		if (debug_index == 7) {
-		    //File__format(log_file,
-		    //  "point[%d] x:%f y:%f\n", index, point->x, point->y);
-		}
-	    }
+                if (debug_index == 7) {
+                    //File__format(log_file,
+                    //  "point[%d] x:%f y:%f\n", index, point->x, point->y);
+                }
+            }
 
-	    // Now find the sub pixel corners of {corners}:
-	    CV_Image__find_corner_sub_pix(gray_image, corners, 4,
-	      fiducials->size_5x5, fiducials->size_m1xm1,
-	      fiducials->term_criteria);
+            // Now find the sub pixel corners of {corners}:
+            CV_Image__find_corner_sub_pix(gray_image, corners, 4,
+              fiducials->size_5x5, fiducials->size_m1xm1,
+              fiducials->term_criteria);
 
-	    // Ensure that the corners are in a counter_clockwise direction:
-	    CV_Point2D32F_Vector__corners_normalize(corners);
+            // Ensure that the corners are in a counter_clockwise direction:
+            CV_Point2D32F_Vector__corners_normalize(corners);
 
-	    // For debugging show the 4 corners of the possible tag where
-	    //corner0=red, corner1=green, corner2=blue, corner3=purple:
-	    if (debug_index == 8) {
-		for (Unsigned index = 0; index < 4; index++) {
-		    CV_Point point =
-		      CV_Sequence__point_fetch1(polygon_contour, index);
-		    int x = CV_Point__x_get(point);
-		    int y = CV_Point__y_get(point);
-		    CV_Scalar color = (CV_Scalar)0;
-		    String_Const text = (String)0;
-		    switch (index) {
-		      case 0:
-			color = fiducials->red;
-			text = "red";
-			break;
-		      case 1:
-			color = fiducials->green;
-			text = "green";
-			break;
-		      case 2:
-			color = fiducials->blue;
-			text = "blue";
-			break;
-		      case 3:
-			color = fiducials->purple;
-			text = "purple";
-			break;
-		      default:
-			assert(0);
-		    }
-		    CV_Image__cross_draw(debug_image, x, y, color);
-		    File__format(log_file,
-		      "poly_point[%d]=(%d:%d) %s\n", index, x, y, text);
-		}
-	    }
+            // For debugging show the 4 corners of the possible tag where
+            //corner0=red, corner1=green, corner2=blue, corner3=purple:
+            if (debug_index == 8) {
+                for (Unsigned index = 0; index < 4; index++) {
+                    CV_Point point =
+                      CV_Sequence__point_fetch1(polygon_contour, index);
+                    int x = CV_Point__x_get(point);
+                    int y = CV_Point__y_get(point);
+                    CV_Scalar color = (CV_Scalar)0;
+                    String_Const text = (String)0;
+                    switch (index) {
+                      case 0:
+                        color = fiducials->red;
+                        text = "red";
+                        break;
+                      case 1:
+                        color = fiducials->green;
+                        text = "green";
+                        break;
+                      case 2:
+                        color = fiducials->blue;
+                        text = "blue";
+                        break;
+                      case 3:
+                        color = fiducials->purple;
+                        text = "purple";
+                        break;
+                      default:
+                        assert(0);
+                    }
+                    CV_Image__cross_draw(debug_image, x, y, color);
+                    File__format(log_file,
+                      "poly_point[%d]=(%d:%d) %s\n", index, x, y, text);
+                }
+            }
 
-	    // Compute the 8 reference points for deciding whether the
-	    // polygon is "tag like" in its borders:
-	    CV_Point2D32F_Vector references =
-	      Fiducials__references_compute(fiducials, corners);
+            // Compute the 8 reference points for deciding whether the
+            // polygon is "tag like" in its borders:
+            CV_Point2D32F_Vector references =
+              Fiducials__references_compute(fiducials, corners);
 
-	    // Now sample the periphery of the tag and looking for the
-	    // darkest white value (i.e. minimum) and the lightest black
-	    // value (i.e. maximum):
-	    //int white_darkest =
-	    //  CV_Image__points_minimum(gray_image, references, 0, 3);
-	    //int black_lightest =
-	    //  CV_Image__points_maximum(gray_image, references, 4, 7);
-	    int white_darkest =
-	      Fiducials__points_minimum(fiducials, references, 0, 3);
-	    int black_lightest =
-	      Fiducials__points_maximum(fiducials, references, 4, 7);
+            // Now sample the periphery of the tag and looking for the
+            // darkest white value (i.e. minimum) and the lightest black
+            // value (i.e. maximum):
+            //int white_darkest =
+            //  CV_Image__points_minimum(gray_image, references, 0, 3);
+            //int black_lightest =
+            //  CV_Image__points_maximum(gray_image, references, 4, 7);
+            int white_darkest =
+              Fiducials__points_minimum(fiducials, references, 0, 3);
+            int black_lightest =
+              Fiducials__points_maximum(fiducials, references, 4, 7);
 
-	    // {threshold} should be smack between the two:
-	    int threshold = (white_darkest + black_lightest) / 2;
-	    
-	    // For debugging, show the 8 points that are sampled around the
-	    // the tag periphery to even decide whether to do further testing.
-	    // Show "black" as green crosses, and "white" as green crosses:
-	    if (debug_index == 9) {
-		CV_Scalar red = fiducials->red;
-		CV_Scalar green = fiducials->green;
-		for (Unsigned index = 0; index < 8; index++) {
-		    CV_Point2D32F reference =
-		      CV_Point2D32F_Vector__fetch1(references, index);
-		    int x = CV__round(CV_Point2D32F__x_get(reference));
-		    int y = CV__round(CV_Point2D32F__y_get(reference));
-		    //int value =
-		    //  CV_Image__point_sample(gray_image, reference);
-		    int value =
-		      Fiducials__point_sample(fiducials, reference);
-		    CV_Scalar color = red;
-		    if (value < threshold) {
-			color = green;
-		    }
-		    CV_Image__cross_draw(debug_image, x, y, color);
-		    File__format(log_file, "ref[%d:%d]:%d\n", x, y, value);
-		}
-	    }
+            // {threshold} should be smack between the two:
+            int threshold = (white_darkest + black_lightest) / 2;
+            
+            // For debugging, show the 8 points that are sampled around the
+            // the tag periphery to even decide whether to do further testing.
+            // Show "black" as green crosses, and "white" as green crosses:
+            if (debug_index == 9) {
+                CV_Scalar red = fiducials->red;
+                CV_Scalar green = fiducials->green;
+                for (Unsigned index = 0; index < 8; index++) {
+                    CV_Point2D32F reference =
+                      CV_Point2D32F_Vector__fetch1(references, index);
+                    int x = CV__round(CV_Point2D32F__x_get(reference));
+                    int y = CV__round(CV_Point2D32F__y_get(reference));
+                    //int value =
+                    //  CV_Image__point_sample(gray_image, reference);
+                    int value =
+                      Fiducials__point_sample(fiducials, reference);
+                    CV_Scalar color = red;
+                    if (value < threshold) {
+                        color = green;
+                    }
+                    CV_Image__cross_draw(debug_image, x, y, color);
+                    File__format(log_file, "ref[%d:%d]:%d\n", x, y, value);
+                }
+            }
 
-	    // If we have enough contrast keep on trying for a tag match:
-	    if (black_lightest < white_darkest) {
-		// We have a tag to try:
+            // If we have enough contrast keep on trying for a tag match:
+            if (black_lightest < white_darkest) {
+                // We have a tag to try:
 
-		// Now it is time to read all the bits of the tag out:
-		CV_Point2D32F_Vector sample_points = fiducials->sample_points;
+                // Now it is time to read all the bits of the tag out:
+                CV_Point2D32F_Vector sample_points = fiducials->sample_points;
 
-		// Now compute the locations to sample for tag bits:
-		Fiducials__sample_points_compute(corners, sample_points);
+                // Now compute the locations to sample for tag bits:
+                Fiducials__sample_points_compute(corners, sample_points);
 
-		// Extract all 64 tag bit values:
-		bool *tag_bits = &fiducials->tag_bits[0];
-		for (Unsigned index = 0; index < 64; index++) {
-		    // Grab the pixel value and convert into a {bit}:
-		    CV_Point2D32F sample_point =
-		      CV_Point2D32F_Vector__fetch1(sample_points, index);
-		    //int value =
-		    //  CV_Image__point_sample(gray_image, sample_point);
-		    int value =
-		      Fiducials__point_sample(fiducials, sample_point);
-		    bool bit = (value < threshold);
-		    tag_bits[index] = bit;
+                // Extract all 64 tag bit values:
+                bool *tag_bits = &fiducials->tag_bits[0];
+                for (Unsigned index = 0; index < 64; index++) {
+                    // Grab the pixel value and convert into a {bit}:
+                    CV_Point2D32F sample_point =
+                      CV_Point2D32F_Vector__fetch1(sample_points, index);
+                    //int value =
+                    //  CV_Image__point_sample(gray_image, sample_point);
+                    int value =
+                      Fiducials__point_sample(fiducials, sample_point);
+                    bool bit = (value < threshold);
+                    tag_bits[index] = bit;
 
-		    // For debugging:
-		    if (debug_index == 10) {
-			CV_Scalar red = fiducials->red;
-			CV_Scalar green = fiducials->green;
-			CV_Scalar cyan = fiducials->cyan;
-			CV_Scalar blue = fiducials->blue;
+                    // For debugging:
+                    if (debug_index == 10) {
+                        CV_Scalar red = fiducials->red;
+                        CV_Scalar green = fiducials->green;
+                        CV_Scalar cyan = fiducials->cyan;
+                        CV_Scalar blue = fiducials->blue;
 
-			// Show white bits as {red} and black bits as {green}:
-			CV_Scalar color = red;
-			if (bit) {
-			    color = green;
-			}
+                        // Show white bits as {red} and black bits as {green}:
+                        CV_Scalar color = red;
+                        if (bit) {
+                            color = green;
+                        }
 
-			// Show where bit 0 and 7 are:
-			//if (index == 0) {
-			//    // Bit 0 is {cyan}:
-			//    color = cyan;
-			//}
-			//if (index == 7) {
-			//    // Bit 7 is {blue}:
-			//    color = blue;
-			//}
+                        // Show where bit 0 and 7 are:
+                        //if (index == 0) {
+                        //    // Bit 0 is {cyan}:
+                        //    color = cyan;
+                        //}
+                        //if (index == 7) {
+                        //    // Bit 7 is {blue}:
+                        //    color = blue;
+                        //}
 
-			// Now splat a cross of {color} at ({x},{y}):
-			int x =
-			  CV__round(CV_Point2D32F__x_get(sample_point));
-			int y =
-			  CV__round(CV_Point2D32F__y_get(sample_point));
-			CV_Image__cross_draw(debug_image, x, y, color);
-		    }
-		}
+                        // Now splat a cross of {color} at ({x},{y}):
+                        int x =
+                          CV__round(CV_Point2D32F__x_get(sample_point));
+                        int y =
+                          CV__round(CV_Point2D32F__y_get(sample_point));
+                        CV_Image__cross_draw(debug_image, x, y, color);
+                    }
+                }
 
-		//tag_bits :@= extractor.tag_bits
-		//bit_field :@= extractor.bit_field
-		//tag_bytes :@= extractor.tag_bytes
+                //tag_bits :@= extractor.tag_bits
+                //bit_field :@= extractor.bit_field
+                //tag_bytes :@= extractor.tag_bytes
 
-		// Now we iterate through the 4 different mapping
-		// orientations to see if any one of the 4 mappings match:
-		bool **mappings = fiducials->mappings;
-		Unsigned mappings_size = 4;
-		for (Unsigned direction_index = 0;
-		  direction_index < mappings_size; direction_index++) {
-		    // Grab the mapping:
-		    bool *mapping = mappings[direction_index];
-		    //File__format(log_file,
-		    //  "mappings[%d]:0x%x\n", direction_index, mapping);
+                // Now we iterate through the 4 different mapping
+                // orientations to see if any one of the 4 mappings match:
+                bool **mappings = fiducials->mappings;
+                Unsigned mappings_size = 4;
+                for (Unsigned direction_index = 0;
+                  direction_index < mappings_size; direction_index++) {
+                    // Grab the mapping:
+                    bool *mapping = mappings[direction_index];
+                    //File__format(log_file,
+                    //  "mappings[%d]:0x%x\n", direction_index, mapping);
 
 
-		    bool mapped_bits[64];
-		    for (Unsigned i = 0; i < 64; i++) {
-			 mapped_bits[mapping[i]] = tag_bits[i];
-		    }
+                    bool mapped_bits[64];
+                    for (Unsigned i = 0; i < 64; i++) {
+                         mapped_bits[mapping[i]] = tag_bits[i];
+                    }
 
-		    // Fill in tag bytes;
-		    Unsigned tag_bytes[8];
-		    for (Unsigned i = 0; i < 8; i++) {
-			Unsigned byte = 0;
-			for (Unsigned j = 0; j < 8; j++) {
-			    if (mapped_bits[(i<<3) + j]) {
-				//byte |= 1 << j;
-				byte |= 1 << (7 - j);
-			    }
-			}
-			tag_bytes[i] = byte;
-		    }
-		    if (debug_index == 11) {
-			File__format(log_file,
-			  "dir=%d Tag[0]=0x%x Tag[1]=0x%x\n",
-			  direction_index, tag_bytes[0], tag_bytes[1]);
-		    }
+                    // Fill in tag bytes;
+                    Unsigned tag_bytes[8];
+                    for (Unsigned i = 0; i < 8; i++) {
+                        Unsigned byte = 0;
+                        for (Unsigned j = 0; j < 8; j++) {
+                            if (mapped_bits[(i<<3) + j]) {
+                                //byte |= 1 << j;
+                                byte |= 1 << (7 - j);
+                            }
+                        }
+                        tag_bytes[i] = byte;
+                    }
+                    if (debug_index == 11) {
+                        File__format(log_file,
+                          "dir=%d Tag[0]=0x%x Tag[1]=0x%x\n",
+                          direction_index, tag_bytes[0], tag_bytes[1]);
+                    }
 
-		    // Now we need to do some FEC (Forward Error Correction):
-		    FEC fec = fiducials->fec;
-		    if (FEC__correct(fec, tag_bytes, 8)) {
-			// We passed FEC:
-			if (debug_index == 11) {
-			    File__format(log_file, "FEC correct\n");
-			}
+                    // Now we need to do some FEC (Forward Error Correction):
+                    FEC fec = fiducials->fec;
+                    if (FEC__correct(fec, tag_bytes, 8)) {
+                        // We passed FEC:
+                        if (debug_index == 11) {
+                            File__format(log_file, "FEC correct\n");
+                        }
 
-			// Now see if the two CRC's match:
-			Unsigned computed_crc = CRC__compute(tag_bytes, 2);
-			Unsigned tag_crc = (tag_bytes[3] << 8) | tag_bytes[2];
-			if (computed_crc == tag_crc) {
-			    // Yippee!!! We have a tag:
-			    // Compute {tag_id} from the the first two bytes
-			    // of {tag_bytes}:
-			    Unsigned tag_id =
-			      (tag_bytes[1] << 8) | tag_bytes[0];
+                        // Now see if the two CRC's match:
+                        Unsigned computed_crc = CRC__compute(tag_bytes, 2);
+                        Unsigned tag_crc = (tag_bytes[3] << 8) | tag_bytes[2];
+                        if (computed_crc == tag_crc) {
+                            // Yippee!!! We have a tag:
+                            // Compute {tag_id} from the the first two bytes
+                            // of {tag_bytes}:
+                            Unsigned tag_id =
+                              (tag_bytes[1] << 8) | tag_bytes[0];
 
-			    if (debug_index == 11) {
-				File__format(log_file,
-				  "CRC correct, Tag=%d\n", tag_id);
-			    }
+                            if (debug_index == 11) {
+                                File__format(log_file,
+                                  "CRC correct, Tag=%d\n", tag_id);
+                            }
 
-			    // Allocate a *camera_tag*:
-			    Camera_Tag camera_tag = (Camera_Tag)0;
-			    if (fiducials->camera_tags_pool.size() == 0) {
-				 // *camera_tags_pool* is empty;
-				// allocate a new one:
-				camera_tag = Camera_Tag__new();
-			    } else {
-				camera_tag = fiducials->camera_tags_pool.back();
+                            // Allocate a *camera_tag*:
+                            Camera_Tag camera_tag = (Camera_Tag)0;
+                            if (fiducials->camera_tags_pool.size() == 0) {
+                                 // *camera_tags_pool* is empty;
+                                // allocate a new one:
+                                camera_tag = Camera_Tag__new();
+                            } else {
+                                camera_tag = fiducials->camera_tags_pool.back();
               fiducials->camera_tags_pool.pop_back();
-			    }
+                            }
 
-			    // Load up *camera_tag* to get center, twist, etc.:
-			    Tag tag = Map__tag_lookup(map, tag_id);
+                            // Load up *camera_tag* to get center, twist, etc.:
+                            Tag tag = Map__tag_lookup(map, tag_id);
 
-			    double vertices[4][2];
-			    for (Unsigned index = 0; index < 4; index++) {
-			      CV_Point2D32F pt = CV_Point2D32F_Vector__fetch1(corners, index);
-			      vertices[index][0] = pt->x;
-			      vertices[index][1] = pt->y;
-			    }			    
+                            double vertices[4][2];
+                            for (Unsigned index = 0; index < 4; index++) {
+                              CV_Point2D32F pt = CV_Point2D32F_Vector__fetch1(corners, index);
+                              vertices[index][0] = pt->x;
+                              vertices[index][1] = pt->y;
+                            }                            
                             fiducials->fiducial_announce_routine(
                                 fiducials->announce_object, tag_id,
-				direction_index, tag->world_diagonal,
+                                direction_index, tag->world_diagonal,
                                 vertices[0][0], vertices[0][1],
-				vertices[1][0], vertices[1][1],
+                                vertices[1][0], vertices[1][1],
                                 vertices[2][0], vertices[2][1],
                                 vertices[3][0], vertices[3][1]);
 
-			    if (debug_index == 11) {
-				Camera_Tag__initialize(camera_tag, tag,
-				  direction_index, corners, debug_image);
-			    } else {
-				Camera_Tag__initialize(camera_tag, tag,
-				  direction_index, corners, (CV_Image)0);
-			    }
-			    List__append(current_visibles, (Memory)tag,
-			      "Fiduicals__create:List_append:current_visibles");
-			    File__format(log_file, "Tag: %d x=%f y=%f\n",
-			      tag->id, tag->x, tag->y);
+                            if (debug_index == 11) {
+                                Camera_Tag__initialize(camera_tag, tag,
+                                  direction_index, corners, debug_image);
+                            } else {
+                                Camera_Tag__initialize(camera_tag, tag,
+                                  direction_index, corners, (CV_Image)0);
+                            }
+                            List__append(current_visibles, (Memory)tag,
+                              "Fiduicals__create:List_append:current_visibles");
+                            File__format(log_file, "Tag: %d x=%f y=%f\n",
+                              tag->id, tag->x, tag->y);
 
-			    // Record the maximum *camera_diagonal*:
-			    Double camera_diagonal = camera_tag->diagonal;
-			    Double diagonal =
-			      camera_diagonal;
-			    if (diagonal  > tag->diagonal) {
-				tag->diagonal = diagonal;
+                            // Record the maximum *camera_diagonal*:
+                            Double camera_diagonal = camera_tag->diagonal;
+                            Double diagonal =
+                              camera_diagonal;
+                            if (diagonal  > tag->diagonal) {
+                                tag->diagonal = diagonal;
                                 tag->updated = (bool)1;
-			    }
+                            }
 
-			    // Append *camera_tag* to *camera_tags*:
+                            // Append *camera_tag* to *camera_tags*:
           fiducials->camera_tags.push_back(camera_tag);
-			    //File__format(log_file,
-			    //  "Found %d\n", camera_tag->tag->id);
-			}
-		    }
-		}
-	    }
-	}
+                            //File__format(log_file,
+                            //  "Found %d\n", camera_tag->tag->id);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Just for consistency sort *camera_tags*:
@@ -1364,120 +1364,120 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     // Sweep through all *camera_tag* pairs to generate associated *Arc*'s:
     Unsigned camera_tags_size = fiducials->camera_tags.size();
     if (camera_tags_size >= 2) {
-	// Iterate through all pairs, using a "triangle" scan:
-	for (Unsigned tag1_index = 0;
-	  tag1_index < camera_tags_size - 1; tag1_index++) {
-	    Camera_Tag camera_tag1 = fiducials->camera_tags[tag1_index];
-	
-	    for (Unsigned tag2_index = tag1_index + 1;
-	      tag2_index < camera_tags_size; tag2_index++) {
-		Camera_Tag camera_tag2 = fiducials->camera_tags[tag2_index];
-		assert (camera_tag1->tag->id != camera_tag2->tag->id);
-		if (Map__arc_update(map,
-		  camera_tag1, camera_tag2, gray_image, sequence_number) > 0) {
-		    results->map_changed = (bool)1;
-		}
-	    }
-	}
+        // Iterate through all pairs, using a "triangle" scan:
+        for (Unsigned tag1_index = 0;
+          tag1_index < camera_tags_size - 1; tag1_index++) {
+            Camera_Tag camera_tag1 = fiducials->camera_tags[tag1_index];
+        
+            for (Unsigned tag2_index = tag1_index + 1;
+              tag2_index < camera_tags_size; tag2_index++) {
+                Camera_Tag camera_tag2 = fiducials->camera_tags[tag2_index];
+                assert (camera_tag1->tag->id != camera_tag2->tag->id);
+                if (Map__arc_update(map,
+                  camera_tag1, camera_tag2, gray_image, sequence_number) > 0) {
+                    results->map_changed = (bool)1;
+                }
+            }
+        }
     }
 
     List__trim(locations, 0);
     results->image_interesting = (bool)0;
     if (camera_tags_size > 0) {
-	Double pi = 3.14159265358979323846264;
-	Unsigned half_width = CV_Image__width_get(gray_image) >> 1;
-	Unsigned half_height = CV_Image__height_get(gray_image) >> 1;
-	//File__format(log_file,
-	//  "half_width=%d half_height=%d\n", half_width, half_height);
-	for (Unsigned index = 0; index < camera_tags_size; index++) {
-	    Camera_Tag camera_tag = fiducials->camera_tags[index];
-	    Tag tag = camera_tag->tag;
-	    //File__format(log_file,
-	    //  "[%d]:tag_id=%d tag_x=%f tag_y=%f tag_twist=%f\n",
-	    //  index, tag->id, tag->x, tag->y, tag->twist * 180.0 / pi);
-	    Double camera_dx = camera_tag->x - half_width;
-	    Double camera_dy = camera_tag->y - half_height;
-	    //File__format(log_file,
-	    //  "[%d]:camera_dx=%f camera_dy=%f camera_twist=%f\n",
-	    //  index, camera_dx, camera_dy, camera_tag->twist * 180.0 / pi);
-	    Double polar_distance = Double__square_root(
-	      camera_dx * camera_dx + camera_dy * camera_dy);
-	    Double polar_angle = Double__arc_tangent2(camera_dy, camera_dx);
-	    //File__format(log_file,
-	    //  "[%d]:polar_distance=%f polar_angle=%f\n", index,
-	    //  polar_distance, polar_angle * 180.0 / pi);
-	    Double floor_distance = 
-	      polar_distance * tag->world_diagonal / tag->diagonal;
-	    Double angle =
-	      Double__angle_normalize(polar_angle + pi - camera_tag->twist);
-	    //File__format(log_file,
-	    //  "[%d]:floor_distance=%f angle=%f\n",
-	    //  index, floor_distance, angle * 180.0 / pi);
-	    Double x = tag->x + floor_distance * Double__cosine(angle);
-	    Double y = tag->y + floor_distance * Double__sine(angle);
-	    Double bearing =
-	      Double__angle_normalize(camera_tag->twist + tag->twist);
+        Double pi = 3.14159265358979323846264;
+        Unsigned half_width = CV_Image__width_get(gray_image) >> 1;
+        Unsigned half_height = CV_Image__height_get(gray_image) >> 1;
+        //File__format(log_file,
+        //  "half_width=%d half_height=%d\n", half_width, half_height);
+        for (Unsigned index = 0; index < camera_tags_size; index++) {
+            Camera_Tag camera_tag = fiducials->camera_tags[index];
+            Tag tag = camera_tag->tag;
+            //File__format(log_file,
+            //  "[%d]:tag_id=%d tag_x=%f tag_y=%f tag_twist=%f\n",
+            //  index, tag->id, tag->x, tag->y, tag->twist * 180.0 / pi);
+            Double camera_dx = camera_tag->x - half_width;
+            Double camera_dy = camera_tag->y - half_height;
+            //File__format(log_file,
+            //  "[%d]:camera_dx=%f camera_dy=%f camera_twist=%f\n",
+            //  index, camera_dx, camera_dy, camera_tag->twist * 180.0 / pi);
+            Double polar_distance = Double__square_root(
+              camera_dx * camera_dx + camera_dy * camera_dy);
+            Double polar_angle = Double__arc_tangent2(camera_dy, camera_dx);
+            //File__format(log_file,
+            //  "[%d]:polar_distance=%f polar_angle=%f\n", index,
+            //  polar_distance, polar_angle * 180.0 / pi);
+            Double floor_distance = 
+              polar_distance * tag->world_diagonal / tag->diagonal;
+            Double angle =
+              Double__angle_normalize(polar_angle + pi - camera_tag->twist);
+            //File__format(log_file,
+            //  "[%d]:floor_distance=%f angle=%f\n",
+            //  index, floor_distance, angle * 180.0 / pi);
+            Double x = tag->x + floor_distance * Double__cosine(angle);
+            Double y = tag->y + floor_distance * Double__sine(angle);
+            Double bearing =
+              Double__angle_normalize(camera_tag->twist + tag->twist);
 
-	    // FIXME: Kludge,  There is a sign error somewhere in the code
-	    // causes the "sign" on the X axis to be inverted.  We kludge
-	    // around the problem with the following disgusting code:
-	    bearing = Double__angle_normalize(bearing - pi / 2.0);
-	    bearing = -bearing;
-	    bearing = Double__angle_normalize(bearing + pi / 2.0);
+            // FIXME: Kludge,  There is a sign error somewhere in the code
+            // causes the "sign" on the X axis to be inverted.  We kludge
+            // around the problem with the following disgusting code:
+            bearing = Double__angle_normalize(bearing - pi / 2.0);
+            bearing = -bearing;
+            bearing = Double__angle_normalize(bearing + pi / 2.0);
 
-	    //File__format(log_file, "[%d]:x=%f:y=%f:bearing=%f\n",
-	    //  index, x, y, bearing * 180.0 / pi);
-	    Unsigned location_index = List__size(locations);
-	    Location location = Location__create(tag->id,
-	      x, y, bearing, floor_distance, location_index);
-	    List__append(locations,
-	      (Memory)location, "Fiducials__process:locations");
-	}
+            //File__format(log_file, "[%d]:x=%f:y=%f:bearing=%f\n",
+            //  index, x, y, bearing * 180.0 / pi);
+            Unsigned location_index = List__size(locations);
+            Location location = Location__create(tag->id,
+              x, y, bearing, floor_distance, location_index);
+            List__append(locations,
+              (Memory)location, "Fiducials__process:locations");
+        }
 
-	// Compute closest location:
-	Location closest_location = (Location)0;
-	Unsigned locations_size = List__size(locations);
-	for (Unsigned index = 0; index < locations_size; index++) {
-	  Location location = (Location)List__fetch(locations, index);
-	    if (closest_location == (Location)0) {
-		closest_location = location;
-	    } else {
-		if (location->goodness < closest_location->goodness) {
-		    closest_location = location;
-		}
-	    }
-	}
+        // Compute closest location:
+        Location closest_location = (Location)0;
+        Unsigned locations_size = List__size(locations);
+        for (Unsigned index = 0; index < locations_size; index++) {
+          Location location = (Location)List__fetch(locations, index);
+            if (closest_location == (Location)0) {
+                closest_location = location;
+            } else {
+                if (location->goodness < closest_location->goodness) {
+                    closest_location = location;
+                }
+            }
+        }
 
-	if (closest_location != (Location)0) {
-	    List /* <Location> */ locations_path = fiducials->locations_path;
-	    List__append(locations_path, (Memory)closest_location,
-	     "Fiducials__create:List__append:locations");
-	    File__format(log_file,
-	      "Fiducials__process:Location: " /* + */
-	      "x=%f y=%f bearing=%f goodness=%f index=%d\n",
-	      closest_location->x, closest_location->y,
-	      closest_location->bearing * 180.0 / pi,
-	      closest_location->goodness, closest_location->index);
+        if (closest_location != (Location)0) {
+            List /* <Location> */ locations_path = fiducials->locations_path;
+            List__append(locations_path, (Memory)closest_location,
+             "Fiducials__create:List__append:locations");
+            File__format(log_file,
+              "Fiducials__process:Location: " /* + */
+              "x=%f y=%f bearing=%f goodness=%f index=%d\n",
+              closest_location->x, closest_location->y,
+              closest_location->bearing * 180.0 / pi,
+              closest_location->goodness, closest_location->index);
 
-	    Double change_dx = closest_location->x - fiducials->last_x;
-	    Double change_dy = closest_location->y - fiducials->last_y;
-	    Double change = Double__square_root(
-	      change_dx * change_dx + change_dy * change_dy);
-	    if (change > 0.1) {
-		results->image_interesting = (bool)1;
-	    }
-	    fiducials->last_x = closest_location->x;
-	    fiducials->last_y = closest_location->y;
+            Double change_dx = closest_location->x - fiducials->last_x;
+            Double change_dy = closest_location->y - fiducials->last_y;
+            Double change = Double__square_root(
+              change_dx * change_dx + change_dy * change_dy);
+            if (change > 0.1) {
+                results->image_interesting = (bool)1;
+            }
+            fiducials->last_x = closest_location->x;
+            fiducials->last_y = closest_location->y;
 
-	    // send rviz marker message here
-	    File__format(log_file,
-	      "Location: id=%d x=%f y=%f bearing=%f\n",
-	      closest_location->id, closest_location->x, closest_location->y,
-	      closest_location->bearing);
-	    location_announce_routine(fiducials->announce_object,
-	      closest_location->id, closest_location->x, closest_location->y,
-	      /* z */ 0.0, closest_location->bearing);
-	}
+            // send rviz marker message here
+            File__format(log_file,
+              "Location: id=%d x=%f y=%f bearing=%f\n",
+              closest_location->id, closest_location->x, closest_location->y,
+              closest_location->bearing);
+            location_announce_routine(fiducials->announce_object,
+              closest_location->id, closest_location->x, closest_location->y,
+              /* z */ 0.0, closest_location->bearing);
+        }
     }
 
     // Visit each *current_tag* in *current_visibles*:
@@ -1485,16 +1485,16 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     for (Unsigned current_visibles_index = 0;
       current_visibles_index < current_visibles_size;
       current_visibles_index++) {
-	Tag current_visible =
-	  (Tag)List__fetch(current_visibles, current_visibles_index);
-	//File__format(log_file, "Current[%d]:%d\n",
-	//  current_visibles_index, current_visible->id);
+        Tag current_visible =
+          (Tag)List__fetch(current_visibles, current_visibles_index);
+        //File__format(log_file, "Current[%d]:%d\n",
+        //  current_visibles_index, current_visible->id);
 
-	// Always announce *current_visible* as visible:
-	current_visible->visible = (bool)1;
+        // Always announce *current_visible* as visible:
+        current_visible->visible = (bool)1;
         if( current_visible->updated ) {
-	    Map__tag_announce(map, current_visible,
-	        (bool)1, original_image, sequence_number);
+            Map__tag_announce(map, current_visible,
+                (bool)1, original_image, sequence_number);
             current_visible->updated = (bool)0;
         }
     }
@@ -1504,31 +1504,31 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     for (Unsigned previous_visibles_index = 0;
        previous_visibles_index < previous_visibles_size;
        previous_visibles_index++) {
-	Tag previous_visible =
-	  (Tag)List__fetch(previous_visibles, previous_visibles_index);
-	//File__format(log_file, "Previous[%d]:%d\n",
-	//  previous_visibles_index, previous_visible->id);
+        Tag previous_visible =
+          (Tag)List__fetch(previous_visibles, previous_visibles_index);
+        //File__format(log_file, "Previous[%d]:%d\n",
+        //  previous_visibles_index, previous_visible->id);
 
-	// Now look to see if *previous_visible* is in *current_visibles*:
-	Tag current_visible = (Tag)0;
-	for (Unsigned current_visibles_index = 0;
-	  current_visibles_index < current_visibles_size;
-	  current_visibles_index++) {
-	    current_visible = 
-	      (Tag)List__fetch(current_visibles, current_visibles_index);
-	    if (current_visible == previous_visible) {
-		break;
-	    }
-	    current_visible = (Tag)0;
-	}	
+        // Now look to see if *previous_visible* is in *current_visibles*:
+        Tag current_visible = (Tag)0;
+        for (Unsigned current_visibles_index = 0;
+          current_visibles_index < current_visibles_size;
+          current_visibles_index++) {
+            current_visible = 
+              (Tag)List__fetch(current_visibles, current_visibles_index);
+            if (current_visible == previous_visible) {
+                break;
+            }
+            current_visible = (Tag)0;
+        }        
 
-	// *current_visible* is null if it was not found:
-	if (current_visible == (Tag)0) {
-	    // Not found => announce the tag as no longer visible:
-	    previous_visible->visible = (bool)0;
-	    Map__tag_announce(map,
-	      previous_visible, (bool)0, original_image, sequence_number);
-	}
+        // *current_visible* is null if it was not found:
+        if (current_visible == (Tag)0) {
+            // Not found => announce the tag as no longer visible:
+            previous_visible->visible = (bool)0;
+            Map__tag_announce(map,
+              previous_visible, (bool)0, original_image, sequence_number);
+        }
     }
     // Clear *previous_visibles* and swap *current_visible* with
     // *previous_visibles*:
@@ -1545,7 +1545,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
     // Flip the debug image:
     if (fiducials->y_flip) {
-	CV_Image__flip(debug_image, debug_image, 0);
+        CV_Image__flip(debug_image, debug_image, 0);
     }
 
     // Update the map:
@@ -1604,33 +1604,33 @@ int Fiducials__point_sample(Fiducials fiducials, CV_Point2D32F point) {
     int *weights = (int *)0;
     switch (fiducials->weights_index) {
       case 1:
-	weights = weights1;
-	break;
+        weights = weights1;
+        break;
       case 2:
-	weights = weights2;
-	break;
+        weights = weights2;
+        break;
       default:
-	weights = weights0;
-	break;
+        weights = weights0;
+        break;
     }
 
     // Interate across sample point;
     int numerator = 0;
     int denominator = 0;
     for (int index = 0; index < 9; index++) {
-	int sample = CV_Image__gray_fetch(image,
-	  x + x_offsets[index], y + y_offsets[index]);
-	if (sample >= 0) {
-	    int weight = weights[index];
-	    numerator += sample * weight;
-	    denominator += weight;
-	}
+        int sample = CV_Image__gray_fetch(image,
+          x + x_offsets[index], y + y_offsets[index]);
+        if (sample >= 0) {
+            int weight = weights[index];
+            numerator += sample * weight;
+            denominator += weight;
+        }
     }
 
     // Compute *result* checking for divide by zero:
     int result = 0;
     if (denominator > 0) {
-	result = numerator / denominator;
+        result = numerator / denominator;
     }
     return result;
 }
@@ -1650,21 +1650,21 @@ void CV_Point2D32F_Vector__corners_normalize(CV_Point2D32F_Vector corners) {
     // in the counter-clockwise direction.
 
     if (CV_Point2D32F_Vector__is_clockwise(corners)) {
-	// Extract two corners to be swapped:
-	CV_Point2D32F corner1 = CV_Point2D32F_Vector__fetch1(corners, 1);
-	CV_Point2D32F corner3 = CV_Point2D32F_Vector__fetch1(corners, 3);
+        // Extract two corners to be swapped:
+        CV_Point2D32F corner1 = CV_Point2D32F_Vector__fetch1(corners, 1);
+        CV_Point2D32F corner3 = CV_Point2D32F_Vector__fetch1(corners, 3);
 
-	// Extract X and Y for both corners:
-	Double x1 = CV_Point2D32F__x_get(corner1);
-	Double y1 = CV_Point2D32F__y_get(corner1);
-	Double x3 = CV_Point2D32F__x_get(corner3);
-	Double y3 = CV_Point2D32F__y_get(corner3);
+        // Extract X and Y for both corners:
+        Double x1 = CV_Point2D32F__x_get(corner1);
+        Double y1 = CV_Point2D32F__y_get(corner1);
+        Double x3 = CV_Point2D32F__x_get(corner3);
+        Double y3 = CV_Point2D32F__y_get(corner3);
 
-	// Swap contents of {corner1} and {corner3}:
-	CV_Point2D32F__x_set(corner1, x3);
-	CV_Point2D32F__y_set(corner1, y3);
-	CV_Point2D32F__x_set(corner3, x1);
-	CV_Point2D32F__y_set(corner3, y1);
+        // Swap contents of {corner1} and {corner3}:
+        CV_Point2D32F__x_set(corner1, x3);
+        CV_Point2D32F__y_set(corner1, y3);
+        CV_Point2D32F__x_set(corner3, x1);
+        CV_Point2D32F__y_set(corner3, y1);
     }
 }
 
@@ -1816,14 +1816,14 @@ int Fiducials__points_maximum(Fiducials fiducials,
 
     // Iterate across the {points} from {start_index} to {end_index}:
     for (Unsigned index = start_index; index <= end_index; index++) {
-	CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
-	int value = Fiducials__point_sample(fiducials, point);
-	//call d@(form@("max[%f%:%f%]:%d%\n\") %
-	//  f@(point.x) % f@(point.y) / f@(value))
-	if (value > result) {
-	// New maximum value:
-	    result = value;
-	}
+        CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
+        int value = Fiducials__point_sample(fiducials, point);
+        //call d@(form@("max[%f%:%f%]:%d%\n\") %
+        //  f@(point.x) % f@(point.y) / f@(value))
+        if (value > result) {
+        // New maximum value:
+            result = value;
+        }
     }
     return result;
 }
@@ -1848,12 +1848,12 @@ int Fiducials__points_minimum(Fiducials fiducials,
 
     // Iterate across the {points} from {start_index} to {end_index}:
     for (Unsigned index = start_index; index <= end_index; index++) {
-	CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
-	int value = Fiducials__point_sample(fiducials, point);
-	if (value < result) {
-	    // New minimum value:
-	    result = value;
-	}
+        CV_Point2D32F point = CV_Point2D32F_Vector__fetch1(points, index);
+        int value = Fiducials__point_sample(fiducials, point);
+        if (value < result) {
+            // New minimum value:
+            result = value;
+        }
     }
     return result;
 }
@@ -1916,44 +1916,44 @@ void Fiducials__sample_points_compute(
     Unsigned i = 0;
     while (i < 8) {
 
-	// Compute ({xx1},{yy1}) which is a point that is {i_fraction} between
-	// ({x1},{y1}) and ({x2},{y2}), as well as, ({xx2},{yy2}) which is a
-	// point that is {i_fraction} between ({x0},{y0}) and ({x3},{y3}).
-	Double xx1 = x1 + dx21 * i_fraction;
-	Double yy1 = y1 + dy21 * i_fraction;
-	Double xx2 = x0 + dx30 * i_fraction;
-	Double yy2 = y0 + dy30 * i_fraction;
+        // Compute ({xx1},{yy1}) which is a point that is {i_fraction} between
+        // ({x1},{y1}) and ({x2},{y2}), as well as, ({xx2},{yy2}) which is a
+        // point that is {i_fraction} between ({x0},{y0}) and ({x3},{y3}).
+        Double xx1 = x1 + dx21 * i_fraction;
+        Double yy1 = y1 + dy21 * i_fraction;
+        Double xx2 = x0 + dx30 * i_fraction;
+        Double yy2 = y0 + dy30 * i_fraction;
 
-	// Compute the vector from ({xx1},{yy1}) to ({xx2},{yy2}):
-	Double dxx21 = xx2 - xx1;
-	Double dyy21 = yy2 - yy1;
+        // Compute the vector from ({xx1},{yy1}) to ({xx2},{yy2}):
+        Double dxx21 = xx2 - xx1;
+        Double dyy21 = yy2 - yy1;
 
-	// As with {i_fraction}, {j_fraction} needs to sample the
-	// the data stripes through the quadralateral with values
-	// that range from 3/20 through 17/20:
-	Double j_fraction = 3.0 / 20.0;
-	Double j_increment = 2.0 / 20.0;
+        // As with {i_fraction}, {j_fraction} needs to sample the
+        // the data stripes through the quadralateral with values
+        // that range from 3/20 through 17/20:
+        Double j_fraction = 3.0 / 20.0;
+        Double j_increment = 2.0 / 20.0;
 
-	// Loop over the second axis of the grid:
-	Unsigned j = 0;
-	while (j < 8) {
-	    // Fetch next {sample_point}:
-	    CV_Point2D32F sample_point =
-	      CV_Point2D32F_Vector__fetch1(sample_points, index);
-	    index = index + 1;
+        // Loop over the second axis of the grid:
+        Unsigned j = 0;
+        while (j < 8) {
+            // Fetch next {sample_point}:
+            CV_Point2D32F sample_point =
+              CV_Point2D32F_Vector__fetch1(sample_points, index);
+            index = index + 1;
 
-	    // Write the rvGrid position into the rvGrid array:
-	    CV_Point2D32F__x_set(sample_point, xx1 + dxx21 * j_fraction);
-	    CV_Point2D32F__y_set(sample_point, yy1 + dyy21 * j_fraction);
+            // Write the rvGrid position into the rvGrid array:
+            CV_Point2D32F__x_set(sample_point, xx1 + dxx21 * j_fraction);
+            CV_Point2D32F__y_set(sample_point, yy1 + dyy21 * j_fraction);
 
-	    // Increment {j_faction} to the sample point:
-	    j_fraction = j_fraction + j_increment;
-	    j = j + 1;
-	}
+            // Increment {j_faction} to the sample point:
+            j_fraction = j_fraction + j_increment;
+            j = j + 1;
+        }
 
-	// Increment {i_fraction} to the next sample striple:
-	i_fraction = i_fraction + i_increment;
-	i = i + 1;
+        // Increment {i_fraction} to the next sample striple:
+        i_fraction = i_fraction + i_increment;
+        i = i + 1;
     }
 
     CV_Point2D32F sample_point0 =
@@ -2010,7 +2010,7 @@ void Fiducials__tag_announce(void *announce_object, int id,
   Double distance_per_pixel, bool visible, int hop_count) {
     String_Const visible_text = "";
     if (!visible) {
-	visible_text = "*** No longer visible ***";
+        visible_text = "*** No longer visible ***";
     }
     File__format(stderr, "id=%d x=%f y=%f twist=%f %s\n",
       id, x, y, twist, visible_text);
@@ -2018,16 +2018,16 @@ void Fiducials__tag_announce(void *announce_object, int id,
 
 static struct Fiducials_Create__Struct fiducials_create_struct =
 {
-    (String_Const)0,				// fiducials_path
-    (String_Const)0,				// lens_calibrate_file_name
-    (void *)0,					// announce_object
-    (Fiducials_Arc_Announce_Routine)0,		// arc_announce_routine
-    (Fiducials_Location_Announce_Routine)0,	// location_announce_routine
-    (Fiducials_Tag_Announce_Routine)0,		// tag_announce_routine
-    (Fiducials_Fiducial_Announce_Routine)0,    	// fiducial_announce_routine
-    (String_Const)0,				// log_file_name
-    (String_Const)0,				// map_base_name
-    (String_Const)0,				// tag_heights_file_name
+    (String_Const)0,                                // fiducials_path
+    (String_Const)0,                                // lens_calibrate_file_name
+    (void *)0,                                        // announce_object
+    (Fiducials_Arc_Announce_Routine)0,                // arc_announce_routine
+    (Fiducials_Location_Announce_Routine)0,        // location_announce_routine
+    (Fiducials_Tag_Announce_Routine)0,                // tag_announce_routine
+    (Fiducials_Fiducial_Announce_Routine)0,            // fiducial_announce_routine
+    (String_Const)0,                                // log_file_name
+    (String_Const)0,                                // map_base_name
+    (String_Const)0,                                // tag_heights_file_name
 };
 
 /// @brief Returns the one and only *Fiducials_Create* object.
