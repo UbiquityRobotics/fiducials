@@ -37,7 +37,6 @@ extern Memory Memory__allocate(unsigned int bytes, String_Const from);
 extern void Memory__free(Memory memory);
 extern Memory Memory__reallocate(Memory memory, unsigned int new_size,
     String_Const from);
-extern Memory unsigned__to_memory(unsigned int unsigned1);
 
 #endif // !defined(MEMORY_H_INCLUDED)
 

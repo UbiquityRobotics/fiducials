@@ -112,18 +112,3 @@ Memory Memory__reallocate(Memory memory, unsigned int new_size, String_Const fro
     #endif // defined(MEMORY_LEAK_CHECK)
     return new_memory;
 }
-
-/// @brief Return *unsigned1* as a *Memory* pointer.
-/// @param unsigned1 is the value to be treated as *Memory*
-/// @returns *unsigned1* as a *Memory* pointer.
-///
-/// *unsigned int__to_memory*() returns *unsigned1* as a *Memory* pointer.
-
-Memory unsigned__to_memory(unsigned int unsigned1) {
-    union {
-        unsigned int unsigned1;
-        Memory memory;
-    } convert;
-    convert.unsigned1 = unsigned1;
-    return convert.memory;
-}
