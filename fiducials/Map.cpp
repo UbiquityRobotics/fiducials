@@ -279,6 +279,7 @@ Map Map__create(String_Const file_path, String_Const file_base,
   String_Const tag_heights_file_name, String_Const from) {
     // Create and fill in *map*:
     Map map = Memory__new(Map, from);
+    map = new(map) Map__Struct();
     map->arc_announce_routine = arc_announce_routine;
     map->announce_object = announce_object;
     map->changes_count = 0;
