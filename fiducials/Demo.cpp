@@ -63,7 +63,7 @@ int main(int arguments_size, char *arguments[]) {
 
         // Load up *fiducials_create*:
         Fiducials_Create fiducials_create = Fiducials_Create__one_and_only();
-        fiducials_create->fiducials_path = (String_Const)".";
+        fiducials_create->fiducials_path = ".";
         fiducials_create->lens_calibrate_file_name = lens_calibrate_file_name;
         fiducials_create->announce_object = (Memory)0;
         fiducials_create->arc_announce_routine = Fiducials__arc_announce;
@@ -71,9 +71,8 @@ int main(int arguments_size, char *arguments[]) {
           Fiducials__location_announce;
         fiducials_create->tag_announce_routine = Fiducials__tag_announce;
         fiducials_create->log_file_name = log_file_name;
-        fiducials_create->map_base_name = (String_Const)"Demo_Map";
-        fiducials_create->tag_heights_file_name =
-          (String_Const)"Tag_Heights.xml";
+        fiducials_create->map_base_name = "Demo_Map";
+        fiducials_create->tag_heights_file_name = "Tag_Heights.xml";
         
         Fiducials fiducials = Fiducials__create(image, fiducials_create);
         fiducials->map->image_log = image_log;
