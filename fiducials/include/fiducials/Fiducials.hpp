@@ -70,7 +70,7 @@ struct Fiducials__Struct {
     Map map;
     CV_Point origin;
     CV_Image original_image;
-    bool **mappings;
+    int **mappings;
     CV_Image map_x;
     CV_Image map_y;
     String_Const path;

@@ -650,7 +650,7 @@ Fiducials Fiducials__create(
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
 
-    static bool north_mapping[64] = {
+    static int north_mapping[64] = {
         //corner1              corner0
          0,  1,  2,  3,  4,  5,  6,  7,
          8,  9, 10, 11, 12, 13, 14, 15,
@@ -663,7 +663,7 @@ Fiducials Fiducials__create(
         //corner2              corner3
     };
 
-    static bool west_mapping[64] = {
+    static int west_mapping[64] = {
         //corner1              corner0
          7, 15, 23, 31, 39, 47, 55, 63,
          6, 14, 22, 30, 38, 46, 54, 62,
@@ -676,7 +676,7 @@ Fiducials Fiducials__create(
         //corner2              corner3
     };
 
-    static bool south_mapping[64] = {
+    static int south_mapping[64] = {
         //corner1              corner0
         63, 62, 61, 60, 59, 58, 57, 56,
         55, 54, 53, 52, 51, 50, 49, 48,
@@ -689,7 +689,7 @@ Fiducials Fiducials__create(
         //corner2              corner3
     };
 
-    static bool east_mapping[64] = {
+    static int east_mapping[64] = {
         //corner1              corner0
         56, 48, 40, 32, 24, 16,  8,  0,
         57, 49, 41, 33, 25, 17,  9,  1,
@@ -702,7 +702,7 @@ Fiducials Fiducials__create(
         //corner2              corner3
     };
 
-    static bool north_mapping_flipped[64] = {
+    static int north_mapping_flipped[64] = {
         //corner1              corner0
          7,  6,  5,  4,  3,  2,  1,  0,
         15, 14, 13, 12, 11, 10,  9,  8,
@@ -715,7 +715,7 @@ Fiducials Fiducials__create(
          //corner2              corner3
     };
 
-    static bool west_mapping_flipped[64] = {
+    static int west_mapping_flipped[64] = {
         //corner1              corner0
         63, 55, 47, 39, 31, 23, 15, 7,
         62, 54, 46, 38, 30, 22, 14, 6,
@@ -728,7 +728,7 @@ Fiducials Fiducials__create(
         //corner2              corner3
     };
 
-    static bool south_mapping_flipped[64] = {
+    static int south_mapping_flipped[64] = {
         //corner1              corner0
         56, 57, 58, 59, 60, 61, 62, 63, 
         48, 49, 50, 51, 52, 53, 54, 55,
@@ -741,7 +741,7 @@ Fiducials Fiducials__create(
         //corner2              corner3
     };
 
-    static bool east_mapping_flipped[64] = {
+    static int east_mapping_flipped[64] = {
         //corner1              corner0
          0,  8, 16, 24, 32, 40, 48, 56,
          1,  9, 17, 25, 33, 41, 49, 57,
@@ -757,7 +757,7 @@ Fiducials Fiducials__create(
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
 
-    static bool *mappings[4] = {
+    static int *mappings[4] = {
         &north_mapping_flipped[0],
         &west_mapping_flipped[0],
         &south_mapping_flipped[0],
@@ -1174,7 +1174,7 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                     //  CV_Image__point_sample(gray_image, sample_point);
                     int value =
                       Fiducials__point_sample(fiducials, sample_point);
-                    bool bit = (value < threshold);
+                    int bit = (value < threshold);
                     tag_bits[index] = bit;
 
                     // For debugging:
@@ -1215,17 +1215,17 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
 
                 // Now we iterate through the 4 different mapping
                 // orientations to see if any one of the 4 mappings match:
-                bool **mappings = fiducials->mappings;
+                int **mappings = fiducials->mappings;
                 unsigned int mappings_size = 4;
                 for (unsigned int direction_index = 0;
                   direction_index < mappings_size; direction_index++) {
                     // Grab the mapping:
-                    bool *mapping = mappings[direction_index];
+                    int *mapping = mappings[direction_index];
                     //File__format(log_file,
                     //  "mappings[%d]:0x%x\n", direction_index, mapping);
 
 
-                    bool mapped_bits[64];
+                    int mapped_bits[64];
                     for (unsigned int i = 0; i < 64; i++) {
                          mapped_bits[mapping[i]] = tag_bits[i];
                     }
