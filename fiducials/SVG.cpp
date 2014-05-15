@@ -58,11 +58,11 @@ void SVG::cartesian_scale(double x_width, double y_height,
     // Load up *svg*:
     width = x_width * x_scale;
     height = y_height * y_scale;
-    x_scale = x_scale;
+    this->x_scale = x_scale;
     // Swap Y axis direction by negating *y_scale*:
-    y_scale = -y_scale;
-    x_offset = -x_offset;
-    y_offset = -y_offset;
+    this->y_scale = -y_scale;
+    this->x_offset = -x_offset;
+    this->y_offset = -y_offset;
 }
 
 
