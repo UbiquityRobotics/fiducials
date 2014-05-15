@@ -789,6 +789,7 @@ Fiducials Fiducials__create(
 
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
+    fiducials = new(fiducials) Fiducials__Struct();
     fiducials->arc_announce_routine = arc_announce_routine;
     if (fiducial_announce_routine != NULL) 
        fiducials->fiducial_announce_routine = fiducial_announce_routine;
