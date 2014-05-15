@@ -33,91 +33,91 @@ int main(int arguments_size, char *arguments[]) {
     String log_file_name = (String)0;
     //File__format(stdout, "Hello\n");
     if (arguments_size <= 1) {
-	File__format(stderr, "Usage: Demo lens.txt *.pnm\n");
+        File__format(stderr, "Usage: Demo lens.txt *.pnm\n");
     } else {
-	for (unsigned int index = 1; index < arguments_size; index++) {
-	    String argument = arguments[index];
-	    unsigned int size = String__size(argument);
-	    if (String__equal(argument, "--image_log")) {
-		image_log = (bool)1;
-	    } else if (size > 4 && String__equal(argument + size - 4, ".txt")) {
-		lens_calibrate_file_name = argument;
-	    } else if (size > 4 && String__equal(argument + size - 4, ".log")) {
-		log_file_name = argument;
-	    } else if (size > 4 && String__equal(argument + size - 4, ".pnm")) {
-        image_file_names.push_back(argument);
-	    } else if (size > 4 && String__equal(argument + size - 4, ".chk")) {
-		// Do nothing:
-	    } else {
-		File__format(stderr, "Unrecoginized file '%s'\n", argument);
-	    }
-	}
+        for (unsigned int index = 1; index < arguments_size; index++) {
+            String argument = arguments[index];
+            unsigned int size = String__size(argument);
+            if (String__equal(argument, "--image_log")) {
+                image_log = (bool)1;
+            } else if (size > 4 && String__equal(argument + size - 4, ".txt")) {
+                lens_calibrate_file_name = argument;
+            } else if (size > 4 && String__equal(argument + size - 4, ".log")) {
+                log_file_name = argument;
+            } else if (size > 4 && String__equal(argument + size - 4, ".pnm")) {
+                image_file_names.push_back(argument);
+            } else if (size > 4 && String__equal(argument + size - 4, ".chk")) {
+                // Do nothing:
+            } else {
+                File__format(stderr, "Unrecoginized file '%s'\n", argument);
+            }
+        }
     }
 
     unsigned int size = image_file_names.size();
     if (size > 0) {
-	String image_file_name0 = image_file_names[0];
-	CV_Image image = (CV_Image)0;
-	image = CV_Image__pnm_read(image_file_name0);
-	assert (image != (CV_Image)0);
+        String image_file_name0 = image_file_names[0];
+        CV_Image image = (CV_Image)0;
+        image = CV_Image__pnm_read(image_file_name0);
+        assert (image != (CV_Image)0);
 
-	// Load up *fiducials_create*:
-	Fiducials_Create fiducials_create = Fiducials_Create__one_and_only();
-	fiducials_create->fiducials_path = (String_Const)".";
-	fiducials_create->lens_calibrate_file_name = lens_calibrate_file_name;
-	fiducials_create->announce_object = (Memory)0;
-	fiducials_create->arc_announce_routine = Fiducials__arc_announce;
-	fiducials_create->location_announce_routine =
-	  Fiducials__location_announce;
-	fiducials_create->tag_announce_routine = Fiducials__tag_announce;
-	fiducials_create->log_file_name = log_file_name;
-	fiducials_create->map_base_name = (String_Const)"Demo_Map";
-	fiducials_create->tag_heights_file_name =
-	  (String_Const)"Tag_Heights.xml";
-	
-	Fiducials fiducials = Fiducials__create(image, fiducials_create);
-	fiducials->map->image_log = image_log;
+        // Load up *fiducials_create*:
+        Fiducials_Create fiducials_create = Fiducials_Create__one_and_only();
+        fiducials_create->fiducials_path = (String_Const)".";
+        fiducials_create->lens_calibrate_file_name = lens_calibrate_file_name;
+        fiducials_create->announce_object = (Memory)0;
+        fiducials_create->arc_announce_routine = Fiducials__arc_announce;
+        fiducials_create->location_announce_routine =
+          Fiducials__location_announce;
+        fiducials_create->tag_announce_routine = Fiducials__tag_announce;
+        fiducials_create->log_file_name = log_file_name;
+        fiducials_create->map_base_name = (String_Const)"Demo_Map";
+        fiducials_create->tag_heights_file_name =
+          (String_Const)"Tag_Heights.xml";
+        
+        Fiducials fiducials = Fiducials__create(image, fiducials_create);
+        fiducials->map->image_log = image_log;
 
-	for (unsigned int index = 0; index < size; index++) {
-	    String image_file_name = image_file_names[index];
-	    image = CV_Image__pnm_read(image_file_name);
-	    Fiducials__image_set(fiducials, image);
-	    Fiducials__process(fiducials);
-	}
+        for (unsigned int index = 0; index < size; index++) {
+            String image_file_name = image_file_names[index];
+            image = CV_Image__pnm_read(image_file_name);
+            Fiducials__image_set(fiducials, image);
+            Fiducials__process(fiducials);
+        }
 
-	assert (gettimeofday(end_time_value, (struct timezone *)0) == 0);
+        assert (gettimeofday(end_time_value, (struct timezone *)0) == 0);
 
-	double start_time = (double)start_time_value->tv_usec / 1000000.0;
-	double end_time =
-	  (double)(end_time_value->tv_sec - start_time_value->tv_sec) +
-	  (double)end_time_value->tv_usec / 1000000.0;
-	double time = end_time - start_time;
-	double frames_per_second = (double)size / time;
+        double start_time = (double)start_time_value->tv_usec / 1000000.0;
+        double end_time =
+          (double)(end_time_value->tv_sec - start_time_value->tv_sec) +
+          (double)end_time_value->tv_usec / 1000000.0;
+        double time = end_time - start_time;
+        double frames_per_second = (double)size / time;
 
-	File__format(stderr, "%d frames / %f sec = %f Frame/sec\n",
-	  size, time, frames_per_second);
+        File__format(stderr, "%d frames / %f sec = %f Frame/sec\n",
+          size, time, frames_per_second);
 
-	if (size == 1) {
-	    Fiducials__image_show(fiducials, (bool)1);
-	} else {
-	    Map map = fiducials->map;
-	    Map__save(map);
-	    File__format(stderr,
-	      "Outputing %d locations\n", fiducials->locations.size());
-	    Map__svg_write(map, "Demo", fiducials->locations);
-	}
+        if (size == 1) {
+            Fiducials__image_show(fiducials, (bool)1);
+        } else {
+            Map map = fiducials->map;
+            Map__save(map);
+            File__format(stderr,
+              "Outputing %d locations\n", fiducials->locations.size());
+            Map__svg_write(map, "Demo", fiducials->locations);
+        }
 
-	// Release all the storage associated with *fiducials*:
+        // Release all the storage associated with *fiducials*:
 
-	// Some debugging code to make sure that we are reading/writing
-	// map.xml files correctly:
-	//fiducials =
-	//  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
-	//  Fiducials__location_announce, Map__tag_announce, log_file_name,
-	//  "Demo.xml");
-	//fiducials->map->is_saved = (bool)0;
-	//fiducials->map->file_name = "Demo2.xml";
-	//Fiducials__free(fiducials);
+        // Some debugging code to make sure that we are reading/writing
+        // map.xml files correctly:
+        //fiducials =
+        //  Fiducials__create(image, lens_calibrate_file_name, (void *)0,
+        //  Fiducials__location_announce, Map__tag_announce, log_file_name,
+        //  "Demo.xml");
+        //fiducials->map->is_saved = (bool)0;
+        //fiducials->map->file_name = "Demo2.xml";
+        //Fiducials__free(fiducials);
     }
 
     return 0;
