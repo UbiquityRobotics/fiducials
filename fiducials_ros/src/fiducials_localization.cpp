@@ -72,9 +72,12 @@ class FiducialsNode {
     std::string odom_frame;
     bool use_odom;
 
-    // these two would only be turned off if we are publishing the tf
+    // this would only be turned off if we are publishing the tf
     // in another node
     bool publish_tf;
+
+    // this would only be turned off if we are publishing the markers
+    // in another node
     bool publish_markers;
 
     // the last frame we saw on the camera header
