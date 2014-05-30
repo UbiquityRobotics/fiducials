@@ -15,12 +15,6 @@ catkin_package(
 add_definitions(-g)
 #add_definitions(-DMEMORY_LEAK_CHECK=1)
 
-# Really simple, poor-man's find_package for the flycapture library
-if(EXISTS /usr/include/flycapture)
-  set(flycapture_FOUND true)
-  include_directories(/usr/include/flycapture)
-endif()
-
 include_directories(include/fiducials)
 include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -39,10 +33,6 @@ add_executable(Demo Demo.cpp)
 target_link_libraries(Demo fiducials)
 target_link_libraries(Demo m)
 
-#add_executable(Rviz_Demo Rviz_Demo.cpp)
-#target_link_libraries(Rviz_Demo fiducials)
-#target_link_libraries(Rviz_Demo m ${catkin_LIBRARIES})
-
 add_executable(Tags Tags.cpp)
 target_link_libraries(Tags fiducials_base)
 target_link_libraries(Tags m)
@@ -54,21 +44,6 @@ target_link_libraries(Map_Test m)
 add_executable(Video_Capture Video_Capture.cpp)
 target_link_libraries(Video_Capture fiducials_cv)
 target_link_libraries(Video_Capture m)
-
-if(${flycapture_FOUND})
-  add_executable(FlyCapture2Test FlyCapture2Test.cpp)
-  target_link_libraries(FlyCapture2Test flycapture-c flycapture)
-
-  add_executable(Fly_Capture Fly_Capture.cpp FC2.cpp)
-  target_link_libraries(Fly_Capture flycapture-c flycapture m fiducials
-   ${OpenCV_LIBS})
-endif()
-
-#add_executable(undistort undistort.cpp)
-#target_link_libraries(undistort ${OpenCV_LIBS})
-
-#add_executable(Rviz_Test Rviz_Test.cpp)
-#target_link_libraries(Rviz_Test ${catkin_LIBRARIES})
 
 install(TARGETS
   Demo Tags Map_Test Video_Capture
