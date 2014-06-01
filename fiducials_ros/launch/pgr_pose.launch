@@ -1,0 +1,4 @@
+<launch>
+  <node type="static_transform_publisher" pkg="tf" name="camera_pose"
+        args="0 0 0 3.14159 0 0 base_link pgr_camera_frame 100"/> 
+</launch>

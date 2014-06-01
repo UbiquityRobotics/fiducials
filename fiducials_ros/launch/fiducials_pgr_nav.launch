@@ -1,0 +1,14 @@
+<launch>
+
+    <include file="$(find fiducials_rviz)/launch/pgr_camera.launch">
+    </include>
+
+    <node name="undistort" pkg="image_proc" type="image_proc" ns="/pgr_camera_node"/>
+
+    <include file="$(find fiducials_ros)/launch/pgr_pose.launch"/>
+
+    <include file="$(find fiducials_ros)/launch/fiducials_ros.launch">
+        <arg name="camera" value="/pgr_camera_node"/>
+    </include>
+
+</launch>
