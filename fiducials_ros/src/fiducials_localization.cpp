@@ -244,10 +244,10 @@ void FiducialsNode::tag_cb(int id, double x, double y, double z, double twist,
     snprintf(str_id, 12, "%d", id);
     marker.text = str_id;
     marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+    marker.pose.position.z += (marker.scale.z/2.0) + 0.05; // draw text above marker
     marker.color.r = marker.color.g = marker.color.b = 1.0; // white
-    marker.scale.x = marker.scale.y = marker.scale.z = 0.1;
+    marker.scale.x = marker.scale.y = marker.scale.z = 0.2;
     marker.id = id + 10000;
-    marker.pose.position.z += 0.05; // draw text above marker
     marker.ns = fiducial_namespace + "_text";
     marker_pub->publish(marker);
 }
@@ -314,6 +314,20 @@ void FiducialsNode::location_cb(int id, double x, double y, double z,
 
         tf2::Transform pose(tf_quat, tf2::Vector3(tf_x, tf_y, 0));
 
+        // look up camera transform if we can
+        if( last_camera_frame.length() > 0 ) {
+          if( tf_buffer.canTransform(pose_frame, last_camera_frame, now,
+                ros::Duration(0.1), &tf_err) ) {
+            geometry_msgs::TransformStamped camera_tf;
+            camera_tf = tf_buffer.lookupTransform(pose_frame,
+                                                    last_camera_frame, now);
+            tf2::Transform camera = msg_to_tf(camera_tf);
+            pose = pose * camera.inverse();
+          } else {
+            ROS_ERROR("Cannot look up transform from %s to %s: %s",
+                pose_frame.c_str(), last_camera_frame.c_str(), tf_err.c_str());
+          }
+        }
 
         geometry_msgs::TransformStamped odom;
         odom = tf_buffer.lookupTransform(odom_frame, pose_frame, now);
@@ -324,21 +338,6 @@ void FiducialsNode::location_cb(int id, double x, double y, double z,
         // C^-1 = O * M-1
         tf2::Transform odom_correction = (odom_tf * pose.inverse()).inverse();
 
-        // look up camera transform if we can
-        if( last_camera_frame.length() > 0 ) {
-          if( tf_buffer.canTransform(pose_frame, last_camera_frame, now,
-                ros::Duration(0.1), &tf_err) ) {
-            geometry_msgs::TransformStamped camera_tf;
-            camera_tf = tf_buffer.lookupTransform(pose_frame,
-                                                    last_camera_frame, now);
-            tf2::Transform camera = msg_to_tf(camera_tf);
-            odom_correction = odom_correction * camera.inverse();
-          } else {
-            ROS_ERROR("Cannot look up transform from %s to %s: %s",
-                pose_frame.c_str(), last_camera_frame.c_str(), tf_err.c_str());
-          }
-        }
-        
         geometry_msgs::TransformStamped transform;
         tf2::Vector3 odom_correction_v = odom_correction.getOrigin();
         transform.transform.translation.x = odom_correction_v.getX();

@@ -5,7 +5,9 @@
   <node pkg="fiducials_ros" name="fiducials_localization" 
     type="fiducials_localization" output="screen">
     <param name="tag_height" value="$(find fiducials)/Tag_Heights.xml" />
+    <param name="map_frame" value="map"/>
     <param name="odom_frame" value="odom"/>
+    <param name="pose_frame" value="base_link"/>
     <remap from="fiducials_localization/camera" to="$(arg camera)/image_rect"/>
     <param name="publish_images" value="true"/>
   </node>
