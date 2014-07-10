@@ -1,4 +1,4 @@
-base_global_planner: NavfnROS
+base_global_planner: navfn/NavfnROS
 recovery_behaviors:  [{name: conservative_reset, type: clear_costmap_recovery/ClearCostmapRecovery}]
 planner_patience: 15.0
 clearing_rotation_allowed: false

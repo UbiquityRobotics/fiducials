@@ -2,12 +2,12 @@ global_frame: /map
 robot_base_frame: base_link
 update_frequency: 2.0
 publish_frequency: 1.0
-resolution: 0.10
+resolution: 0.1
 plugins:
    - name: static_map
      type: "costmap_2d::StaticLayer"
-#   - name: obstacle_layer
-#     type: "costmap_2d::ObstacleLayer"
+   - name: obstacle_layer
+     type: "costmap_2d::ObstacleLayer"
    - name: footprint_layer
      type: "costmap_2d::FootprintLayer"
    - name: inflation_layer
