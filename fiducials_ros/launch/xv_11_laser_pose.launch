@@ -2,6 +2,7 @@
   <node type="static_transform_publisher" pkg="tf" name="laser_pose"
         args="0 0 .42 0 0 0 base_link laser 100"/> 
 
-  <node type="neato_laser_publisher" pkg="xv_11_laser_driver" name="neato_node" 
-  args="_firmware_version:=2"/>
+  <node type="neato_laser_publisher" pkg="xv_11_laser_driver" name="neato_node">
+    <param name="firmware_version" value="2"/>
+  </node>
 </launch>
