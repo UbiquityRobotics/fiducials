@@ -23,10 +23,10 @@ class BoundingBox {
     // @param y is the Y value to update
     void update(double x, double y);
 
-    int min_x() { return minimum_x; }
-    int max_x() { return maximum_x; }
-    int min_y() { return minimum_y; }
-    int max_y() { return maximum_y; }
+    double min_x() { return minimum_x; }
+    double max_x() { return maximum_x; }
+    double min_y() { return minimum_y; }
+    double max_y() { return maximum_y; }
 };
 
 #endif // !defined(BOUNDING_BOX_H_INCLUDED)
