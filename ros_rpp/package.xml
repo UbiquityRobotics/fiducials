@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+  <name>ros_rpp</name>
+  <version>1.0.0</version>
+  <description>ROS node to estimate 3D pose with RosbustPlanarPose</description>
+
+  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
+  <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
+
+  <!-- One license tag required, multiple allowed, one license per tag -->
+  <!-- Commonly used license strings: -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <license>BSD</license>
+
+  <author email="jimv@mrjim.com">Jim Vaughan</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
