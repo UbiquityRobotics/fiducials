@@ -1,0 +1,17 @@
+2012-03-12
+    * RobustPlanarPose 1.1.2 released
+    * Small typo in demo.cpp (Octav instead of Octave)
+    * Renamed text files to include .txt extension, makes it easier to double click and open.
+    * Added a check in RPP.cpp to see if the root finding code returned any solutions, if not return a false (thanks to csantos)
+
+2011-12-11
+	* RobustPlanarPose 1.1.1 released
+	* Fixed bugs found by Valgrind
+	* Got rid of any pointer access to cv::Mat
+
+2011-08-11
+	* RobustPlanarPose 1.1.0 offically released
+	* Bug fixed from line 1030 to 1032 in RPP.cpp, incorrect indexing of matrix. Thanks to Tatsiana!
+
+2011-07-26
+	* RobustPlanarPose 1.0 offically released

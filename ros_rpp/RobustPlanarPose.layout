@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="RPP.cpp" open="1" top="1" tabpos="2">
+		<Cursor position="26441" topLine="1122" />
+	</File>
+	<File name="RPP.h" open="1" top="0" tabpos="3">
+		<Cursor position="2897" topLine="84" />
+	</File>
+	<File name="Rpoly.cpp" open="1" top="0" tabpos="4">
+		<Cursor position="1156" topLine="8" />
+	</File>
+	<File name="Rpoly.h" open="1" top="0" tabpos="5">
+		<Cursor position="1683" topLine="18" />
+	</File>
+	<File name="demo.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="3723" topLine="94" />
+	</File>
+</CodeBlocks_layout_file>
