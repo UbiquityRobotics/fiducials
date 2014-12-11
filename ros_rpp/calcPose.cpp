@@ -20,12 +20,13 @@ the fiducial relative to a fiducial centered on the origin.
 #include "RPP.h"
 
 
-//double markerLen = 0.142; // in meters
-double markerLen = 0.2055; // At the dojo measured 11/17/14
+//TODO: have this as params
+double markerLen = 0.142; // in meters
+//double markerLen = 0.2055; // At the dojo measured 11/17/14
 double markerHeight = 0.0; //2.77;
 
 /*
-From camera info
+From camera info - TODO: load camera_info file
 
 image_width: 640
 image_height: 480
@@ -67,6 +68,7 @@ double fy = 1018.80123863486;
 double cx = 362.120173989305;
 double cy = 280.729668298301;
 
+double kc[] = {-0.385773196965028, 0.379304602782537, 0.000508189783669918, 0.0016178175839165, 0};
 double fLength = (fx + fy) / 2.0;
 //double fLength=652.641248385787;
 
@@ -102,6 +104,32 @@ double r2d(double r)
   return r / M_PI * 180.0;
 }
 
+void ideal2Observe(cv::Mat pts)
+{
+  for (int i=0; i<pts.cols; i++) {
+    printf("before %f %f\n", pts.at<double>(0, i), pts.at<double>(1, i));
+    const double xu[2] = { (pts.at<double>(0, i) - cx) / fx, (pts.at<double>(1, i) - cy) / fy };
+    
+    /*
+    const double r2 = (xu[0]*xu[0]) + (xu[1]*xu[1]);
+    const double r4 = r2*r2;
+    const double r6 = r4*r2;
+    const double cdist = 1 + kc[0] * r2 + kc[1] * r4 + kc[4] * r6;
+    
+    const double a1 = 2*xu[0]*xu[1];
+    const double a2 = r2 + 2*(xu[0]*xu[0]);
+    const double a3 = r2 + 2*(xu[1]*xu[1]);
+    
+    pts.at<double>(0, i) = (xu[0] * cdist) + (kc[2]*a1 + kc[3]*a2);
+    pts.at<double>(1, i) = (xu[1] * cdist) + (kc[2]*a3 + kc[3]*a1);
+    */
+
+    pts.at<double>(0, i) = xu[0];
+    pts.at<double>(1, i) = xu[1];
+    
+    printf("after %f %f\n", pts.at<double>(0, i), pts.at<double>(1, i));
+  }
+}
 
 /*******************************************************************************************************/
 
@@ -124,49 +152,59 @@ void Localization::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg
 
     switch(msg->direction) {
       case 0: 
+	// 3 0 1 2
         ipts.at<double>(0,0) = msg->x3;
-        ipts.at<double>(1,0) = msg->y3;
-        ipts.at<double>(0,1) = msg->x0;
+	ipts.at<double>(1,0) = msg->y3;
+	ipts.at<double>(0,1) = msg->x0;
         ipts.at<double>(1,1) = msg->y0;
         ipts.at<double>(0,2) = msg->x1;
         ipts.at<double>(1,2) = msg->y1;
         ipts.at<double>(0,3) = msg->x2;
         ipts.at<double>(1,3) = msg->y2;
         break;
-  
+	/*   
       case 1: 
+	// 0 1 2 3 
         ipts.at<double>(0,0) = msg->x2;
+        ipts.at<double>(1,0) = msg->y2;
+        ipts.at<double>(0,1) = msg->x3;
+	ipts.at<double>(1,1) = msg->y3;
+	ipts.at<double>(0,2) = msg->x0;
+        ipts.at<double>(1,2) = msg->y0;
+        ipts.at<double>(0,3) = msg->x1;
+        ipts.at<double>(1,3) = msg->y1;
+        break;
+      	
+      case 2:
+	// 1 2 3 0
+        ipts.at<double>(0,0) = msg->x1;
+        ipts.at<double>(1,0) = msg->y1;
+        ipts.at<double>(0,1) = msg->x2;
+        ipts.at<double>(1,1) = msg->y2;
+        ipts.at<double>(0,2) = msg->x3;
+	ipts.at<double>(1,2) = msg->y3;
+	ipts.at<double>(0,3) = msg->x0;
+        ipts.at<double>(1,3) = msg->y0;
+        break;
+	
+      case 3: 
+	// 0 1 2 3
+	// 2 3 0 1
+	ipts.at<double>(0,0) = msg->x2;
         ipts.at<double>(1,0) = msg->y2;
         ipts.at<double>(0,1) = msg->x3;
         ipts.at<double>(1,1) = msg->y3;
         ipts.at<double>(0,2) = msg->x0;
         ipts.at<double>(1,2) = msg->y0;
         ipts.at<double>(0,3) = msg->x1;
-        ipts.at<double>(1,3) = msg->y1;
+	ipts.at<double>(1,3) = msg->y1;
         break;
-  
-      case 2: 
-        ipts.at<double>(0,0) = msg->x1;
-        ipts.at<double>(1,0) = msg->y1;
-        ipts.at<double>(0,1) = msg->x2;
-        ipts.at<double>(1,1) = msg->y2;
-        ipts.at<double>(0,2) = msg->x3;
-        ipts.at<double>(1,2) = msg->y3;
-        ipts.at<double>(0,3) = msg->x0;
-        ipts.at<double>(1,3) = msg->y0;
-        break;
-  
-      case 3: 
-        ipts.at<double>(0,0) = msg->x0;
-        ipts.at<double>(1,0) = msg->y0;
-        ipts.at<double>(0,1) = msg->x1;
-        ipts.at<double>(1,1) = msg->y1;
-        ipts.at<double>(0,2) = msg->x2;
-        ipts.at<double>(1,2) = msg->y2;
-        ipts.at<double>(0,3) = msg->x3;
-        ipts.at<double>(1,3) = msg->y3;
-        break;
+      */
+    default:
+      return;
     }
+
+    ideal2Observe(ipts);
   
     cv::Mat rotation;
     cv::Mat translation;
@@ -205,8 +243,8 @@ void Localization::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg
     tf::Vector3 t1(translation.at<double>(0), translation.at<double>(1), translation.at<double>(2));
 
     tf::Transform trans1(m1, t1);
+    trans1 = trans1.inverse();
     frameTransforms[msg->fiducial_id] = trans1;
-    //trans1 = trans1.inverse();
     t1 = trans1.getOrigin();
     m1 = trans1.getBasis();
 
@@ -250,7 +288,6 @@ Localization::Localization(ros::NodeHandle nh)
     K.at<double>(1,2) = cy;
     K.at<double>(2,2) = 1;
     
-
     // homogeneous 2D points
     ipts = cv::Mat::ones(3, 4, CV_64F);
 
@@ -274,9 +311,10 @@ Localization::Localization(ros::NodeHandle nh)
 
 int main(int argc, char *argv[]) 
 {
-    ros::init(argc, argv, "calc_pose");
+    ros::init(argc, argv, "rpp_pose");
     ros::NodeHandle node;
     Localization localization(node);
+    ROS_INFO("rpp_pose started");
 
     ros::spin();
 }
