@@ -5,23 +5,36 @@ project(ros_rpp)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
-  tf)
+  std_msgs
+  geometry_msgs
+  tf
+)
 
 find_package(OpenCV REQUIRED)
 
+add_message_files(
+   FILES
+   FiducialTransform.msg
+)
+
+generate_messages(
+  DEPENDENCIES 
+  std_msgs 
+  geometry_msgs
+)
 
 catkin_package(
   INCLUDE_DIRS
   LIBRARIES
 )
 
-include_directories(. ${OpenCV_INCLUDE_DIRS})
+include_directories(include ${OpenCV_INCLUDE_DIRS})
 
 
-add_executable(rpp_pose Rpoly.cpp RPP.cpp calcPose.cpp)
+add_executable(rpp_pose src/Rpoly.cpp src/RPP.cpp src/calcPose.cpp)
 target_link_libraries(rpp_pose m ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_dependencies(rpp_pose fiducials_ros_gencpp)
+add_dependencies(rpp_pose fiducials_ros_gencpp ros_rpp_gencpp)
 
 install(PROGRAMS
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

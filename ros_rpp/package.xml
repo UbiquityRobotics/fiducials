@@ -14,5 +14,8 @@
 
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
+  <build_depend>geometry_msgs</build_depend>
+  <run_depend>geometry_msgs</run_depend>
+
   <buildtool_depend>catkin</buildtool_depend>
 </package>
