@@ -16,6 +16,7 @@ the fiducial relative to a fiducial centered on the origin.
 #include <tf/LinearMath/Matrix3x3.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <fiducials_ros/Fiducial.h>
+#include <ros_rpp/FiducialTransform.h>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
@@ -37,7 +38,7 @@ class RosRpp {
   int currentFrame;
   ros::Time frameTime;
   std::map<int, tf::Transform> frameTransforms;
-  tf::TransformBroadcaster tf_pub;
+  ros::Publisher tfPub;
   ros::Subscriber verticesSub;
   ros::Subscriber camInfoSub;
 
@@ -84,7 +85,7 @@ void RosRpp::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg)
 	   msg->direction);
 
   if (!haveCamInfo) {
-    ROS_INFO("No camera info");
+    ROS_ERROR("No camera info");
     return;
   }
 
@@ -190,22 +191,27 @@ void RosRpp::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg)
 	   t1.x(), t1.y(), t1.z(),
 	   r2d(r), r2d(p), r2d(y));
   
-  geometry_msgs::TransformStamped transform;
-  transform.header.stamp = frameTime;
+  ros_rpp::FiducialTransform ft;
+  geometry_msgs::Transform transform;
+  ft.header.stamp = frameTime;
   char t1name[32];
   sprintf(t1name, "fiducial_%d", msg->fiducial_id);
-  transform.header.frame_id = "camera";
-  transform.child_frame_id = t1name;
+  ft.header.frame_id = t1name;
 
-  transform.transform.translation.x = t1.x();
-  transform.transform.translation.y = t1.y();		
-  transform.transform.translation.z = t1.z(); 
+  transform.translation.x = t1.x();
+  transform.translation.y = t1.y();		
+  transform.translation.z = t1.z(); 
   tf::Quaternion q = trans1.getRotation();
-  transform.transform.rotation.w = q.w();
-  transform.transform.rotation.x = q.x();
-  transform.transform.rotation.y = q.y();
-  transform.transform.rotation.z = q.z();
-  tf_pub.sendTransform(transform);
+  transform.rotation.w = q.w();
+  transform.rotation.x = q.x();
+  transform.rotation.y = q.y();
+  transform.rotation.z = q.z();
+  ft.transform = transform;
+  ft.fiducial_id = msg->fiducial_id;
+  ft.image_seq = msg->image_seq;
+  ft.image_error = img_err;
+  ft.object_error = obj_err;
+  tfPub.publish(ft);
 }
 
 /**************************************************************************/
@@ -253,7 +259,7 @@ RosRpp::RosRpp(ros::NodeHandle nh)
 
   haveCamInfo = false;
 
-  camInfoSub = nh.subscribe("/pgr_camera_node/camera_info",
+  camInfoSub = nh.subscribe("/camera_info",
 			    1,
 			    &RosRpp::camInfoCallback,
 			    this);
@@ -261,7 +267,6 @@ RosRpp::RosRpp(ros::NodeHandle nh)
   nh.param<double>("fiducial_len", fiducialLen, 0.146);
 
   /*
-    
      Vertex ordering:
 
        2  3
@@ -290,7 +295,9 @@ RosRpp::RosRpp(ros::NodeHandle nh)
 
   currentFrame = 0;
 
-  verticesSub = nh.subscribe("/fiducials_localization/vertices",
+  tfPub = nh.advertise<ros_rpp::FiducialTransform>("fiducial_transforms", 100);
+
+  verticesSub = nh.subscribe("/vertices",
 			     1,
 			     &RosRpp::fiducialCallback,
 			     this);
