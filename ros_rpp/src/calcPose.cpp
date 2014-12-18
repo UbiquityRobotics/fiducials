@@ -25,7 +25,6 @@ the fiducial relative to a fiducial centered on the origin.
 
 #include "RPP.h"
 
-/**************************************************************************/
 
 class RosRpp {
   cv::Mat model;
@@ -55,7 +54,6 @@ double r2d(double r)
   return r / M_PI * 180.0;
 }
 
-/**************************************************************************/
 
 void RosRpp::undistortPoints(cv::Mat pts)
 {
@@ -76,7 +74,6 @@ void RosRpp::undistortPoints(cv::Mat pts)
   } 
 }
 
-/**************************************************************************/
 
 void RosRpp::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg)
 {
@@ -214,7 +211,6 @@ void RosRpp::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg)
   tfPub.publish(ft);
 }
 
-/**************************************************************************/
 
 void RosRpp::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
 {
@@ -241,7 +237,6 @@ void RosRpp::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
   haveCamInfo = true;
 }
 
-/**************************************************************************/
 
 RosRpp::RosRpp(ros::NodeHandle nh)
 {
@@ -297,13 +292,12 @@ RosRpp::RosRpp(ros::NodeHandle nh)
 
   tfPub = nh.advertise<ros_rpp::FiducialTransform>("fiducial_transforms", 100);
 
-  verticesSub = nh.subscribe("/vertices",
+  verticesSub = nh.subscribe("vertices",
 			     1,
 			     &RosRpp::fiducialCallback,
 			     this);
 } 
 
-/**************************************************************************/
 
 int main(int argc, char *argv[]) 
 {
@@ -315,4 +309,3 @@ int main(int argc, char *argv[])
   ros::spin();
 }
 
-/**************************************************************************/
