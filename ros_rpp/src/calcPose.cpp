@@ -48,10 +48,44 @@ public:
   void undistortPoints(cv::Mat pts);
 };
 
-
+// Radians to degrees
 double r2d(double r) 
 {
   return r / M_PI * 180.0;
+}
+
+// Euclidean distance between two points
+double dist(cv::Mat pts, int i1, int i2)
+{
+  double x1 = pts.at<double>(0, i1);
+  double y1 = pts.at<double>(1, i1);
+  double x2 = pts.at<double>(0, i2);
+  double y2 = pts.at<double>(1, i2);
+
+  double dx = x1 - x2;
+  double dy = y1 - y2;
+
+  return sqrt(dx*dx + dy*dy);
+}
+
+// Compute area in image of a fiducial, using Heron's formula
+// to find the area of two triangles
+double calcFiducialArea(cv::Mat pts)
+{
+  double a1 = dist(pts, 0, 1);
+  double b1 = dist(pts, 0, 3);
+  double c1 = dist(pts, 1, 3);
+  
+  double a2 = dist(pts, 1, 2);
+  double b2 = dist(pts, 2, 3);
+  double c2 = c1;
+
+  double s1 = (a1 + b1 + c1) / 2.0;
+  double s2 = (a2 + b2 + c2) / 2.0;
+
+  a1 = sqrt(s1*(s1-a1)*(s1-b1)*(s1-c1));
+  a2 = sqrt(s2*(s2-a2)*(s2-b2)*(s2-c2));
+  return a1+a2;
 }
 
 
@@ -208,6 +242,7 @@ void RosRpp::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg)
   ft.image_seq = msg->image_seq;
   ft.image_error = img_err;
   ft.object_error = obj_err;
+  ft.fiducial_area = calcFiducialArea(ipts);
   tfPub.publish(ft);
 }
 
