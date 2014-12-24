@@ -10,23 +10,27 @@ camera pose from them
 import rospy
 from nav_msgs.msg import Odometry
 from tf2_msgs.msg import TFMessage
-from std_msgs.msg import String
+from std_msgs.msg import String, ColorRGBA
+from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
+from visualization_msgs.msg import Marker
+
+from fiducials_ros.msg import Fiducial
+from ros_rpp.msg import FiducialTransform
+
 from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                translation_matrix, quaternion_matrix, \
                                translation_from_matrix, quaternion_from_matrix, \
                                quaternion_from_euler
-from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
-from fiducials_ros.msg import Fiducial
-from ros_rpp.msg import FiducialTransform
-from json import dumps
 import tf
-from math import pi, sqrt
 import rosbag
+
+from math import pi, sqrt
 import sys
 import os
 import traceback
 import math
 import numpy
+import time
 
 
 """
@@ -99,14 +103,16 @@ class Fiducial:
 class FiducialSlam:
     def __init__(self):
        rospy.init_node('fiducials_slam')
-       rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
        self.mapFile = rospy.get_param("map_file", "map.txt")
        self.tfs = {}
        self.currentSeq = None
        self.fiducials = {}
        #self.addOriginFiducial(543)
        self.br = tf.TransformBroadcaster()
+       self.markerPub = rospy.Publisher("fiducials", Marker)
+       time.sleep(10)
        self.loadMap()
+       rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
 
     def addOriginFiducial(self, id):
        pose = numpy.zeros(3),
@@ -126,16 +132,16 @@ class FiducialSlam:
             f = self.fiducials[fid]
             pos = f.position
             (r, p, y) = euler_from_quaternion(f.orientation)
-            file.write("%d %d %lf %lf %lf %lf %lf %lf %lf\n" % \
-              (f.id, f.observations, pos[0], pos[1], pos[2],
-               rad2deg(r), rad2deg(p), rad2deg(y), f.variance))
+            file.write("%d %lf %lf %lf %lf %lf %lf %lf %d\n" % \
+              (f.id, pos[0], pos[1], pos[2],
+               rad2deg(r), rad2deg(p), rad2deg(y),
+               f.variance, f.observations))
         file.close()
 
     def loadMap(self):
         file = open(self.mapFile, "r")
         for line in file.readlines():
             words = line.split()
-            print words
             fid = int(words[0])
             f = Fiducial(fid)
             f.position = numpy.array((float(words[1]), float(words[2]), float(words[3])))
@@ -143,6 +149,7 @@ class FiducialSlam:
             f.variance = float(words[7])
             f.observations = int(words[8])
             self.fiducials[fid] = f
+            self.publishMarker(fid)
         file.close()
 
     """
@@ -221,6 +228,7 @@ class FiducialSlam:
         if addedNew:
             self.saveMap()
 
+        self.publishMarker(f2)
 
     """ 
     Estimate the pose of the camera from the fiducial to camera
@@ -266,10 +274,40 @@ class FiducialSlam:
                                                   rad2deg(r), 
                                                   rad2deg(p),
                                                   rad2deg(y))
-        # TODO: publish
+            self.publishTransform(position, orientation)
+
+    def publishMarker(self, fiducialId):
+        marker = Marker()
+        marker.type = Marker.CUBE
+        marker.action = Marker.ADD
+        
+        position = self.fiducials[fiducialId].position
+        marker.pose = Pose(Point(position[0], position[1], 0.0),
+                           Quaternion(0, 0, 0, 1))
+        marker.scale.x = 0.15
+        marker.scale.y = 0.15
+        marker.scale.z = 0.15
+        marker.color = ColorRGBA(1, 0, 0, 1)
+        marker.id = fiducialId
+        marker.ns = "fiducial_namespace"
+        marker.header.frame_id = "/map"
+        self.markerPub.publish(marker)
+
+        marker.pose.position.z += (marker.scale.z/2.0) + 0.05  # draw text above marker
+        marker.color.r = marker.color.g = marker.color.b = 1.0 # white
+        marker.scale.y = marker.scale.z = 0.1
+        marker.id = fiducialId + 10000
+        marker.ns = "fiducial_namespace_text"
+        marker.type = Marker.TEXT_VIEW_FACING
+        marker.text = str(fiducialId)
+        self.markerPub.publish(marker)
+
+    def publishTansform(self, position, orientation):
+        pass
 
 if __name__ == "__main__":
     node = FiducialSlam()
+    rospy.loginfo("Fiducial Slam started")
     rospy.spin()
     print "end spin"
     node.saveMap()
