@@ -11,7 +11,8 @@ import rospy
 from nav_msgs.msg import Odometry
 from tf2_msgs.msg import TFMessage
 from std_msgs.msg import String, ColorRGBA
-from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
+from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion, \
+                              TransformStamped
 from visualization_msgs.msg import Marker
 
 from fiducials_ros.msg import Fiducial
@@ -109,20 +110,18 @@ class FiducialSlam:
        self.fiducials = {}
        #self.addOriginFiducial(543)
        self.br = tf.TransformBroadcaster()
+       self.lr = tf.TransformListener()
        self.markerPub = rospy.Publisher("fiducials", Marker)
-       time.sleep(10)
        self.loadMap()
+       self.robotXyz = None
+       self.robotQuat = None
+       self.timer = rospy.Timer(rospy.Duration(1.0/20.0), self.sendTransform)
        rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
 
-    def addOriginFiducial(self, id):
-       pose = numpy.zeros(3),
-       fid = Fiducial(id)
-       fid.position = numpy.zeros(3)
-       fid.orientation = numpy.array((0.0, 0.0, 0.0, 1.0))
-       fid.variance = 0.0
-       fid.observations = 1
-       self.fiducials[id] = fid
 
+    """
+    Save current map to file
+    """
     def saveMap(self):
         print "** save map **"
         file = open(self.mapFile, "w")
@@ -138,6 +137,9 @@ class FiducialSlam:
                f.variance, f.observations))
         file.close()
 
+    """
+    Load map from file
+    """
     def loadMap(self):
         file = open(self.mapFile, "r")
         for line in file.readlines():
@@ -179,7 +181,7 @@ class FiducialSlam:
         rot = m.transform.rotation
         mat = numpy.dot(translation_matrix((trans.x, trans.y, trans.z)),
                         quaternion_matrix((rot.x, rot.y, rot.z, rot.w)))
-        self.tfs[id] = (mat, m.object_error, m.image_error, m.fiducial_area)
+        self.tfs[id] = (mat, m.object_error, m.image_error)
     
         
     """
@@ -193,8 +195,8 @@ class FiducialSlam:
 
         posef1 = self.fiducials[f1].pose44()
 
-        (trans1, oerr1, ierr1, area1) = self.tfs[f1]
-        (trans2, oerr2, ierr2, area2) = self.tfs[f2]
+        (trans1, oerr1, ierr1) = self.tfs[f1]
+        (trans2, oerr2, ierr2) = self.tfs[f2]
 
         # transform form fiducial f1 to f2
         trans = numpy.dot(numpy.linalg.inv(trans1), trans2)
@@ -202,14 +204,14 @@ class FiducialSlam:
         # pose of f1 transformed by trans
         posef2 = numpy.dot(posef1, trans)
 
-        xyz = numpy.array(translation_from_matrix(trans))[:3]
-        quat = numpy.array(quaternion_from_matrix(trans))
+        xyz = numpy.array(translation_from_matrix(posef2))[:3]
+        quat = numpy.array(quaternion_from_matrix(posef2))
         (r, p, yaw) = euler_from_quaternion(quat)
 
-        print "new %d from %d %d %.3f %.3f %.3f %f %f %f %f %f %f %f %f %f" % \
+        print "new %d from %d %d %.3f %.3f %.3f %f %f %f %f %f %f %f" % \
             (f2, f1, self.currentSeq, xyz[0], xyz[1], xyz[2], 
              rad2deg(r), rad2deg(p), rad2deg(yaw),
-             oerr1, ierr1, oerr2, ierr2, area1, area2)
+             oerr1, ierr1, oerr2, ierr2)
             
         addedNew = False
         if not self.fiducials.has_key(f2):
@@ -242,7 +244,7 @@ class FiducialSlam:
             if not self.fiducials.has_key(t):
                 continue
 
-            (trans, oerr, ierr, area) = self.tfs[t]
+            (trans, oerr, ierr) = self.tfs[t]
             posef1 = self.fiducials[t].pose44()
 
             txpose = numpy.dot(posef1, trans,)
@@ -302,8 +304,36 @@ class FiducialSlam:
         marker.text = str(fiducialId)
         self.markerPub.publish(marker)
 
-    def publishTansform(self, position, orientation):
-        pass
+    """
+    Until we have proper sensor fusion in place, we publish a correction to odom, and do this in a timer,
+    so that we can ron on odometry if no fiducials are visible
+    """
+    def publishTransform(self, trans, rot):
+        odomt, odomr = self.lr.lookupTransform("odom", "base_footprint",
+                                               rospy.Time(0))
+        camt, camr = self.lr.lookupTransform("pgr_camera_frame", "base_link", 
+                                             rospy.Time(0))
+        odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
+                         quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
+        camera = numpy.dot(translation_matrix((camt[0], camt[1], camt[2])),
+                           quaternion_matrix((camr[0], camr[1], camr[2], camr[3])))
+        pose = numpy.dot(translation_matrix((trans[0], trans[1], trans[2])),
+                         quaternion_matrix((rot[0], rot[1], rot[2], rot[3])))
+
+        odomCorrection = numpy.linalg.inv(numpy.dot(pose, numpy.linalg.inv(odom)))
+        self.robotXyz = numpy.array(translation_from_matrix(odomCorrection))[:3]
+        self.robotXyz[2] = 0
+        self.robotQuat = numpy.array(quaternion_from_matrix(odomCorrection))
+        print self.robotXyz
+        #tf2::Transform odom_correction = (odom_tf * pose.inverse()).inverse();
+
+    def sendTransform(self, arg):
+        if self.robotXyz is None:
+            return
+        self.br.sendTransform(self.robotXyz, self.robotQuat,
+                              rospy.Time.now(),
+                              "odom",
+                              "map")
 
 if __name__ == "__main__":
     node = FiducialSlam()
