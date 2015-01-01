@@ -325,7 +325,7 @@ RosRpp::RosRpp(ros::NodeHandle nh)
 
   currentFrame = 0;
 
-  tfPub = nh.advertise<ros_rpp::FiducialTransform>("fiducial_transforms", 100);
+  tfPub = nh.advertise<ros_rpp::FiducialTransform>("fiducial_transforms", 3);
 
   verticesSub = nh.subscribe("vertices",
 			     1,
