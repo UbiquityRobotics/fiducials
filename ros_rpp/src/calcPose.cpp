@@ -102,9 +102,12 @@ void RosRpp::undistortPoints(cv::Mat pts)
   cv::vector<cv::Point2f> dest;
   cv::undistortPoints(src, dst, K, dist);
 
+  printf("undistorted:  ");
   for (int i=0; i<pts.cols; i++) {
     pts.at<double>(0, i) = dst.at<cv::Vec2d>(0, i)[0];
     pts.at<double>(1, i) = dst.at<cv::Vec2d>(0, i)[1];
+    printf("%lf %lf ",  pts.at<double>(0, i) / K.at<double>(0, 0) + K.at<double>(0, 2),
+                        pts.at<double>(1, i) / K.at<double>(1, 1) + K.at<double>(1, 2));
   } 
 }
 
@@ -311,16 +314,16 @@ RosRpp::RosRpp(ros::NodeHandle nh)
     Fiducial with origin at center:
   */
 
-  model.at<double>(0,0) = -fiducialLen / 2.0;
+  model.at<double>(0,0) =  fiducialLen / 2.0;
   model.at<double>(1,0) = -fiducialLen / 2.0;
   
-  model.at<double>(0,1) =  fiducialLen / 2.0;
+  model.at<double>(0,1) = -fiducialLen / 2.0;
   model.at<double>(1,1) = -fiducialLen / 2.0;
 
-  model.at<double>(0,2) =  fiducialLen / 2.0;
+  model.at<double>(0,2) = -fiducialLen / 2.0;
   model.at<double>(1,2) =  fiducialLen / 2.0;
 
-  model.at<double>(0,3) = -fiducialLen / 2.0;
+  model.at<double>(0,3) =  fiducialLen / 2.0;
   model.at<double>(1,3) =  fiducialLen / 2.0;
 
   currentFrame = 0;
