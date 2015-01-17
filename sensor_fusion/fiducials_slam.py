@@ -36,6 +36,22 @@ import threading
 import copy
 
 
+"""
+Distance from the nearest perpendicular
+"""
+def angularError(r):
+    r = r % (2.0*math.pi)
+    rDiff = r % (math.pi/2.0)
+    quadrant = r - rDiff
+    return abs(min(rDiff, quadrant - rDiff))
+
+def angularError3D(r, p, y):
+    a = angularError(r)
+    b = angularError(p)
+    c = angularError(y)
+    return math.sqrt(a*a + b*b + c*c)
+
+
 
 """
 Radians to degrees
@@ -235,11 +251,9 @@ class FiducialSlam:
 
         # transform form fiducial f1 to f2
         trans = numpy.dot(trans1Inv, trans2)
-        #trans = numpy.dot(trans2, trans1Inv)
                              
         # pose of f1 transformed by trans
-        #posef2 = numpy.dot(posef1, trans)
-        posef2 = numpy.dot(trans, posef1)
+        posef2 = numpy.dot(posef1, trans)
 
         xyz = numpy.array(translation_from_matrix(posef2))[:3]
         quat = numpy.array(quaternion_from_matrix(posef2))
@@ -259,7 +273,8 @@ class FiducialSlam:
         fid2 = self.fiducials[f2]
 
         # We use the max of the two object errors, scaled, as our variance
-        variance = max(oerr1, oerr2) * 100.0
+        #variance = max(oerr1, oerr2) * 100.0
+        variance  = angularError3D(r, p , yaw)
         # and take into account the variance of the reference fiducial
         variance = max(variance, self.fiducials[f1].variance)
         self.fiducials[f2].update(xyz, quat, variance)
