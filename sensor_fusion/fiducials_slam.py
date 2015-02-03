@@ -11,7 +11,7 @@ import rospy
 from nav_msgs.msg import Odometry
 from tf2_msgs.msg import TFMessage
 from std_msgs.msg import String, ColorRGBA
-from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion, \
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion, \
                               TransformStamped
 from visualization_msgs.msg import Marker
 
@@ -35,20 +35,23 @@ import time
 import threading
 import copy
 
+USE_ODOM = 0
+SEND_TF = 0
 
 """
 Distance from the nearest perpendicular
 """
 def angularError(r):
-    r = r % (2.0*math.pi)
-    rDiff = r % (math.pi/2.0)
+    r = r % 360
+    rDiff = r % 90
     quadrant = r - rDiff
-    return abs(min(rDiff, quadrant - rDiff))
+    err = abs(min(rDiff, 90 - rDiff))
+    return err
 
 def angularError3D(r, p, y):
-    a = angularError(r)
-    b = angularError(p)
-    c = angularError(y)
+    a = angularError(rad2deg(r))
+    b = angularError(rad2deg(p))
+    c = angularError(rad2deg(y))
     return math.sqrt(a*a + b*b + c*c)
 
 
@@ -144,7 +147,10 @@ class FiducialSlam:
        self.robotXyz = None
        self.robotQuat = None
        self.loadMap()
+       self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
+       if not SEND_TF:
+           self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped)
 
 
     def close(self):
@@ -298,25 +304,34 @@ class FiducialSlam:
     def updatePose(self):
         position = None
         orientation = None
+        try:
+            camt, camr = self.lr.lookupTransform("base_link", "pgr_camera_frame", 
+                                                 rospy.Time(0))
+        except:
+            rospy.logerr("Unable to lookup transfrom from camera to robot")
+            return
+        camera = numpy.dot(translation_matrix((camt[0], camt[1], camt[2])),
+                     quaternion_matrix((camr[0], camr[1], camr[2], camr[3])))
+        #camera = numpy.linalg.inv(camera)
         
         for t in self.tfs.keys():
             if not self.fiducials.has_key(t):
+                rospy.logwarn("No path to %d" % t)
                 continue
             (trans, invTrans, oerr, ierr) = self.tfs[t]
             posef1 = self.fiducials[t].pose44()
 
             txpose = numpy.dot(posef1, invTrans)
-            #txpose = numpy.dot(invTrans, posef1)
+            #txpose = numpy.dot(posef1, trans)
+            txpose = numpy.dot(txpose, camera)
             xyz = numpy.array(translation_from_matrix(txpose))[:3]
             quat = numpy.array(quaternion_from_matrix(txpose))
 
             (r, p, y) = euler_from_quaternion(quat)
-            print "pose %d %f %f %f %f %f %f" % (t, xyz[0], xyz[1], xyz[2],
-                                                 rad2deg(r), 
-                                                 rad2deg(p),
-                                                 rad2deg(y))
-            thisvar = oerr * 100.0
-            thisvar = max(thisvar, self.fiducials[t].variance)
+            thisvar  = angularError3D(r, p , 0.0)
+            print "pose %d %f %f %f %f %f %f %f" % (t, xyz[0], xyz[1], xyz[2],
+                                                 rad2deg(r), rad2deg(p), rad2deg(y),
+                                                 thisvar)
 
             if position is None:
                 position = xyz
@@ -324,17 +339,16 @@ class FiducialSlam:
                 variance = thisvar
             else:
                 position, v1 = updateLinear(position, variance,
-                                       xyz, oerr)
+                                       xyz, thisvar)
                 orientation, v2 = updateAngular(orientation, variance,
                                                 quat, thisvar)
-                self.variance = v1
+                variance = v1
         if not position is None:
             (r, p, y) = euler_from_quaternion(orientation)
             xyz = position
-            print "pose ALL %f %f %f %f %f %f" % (xyz[0], xyz[1], xyz[2],
-                                                  rad2deg(r), 
-                                                  rad2deg(p),
-                                                  rad2deg(y))
+            print "pose ALL %f %f %f %f %f %f %f" % (xyz[0], xyz[1], xyz[2],
+                                                  rad2deg(r), rad2deg(p), rad2deg(y), 
+                                                  variance)
             self.publishTransform(position, orientation)
 
     def publishMarkers(self):
@@ -399,45 +413,48 @@ class FiducialSlam:
     so that we can ron on odometry if no fiducials are visible
     """
     def publishTransform(self, trans, rot):
-        """
-
-        self.lr.waitForTransform("base_footprint", "odom", rospy.Time(0), rospy.Duration(0.4))
-        odomt, odomr = self.lr.lookupTransform("base_footprint", "odom",
-                                               rospy.Time(0))
-        odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
-                         quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
-        """
-
-        """
-        camt, camr = self.lr.lookupTransform("base_link", "pgr_camera_frame", 
-                                             rospy.Time(0))
-        camera = numpy.dot(translation_matrix((camt[0], camt[1], camt[2])),
-                           quaternion_matrix((camr[0], camr[1], camr[2], camr[3])))
-        """
         pose = numpy.dot(translation_matrix((trans[0], trans[1], trans[2])),
                          quaternion_matrix((rot[0], rot[1], rot[2], rot[3])))
-        """
-        except:
-            print "Exception with tf"
-            return
-        """
-
+        if USE_ODOM:
+            self.lr.waitForTransform("base_footprint", "odom", rospy.Time(0), rospy.Duration(0.4))
+            odomt, odomr = self.lr.lookupTransform("base_footprint", "odom",
+                                               rospy.Time(0))
+            odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
+                         quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
         
-        #pose = numpy.linalg.inv(odom)
-        #pose = odom
-        #pose = numpy.dot(pose, numpy.linalg.inv(odom))
-        #pose = numpy.dot(pose, numpy.linalg.inv(camera))
+            pose = numpy.dot(pose, odom)
 
-        #pose = numpy.dot(pose, odom)
-        #pose = numpy.dot(pose, camera)
+        robotXyz = numpy.array(translation_from_matrix(pose))[:3]
+        robotQuat = numpy.array(quaternion_from_matrix(pose))
+        (r, p, y) = euler_from_quaternion(robotQuat)
+        robotQuat = quaternion_from_euler(0.0, 0.0, y) 
+        m = PoseWithCovarianceStamped()
+        m.header.frame_id = "/map"
+        m.header.stamp = rospy.Time.now()
+        m.pose.pose.orientation.x = robotQuat[0]
+        m.pose.pose.orientation.y = robotQuat[1]
+        m.pose.pose.orientation.z = robotQuat[2]
+        m.pose.pose.orientation.w = robotQuat[3]
+        m.pose.pose.position.x = robotXyz[0]
+        m.pose.pose.position.y = robotXyz[1]
+        m.pose.pose.position.z = robotXyz[2]
+        """
+        These values are designed to work with robot_localization.
+        See http://wiki.ros.org/robot_localization/Tutorials/Migration%20from%20robot_pose_ekf
+        """
+        m.pose.covariance = [0.1,  0,    0,     0,     0,     0,
+                                0,    0.1,  0,     0,     0,     0,
+                                0,    0,    0.1,   0,     0,     0,
+                                0,    0,    0,     0.1,   0,     0,
+                                0,    0,    0,     0,     0.1,   0,
+                                0,    0,    0,     0,     0,     0.1]
 
-        #pose = numpy.dot(numpy.linalg.inv(pose), (odom))
-        #pose = numpy.linalg.inv(numpy.dot(odom, numpy.linalg.inv(pose)))
+
+        self.posePub.publish(m)
         self.threadLock.acquire()
-        self.robotXyz = numpy.array(translation_from_matrix(pose))[:3]
-        #self.robotXyz[2] = 0
-        self.robotQuat = numpy.array(quaternion_from_matrix(pose))
-        print self.robotXyz
+        self.robotXyz = robotXyz
+        self.robotXyz[2] = 0
+        self.robotQuat = robotQuat
         self.threadLock.release()
 
 
@@ -449,15 +466,21 @@ class FiducialSlam:
             for fid in self.fiducials.keys():
                rospy.sleep(.1)
                self.publishMarker(fid)
+            print "published map"
         if self.numFiducialsVisible == 0:
             for fid in self.visibleMarkers.keys():
                 if not self.tfs.has_key(fid):
                     self.publishMarker(fid)
         if not self.robotXyz is None:
-            self.br.sendTransform(self.robotXyz, self.robotQuat,
-                                  rospy.Time.now(),
-                                  "base_footprint",
-                                  "map")
+            if USE_ODOM:
+                frame = "odom" # and odom is from odom to base_footprint
+            else:
+                frame = "base_footprint"
+            if SEND_TF:
+                self.br.sendTransform(self.robotXyz, self.robotQuat,
+                                      rospy.Time.now(),
+                                      frame,
+                                      "map")
         self.threadLock.release()
 
 if __name__ == "__main__":
