@@ -91,6 +91,14 @@ double calcFiducialArea(cv::Mat pts)
 
 void RosRpp::undistortPoints(cv::Mat pts)
 {
+#if 1
+  printf("fx %lf fy %lf cx %lf cy %lf", K.at<double>(0, 0), K.at<double>(1, 1), K.at<double>(0, 2), K.at<double>(1, 2));
+  for (int i=0; i<pts.cols; i++) {
+    pts.at<double>(0, i) = (pts.at<double>(0, i) - K.at<double>(0, 2)) / K.at<double>(0, 0);
+    pts.at<double>(1, i) = (pts.at<double>(1, i) - K.at<double>(1, 2)) / K.at<double>(1, 1);
+  }
+#else
+
   cv::Mat src(1, pts.cols, CV_64FC2);
   cv::Mat dst(1, pts.cols, CV_64FC2);
 
@@ -98,19 +106,15 @@ void RosRpp::undistortPoints(cv::Mat pts)
     src.at<cv::Vec2d>(0, i)[0] = pts.at<double>(0, i);
     src.at<cv::Vec2d>(0, i)[1] = pts.at<double>(1, i);
   }
-
   cv::vector<cv::Point2f> dest;
   cv::undistortPoints(src, dst, K, dist);
 
-  printf("undistorted:  ");
   for (int i=0; i<pts.cols; i++) {
     pts.at<double>(0, i) = dst.at<cv::Vec2d>(0, i)[0];
     pts.at<double>(1, i) = dst.at<cv::Vec2d>(0, i)[1];
-    printf("%lf %lf ",  pts.at<double>(0, i) / K.at<double>(0, 0) + K.at<double>(0, 2),
-                        pts.at<double>(1, i) / K.at<double>(1, 1) + K.at<double>(1, 2));
   } 
+#endif
 }
-
 
 void RosRpp::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg)
 {
