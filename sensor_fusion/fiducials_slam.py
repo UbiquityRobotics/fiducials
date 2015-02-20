@@ -45,26 +45,11 @@ SEND_TF = 0
 # These thresholds are to prevent the map being updated repeateadly with the same
 # observation.  They specify how much the robot needs to move (meters, radians) before
 # the map will be updated again
-MIN_UPDATE_TRANSLATION = 0.5
+MIN_UPDATE_TRANSLATION = 1.0
 MIN_UPDATE_ROTATION = math.pi/4.0
 
-
-"""
-Distance from the nearest perpendicular
-"""
-def angularError(r):
-    r = r % 360
-    rDiff = r % 90
-    quadrant = r - rDiff
-    err = abs(min(rDiff, 90 - rDiff))
-    return err
-
-def angularError3D(r, p, y):
-    a = angularError(rad2deg(r))
-    b = angularError(rad2deg(p))
-    c = angularError(rad2deg(y))
-    return 1 +  math.sqrt(a*a + b*b + c*c) / 5.0
-
+# Used to make an estimeate of error, based on tilt
+CEILING_HEIGHT = 2.77
 
 
 """
@@ -78,6 +63,31 @@ Degrees to radians
 """
 def deg2rad(deg):
     return float(deg) * math.pi / 180.0
+
+"""
+Distance from the nearest perpendicular
+"""
+
+
+def angularError(r):
+    r = r % 360
+    rDiff = r % 90
+    quadrant = r - rDiff
+    err = abs(min(rDiff, 90 - rDiff))
+    return err
+
+def angularError3D(r, p, y):
+    a = angularError(rad2deg(r))
+    b = angularError(rad2deg(p))
+    c = angularError(rad2deg(y))
+    tilt = deg2rad(math.sqrt(a*a + b*b + c*c))
+    error = CEILING_HEIGHT * math.tan(tilt)
+    variance = error * error
+    print "Variance", variance
+    return variance
+
+
+
 
 
 """
@@ -229,7 +239,7 @@ class FiducialSlam:
                 dist = numpy.linalg.norm(self.lastUpdateXyz - self.robotXyz)
                 angle = self.lastUpdateYaw - self.robotYaw
                 print "Distance moved", dist, angle
-                if dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
+                if True or dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
                     self.updateMap()
                     self.lastUpdateXyz = self.robotXyz
                     self.lastUpdateYaw = self.robotYaw
@@ -317,8 +327,10 @@ class FiducialSlam:
         variance = variance + self.fiducials[f1].variance
         self.fiducials[f2].update(xyz, quat, variance)
 
+        print "%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f2, xyz[0], xyz[1], xyz[2],
+            rad2deg(r), rad2deg(p), rad2deg(yaw), variance)
+          
         p = self.fiducials[f2].position
-        print "%d updated to %.3f %.3f %.3f" % (f2, p[0], p[1], p[2])
 
         if addedNew:
             self.saveMap()
