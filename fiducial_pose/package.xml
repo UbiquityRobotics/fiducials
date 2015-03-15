@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>ros_rpp</name>
+  <name>fiducial_pose</name>
   <version>1.0.0</version>
   <description>ROS node to estimate 3D pose with RosbustPlanarPose</description>
 

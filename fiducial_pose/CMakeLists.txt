@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(ros_rpp)
+project(fiducial_pose)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
