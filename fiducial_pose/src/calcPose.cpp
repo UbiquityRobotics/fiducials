@@ -15,8 +15,9 @@ the fiducial relative to a fiducial centered on the origin.
 #include <turtlesim/Pose.h>
 #include <tf/LinearMath/Matrix3x3.h>
 #include <sensor_msgs/CameraInfo.h>
-#include <fiducials_ros/Fiducial.h>
-#include <ros_rpp/FiducialTransform.h>
+
+#include <fiducial_detect/Fiducial.h>
+#include <fiducial_pose/FiducialTransform.h>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
@@ -43,7 +44,7 @@ class RosRpp {
 
 public:
   RosRpp(ros::NodeHandle);
-  void fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg);
+  void fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg);
   void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
   void undistortPoints(cv::Mat pts);
 };
@@ -116,7 +117,7 @@ void RosRpp::undistortPoints(cv::Mat pts)
 #endif
 }
 
-void RosRpp::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg)
+void RosRpp::fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg)
 {
   ROS_INFO("date %d id %d direction %d", 
 	   msg->header.stamp.sec, msg->fiducial_id,
@@ -229,7 +230,7 @@ void RosRpp::fiducialCallback(const fiducials_ros::Fiducial::ConstPtr& msg)
 	   t1.x(), t1.y(), t1.z(),
 	   r2d(r), r2d(p), r2d(y));
   
-  ros_rpp::FiducialTransform ft;
+  fiducial_pose::FiducialTransform ft;
   geometry_msgs::Transform transform;
   ft.header.stamp = frameTime;
   char t1name[32];
@@ -332,7 +333,7 @@ RosRpp::RosRpp(ros::NodeHandle nh)
 
   currentFrame = 0;
 
-  tfPub = nh.advertise<ros_rpp::FiducialTransform>("fiducial_transforms", 3);
+  tfPub = nh.advertise<fiducial_pose::FiducialTransform>("fiducial_transforms", 3);
 
   verticesSub = nh.subscribe("vertices",
 			     1,

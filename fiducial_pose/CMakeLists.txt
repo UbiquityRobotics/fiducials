@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   tf
+  fiducial_detect
 )
 
 find_package(OpenCV REQUIRED)
@@ -34,7 +35,7 @@ include_directories(include ${OpenCV_INCLUDE_DIRS})
 add_executable(rpp_pose src/Rpoly.cpp src/RPP.cpp src/calcPose.cpp)
 target_link_libraries(rpp_pose m ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_dependencies(rpp_pose fiducials_ros_gencpp ros_rpp_gencpp)
+add_dependencies(rpp_pose fiducial_detect_gencpp fiducial_pose_gencpp)
 
 install(PROGRAMS
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

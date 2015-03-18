@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(fiducials_ros)
+project(fiducial_detect)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  fiducials
+  fiducial_lib
   roscpp
   tf2_geometry_msgs
   tf2_ros

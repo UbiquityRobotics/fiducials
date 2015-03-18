@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(fiducials)
+project(fiducial_lib)
 
 find_package(catkin REQUIRED COMPONENTS angles)
 
@@ -15,7 +15,7 @@ catkin_package(
 add_definitions(-g)
 #add_definitions(-DMEMORY_LEAK_CHECK=1)
 
-include_directories(include/fiducials)
+include_directories(include/fiducial_lib)
 include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
