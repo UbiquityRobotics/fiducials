@@ -1,0 +1,19 @@
+<launch>
+    <include file="$(find fiducial_detect)/launch/pgr_camera.launch"/>
+
+    <node name="undistort" pkg="image_proc" type="image_proc" 
+        ns="/pgr_camera_node"/>
+
+    <include file="$(find fiducial_detect)/launch/pgr_pose.launch"/>
+
+    <include file="$(find fiducial_detect)/launch/fiducials_no_odom.launch">
+        <arg name="camera" value="/pgr_camera_node"/>
+	<arg name="image" value="image_rect"/>
+    </include>
+
+    <node name="ros_rpp" pkg="fiducial_pose" type="rpp_pose" output="screen">
+       <remap to="/fiducials_localization/vertices" from="/vertices"/>
+       <remap to="/pgr_camera_node/camera_info" from="/camera_info"/>
+       <param name="fiducial_len" type="double" value="0.146"/>
+    </node>
+</launch>

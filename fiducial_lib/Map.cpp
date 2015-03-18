@@ -389,7 +389,6 @@ void Map__restore(Map map, File in_file) {
     for (unsigned int index = 0; index < all_tags_size; index++) {
         Tag * tag = Tag::read(in_file, map);
 
-        fprintf(stderr, "announce %d\n", tag->id);
         map->tag_announce_routine(map->announce_object,
         tag->id, tag->x, tag->y, tag->z, tag->twist,
         tag->diagonal, tag->world_diagonal/tag->diagonal,
@@ -419,7 +418,7 @@ void Map__save(Map map) {
       File__format(stderr, "**********Map__save************\n");
       if (!map->is_saved) {
         String full_map_file_name =
-          String__format("%s/%s1.xml", map->file_path, map->file_base);
+          String__format("%s/%s", map->file_path, map->file_base);
         File out_file = File__open(full_map_file_name, "w");
         assert (out_file != (File)0);
         String__free(full_map_file_name);

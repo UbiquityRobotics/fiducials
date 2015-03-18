@@ -1,15 +1,17 @@
 <launch>
   <!-- namespace for camera input -->
   <arg name="camera" default="/camera"/>
+  <arg name="image" default="image_rect"/>
 
-  <node pkg="fiducials_ros" name="fiducials_localization" 
+  <node pkg="fiducial_detect" name="fiducials_localization" 
     type="fiducials_localization" output="screen">
     <param name="tag_height" value="Tag_Heights.xml" />
     <param name="data_directory" value="$(env HOME)/.ros/fiducials" />
     <param name="map_frame" value="odom" />
     <param name="pose_frame" value="slam" />
     <param name="publish_images" value="true" />
-    <remap from="fiducials_localization/camera" to="$(arg camera)/image_rect"/>
+    <param name="publish_tf" value="false" />
+    <remap from="fiducials_localization/camera" to="$(arg camera)/$(arg image)"/>
     <param name="publish_images" value="true"/>
   </node>
 </launch>
