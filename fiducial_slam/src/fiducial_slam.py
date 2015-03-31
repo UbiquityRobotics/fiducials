@@ -15,8 +15,8 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
                               TransformStamped
 from visualization_msgs.msg import Marker
 
-from fiducials_ros.msg import Fiducial
-from ros_rpp.msg import FiducialTransform
+from fiducial_detect.msg import Fiducial
+from fiducial_pose.msg import FiducialTransform
 
 from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                translation_matrix, quaternion_matrix, \
@@ -171,6 +171,7 @@ class FiducialSlam:
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
        self.loadMap()
+       self.showVertices()
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
        if not SEND_TF:
@@ -218,6 +219,24 @@ class FiducialSlam:
             f.links = map(int, words[9:])
             self.fiducials[fid] = f
         file.close()
+
+    """
+    Print out fiducual vertices
+    """
+    def showVertices(self):
+        fids = self.fiducials.keys()
+        fids.sort()
+        for fid in fids:
+            f = self.fiducials[fid]
+            pos = f.position
+            off = numpy.dot(translation_matrix(numpy.array((-1.0, -1.0, 0.0))), f.pose44())
+            print fid, translation_from_matrix(off)[:3]
+            off = numpy.dot(translation_matrix(numpy.array((1.0, -1.0, 0.0))), f.pose44())
+            print fid, translation_from_matrix(off)[:3]
+            off = numpy.dot(translation_matrix(numpy.array((1.0, 1.0, 0.0))), f.pose44())
+            print fid, translation_from_matrix(off)[:3]
+            off = numpy.dot(translation_matrix(numpy.array((-1.0, 1.0, 0.0))), f.pose44())
+            print fid, translation_from_matrix(off)[:3]
 
     """
     Called when a FiducialTransform is received
@@ -348,14 +367,14 @@ class FiducialSlam:
     def updatePose(self):
         position = None
         orientation = None
+        camera = None
         try:
             camt, camr = self.lr.lookupTransform("base_link", "pgr_camera_frame", 
                                                  rospy.Time(0))
+            camera = numpy.dot(translation_matrix((camt[0], camt[1], camt[2])),
+                     quaternion_matrix((camr[0], camr[1], camr[2], camr[3])))
         except:
             rospy.logerr("Unable to lookup transfrom from camera to robot")
-            return
-        camera = numpy.dot(translation_matrix((camt[0], camt[1], camt[2])),
-                     quaternion_matrix((camr[0], camr[1], camr[2], camr[3])))
         
         for t in self.tfs.keys():
             if not self.fiducials.has_key(t):
@@ -365,7 +384,9 @@ class FiducialSlam:
             posef1 = self.fiducials[t].pose44()
 
             txpose = numpy.dot(posef1, invTrans)
-            txpose = numpy.dot(txpose, camera)
+            if not camera is None:
+                txpose = numpy.dot(txpose, camera)
+
             xyz = numpy.array(translation_from_matrix(txpose))[:3]
             quat = numpy.array(quaternion_from_matrix(txpose))
 
@@ -390,7 +411,7 @@ class FiducialSlam:
             xyz = position
             print "pose ALL %f %f %f %f %f %f %f" % (xyz[0], xyz[1], xyz[2],
                                                   rad2deg(r), rad2deg(p), rad2deg(y), 
-                                                  variance)
+                                                  variance, self.currentSeq)
             self.publishTransform(position, orientation)
 
     def publishMarkers(self):
