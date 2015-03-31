@@ -3,19 +3,19 @@
   <node pkg="move_base" type="move_base" respawn="false" name="move_base"
         output="screen">
 
-    <rosparam file="$(find fiducials_ros)/config/dagny_nav.yaml" command="load"/>
-    <rosparam file="$(find fiducials_ros)/config/local_planner.yaml" command="load"/>
+    <rosparam file="$(find fiducial_detect)/config/dagny_nav.yaml" command="load"/>
+    <rosparam file="$(find fiducial_detect)/config/local_planner.yaml" command="load"/>
   
     <!-- local costmap parameters. Small laser scanner on /scan -->
-    <rosparam file="$(find fiducials_ros)/config/common_costmap.yaml"
+    <rosparam file="$(find fiducial_detect)/config/common_costmap.yaml"
               command="load" ns="local_costmap"/>
-    <rosparam file="$(find fiducials_ros)/config/local_costmap.yaml"
+    <rosparam file="$(find fiducial_detect)/config/local_costmap.yaml"
               command="load" ns="local_costmap"/>
   
     <!-- global costmap parameters. Should just be a static map. -->
-    <rosparam file="$(find fiducials_ros)/config/common_costmap.yaml"
+    <rosparam file="$(find fiducial_detect)/config/common_costmap.yaml"
               command="load" ns="global_costmap"/>
-    <rosparam file="$(find fiducials_ros)/config/global_costmap.yaml"
+    <rosparam file="$(find fiducial_detect)/config/global_costmap.yaml"
               command="load" ns="global_costmap"/>
   </node>
 </launch>

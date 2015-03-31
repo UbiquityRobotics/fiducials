@@ -3,8 +3,8 @@
   <arg name="camera" default="/camera"/>
   <arg name="image" default="image_rect"/>
 
-  <node pkg="fiducial_detect" name="fiducials_localization" 
-    type="fiducials_localization" output="screen">
+  <node pkg="fiducial_detect" name="fiducials_localization"
+    type="fiducials_localization" output="screen" respawn="true">
     <param name="tag_height" value="Tag_Heights.xml" />
     <param name="data_directory" value="$(env HOME)/.ros/fiducials" />
     <param name="map_frame" value="odom" />

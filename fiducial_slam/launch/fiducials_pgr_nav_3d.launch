@@ -1,19 +1,32 @@
 <launch>
-    <include file="$(find fiducial_detect)/launch/pgr_camera.launch"/>
 
-    <node name="undistort" pkg="image_proc" type="image_proc" 
-        ns="/pgr_camera_node"/>
+  <!-- Camera -->
+  <include file="$(find fiducial_detect)/launch/pgr_camera.launch"/>
+  
+  <!-- Undistort -->
+  <node name="undistort" pkg="image_proc" type="image_proc" 
+        ns="/pgr_camera_node" respawn="true"/>
+  
+  <!-- Camera transform -->
+  <include file="$(find fiducial_detect)/launch/pgr_pose.launch"/>
+  
+  <!-- Fiducial detection -->
+  <include file="$(find fiducial_detect)/launch/fiducials_no_odom.launch">
+    <arg name="camera" value="/pgr_camera_node"/>
+    <arg name="image" value="image_rect"/>
+  </include>
 
-    <include file="$(find fiducial_detect)/launch/pgr_pose.launch"/>
+  <!-- Fiducial pose estimation -->
+  <node name="ros_rpp" pkg="fiducial_pose" type="rpp_pose" output="screen" respawn="true">
+    <remap to="/fiducials_localization/vertices" from="/vertices"/>
+    <remap to="/pgr_camera_node/camera_info" from="/camera_info"/>
+    <param name="fiducial_len" type="double" value="0.145"/>
+  </node>
 
-    <include file="$(find fiducial_detect)/launch/fiducials_no_odom.launch">
-        <arg name="camera" value="/pgr_camera_node"/>
-	<arg name="image" value="image_rect"/>
-    </include>
-
-    <node name="ros_rpp" pkg="fiducial_pose" type="rpp_pose" output="screen">
-       <remap to="/fiducials_localization/vertices" from="/vertices"/>
-       <remap to="/pgr_camera_node/camera_info" from="/camera_info"/>
-       <param name="fiducial_len" type="double" value="0.146"/>
-    </node>
+  <!-- Fiducial detection -->
+  <node type="fiducial_slam.py" pkg="fiducial_slam" output="screen" name="fiducials_slam">
+    <param name="map_file" value="$(env HOME)/.ros/slam/map.txt" />
+    <param name="obs_file" value="$(env HOME)/.ros/slam/obs.txt" />
+    <param name="trans_file" value="$(env HOME)/.ros/slam/trans.txt" />
+  </node>
 </launch>

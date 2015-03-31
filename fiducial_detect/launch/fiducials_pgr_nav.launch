@@ -9,6 +9,7 @@
 
     <include file="$(find fiducials_ros)/launch/fiducials_ros.launch">
         <arg name="camera" value="/pgr_camera_node"/>
+        <arg name="respawn" value="true"/>
     </include>
 
 </launch>
