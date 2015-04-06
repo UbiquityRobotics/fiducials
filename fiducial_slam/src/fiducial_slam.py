@@ -258,7 +258,7 @@ class FiducialSlam:
                 dist = numpy.linalg.norm(self.lastUpdateXyz - self.robotXyz)
                 angle = self.lastUpdateYaw - self.robotYaw
                 print "Distance moved", dist, angle
-                if True or dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
+                if dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
                     self.updateMap()
                     self.lastUpdateXyz = self.robotXyz
                     self.lastUpdateYaw = self.robotYaw
