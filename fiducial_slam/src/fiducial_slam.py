@@ -37,10 +37,10 @@ import copy
 
 # If set, we caculate the correction to odometry and pulish a tf map->odom.
 # The odom should be pulished elsewhere as odom->base_link
-USE_ODOM = 0
+USE_ODOM = 1
 
 # If set, we send tf.  We always send a PoseWithCovarianceStamped 
-SEND_TF = 0
+SEND_TF = 1
 
 # These thresholds are to prevent the map being updated repeateadly with the same
 # observation.  They specify how much the robot needs to move (meters, radians) before
@@ -170,12 +170,12 @@ class FiducialSlam:
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
+       self.lastTfPubTime = rospy.get_time()
        self.loadMap()
        self.showVertices()
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
-       if not SEND_TF:
-           self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped)
+       self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped)
 
 
     def close(self):
@@ -369,8 +369,8 @@ class FiducialSlam:
         orientation = None
         camera = None
         try:
-            camt, camr = self.lr.lookupTransform("base_link", "pgr_camera_frame", 
-                                                 rospy.Time(0))
+            t = self.lr.getLatestCommonTime("/base_link", "/pgr_camera_frame")
+            camt, camr = self.lr.lookupTransform("/base_link", "/pgr_camera_frame", t)
             camera = numpy.dot(translation_matrix((camt[0], camt[1], camt[2])),
                      quaternion_matrix((camr[0], camr[1], camr[2], camr[3])))
         except:
@@ -409,7 +409,7 @@ class FiducialSlam:
         if not position is None:
             (r, p, y) = euler_from_quaternion(orientation)
             xyz = position
-            print "pose ALL %f %f %f %f %f %f %f" % (xyz[0], xyz[1], xyz[2],
+            print "pose ALL %f %f %f %f %f %f %f %d" % (xyz[0], xyz[1], xyz[2],
                                                   rad2deg(r), rad2deg(p), rad2deg(y), 
                                                   variance, self.currentSeq)
             self.publishTransform(position, orientation)
@@ -478,9 +478,8 @@ class FiducialSlam:
         pose = numpy.dot(translation_matrix((trans[0], trans[1], trans[2])),
                          quaternion_matrix((rot[0], rot[1], rot[2], rot[3])))
         if USE_ODOM:
-            self.lr.waitForTransform("base_footprint", "odom", rospy.Time(0), rospy.Duration(0.4))
-            odomt, odomr = self.lr.lookupTransform("base_footprint", "odom",
-                                               rospy.Time(0))
+            t = self.lr.getLatestCommonTime("/base_footprint", "/odom")
+            odomt, odomr = self.lr.lookupTransform("base_footprint", "odom", t)
             odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
                          quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
         
@@ -517,6 +516,7 @@ class FiducialSlam:
         self.robotQuat = robotQuat
         self.robotYaw = yaw
         self.threadLock.release()
+        self.sendTransform()
 
 
     def sendTransform(self):
@@ -542,6 +542,7 @@ class FiducialSlam:
                                       rospy.Time.now(),
                                       frame,
                                       "map")
+                self.lastTfPubTime = rospy.get_time()
         self.threadLock.release()
 
 if __name__ == "__main__":
@@ -549,7 +550,9 @@ if __name__ == "__main__":
     rospy.loginfo("Fiducial Slam started")
     rate = rospy.Rate(10.0)
     while not rospy.is_shutdown():
-        node.sendTransform()
+        age = rospy.get_time() - node.lastTfPubTime
+        if age > 0.1:
+            node.sendTransform()
         rate.sleep()
     node.close()
     rospy.loginfo("Fiducial Slam ended")
