@@ -2,6 +2,13 @@
 Simultaneous localization and mapping using fiducial markers
 ============================================================
 
+Overview
+--------
+
+A document describing the system in more detail is at:
+
+    https://docs.google.com/a/mrjim.com/document/d/1GsqAXgagWFZp891-5EDgfnYioPGjC1JdtXoIOecaQ-w
+
 Creating a map
 --------------
 
@@ -73,5 +80,7 @@ To convert the `.svg` files to to .pdf files use `inkscape`:
 Running Fiducials
 -----------------
 
+To run the localization:
 
+        roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
 
