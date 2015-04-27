@@ -6,8 +6,8 @@
   <!-- Undistort -->
   <node name="undistort" pkg="image_proc" type="image_proc" 
         ns="/raspi_camera_node" respawn="true">
-    <remap to="/raspi_camera_node/image_raw" from="/image_raw"/>
-    <remap to="/raspi_camera_node/camera_info" from="/camera_info"/>
+    <remap to="/camera/image_raw" from="/image_raw"/>
+    <remap to="/camera/camera_info" from="/camera_info"/>
   </node>
   
   <!-- Camera transform -->
