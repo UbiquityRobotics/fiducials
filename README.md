@@ -22,9 +22,8 @@ Calibrating a camera
 --------------------
 
 The
-http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration
-  [Monocular Camera Calibration](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration)
-tutorial shows how to calibrate a single camera.
+  [Monocular Camera Calibration tutorial](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration)
+shows how to calibrate a single camera.
 
 The
   [8x6 checkerboard](http://wiki.ros.org/camera_calibration/Tutorials/StereoCalibration?action=AttachFile&do=view&target=check-108.pdf)
