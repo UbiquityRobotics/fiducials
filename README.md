@@ -6,7 +6,6 @@ Overview
 --------
 
 A document describing the system in more detail in
-
   [this document](https://docs.google.com/a/mrjim.com/document/d/1GsqAXgagWFZp891-5EDgfnYioPGjC1JdtXoIOecaQ-w)
 
 Creating a map
