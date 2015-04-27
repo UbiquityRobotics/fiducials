@@ -2,15 +2,38 @@
   <arg name="camera_node" default="raspi_camera_node" />
   <arg name="calibration_file" default="" />
   <arg name="respawn" default="false" />
-	
-  <node name="$(arg camera_node)" pkg="raspi_camera_driver" type="raspi_camera_node" respawn="$(arg respawn)" output="screen">
-        <param name="width" type="int" value="2048" /> # Default 640
-        <param name="height" type="int" value="2048" /> # Default 480
-        <param name="format" value="Y8" />
-        <param name="frame_rate" type="int" value="10" />
-        <param name="streaming_mode" type="str" value="polled_mode" />
+  <arg name="DEVICE" default="/dev/video0"/>
+  <!-- The GStreamer framerate needs to be an integral fraction -->
+  <arg name="WIDTH" default="640"/>
+  <arg name="HEIGHT" default="480"/>
+  <arg name="FPS" default="30/1"/>
+
+  <node name="standalone_nodelet" args="manager"
+        pkg="nodelet" type="nodelet"
+        output="screen"/>
+
+  <node name="$(arg camera_node)"
+        pkg="nodelet" type="nodelet"
+        args="load gscam/GSCamNodelet standalone_nodelet" 
+        <!-- pkg="raspi_camera_driver" -->
+        <!-- type="raspi_camera_node" -->
+        <!-- respawn="$(arg respawn)" -->
+       output="screen">
+    <param name="camera_name" value="default"/>
+    <param name="camera_info_url"
+           value="package://gscam/examples/uncalibrated_parameters.ini"/>
+    <param name="gscam_config"
+           value="v4l2src device=$(arg DEVICE) ! video/x-raw-rgb,width=$(arg WIDTH),height=$(arg HEIGHT),framerate=$(arg FPS) ! ffmpegcolorspace"/>
+    <param name="frame_id" value="/v4l_frame"/>
+    <param name="sync_sink" value="true"/>
+
+    <param name="width" type="int" value="$(arg WIDTH)" /> # Default 640
+    <param name="height" type="int" value="$(arg HEIGHT)" /> # Default 480
+    <!-- <param name="format" value="Y8" /> -->
+    <!-- <param name="frame_rate" type="int" value="10" /> -->
+    <!-- <param name="streaming_mode" type="str" value="polled_mode" /> -->
         
-        <param name="intrinsics_ini" type="str" value="$(arg calibration_file)" />
-  </node> 	
-	
+    <!-- <param name="intrinsics_ini" type="str"
+           value="$(arg calibration_file)" /> -->
+   </node>                 
 </launch>
