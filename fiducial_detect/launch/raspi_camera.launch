@@ -1,0 +1,16 @@
+<launch>
+  <arg name="camera_node" default="raspi_camera_node" />
+  <arg name="calibration_file" default="" />
+  <arg name="respawn" default="false" />
+	
+  <node name="$(arg camera_node)" pkg="raspi_camera_driver" type="raspi_camera_node" respawn="$(arg respawn)" output="screen">
+        <param name="width" type="int" value="2048" /> # Default 640
+        <param name="height" type="int" value="2048" /> # Default 480
+        <param name="format" value="Y8" />
+        <param name="frame_rate" type="int" value="10" />
+        <param name="streaming_mode" type="str" value="polled_mode" />
+        
+        <param name="intrinsics_ini" type="str" value="$(arg calibration_file)" />
+  </node> 	
+	
+</launch>

@@ -1,0 +1,15 @@
+<launch>
+
+    <include file="$(find fiducials_rviz)/launch/raspi_camera.launch">
+    </include>
+
+    <node name="undistort" pkg="image_proc" type="image_proc" ns="/raspi_camera_node"/>
+
+    <include file="$(find fiducials_ros)/launch/raspi_pose.launch"/>
+
+    <include file="$(find fiducials_ros)/launch/fiducials_ros.launch">
+        <arg name="camera" value="/raspi_camera_node"/>
+        <arg name="respawn" value="true"/>
+    </include>
+
+</launch>
