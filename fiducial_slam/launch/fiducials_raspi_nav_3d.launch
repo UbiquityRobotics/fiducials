@@ -5,7 +5,10 @@
   
   <!-- Undistort -->
   <node name="undistort" pkg="image_proc" type="image_proc" 
-        ns="/raspi_camera_node" respawn="true"/>
+        ns="/raspi_camera_node" respawn="true">
+    <remap to="/raspi_camera_node/image_raw" from="/image_raw"/>
+    <remap to="/raspi_camera_node/camera_info" from="/camera_info"/>
+  </node>
   
   <!-- Camera transform -->
   <include file="$(find fiducial_detect)/launch/raspi_pose.launch"/>
