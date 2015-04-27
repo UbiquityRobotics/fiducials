@@ -5,17 +5,17 @@ Simultaneous localization and mapping using fiducial markers
 Overview
 --------
 
-A document describing the system in more detail is at:
+A document describing the system in more detail in
 
-    https://docs.google.com/a/mrjim.com/document/d/1GsqAXgagWFZp891-5EDgfnYioPGjC1JdtXoIOecaQ-w
+  [this document](https://docs.google.com/a/mrjim.com/document/d/1GsqAXgagWFZp891-5EDgfnYioPGjC1JdtXoIOecaQ-w)
 
 Creating a map
 --------------
 
 To create an empty map file with fiducial 301 at the origin:
 
-`$ mkdir ~/.ros/slam`
-`$ echo '301 0.0 0.0 0.0 180.0 -0.0 0.0 0.0 1' > ~/ros/slam/map.txt`
+        mkdir ~/.ros/slam
+        echo '301 0.0 0.0 0.0 180.0 -0.0 0.0 0.0 1' > ~/ros/slam/map.txt
 
 The format of this file is id x y z pan tilt roll numObservations
 
@@ -23,8 +23,9 @@ Calibrating a camera
 --------------------
 
 The
-  [Stereo Camera Calibration](http://wiki.ros.org/camera_calibration/Tutorials/StereoCalibration)
-information is also used for calibrating single lens cameras.
+http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration
+  [Monocular Camera Calibration](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration)
+tutorial shows how to calibrate a single camera.
 
 The
   [8x6 checkerboard](http://wiki.ros.org/camera_calibration/Tutorials/StereoCalibration?action=AttachFile&do=view&target=check-108.pdf)
@@ -81,6 +82,10 @@ Running Fiducials
 -----------------
 
 To run the localization:
+
+        roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
+
+To run the navigation:
 
         roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
 
