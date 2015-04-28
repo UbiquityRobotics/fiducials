@@ -1,0 +1,36 @@
+<launch>
+
+  <!-- Camera -->
+  <include file="$(find fiducial_detect)/launch/raspi_camera.launch"/>
+  
+  <!-- Undistort -->
+  <node name="undistort" pkg="image_proc" type="image_proc" 
+        ns="/undistort_node" respawn="true"
+        output="screen">
+    <remap to="/camera/image_raw" from="/undistort_node/image_raw" />
+    <remap to="/camera/camera_info" from="/undistort_node/camera_info" />
+  </node>
+  
+  <!-- Camera transform -->
+  <include file="$(find fiducial_detect)/launch/raspi_pose.launch"/>
+  
+  <!-- Fiducial detection -->
+  <include file="$(find fiducial_detect)/launch/fiducials_no_odom.launch">
+    <arg name="camera" value="/undistort_node"/>
+    <arg name="image" value="image_rect"/>
+  </include>
+
+  <!-- Fiducial pose estimation -->
+  <node name="ros_rpp" pkg="fiducial_pose" type="rpp_pose" output="screen" respawn="true">
+    <remap to="/fiducials_localization/vertices" from="/vertices"/>
+    <remap to="/undistort_node/camera_info" from="/camera_info"/>
+    <param name="fiducial_len" type="double" value="0.145"/>
+  </node>
+
+  <!-- Fiducial detection -->
+  <node type="fiducial_slam.py" pkg="fiducial_slam" output="screen" name="fiducials_slam">
+    <param name="map_file" value="$(env HOME)/.ros/slam/map.txt" />
+    <param name="obs_file" value="$(env HOME)/.ros/slam/obs.txt" />
+    <param name="trans_file" value="$(env HOME)/.ros/slam/trans.txt" />
+  </node>
+</launch>

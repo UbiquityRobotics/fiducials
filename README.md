@@ -13,7 +13,7 @@ Creating a map
 
 To create an empty map file with fiducial 301 at the origin:
 
-        mkdir ~/.ros/slam
+        mkdir -p ~/.ros/slam
         echo '301 0.0 0.0 0.0 180.0 -0.0 0.0 0.0 1' > ~/ros/slam/map.txt
 
 The format of this file is id x y z pan tilt roll numObservations
@@ -45,6 +45,8 @@ For the Raspberry Pi camera using gscam:
 
 The resulting calibration is stored in `~ros/camera_info`.
 
+When done, `ost.txt` needs to be copied into `~/.ros/slam/ost.txt`.
+
 Generating Fiducials
 --------------------
 
@@ -69,7 +71,7 @@ To convert the `.svg` files to to .pdf files use `inkscape`:
         # Convert a single .svg to a single .pdf
         inkscape --without-gui --export-pdf=tag42.pdf tag42.svg
         # Convert a bunch at a time:
-	for n in 17{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9} ; do \
+        for n in 17{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9} ; do \
            inkscape --without-gui --export-pdf=tag$n.pdf tag$n.svg ; \
            done
         # Merge the remaining pdf files:
