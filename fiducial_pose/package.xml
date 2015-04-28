@@ -15,8 +15,8 @@
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
   <build_depend>geometry_msgs</build_depend>
-  <build_depend>fiducial_detect</build_depend>
-  <build_depend>fiducial_lib</build_depend>
+  <build_depend>libopencv-dev</build_depend>
+
   <run_depend>geometry_msgs</run_depend>
 
   <buildtool_depend>catkin</buildtool_depend>
