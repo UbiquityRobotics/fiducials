@@ -110,7 +110,7 @@ but is required to exist even if 2D slam is not used.
 
 **odom_frame** If this is set to a non-empty string, then the result of the localization is published as a correction to odometry.
 For example, the odometry publishes the tf from map to odom, and this node publishes the tf from odom to base_link, with the tf from
-map to odom removed. 
+map to odom removed. Default: not set.
  
 **map_frame** The name of the map (world) frame.  Default `map`.
 
@@ -172,6 +172,18 @@ For the localization part, fiducial transforms are combined with fiducial poses 
 **trans_file** Path to a file to store all detected fidicial transforms. Default `trans.txt`.
 
 **obs_file** Path to a file to store all detected fidicial observations. Default `obs.txt`.
+
+**odom_frame** If this is set to a non-empty string, then the result of the localization is published as a correction to odometry.
+For example, the odometry publishes the tf from map to odom, and this node publishes the tf from odom to base_link, with the tf from
+map to odom removed. Default: not set.
+ 
+**map_frame** The name of the map (world) frame.  Default `map`.
+
+**pose_frame** The frame for our tf. Default `base_link`.
+
+**publish_tf** If `true`, transforms are published. Default `true`.
+
+**ignore_similar_obs** If `true` the map is not updated unless the robot is moving.
 
 #### Published Topics
 
