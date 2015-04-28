@@ -95,9 +95,45 @@ Nodes
 
 ### fiducial_detect fducial_localization
 
+This node finds fiducial markers in an image stream and publishes there vertices (corner points).  It also has 2D SLAM built in.
+
 #### Parameters
+
+**tag_height** Name of the tag_height file (default `Tag_Heights.xml`).  This file is used to specify the height of the fiducials for 2D slam,
+but is required to exist even if 2D slam is not used.
+
+**map_file** Name of the file where the generated 2D SLAM-based map should be stored (default `ROS_MAP`).
+
+**log_file** Name of the log file (default `fiducuals.log.txt`).
+
+**data_directory** Name of the directory where tag_height and map_file reside, relative to `~/.ros`.
+
+**odom_frame** If this is set to a non-empty string, then the result of the localization is published as a correction to odometry.
+For example, the odometry publishes the tf from map to odom, and this node publishes the tf from odom to base_link, with the tf from
+map to odom removed. 
+ 
+**map_frame** The name of the map (world) frame.  Default `map`.
+
+**pose_frame** The frame for our tf. Default `base_link`.
+
+**publish_images** If `true`, images containing fiducials are published. Default `false`.
+
+**publish_images** If `true`, 'interesting' images containing fiducials are published. Default `false`. This is for debug purposes.
+
+**publish_tf** If `true`, transforms are published. Default `true`.
+
+**publish_markers** If `true`, visualization markers are published. Default `true`.
 
 #### Published Topics
 
+**fiducuals** **visualization_msgs::Marker**
+
+**vertices** **fiducial_detect::Fiducial**
+
+**fiducials_images** **ImageTransport**
+
+**interesting_images** **ImageTransport**
+
 #### Subscribed Topics
 
+**camera** **ImageTransport**
