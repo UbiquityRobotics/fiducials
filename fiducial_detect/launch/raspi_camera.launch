@@ -1,5 +1,5 @@
 <launch>
-  <arg name="camera_node" default="raspi_camera_node" />
+  <arg name="camera_node" default="camera_node" />
   <arg name="calibration_file" default="" />
   <arg name="respawn" default="false" />
   <arg name="DEVICE" default="/dev/video0"/>
