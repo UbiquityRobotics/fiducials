@@ -33,6 +33,7 @@ class RosRpp {
   cv::Mat K;
   cv::Mat dist;
   
+  bool doUndistort;
   bool haveCamInfo;
   double fiducialLen;
   int currentFrame;
@@ -92,29 +93,29 @@ double calcFiducialArea(cv::Mat pts)
 
 void RosRpp::undistortPoints(cv::Mat pts)
 {
-#if 1
-  printf("fx %lf fy %lf cx %lf cy %lf", K.at<double>(0, 0), K.at<double>(1, 1), K.at<double>(0, 2), K.at<double>(1, 2));
-  for (int i=0; i<pts.cols; i++) {
-    pts.at<double>(0, i) = (pts.at<double>(0, i) - K.at<double>(0, 2)) / K.at<double>(0, 0);
-    pts.at<double>(1, i) = (pts.at<double>(1, i) - K.at<double>(1, 2)) / K.at<double>(1, 1);
+  if (!doUndistort) {
+    printf("fx %lf fy %lf cx %lf cy %lf", K.at<double>(0, 0), K.at<double>(1, 1), K.at<double>(0, 2), K.at<double>(1, 2));
+    for (int i=0; i<pts.cols; i++) {
+      pts.at<double>(0, i) = (pts.at<double>(0, i) - K.at<double>(0, 2)) / K.at<double>(0, 0);
+      pts.at<double>(1, i) = (pts.at<double>(1, i) - K.at<double>(1, 2)) / K.at<double>(1, 1);
+    }
   }
-#else
+  else {
+    cv::Mat src(1, pts.cols, CV_64FC2);
+    cv::Mat dst(1, pts.cols, CV_64FC2);
+  
+    for (int i=0; i<pts.cols; i++) {
+      src.at<cv::Vec2d>(0, i)[0] = pts.at<double>(0, i);
+      src.at<cv::Vec2d>(0, i)[1] = pts.at<double>(1, i);
+    }
+    cv::vector<cv::Point2f> dest;
+    cv::undistortPoints(src, dst, K, dist);
 
-  cv::Mat src(1, pts.cols, CV_64FC2);
-  cv::Mat dst(1, pts.cols, CV_64FC2);
-
-  for (int i=0; i<pts.cols; i++) {
-    src.at<cv::Vec2d>(0, i)[0] = pts.at<double>(0, i);
-    src.at<cv::Vec2d>(0, i)[1] = pts.at<double>(1, i);
+    for (int i=0; i<pts.cols; i++) {
+      pts.at<double>(0, i) = dst.at<cv::Vec2d>(0, i)[0];
+      pts.at<double>(1, i) = dst.at<cv::Vec2d>(0, i)[1];
+    } 
   }
-  cv::vector<cv::Point2f> dest;
-  cv::undistortPoints(src, dst, K, dist);
-
-  for (int i=0; i<pts.cols; i++) {
-    pts.at<double>(0, i) = dst.at<cv::Vec2d>(0, i)[0];
-    pts.at<double>(1, i) = dst.at<cv::Vec2d>(0, i)[1];
-  } 
-#endif
 }
 
 void RosRpp::fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg)
@@ -303,6 +304,7 @@ RosRpp::RosRpp(ros::NodeHandle nh)
 			    this);
   
   nh.param<double>("fiducial_len", fiducialLen, 0.146);
+  nh.param<bool>("undisort_points", doUndistort, false);
 
   /*
      Vertex ordering:

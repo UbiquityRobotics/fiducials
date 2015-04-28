@@ -126,14 +126,59 @@ map to odom removed.
 
 #### Published Topics
 
-**fiducuals** **visualization_msgs::Marker**
+**fiducuals** A topic of `visualization_msgs/Marker` messages that can be viewed in RViz for debugging, if that option is selected.
 
-**vertices** **fiducial_detect::Fiducial**
+**vertices** A topic of `fiducial_detect/Fiducial*` messages with the detected fiducial vertices.
 
-**fiducials_images** **ImageTransport**
+**fiducials_images** An `ImageTransport*` of images containing fiducials, if that option is selected.
 
-**interesting_images** **ImageTransport**
+**interesting_images** `ImageTransport*` of interesting images, if that option is selected.
 
 #### Subscribed Topics
 
-**camera** **ImageTransport**
+**camera** An `ImageTransport` of the images to be processed.
+
+### fiducial_pose ros_rpp
+
+This node computes the transforms from fiducial to camera, given the fiducial vertices.
+
+#### Parameters
+
+**fiducial_len** The length of a fiducial, in meters. Default `0.146`.
+
+**undisort_points** If `true`, then the detected points are undistorted. Default `false`. This option should only be set if the 
+input image is not undistorted.
+
+#### Published Topics
+
+**fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with the computed fiducial pose.
+
+#### Subscribed Topics
+
+**camera_info** A topic of `sensor_msgs/CameraInfo` messages with the camera intrinsic parameters.
+
+**vertices** A topic of iducial_detect::Fiducial*` messages with the input fiducial vertices.
+
+### fiducial_slam fiducial_slam.py
+
+This node performs 3D Simultaneous Localization and Mapping (SLAM) from the fiducial transforms.
+For the mapping part, pairs of transforms are combined to determine the position of fiducials based on existing observations.
+For the localization part, fiducial transforms are combined with fiducial poses to estimate the camera pose (and hence the robot pose).
+
+#### Parameters
+
+**map_file** Path to the file containing the generated map (this must exist). Default `map.txt`.
+
+**trans_file** Path to a file to store all detected fidicial transforms. Default `trans.txt`.
+
+**obs_file** Path to a file to store all detected fidicial observations. Default `obs.txt`.
+
+#### Published Topics
+
+**fiducuals** A topic of `visualization_msgs/Marker` messages that can be viewed in RViz for debugging.
+
+**fidicual_pose** a topic of `geometry_msgs/PoseWithCovarianceStamped` containing the computed pose.
+
+#### Subscribed Topics
+
+**fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with fiducial pose.
