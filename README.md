@@ -89,3 +89,108 @@ To run the navigation:
 
         roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
 
+
+Nodes
+-----
+
+### fiducial_detect fducial_localization
+
+This node finds fiducial markers in an image stream and publishes there vertices (corner points).  It also has 2D SLAM built in.
+
+#### Parameters
+
+**tag_height** Name of the tag_height file (default `Tag_Heights.xml`).  This file is used to specify the height of the fiducials for 2D slam,
+but is required to exist even if 2D slam is not used.
+
+**map_file** Name of the file where the generated 2D SLAM-based map should be stored (default `ROS_MAP`).
+
+**log_file** Name of the log file (default `fiducuals.log.txt`).
+
+**data_directory** Name of the directory where tag_height and map_file reside, relative to `~/.ros`.
+
+**odom_frame** If this is set to a non-empty string, then the result of the localization is published as a correction to odometry.
+For example, the odometry publishes the tf from map to odom, and this node publishes the tf from odom to base_link, with the tf from
+map to odom removed. Default: not set.
+ 
+**map_frame** The name of the map (world) frame.  Default `map`.
+
+**pose_frame** The frame for our tf. Default `base_link`.
+
+**publish_images** If `true`, images containing fiducials are published. Default `false`.
+
+**publish_images** If `true`, 'interesting' images containing fiducials are published. Default `false`. This is for debug purposes.
+
+**publish_tf** If `true`, transforms are published. Default `true`.
+
+**publish_markers** If `true`, visualization markers are published. Default `true`.
+
+#### Published Topics
+
+**fiducuals** A topic of `visualization_msgs/Marker` messages that can be viewed in RViz for debugging, if that option is selected.
+
+**vertices** A topic of `fiducial_detect/Fiducial*` messages with the detected fiducial vertices.
+
+**fiducials_images** An `ImageTransport*` of images containing fiducials, if that option is selected.
+
+**interesting_images** `ImageTransport*` of interesting images, if that option is selected.
+
+#### Subscribed Topics
+
+**camera** An `ImageTransport` of the images to be processed.
+
+### fiducial_pose ros_rpp
+
+This node computes the transforms from fiducial to camera, given the fiducial vertices.
+
+#### Parameters
+
+**fiducial_len** The length of a fiducial, in meters. Default `0.146`.
+
+**undisort_points** If `true`, then the detected points are undistorted. Default `false`. This option should only be set if the 
+input image is not undistorted.
+
+#### Published Topics
+
+**fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with the computed fiducial pose.
+
+#### Subscribed Topics
+
+**camera_info** A topic of `sensor_msgs/CameraInfo` messages with the camera intrinsic parameters.
+
+**vertices** A topic of iducial_detect::Fiducial*` messages with the input fiducial vertices.
+
+### fiducial_slam fiducial_slam.py
+
+This node performs 3D Simultaneous Localization and Mapping (SLAM) from the fiducial transforms.
+For the mapping part, pairs of transforms are combined to determine the position of fiducials based on existing observations.
+For the localization part, fiducial transforms are combined with fiducial poses to estimate the camera pose (and hence the robot pose).
+
+#### Parameters
+
+**map_file** Path to the file containing the generated map (this must exist). Default `map.txt`.
+
+**trans_file** Path to a file to store all detected fidicial transforms. Default `trans.txt`.
+
+**obs_file** Path to a file to store all detected fidicial observations. Default `obs.txt`.
+
+**odom_frame** If this is set to a non-empty string, then the result of the localization is published as a correction to odometry.
+For example, the odometry publishes the tf from map to odom, and this node publishes the tf from odom to base_link, with the tf from
+map to odom removed. Default: not set.
+ 
+**map_frame** The name of the map (world) frame.  Default `map`.
+
+**pose_frame** The frame for our tf. Default `base_link`.
+
+**publish_tf** If `true`, transforms are published. Default `true`.
+
+**ignore_similar_obs** If `true` the map is not updated unless the robot is moving.
+
+#### Published Topics
+
+**fiducuals** A topic of `visualization_msgs/Marker` messages that can be viewed in RViz for debugging.
+
+**fidicual_pose** a topic of `geometry_msgs/PoseWithCovarianceStamped` containing the computed pose.
+
+#### Subscribed Topics
+
+**fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with fiducial pose.

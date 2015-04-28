@@ -35,13 +35,6 @@ import time
 import threading
 import copy
 
-# If set, we caculate the correction to odometry and pulish a tf map->odom.
-# The odom should be pulished elsewhere as odom->base_link
-USE_ODOM = 1
-
-# If set, we send tf.  We always send a PoseWithCovarianceStamped 
-SEND_TF = 1
-
 # These thresholds are to prevent the map being updated repeateadly with the same
 # observation.  They specify how much the robot needs to move (meters, radians) before
 # the map will be updated again
@@ -148,6 +141,11 @@ class Fiducial:
 class FiducialSlam:
     def __init__(self):
        rospy.init_node('fiducials_slam')
+       self.odomFrame = rospy.get_param("~odom_frame", "")
+       self.poseFrame = rospy.get_param("~pose_frame", "base_link")
+       self.mapFrame = rospy.get_param("~map_frame", "map")
+       self.sendTf = rospy.get_param("~publish_tf", True)
+       self.ignoreSimilarObs = rospy.get_param("~ignore_similar_obs", True)
        self.mapFileName = rospy.get_param("~map_file", "map.txt")
        self.obsFileName = rospy.get_param("~obs_file", "obs.txt")
        self.transFileName = rospy.get_param("~trans_file", "trans.txt")
@@ -165,8 +163,9 @@ class FiducialSlam:
        self.mapPublished = False
        self.numFiducialsVisible = 0
        self.threadLock = threading.Lock()
-       self.robotXyz = None
+       self.pose = None
        self.robotQuat = None
+       self.robotXyz = None
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
@@ -258,7 +257,7 @@ class FiducialSlam:
                 dist = numpy.linalg.norm(self.lastUpdateXyz - self.robotXyz)
                 angle = self.lastUpdateYaw - self.robotYaw
                 print "Distance moved", dist, angle
-                if dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
+                if not self.ignoreSimilarObs or dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
                     self.updateMap()
                     self.lastUpdateXyz = self.robotXyz
                     self.lastUpdateYaw = self.robotYaw
@@ -477,20 +476,13 @@ class FiducialSlam:
     def publishTransform(self, trans, rot):
         pose = numpy.dot(translation_matrix((trans[0], trans[1], trans[2])),
                          quaternion_matrix((rot[0], rot[1], rot[2], rot[3])))
-        if USE_ODOM:
-            t = self.lr.getLatestCommonTime("/base_footprint", "/odom")
-            odomt, odomr = self.lr.lookupTransform("base_footprint", "odom", t)
-            odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
-                         quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
-        
-            pose = numpy.dot(pose, odom)
 
         robotXyz = numpy.array(translation_from_matrix(pose))[:3]
         robotQuat = numpy.array(quaternion_from_matrix(pose))
         (r, p, yaw) = euler_from_quaternion(robotQuat)
         robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
         m = PoseWithCovarianceStamped()
-        m.header.frame_id = "/map"
+        m.header.frame_id = self.mapFrame
         m.header.stamp = rospy.Time.now()
         m.pose.pose.orientation.x = robotQuat[0]
         m.pose.pose.orientation.y = robotQuat[1]
@@ -511,10 +503,20 @@ class FiducialSlam:
                              0,    0,    0,     0,     0,     0.1]
         self.posePub.publish(m)
         self.threadLock.acquire()
-        self.robotXyz = robotXyz
-        self.robotXyz[2] = 0
-        self.robotQuat = robotQuat
+        if self.odomFrame != "":
+            t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
+            odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, t)
+            odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
+                             quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
+            pose = numpy.dot(pose, odom)
+        robotXyz = numpy.array(translation_from_matrix(pose))[:3]
+        robotQuat = numpy.array(quaternion_from_matrix(pose))
+        (r, p, yaw) = euler_from_quaternion(robotQuat)
+        robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
+        self.pose = pose
         self.robotYaw = yaw
+        self.robotQuat = robotQuat
+        self.robotXyz = robotXyz
         self.threadLock.release()
         self.sendTransform()
 
@@ -532,17 +534,16 @@ class FiducialSlam:
             for fid in self.visibleMarkers.keys():
                 if not self.tfs.has_key(fid):
                     self.publishMarker(fid)
-        if not self.robotXyz is None:
-            if SEND_TF:
-                if USE_ODOM:
-                    frame = "odom" # and odom is from odom to base_footprint
-                else:
-                    frame = "base_footprint"
-                self.br.sendTransform(self.robotXyz, self.robotQuat,
-                                      rospy.Time.now(),
-                                      frame,
-                                      "map")
-                self.lastTfPubTime = rospy.get_time()
+        if (not self.pose == None) and self.sendTf:
+            if self.odomFrame != "":
+                frame = self.odomFrame
+            else:
+                frame = self.poseFrame
+            self.br.sendTransform(self.robotXyz, self.robotQuat,
+                                  rospy.Time.now(),
+                                  frame,
+                                  self.mapFrame)
+            self.lastTfPubTime = rospy.get_time()
         self.threadLock.release()
 
 if __name__ == "__main__":
