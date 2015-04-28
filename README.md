@@ -87,3 +87,15 @@ To run the navigation:
 
         roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
 
+
+Nodes
+-----
+
+### fiducial_detect fducial_localization
+
+#### Parameters
+
+#### Published Topics
+
+#### Subscribed Topics
+
