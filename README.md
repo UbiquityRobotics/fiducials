@@ -257,5 +257,6 @@ and you should start to see something that looks as follows:
 
 The format of `map.txt` is a series of lines of the form:
 
-        ID  X  Y  Z Qx Qy Qz Qw ? [neighbors ...]
+        ID X Y Z Pan Tilt Roll Num_Observations [Neighbors ...]
+
 
