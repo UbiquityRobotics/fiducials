@@ -236,8 +236,8 @@ In order to see the fiducials during map building:
         rosrun rviz rviz
 
 Click on [Add] and select the [by Topic] tab in the window
-that pops up.  Select `/fiducials_localization/fiducials`.
-Below is:
+that pops up.  Select `/fiducials_localization/fiducials`
+and you should start to see something that looks as follows:
 
 > ![RViz Showing Fiducials](fiducials_rviz.png "RViz Displaying Fiducials")
 
