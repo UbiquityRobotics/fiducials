@@ -228,3 +228,34 @@ map to odom removed. Default: not set.
 #### Subscribed Topics
 
 **fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with fiducial pose.
+
+## RViz
+
+In order to see the fiducials during map building:
+
+        rosrun rviz rviz
+
+Click on [Add] and select the [by Topic] tab in the window
+that pops up.  Select `/fiducials_localization/fiducials`.
+Below is:
+
+> ![RViz Showing Fiducials](fiducials_rviz.png "RViz Displaying Fiducials")
+
+* Red cubes represent fiducials that are currently in view
+  of the camera.
+
+* Green cubes represent fiducials that are in the map, but
+  not currently in the view of the camera.
+
+* Blue lines connect proximal pairs of fiducials that have shown
+  up in the camera view at the same time.  The map is constructed
+  by stringing together proximal fiducial pairs.
+
+## File Formats:
+
+### `map.txt` file format:
+
+The format of `map.txt` is a series of lines of the form:
+
+        ID  X  Y  Z Qx Qy Qz Qw ? [neighbors ...]
+
