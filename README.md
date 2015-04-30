@@ -1,15 +1,11 @@
+#Simultaneous localization and mapping using fiducial markers
 
-Simultaneous localization and mapping using fiducial markers
-============================================================
-
-Overview
---------
+## Overview
 
 A document describing the system in more detail in
   [this document](https://docs.google.com/a/mrjim.com/document/d/1GsqAXgagWFZp891-5EDgfnYioPGjC1JdtXoIOecaQ-w)
 
-Creating a map
---------------
+## Creating a map
 
 To create an empty map file with fiducial 301 at the origin:
 
@@ -18,8 +14,10 @@ To create an empty map file with fiducial 301 at the origin:
 
 The format of this file is id x y z pan tilt roll numObservations
 
-Calibrating a camera
---------------------
+## Calibrating a camera
+
+Each time you select a new camera image size, it is necessary
+to recalibrate the camera and generate a calibration `.yaml` file.
 
 The
   [Monocular Camera Calibration tutorial](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration)
@@ -37,18 +35,53 @@ square size in millimeters and convert to meters by dividing by 1000.
 Assuming a checker board with 38mm squares, the following command can be used
 to calibrate the camera:
 
-        rosrun camera_calibration cameracalibrator.py camera:=pgr_camera_node image:=pgr_camera_node/image_raw --size 8x6 --square 0.038 --no-service_check
+        rosrun camera_calibration cameracalibrator.py camera:=pgr_camera_node image:=pgr_camera_node/image_raw --size 8x6 --square 0.038 --no-service-check
 
 For the Raspberry Pi camera using gscam:
 
-        rosrun camera_calibration cameracalibrator.py camera:=GSCamNodelet image:=camera_node/image_raw --size 8x6 --square 0.038 --no-service_check
+	# On Rasperry Pi:
+	roslaunch fiducials_detect raspi_camera.launch
+        # Note: This launch file refers to a calibration file that
+        # probably does not exist.  The resulting error is OK.
 
-The resulting calibration is stored in `~ros/camera_info`.
+	# On a laptop/desktop with ROS_MASTER_URI and ROS_HOSTNAME
+	# env. variables set.
+        rosrun camera_calibration cameracalibrator.py camera:=camera image:=camera_node/image_raw --size 8x6 --square 0.038 --no-service-check
 
-When done, `ost.txt` needs to be copied into `~/.ros/slam/ost.txt`.
+Read the
+  [Monocular Calibration](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration)
+tutorial.  When the calibrator comes up, the [Calibrate], [Save],
+and [Commit] buttons are dimmed out.  After the [Calibrate]
+button shows up, click on it *once*.   After the [Save] and [Commit]
+buttons show up, click on the [Save] button *once*.  Do not waste
+your time clicking on [Commit], that feature is not supported by
+`gscam`.
 
-Generating Fiducials
---------------------
+The resulting calibration is written into `/tmp/calibrabrationdata.tar.gz`.
+Unpack the data as follows:
+
+        cd /tmp
+        mkdir camara_data
+        cd camera_data
+        gunzip -c ../calibrationdata.tar.gz | tar xvf -
+
+Now you get to convert the file `ost.ini` to a `.yaml` file.
+
+        rosrun camera_calibration_parsers ost.ini camera_WIDTHxHEIGHT.yaml
+	mkdir -p ~/.ros/slam
+	cp camera_WIDTHxHEIGHT.yaml ~/.ros/slam
+
+where *WIDTH* is the image width and *HEIGHT* is the image height.
+Make sure that `.../fiducials/fiducial_detect/launch/raspi.launch`
+points to this file:
+
+        <param name="camera_info_url"
+               value="file:///home/ubuntu.ros/slam/raspi_WIDTHxHEIGHT.yaml"/>
+
+After this step, when you run the camera, you should no longer
+get the calibration file error.
+
+## Generating Fiducials
 
 Fiduical tags are generated using:
 
@@ -78,11 +111,13 @@ To convert the `.svg` files to to .pdf files use `inkscape`:
         sudo apt-get install poppler-utils
         pdfunite tag17??.pdf tags17xx.pdf
 
-Running Fiducials
------------------
+## Running Fiducials
+
+(The localization and navigation commands are the same.)
 
 To run the localization:
 
+        mkdir -p ~/.ros/fiducials	# Only do once
         roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
 
 To run the navigation:
@@ -90,8 +125,7 @@ To run the navigation:
         roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
 
 
-Nodes
------
+## Nodes
 
 ### fiducial_detect fducial_localization
 
@@ -194,3 +228,35 @@ map to odom removed. Default: not set.
 #### Subscribed Topics
 
 **fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with fiducial pose.
+
+## RViz
+
+In order to see the fiducials during map building:
+
+        rosrun rviz rviz
+
+Click on [Add] and select the [by Topic] tab in the window
+that pops up.  Select `/fiducials_localization/fiducials`
+and you should start to see something that looks as follows:
+
+> ![RViz Showing Fiducials](fiducials_rviz.png "RViz Displaying Fiducials")
+
+* Red cubes represent fiducials that are currently in view
+  of the camera.
+
+* Green cubes represent fiducials that are in the map, but
+  not currently in the view of the camera.
+
+* Blue lines connect proximal pairs of fiducials that have shown
+  up in the camera view at the same time.  The map is constructed
+  by stringing together proximal fiducial pairs.
+
+## File Formats:
+
+### `map.txt` file format:
+
+The format of `map.txt` is a series of lines of the form:
+
+        ID X Y Z Pan Tilt Roll Num_Observations [Neighbors ...]
+
+

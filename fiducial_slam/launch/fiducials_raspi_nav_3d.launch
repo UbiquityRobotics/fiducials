@@ -23,7 +23,7 @@
   <!-- Fiducial pose estimation -->
   <node name="ros_rpp" pkg="fiducial_pose" type="rpp_pose" output="screen" respawn="true">
     <remap to="/fiducials_localization/vertices" from="/vertices"/>
-    <remap to="/undistort_node/camera_info" from="/camera_info"/>
+    <remap to="/camera/camera_info" from="/camera_info"/>
     <param name="fiducial_len" type="double" value="0.145"/>
   </node>
 
