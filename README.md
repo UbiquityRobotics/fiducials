@@ -211,6 +211,10 @@ For the localization part, fiducial transforms are combined with fiducial poses 
 For example, the odometry publishes the tf from map to odom, and this node publishes the tf from odom to base_link, with the tf from
 map to odom removed. Default: not set.
  
+**camera_frame** The name of the camera frame.  Default `camera`. If the
+transform from camera_frame to pose_frame cannot be looked up, then it is
+assumed that the camera is at pose_frame.
+
 **map_frame** The name of the map (world) frame.  Default `map`.
 
 **pose_frame** The frame for our tf. Default `base_link`.

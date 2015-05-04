@@ -32,5 +32,6 @@
     <param name="obs_file" value="$(env HOME)/.ros/slam/obs.txt" />
     <param name="trans_file" value="$(env HOME)/.ros/slam/trans.txt" />
     <param name="publish_tf" value="false" />
+    <param name="camera_frame" value="pgr_camera_frame" />
   </node>
 </launch>
