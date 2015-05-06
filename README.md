@@ -1,18 +1,108 @@
-#Simultaneous localization and mapping using fiducial markers
+# Simultaneous Localization and Mapping Using Fiducial Markers
 
 ## Overview
 
-A document describing the system in more detail in
-  [this document](https://docs.google.com/a/mrjim.com/document/d/1GsqAXgagWFZp891-5EDgfnYioPGjC1JdtXoIOecaQ-w)
+This package implements a system that uses ceiling mounted
+fiducials (think QR Codes) to allow a robot to identify
+its location and orientation.  It does this by constructing
+a map of the ceiling fiducials.  Once the map has been
+constructed, the robot can identify its location by locating
+itself relative to a single ceiling fiducial.
 
-## Creating a map
+A
+  [more detailed document](https://docs.google.com/a/mrjim.com/document/d/1GsqAXgagWFZp891-5EDgfnYioPGjC1JdtXoIOecaQ-w)
+is available that describes the system in more detail.
 
-To create an empty map file with fiducial 301 at the origin:
+In order to use this system you will need to do the following:
 
-        mkdir -p ~/.ros/slam
-        echo '301 0.0 0.0 0.0 180.0 -0.0 0.0 0.0 1' > ~/ros/slam/map.txt
+* Mount Ceiling Fiducials.  You will need to print and install
+  a number of fiduicals on your ceiling.  The fiduicals have to
+  be big enough that your camera can resolve them.
 
-The format of this file is id x y z pan tilt roll numObservations
+* Camera Installation.  You will need to install and calibrate
+  an upward pointing camera.
+
+* Software Installation.  You will have to install the appropriate
+  software.
+
+## Installing Ceiling Fiducials
+
+First you must install ROS (Robot Operating System) on both
+your robot and some sort of laptop/desktop.
+
+The fiducials are typically generated from the laptop/desktop.
+
+Fiduical tags are generated using the following commands:
+
+	cd /tmp
+        rosrun fiducial_lib Tags num ...
+
+Thus, the following command will generate `tag42.svg` and `tagr43.svg`:
+
+        rosrun fiducial_lib Tags 42 43
+
+To generate a 100 at a time, use the following command:
+
+        rosrun fiducial_lib Tags 17{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9}
+
+This will generate `tag1700.svg` through `tag1799.svg` using
+"glob curly bracket" magic.
+
+To convert the `.svg` files to to .pdf files use the`inkscape`
+program and the following commands:
+
+        sudo apt-get install inkscape
+        # Convert a single .svg to a single .pdf
+        inkscape --without-gui --export-pdf=tag42.pdf tag42.svg
+        # Convert a bunch at a time:
+        for n in 17{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9} ; do \
+           inkscape --without-gui --export-pdf=tag$n.pdf tag$n.svg ; \
+           done
+        # Merge the remaining pdf files:
+        sudo apt-get install poppler-utils
+        pdfunite tag17??.pdf tags17xx.pdf
+	rm tag*.svg
+
+You can print the `.pdf` using using `evince`:
+
+	sudo apt-get install evince
+        evince tags17xx.pdf
+
+## Camera Installation:
+
+You are going to need to install a camera and hook it into ROS.
+
+### Raspberry Pi Camera
+
+The
+  [Raspberry Pi 2 Model B](https://www.raspberrypi.org/products/raspberry-pi-2-model-b/)
+is a 900MHz quad core ARM7 single board computer with 1GB or RAM.
+It has a variety of connectors including a CSI MIPI camera connector
+for their
+  [Rapsberry Pi Camera](https://www.raspberrypi.org/products/camera-module/)
+which has some
+  [nice specifications](https://www.raspberrypi.org/documentation/hardware/camera.md).
+
+In order to use this camera, you need to install a ROS package
+called `gscam` (for G[nu]-Streamer CAMera).
+
+> Currently, we install using source.  We are working on a binary
+> install.
+
+(The commands below do not work yet!!!)
+
+When the binary package is ready, do the following command on your
+robot:
+
+        sudo apt-get install ubiquity-indigo-gscam
+
+In addition, you will need to install the fiducals package:
+
+        sudo apt-get install ubiquity-indigo-fiducials
+
+For testing purposes, you will also need to install an area
+to testing.  First, create a ROS catkin workspace
+
 
 ## Calibrating a camera
 
@@ -81,36 +171,6 @@ points to this file:
 After this step, when you run the camera, you should no longer
 get the calibration file error.
 
-## Generating Fiducials
-
-Fiduical tags are generated using:
-
-        rosrun fiducial_lib Tags num ...
-
-Thus, the following command will generate `tag42.svg` and `tagr43.svg`:
-
-        rosrun fiducial_lib Tags 42 43
-
-To generate a 100 at a time, try:
-
-        rosrun fiducial_lib Tags 17{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9}
-
-This will generate `tag1700.svg` through `tag1799.svg` using
-"glob curly bracket" magic.
-
-To convert the `.svg` files to to .pdf files use `inkscape`:
-
-        sudo apt-get install inkscape
-        # Convert a single .svg to a single .pdf
-        inkscape --without-gui --export-pdf=tag42.pdf tag42.svg
-        # Convert a bunch at a time:
-        for n in 17{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9} ; do \
-           inkscape --without-gui --export-pdf=tag$n.pdf tag$n.svg ; \
-           done
-        # Merge the remaining pdf files:
-        sudo apt-get install poppler-utils
-        pdfunite tag17??.pdf tags17xx.pdf
-
 ## Running Fiducials
 
 (The localization and navigation commands are the same.)
@@ -123,6 +183,15 @@ To run the localization:
 To run the navigation:
 
         roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
+
+## Map Creation
+
+To create an empty map file with fiducial 301 at the origin:
+
+        mkdir -p ~/.ros/slam
+        echo '301 0.0 0.0 0.0 180.0 -0.0 0.0 0.0 1' > ~/ros/slam/map.txt
+
+The format of this file is id x y z pan tilt roll numObservations
 
 
 ## Nodes
