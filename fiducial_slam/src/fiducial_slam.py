@@ -144,6 +144,7 @@ class FiducialSlam:
        self.odomFrame = rospy.get_param("~odom_frame", "")
        self.poseFrame = rospy.get_param("~pose_frame", "base_link")
        self.mapFrame = rospy.get_param("~map_frame", "map")
+       self.cameraFrame = rospy.get_param("~camera_frame", "camera")
        self.sendTf = rospy.get_param("~publish_tf", True)
        self.ignoreSimilarObs = rospy.get_param("~ignore_similar_obs", True)
        self.mapFileName = rospy.get_param("~map_file", "map.txt")
@@ -368,8 +369,8 @@ class FiducialSlam:
         orientation = None
         camera = None
         try:
-            t = self.lr.getLatestCommonTime("/base_link", "/pgr_camera_frame")
-            camt, camr = self.lr.lookupTransform("/base_link", "/pgr_camera_frame", t)
+            t = self.lr.getLatestCommonTime(self.poseFrame, self.cameraFrame)
+            camt, camr = self.lr.lookupTransform(self.poseFrame, self.cameraFrame, t)
             camera = numpy.dot(translation_matrix((camt[0], camt[1], camt[2])),
                      quaternion_matrix((camr[0], camr[1], camr[2], camr[3])))
         except:

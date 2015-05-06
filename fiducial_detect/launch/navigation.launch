@@ -3,6 +3,8 @@
   <node pkg="move_base" type="move_base" respawn="false" name="move_base"
         output="screen">
 
+    <remap from="/cmd_vel" to="/cmd_vel_mux/input/navigation"/>
+
     <rosparam file="$(find fiducial_detect)/config/dagny_nav.yaml" command="load"/>
     <rosparam file="$(find fiducial_detect)/config/local_planner.yaml" command="load"/>
   

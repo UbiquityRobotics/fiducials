@@ -7,7 +7,7 @@
         <param name="width" type="int" value="2048" /> # Default 640
         <param name="height" type="int" value="2048" /> # Default 480
         <param name="format" value="Y8" />
-        <param name="frame_rate" type="int" value="10" />
+        <param name="frame_rate" type="int" value="5" />
         <param name="streaming_mode" type="str" value="polled_mode" />
         
         <param name="intrinsics_ini" type="str" value="$(arg calibration_file)" />
