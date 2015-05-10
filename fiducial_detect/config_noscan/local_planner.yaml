@@ -1,0 +1,20 @@
+base_local_planner: dwa_local_planner/DWAPlannerROS
+DWAPlannerROS:
+   acc_lim_th: 1.0
+   acc_lim_x: 0.5
+   acc_lim_y: 0.0
+
+   max_trans_vel: 0.50
+   min_trans_vel: 0.15
+   max_vel_x: 0.50
+   min_vel_x: 0.15
+   max_vel_y: 0
+   min_vel_y: 0
+
+   max_rot_vel: 1.0
+   min_rot_vel: 0.31
+
+   yaw_goal_tolerance: 0.1
+
+   sim_time: 1.0
+   sim_granularity: 0.05
