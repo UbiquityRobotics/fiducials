@@ -221,7 +221,7 @@ assumed that the camera is at pose_frame.
 
 **publish_tf** If `true`, transforms are published. Default `true`.
 
-**ignore_similar_obs** If `true` the map is not updated unless the robot is moving.
+**mapping_mode** If `true` the map updated and saved more frequently.
 
 #### Published Topics
 

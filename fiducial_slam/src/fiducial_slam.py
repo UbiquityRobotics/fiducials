@@ -146,7 +146,7 @@ class FiducialSlam:
        self.mapFrame = rospy.get_param("~map_frame", "map")
        self.cameraFrame = rospy.get_param("~camera_frame", "camera")
        self.sendTf = rospy.get_param("~publish_tf", True)
-       self.ignoreSimilarObs = rospy.get_param("~ignore_similar_obs", True)
+       self.mappingMode = rospy.get_param("~mapping_mode", True)
        self.mapFileName = rospy.get_param("~map_file", "map.txt")
        self.obsFileName = rospy.get_param("~obs_file", "obs.txt")
        self.transFileName = rospy.get_param("~trans_file", "trans.txt")
@@ -258,7 +258,7 @@ class FiducialSlam:
                 dist = numpy.linalg.norm(self.lastUpdateXyz - self.robotXyz)
                 angle = self.lastUpdateYaw - self.robotYaw
                 print "Distance moved", dist, angle
-                if not self.ignoreSimilarObs or dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
+                if self.mappingMode or dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
                     self.updateMap()
                     self.lastUpdateXyz = self.robotXyz
                     self.lastUpdateYaw = self.robotYaw
@@ -351,7 +351,7 @@ class FiducialSlam:
           
         p = self.fiducials[f2].position
 
-        if addedNew:
+        if self.mappingMode or addedNew:
             self.saveMap()
 
         if not f1 in fid2.links:
