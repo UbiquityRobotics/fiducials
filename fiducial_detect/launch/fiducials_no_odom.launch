@@ -5,7 +5,7 @@
 
   <node pkg="fiducial_detect" name="fiducials_localization"
     type="fiducials_localization" output="screen" respawn="true">
-    <param name="tag_height" value="Tag_Heights.xml" />
+    <param name="tag_height" value="$(env HOME)/.ros/fiducials/Tag_Heights.xml" />
     <param name="data_directory" value="$(env HOME)/.ros/fiducials" />
     <param name="map_frame" value="odom" />
     <param name="pose_frame" value="slam" />
