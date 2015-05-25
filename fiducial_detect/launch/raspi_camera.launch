@@ -21,7 +21,7 @@
            value="file:///home/ubuntu/.ros/slam/raspi_1280x960.yaml"/>
     <param name="gscam_config"
            value="v4l2src device=$(arg DEVICE) ! video/x-raw-rgb,width=$(arg WIDTH),height=$(arg HEIGHT),framerate=$(arg FPS) ! ffmpegcolorspace"/>
-    <param name="frame_id" value="/v4l_frame"/>
+    <param name="frame_id" value="/raspi_camera_frame"/>
     <param name="sync_sink" value="true"/>
 
     <param name="width" type="int" value="$(arg WIDTH)" /> # Default 640
