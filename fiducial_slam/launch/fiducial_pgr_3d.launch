@@ -2,6 +2,14 @@
    Run 3d fiducual localization with a Point Grey camera and no undistortion.
 -->
 <launch>
+  <arg name="undistort" default="false"/>
+  <arg name="mapping_mode" default="false"/>
+
+  <!-- Undistort -->
+  <group if="$(arg undistort)">
+      <node name="undistort" pkg="image_proc" type="image_proc" 
+          ns="/pgr_camera_node" respawn="true"/>
+  </group>
 
   <!-- Camera -->
   <include file="$(find fiducial_detect)/launch/pgr_camera.launch"/>
@@ -10,11 +18,12 @@
   <include file="$(find fiducial_detect)/launch/pgr_pose.launch"/>
   
   <!-- Fiducial detection -->
-  <include file="$(find fiducial_detect)/launch/fiducials_no_odom.launch">
+  <include file="$(find fiducial_detect)/launch/fiducial_no_odom.launch">
     <arg name="camera" value="/pgr_camera_node"/>
-    <arg name="image" value="image_raw"/>
-    <param name="fiducial_len" type="double" value="0.145"/>
-    <param name="undistort_points" type="bool" value="true"/>
+    <arg name="image" value="image_raw" unless="$(arg undistort)"/>
+    <arg name="image" value="image_rect" if="$(arg undistort)"/>
+    <arg name="fiducial_len" value="0.145"/>
+    <arg name="undistort_points" value="true"/>
   </include>
 
   <!-- Fiducial slam -->

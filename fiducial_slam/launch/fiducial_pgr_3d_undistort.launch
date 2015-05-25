@@ -4,27 +4,7 @@
 
 <launch>
 
-  <!-- Camera -->
-  <include file="$(find fiducial_detect)/launch/pgr_camera.launch"/>
-  
-  <!-- Undistort -->
-  <node name="undistort" pkg="image_proc" type="image_proc" 
-        ns="/pgr_camera_node" respawn="true"/>
-  
-  <!-- Camera transform -->
-  <include file="$(find fiducial_detect)/launch/pgr_pose.launch"/>
-  
-  <!-- Fiducial detection -->
-  <include file="$(find fiducial_detect)/launch/fiducials_no_odom.launch">
-    <arg name="camera" value="/pgr_camera_node"/>
-    <arg name="image" value="image_rect"/>
-    <param name="fiducial_len" type="double" value="0.145"/>
-    <param name="undistort_points" type="bool" value="false"/>
-  </include>
-
-  <!-- Fiducial slam -->
-  <include file="$(find fiducial_slam)/launch/fiducial_slam.launch">
-    <arg name="mapping_mode" value="$(arg mapping_mode)"/>
-    <arg name="camera_frame" value="pgr_camera_frame"/>
+  <include file="$(find fiducial_slam)/launch/fiducial_pgr_3d.launch">
+    <arg name="undistort" value="true"/>
   </include>
 </launch>
