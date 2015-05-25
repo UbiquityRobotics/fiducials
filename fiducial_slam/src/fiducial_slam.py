@@ -15,7 +15,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
                               TransformStamped
 from visualization_msgs.msg import Marker
 
-from fiducial_detect.msg import Fiducial
+from fiducial_pose.msg import Fiducial
 from fiducial_pose.msg import FiducialTransform
 
 from tf.transformations import euler_from_quaternion, quaternion_slerp, \

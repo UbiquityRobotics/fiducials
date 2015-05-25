@@ -6,6 +6,7 @@ project(fiducial_detect)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   fiducial_lib
+  fiducial_pose
   roscpp
   tf2_geometry_msgs
   tf2_ros
@@ -17,16 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 find_package(orocos_kdl REQUIRED)
-
-
-add_message_files(
-   FILES
-   Fiducial.msg
-)
-
-generate_messages(
-  DEPENDENCIES std_msgs
-)
 
 catkin_package()
 

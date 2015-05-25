@@ -52,13 +52,21 @@
 #include "fiducial_lib/File.hpp"
 #include "fiducial_lib/Fiducials.hpp"
 
-#include "fiducial_detect/Fiducial.h"
+#include "fiducial_pose/rosrpp.h"
+
+#include "fiducial_pose/Fiducial.h"
+#include "fiducial_pose/FiducialTransform.h"
 
 class FiducialsNode {
   private:
     ros::Publisher * marker_pub;
     ros::Publisher * vertices_pub;
+    ros::Publisher * pose_pub;
+
+    ros::Subscriber caminfo_sub;
     image_transport::Subscriber img_sub;
+  
+    RosRpp * pose_est;
 
     // transform bits
     tf2_ros::TransformBroadcaster tf_pub;
@@ -89,6 +97,11 @@ class FiducialsNode {
     // if set, we publish the images that are "interesting", for debugging
     bool publish_interesting_images;
 
+    // pose estimtion params
+    bool estimate_pose;
+    double fiducial_len;
+    bool undistort_points;
+  
     image_transport::Publisher image_pub;
     image_transport::Publisher interesting_image_pub;
 
@@ -133,6 +146,7 @@ class FiducialsNode {
         double x2, double y2, double x3, double y3);
 
     void imageCallback(const sensor_msgs::ImageConstPtr & msg);
+    void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr & msg);
 
   public:
     FiducialsNode(ros::NodeHandle &nh);
@@ -191,7 +205,7 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     double x0, double y0, double x1, double y1,
     double x2, double y2, double x3, double y3)
 {
-    fiducial_detect::Fiducial fid;
+    fiducial_pose::Fiducial fid;
 
     ROS_INFO("fiducial: id=%d dir=%d diag=%f (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
        id, direction, world_diagonal, x0, y0, x1, y1, x2, y2, x3, y3);
@@ -207,6 +221,12 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     fid.x3 = x3; fid.y3 = y3;
 
     vertices_pub->publish(fid);
+    
+    if (pose_est) {
+        fiducial_pose::FiducialTransform ft;
+	pose_est->fiducialCallback(&fid, &ft);
+	pose_pub->publish(ft);
+    }
 }
 
 
@@ -215,7 +235,7 @@ void FiducialsNode::tag_cb(int id, double x, double y, double z, double twist,
     double dx, double dy, double dz, bool visible) {
 
     if (!publish_markers)
-       return;
+         return;
 
     visualization_msgs::Marker marker = createMarker(fiducial_namespace, id);
     marker.type = visualization_msgs::Marker::CUBE;
@@ -379,6 +399,13 @@ void FiducialsNode::location_cb(int id, double x, double y, double z,
     }
 }
 
+void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
+{
+    if (pose_est) {
+        pose_est->camInfoCallback(msg);
+    }
+}
+
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image");
     last_camera_frame = msg->header.frame_id;
@@ -410,12 +437,12 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         Fiducials_Results results = Fiducials__process(fiducials);
 	if (publish_images) {
   	    if (results->map_changed) {
-	      image_pub.publish(msg);
+	        image_pub.publish(msg);
             }
         }
 	if (publish_interesting_images) {
 	  if (results->image_interesting) {
-	    interesting_image_pub.publish(msg);
+	      interesting_image_pub.publish(msg);
 	  }
 	}
     } catch(cv_bridge::Exception & e) {
@@ -463,28 +490,46 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
     }
 
     nh.param<bool>("publish_images", publish_images, false);
-    nh.param<bool>("publish_tf", publish_tf, true);
-    nh.param<bool>("publish_markers", publish_markers, true);
+    nh.param<bool>("publish_tf", publish_tf, false);
+    nh.param<bool>("publish_markers", publish_markers, false);
+    nh.param<bool>("estimate_pose", estimate_pose, true);
     nh.param<bool>("publish_interesting_images", publish_interesting_images, 
 		   false);
+    nh.param<double>("fiducial_len", fiducial_len, 0.146);
+    nh.param<bool>("undistort_points", undistort_points, false);
 
     image_transport::ImageTransport img_transport(nh);
 
     if (publish_images) {
-      image_pub = img_transport.advertise("fiducials_images", 1);
+        image_pub = img_transport.advertise("fiducials_images", 1);
     }
     if (publish_interesting_images) {
-      interesting_image_pub = img_transport.advertise("interesting_images", 1);
+        interesting_image_pub = img_transport.advertise("interesting_images", 1);
     }
 
-    marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
+    if (publish_markers) {
+        marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
+    }
    
-    vertices_pub = new ros::Publisher(nh.advertise<fiducial_detect::Fiducial>("vertices", 1));
- 
+    vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::Fiducial>("vertices", 1));
+
+    if (estimate_pose) {
+        pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransform>("fiducial_transforms", 1)); 
+        pose_est = new RosRpp(fiducial_len, undistort_points);
+    }
+    else {
+        pose_est = NULL;
+    }
+
     fiducials = NULL;
+
+
 
     img_sub = img_transport.subscribe("camera", 1,
                                       &FiducialsNode::imageCallback, this);
+
+    caminfo_sub = nh.subscribe("camera_info", 1,
+			       &FiducialsNode::camInfoCallback, this);
 
     ROS_INFO("Fiducials Localization ready");
 }
