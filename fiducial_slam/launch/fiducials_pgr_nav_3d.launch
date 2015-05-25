@@ -20,7 +20,7 @@
     <param name="undistort_points" type="bool" value="true"/>
   </include>
 
-  <!-- Fiducial detection -->
+  <!-- Fiducial slam -->
   <node type="fiducial_slam.py" pkg="fiducial_slam" output="screen" name="fiducials_slam">
     <param name="map_file" value="$(env HOME)/.ros/slam/map.txt" />
     <param name="obs_file" value="$(env HOME)/.ros/slam/obs.txt" />

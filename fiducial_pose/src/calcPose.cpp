@@ -92,7 +92,7 @@ void undistortPoints(cv::Mat pts, cv::Mat K, cv::Mat dist, bool doUndistort)
 }
 
 
-void RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
+bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
 		       	      fiducial_pose::FiducialTransform* ft)
 {
   ROS_INFO("date %d id %d direction %d", 
@@ -101,14 +101,14 @@ void RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
 
   if (!haveCamInfo) {
     ROS_ERROR("No camera info");
-    return;
+    return false;
   }
 
   if (currentFrame != msg->image_seq) {
     //frameTime = msg->header.stamp;
     frameTime = ros::Time::now();
     currentFrame = msg->image_seq;
-    }
+  }
 
   /* The verices are ordered anti-clockwise, starting with the top-left
      we want to end up with this:
@@ -181,7 +181,7 @@ void RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
 
   if(!RPP::Rpp(model, ipts, rotation, translation, iterations, obj_err, img_err)) {
     ROS_ERROR("Cannot find transform for fiducial %d", msg->fiducial_id);
-    return;
+    return false;
   }
     
   ROS_INFO("fid %d iterations %d object error %f image error %f", 
@@ -224,6 +224,7 @@ void RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
   ft->image_error = img_err;
   ft->object_error = obj_err;
   ft->fiducial_area = calcFiducialArea(ipts);
+  return true;
 }
 
 

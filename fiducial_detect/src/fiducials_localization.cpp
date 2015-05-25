@@ -222,10 +222,13 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
 
     vertices_pub->publish(fid);
     
-    if (pose_est) {
+    if (estimate_pose) {
         fiducial_pose::FiducialTransform ft;
-	pose_est->fiducialCallback(&fid, &ft);
-	pose_pub->publish(ft);
+        geometry_msgs::Transform trans;
+	ft.transform = trans;
+	if (pose_est->fiducialCallback(&fid, &ft)) {
+	    pose_pub->publish(ft);
+        }
     }
 }
 
@@ -310,7 +313,9 @@ void FiducialsNode::location_cb(int id, double x, double y, double z,
 
     marker.lifetime = ros::Duration();
 
-    marker_pub->publish(marker);
+    if (publish_markers) {
+        marker_pub->publish(marker);
+    }
 
     // TODO: subtract out odometry position, and publish transform from
     //  map to odom

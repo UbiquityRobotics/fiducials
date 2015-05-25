@@ -12,6 +12,7 @@
     <param name="publish_images" value="true" />
     <param name="publish_tf" value="false" />
     <remap from="fiducials_localization/camera" to="$(arg camera)/$(arg image)"/>
+    <remap from="fiducials_localization/camera_info" to="$(arg camera)/camera_info"/>
     <param name="publish_images" value="true"/>
   </node>
 </launch>

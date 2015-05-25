@@ -23,7 +23,7 @@ class RosRpp {
 public:
   RosRpp(double fiducialLen, bool doUndistort);
 
-  void fiducialCallback(fiducial_pose::Fiducial* fiducial,
+  bool fiducialCallback(fiducial_pose::Fiducial* fiducial,
 			fiducial_pose::FiducialTransform* transform);
 
   void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
