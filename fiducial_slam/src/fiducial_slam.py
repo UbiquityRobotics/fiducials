@@ -140,7 +140,7 @@ class Fiducial:
 
 class FiducialSlam:
     def __init__(self):
-       rospy.init_node('fiducials_slam')
+       rospy.init_node('fiducial_slam')
        self.odomFrame = rospy.get_param("~odom_frame", "")
        self.poseFrame = rospy.get_param("~pose_frame", "base_link")
        self.mapFrame = rospy.get_param("~map_frame", "map")

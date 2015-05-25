@@ -506,7 +506,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
     image_transport::ImageTransport img_transport(nh);
 
     if (publish_images) {
-        image_pub = img_transport.advertise("fiducials_images", 1);
+        image_pub = img_transport.advertise("fiducial_images", 1);
     }
     if (publish_interesting_images) {
         interesting_image_pub = img_transport.advertise("interesting_images", 1);
@@ -540,7 +540,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
 }
 
 int main(int argc, char ** argv) {
-    ros::init(argc, argv, "fiducials_localization");
+    ros::init(argc, argv, "fiducial_detect");
     ros::NodeHandle nh("~");
 
     FiducialsNode * node = new FiducialsNode(nh);
