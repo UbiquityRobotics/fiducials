@@ -10,15 +10,9 @@
   <include file="$(find fiducial_detect)/launch/fiducials_no_odom.launch">
     <arg name="camera" value="/camera"/>
     <arg name="image" value="image_raw"/>
-  </include>
-
-  <!-- Fiducial pose estimation -->
-  <node name="ros_rpp" pkg="fiducial_pose" type="rpp_pose" output="screen" respawn="true">
-    <remap to="/fiducials_localization/vertices" from="/vertices"/>
-    <remap to="/camera/camera_info" from="/camera_info"/>
     <param name="fiducial_len" type="double" value="0.145"/>
     <param name="undistort_points" type="bool" value="true"/>
-  </node>
+  </include>
 
   <!-- Fiducial slam -->
   <include file="$(find fiducial_slam)/launch/fiducials_raspi_3d_slam.launch"/>
