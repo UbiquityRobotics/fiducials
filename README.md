@@ -117,7 +117,15 @@ To convert the `.svg` files to to .pdf files use `inkscape`:
 To run the localization:
 
         mkdir -p ~/.ros/fiducials	# Only do once
-        roslaunch fiducial_slam fiducial_pgr_nav_3d.launch
+        roslaunch fiducial_slam fiducial_pgr_3d.launch
+
+On a Raspberry PI with camera:
+
+        roslaunch fiducial_slam fiducial_raspi.launch
+
+To generate a map quickly, run this:
+
+        roslaunch fiducial_slam fiducial_raspi_map.launch
 
 To run the navigation:
 
