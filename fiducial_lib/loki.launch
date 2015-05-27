@@ -1,0 +1,4 @@
+<launch>
+       <param name="robot_description" textfile="$(find fiducial_lib)/loki.urdf" />
+       <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+</launch>
