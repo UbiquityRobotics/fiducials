@@ -121,11 +121,11 @@ To run the localization:
 
 On a Raspberry PI with camera:
 
-        roslaunch fiducial_slam fiducial_raspi.launch
+        roslaunch fiducial_slam fiducial_raspi_3d.launch
 
 To generate a map quickly, run this:
 
-        roslaunch fiducial_slam fiducial_raspi_map.launch
+        roslaunch fiducial_slam fiducial_raspi_3d_map.launch
 
 To run the navigation:
 
