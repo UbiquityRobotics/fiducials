@@ -14,6 +14,7 @@ find_package(OpenCV REQUIRED)
 
 add_message_files(
    FILES
+   Fiducial.msg
    FiducialTransform.msg
 )
 
@@ -24,14 +25,15 @@ generate_messages(
 )
 
 catkin_package(
-  INCLUDE_DIRS
-  LIBRARIES
+  INCLUDE_DIRS include
+  LIBRARIES rpp_pose
 )
+
 
 include_directories(include ${OpenCV_INCLUDE_DIRS})
 
 
-add_executable(rpp_pose src/Rpoly.cpp src/RPP.cpp src/calcPose.cpp)
+add_library(rpp_pose src/Rpoly.cpp src/RPP.cpp src/calcPose.cpp)
 target_link_libraries(rpp_pose m ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_dependencies(rpp_pose fiducial_detect_gencpp fiducial_pose_gencpp)

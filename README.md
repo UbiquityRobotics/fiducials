@@ -130,7 +130,7 @@ to calibrate the camera:
 For the Raspberry Pi camera using gscam:
 
 	# On Rasperry Pi:
-	roslaunch fiducials_detect raspi_camera.launch
+	roslaunch fiducial_detect raspi_camera.launch
         # Note: This launch file refers to a calibration file that
         # probably does not exist.  The resulting error is OK.
 
@@ -178,11 +178,20 @@ get the calibration file error.
 To run the localization:
 
         mkdir -p ~/.ros/fiducials	# Only do once
-        roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
+        roslaunch fiducial_slam fiducial_pgr_3d.launch
+
+On a Raspberry PI with camera:
+
+        roslaunch fiducial_slam fiducial_raspi_3d.launch
+
+To generate a map quickly, run this:
+
+        roslaunch fiducial_slam fiducial_raspi_3d_map.launch
 
 To run the navigation:
 
-        roslaunch fiducial_slam fiducials_pgr_nav_3d.launch
+        roslaunch fiducial_slam navigation_noscan.launch
+        rosrun map_server map_server fiducial_detect/map.yaml
 
 ## Map Creation
 
@@ -196,9 +205,10 @@ The format of this file is id x y z pan tilt roll numObservations
 
 ## Nodes
 
-### fiducial_detect fducial_localization
+### fiducial_detect fducial_detect
 
-This node finds fiducial markers in an image stream and publishes there vertices (corner points).  It also has 2D SLAM built in.
+This node finds fiducial markers in an image stream and publishes their vertices (corner points),
+and estimates their 3D pose and publishes that as a transform.  It also has 2D SLAM built in.
 
 #### Parameters
 
@@ -237,30 +247,19 @@ map to odom removed. Default: not set.
 
 **interesting_images** `ImageTransport*` of interesting images, if that option is selected.
 
-#### Subscribed Topics
-
-**camera** An `ImageTransport` of the images to be processed.
-
-### fiducial_pose ros_rpp
-
-This node computes the transforms from fiducial to camera, given the fiducial vertices.
-
-#### Parameters
-
 **fiducial_len** The length of a fiducial, in meters. Default `0.146`.
 
 **undisort_points** If `true`, then the detected points are undistorted. Default `false`. This option should only be set if the 
 input image is not undistorted.
 
-#### Published Topics
-
 **fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with the computed fiducial pose.
 
 #### Subscribed Topics
 
+**camera** An `ImageTransport` of the images to be processed.
+
 **camera_info** A topic of `sensor_msgs/CameraInfo` messages with the camera intrinsic parameters.
 
-**vertices** A topic of iducial_detect::Fiducial*` messages with the input fiducial vertices.
 
 ### fiducial_slam fiducial_slam.py
 
@@ -290,7 +289,7 @@ assumed that the camera is at pose_frame.
 
 **publish_tf** If `true`, transforms are published. Default `true`.
 
-**ignore_similar_obs** If `true` the map is not updated unless the robot is moving.
+**mapping_mode** If `true` the map updated and saved more frequently.
 
 #### Published Topics
 
@@ -306,11 +305,9 @@ assumed that the camera is at pose_frame.
 
 In order to see the fiducials during map building:
 
-        rosrun rviz rviz
+        roslaunch fiducial_detect fiducial_rviz.launch
 
-Click on [Add] and select the [by Topic] tab in the window
-that pops up.  Select `/fiducials_localization/fiducials`
-and you should start to see something that looks as follows:
+You should start to see something that looks as follows:
 
 > ![RViz Showing Fiducials](fiducials_rviz.png "RViz Displaying Fiducials")
 
@@ -320,9 +317,9 @@ and you should start to see something that looks as follows:
 * Green cubes represent fiducials that are in the map, but
   not currently in the view of the camera.
 
-* Blue lines connect proximal pairs of fiducials that have shown
+* Blue lines connect pairs of fiducials that have shown
   up in the camera view at the same time.  The map is constructed
-  by stringing together proximal fiducial pairs.
+  by stringing together fiducial pairs.
 
 ## File Formats:
 
@@ -330,6 +327,4 @@ and you should start to see something that looks as follows:
 
 The format of `map.txt` is a series of lines of the form:
 
-        ID X Y Z Pan Tilt Roll Num_Observations [Neighbors ...]
-
-
+        id x y z pan tilt roll variance numObservations [neighbors ...]

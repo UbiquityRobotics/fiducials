@@ -6,6 +6,7 @@ project(fiducial_detect)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   fiducial_lib
+  fiducial_pose
   roscpp
   tf2_geometry_msgs
   tf2_ros
@@ -17,16 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 find_package(orocos_kdl REQUIRED)
-
-
-add_message_files(
-   FILES
-   Fiducial.msg
-)
-
-generate_messages(
-  DEPENDENCIES std_msgs
-)
 
 catkin_package()
 
@@ -40,8 +31,8 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 link_directories(${orocos_kdl_LIBRARY_DIRS})
 
-add_executable(fiducials_localization src/fiducials_localization.cpp)
-target_link_libraries(fiducials_localization ${catkin_LIBRARIES}
+add_executable(fiducial_detect src/fiducial_detect.cpp)
+target_link_libraries(fiducial_detect ${catkin_LIBRARIES}
 ${orocos_kdl_LIBRARIES})
 
 #############
@@ -49,7 +40,7 @@ ${orocos_kdl_LIBRARIES})
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS fiducials_localization
+install(TARGETS fiducial_detect
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

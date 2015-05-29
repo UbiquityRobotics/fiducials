@@ -1,0 +1,26 @@
+<!--
+   Run the 3d fiducial localization for a raspi
+-->
+<launch>
+  <arg name="mapping_mode" default="false"/>
+
+  <!-- Camera -->
+  <include file="$(find fiducial_detect)/launch/raspi_camera.launch"/>
+  
+  <!-- Camera transform -->
+  <include file="$(find fiducial_detect)/launch/raspi_pose.launch"/>
+  
+  <!-- Fiducial detection -->
+  <include file="$(find fiducial_detect)/launch/fiducial_no_odom.launch">
+    <arg name="camera" value="/camera"/>
+    <arg name="image" value="image_raw"/>
+    <arg name="fiducial_len" value="0.145"/>
+    <arg name="undistort_points" value="true"/>
+  </include>
+
+  <!-- Fiducial slam -->
+  <include file="$(find fiducial_slam)/launch/fiducial_slam.launch">
+    <arg name="mapping_mode" value="$(arg mapping_mode)"/>
+    <arg name="camera_frame" value="raspi_camera_frame"/>
+  </include>
+</launch>
