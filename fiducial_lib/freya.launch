@@ -1,0 +1,4 @@
+<launch>
+  <param name="robot_description" textfile="$(find fiducial_lib)/freya.urdf" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+</launch>
