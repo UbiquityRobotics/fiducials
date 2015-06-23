@@ -150,6 +150,7 @@ class FiducialSlam:
        self.mapFileName = rospy.get_param("~map_file", "map.txt")
        self.obsFileName = rospy.get_param("~obs_file", "obs.txt")
        self.transFileName = rospy.get_param("~trans_file", "trans.txt")
+       print "frames: odom", self.odomFrame, "map:", self.mapFrame, "pose", self.poseFrame
        self.obsFile = open(self.obsFileName, "a")
        self.transFile = open(self.transFileName, "a")
        self.tfs = {}
@@ -537,13 +538,15 @@ class FiducialSlam:
                     self.publishMarker(fid)
         if (not self.pose == None) and self.sendTf:
             if self.odomFrame != "":
-                frame = self.odomFrame
+                toFrame = self.odomFrame
+                fromFrame = self.mapFrame
             else:
-                frame = self.poseFrame
+                toFrame = self.poseFrame
+                fromFrame = self.mapFrame
             self.br.sendTransform(self.robotXyz, self.robotQuat,
                                   rospy.Time.now(),
-                                  frame,
-                                  self.mapFrame)
+                                  toFrame,
+                                  fromFrame)
             self.lastTfPubTime = rospy.get_time()
         self.threadLock.release()
 
