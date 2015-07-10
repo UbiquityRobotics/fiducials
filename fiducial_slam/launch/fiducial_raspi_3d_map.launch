@@ -1,0 +1,8 @@
+<!--
+   Run the 3d fiducial localization for a raspi in mapping mode
+-->
+<launch>
+  <include file="$(find fiducial_slam)/launch/fiducial_raspi_3d.launch">
+    <arg name="mapping_mode" value="true"/>
+  </include>
+</launch>

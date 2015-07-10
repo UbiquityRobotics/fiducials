@@ -1,0 +1,22 @@
+<!-- Run the fiducial_detect node -->
+<launch>
+  <!-- namespace for camera input -->
+  <arg name="camera" default="/camera"/>
+  <arg name="image" default="image_rect"/>
+  <arg name="fiducial_len" default="0.146"/>
+  <arg name="undistort_points" default="false"/>
+
+  <node pkg="fiducial_detect" name="fiducial_detect"
+    type="fiducial_detect" output="screen" respawn="true">
+    <param name="tag_height" value="$(env HOME)/.ros/fiducials/Tag_Heights.xml" />
+    <param name="data_directory" value="$(env HOME)/.ros/fiducials" />
+    <param name="map_frame" value="odom" />
+    <param name="pose_frame" value="slam" />
+    <param name="publish_images" value="true" />
+    <param name="publish_tf" value="false" />
+    <param name="fiducial_len" value="$(arg fiducial_len)"/>
+    <param name="undistort_points" value="$(arg undistort_points)"/>
+    <remap from="fiducial_detect/camera" to="$(arg camera)/$(arg image)"/>
+    <remap from="fiducial_detect/camera_info" to="$(arg camera)/camera_info"/>
+  </node>
+</launch>

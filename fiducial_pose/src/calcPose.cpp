@@ -1,7 +1,7 @@
 
 /*
 
-This node listens for Fiducial messages and computes the pose of
+This library computes the pose of
 the fiducial relative to a fiducial centered on the origin.
 
 */
@@ -14,10 +14,6 @@ the fiducial relative to a fiducial centered on the origin.
 #include <tf/transform_broadcaster.h>
 //#include <turtlesim/Pose.h>
 #include <tf/LinearMath/Matrix3x3.h>
-#include <sensor_msgs/CameraInfo.h>
-
-#include <fiducial_detect/Fiducial.h>
-#include <fiducial_pose/FiducialTransform.h>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
@@ -25,30 +21,7 @@ the fiducial relative to a fiducial centered on the origin.
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "RPP.h"
-
-
-class RosRpp {
-  cv::Mat model;
-  cv::Mat ipts;
-  cv::Mat K;
-  cv::Mat dist;
-  
-  bool doUndistort;
-  bool haveCamInfo;
-  double fiducialLen;
-  int currentFrame;
-  ros::Time frameTime;
-  std::map<int, tf::Transform> frameTransforms;
-  ros::Publisher tfPub;
-  ros::Subscriber verticesSub;
-  ros::Subscriber camInfoSub;
-
-public:
-  RosRpp(ros::NodeHandle);
-  void fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg);
-  void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
-  void undistortPoints(cv::Mat pts);
-};
+#include "fiducial_pose/rosrpp.h"
 
 // Radians to degrees
 double r2d(double r) 
@@ -91,7 +64,7 @@ double calcFiducialArea(cv::Mat pts)
 }
 
 
-void RosRpp::undistortPoints(cv::Mat pts)
+void undistortPoints(cv::Mat pts, cv::Mat K, cv::Mat dist, bool doUndistort)
 {
   if (!doUndistort) {
     printf("fx %lf fy %lf cx %lf cy %lf", K.at<double>(0, 0), K.at<double>(1, 1), K.at<double>(0, 2), K.at<double>(1, 2));
@@ -118,7 +91,9 @@ void RosRpp::undistortPoints(cv::Mat pts)
   }
 }
 
-void RosRpp::fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg)
+
+bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
+		       	      fiducial_pose::FiducialTransform* ft)
 {
   ROS_INFO("date %d id %d direction %d", 
 	   msg->header.stamp.sec, msg->fiducial_id,
@@ -126,14 +101,14 @@ void RosRpp::fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg)
 
   if (!haveCamInfo) {
     ROS_ERROR("No camera info");
-    return;
+    return false;
   }
 
   if (currentFrame != msg->image_seq) {
     //frameTime = msg->header.stamp;
     frameTime = ros::Time::now();
     currentFrame = msg->image_seq;
-    }
+  }
 
   /* The verices are ordered anti-clockwise, starting with the top-left
      we want to end up with this:
@@ -196,7 +171,7 @@ void RosRpp::fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg)
       break;
   }
 
-  undistortPoints(ipts);
+  undistortPoints(ipts, K, dist, doUndistort);
     
   cv::Mat rotation;
   cv::Mat translation;
@@ -206,7 +181,7 @@ void RosRpp::fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg)
 
   if(!RPP::Rpp(model, ipts, rotation, translation, iterations, obj_err, img_err)) {
     ROS_ERROR("Cannot find transform for fiducial %d", msg->fiducial_id);
-    return;
+    return false;
   }
     
   ROS_INFO("fid %d iterations %d object error %f image error %f", 
@@ -231,28 +206,25 @@ void RosRpp::fiducialCallback(const fiducial_detect::Fiducial::ConstPtr& msg)
 	   t1.x(), t1.y(), t1.z(),
 	   r2d(r), r2d(p), r2d(y));
   
-  fiducial_pose::FiducialTransform ft;
-  geometry_msgs::Transform transform;
-  ft.header.stamp = frameTime;
+  ft->header.stamp = frameTime;
   char t1name[32];
   sprintf(t1name, "fiducial_%d", msg->fiducial_id);
-  ft.header.frame_id = t1name;
+  ft->header.frame_id = t1name;
 
-  transform.translation.x = t1.x();
-  transform.translation.y = t1.y();		
-  transform.translation.z = t1.z(); 
+  ft->transform.translation.x = t1.x();
+  ft->transform.translation.y = t1.y();		
+  ft->transform.translation.z = t1.z(); 
   tf::Quaternion q = trans1.getRotation();
-  transform.rotation.w = q.w();
-  transform.rotation.x = q.x();
-  transform.rotation.y = q.y();
-  transform.rotation.z = q.z();
-  ft.transform = transform;
-  ft.fiducial_id = msg->fiducial_id;
-  ft.image_seq = msg->image_seq;
-  ft.image_error = img_err;
-  ft.object_error = obj_err;
-  ft.fiducial_area = calcFiducialArea(ipts);
-  tfPub.publish(ft);
+  ft->transform.rotation.w = q.w();
+  ft->transform.rotation.x = q.x();
+  ft->transform.rotation.y = q.y();
+  ft->transform.rotation.z = q.z();
+  ft->fiducial_id = msg->fiducial_id;
+  ft->image_seq = msg->image_seq;
+  ft->image_error = img_err;
+  ft->object_error = obj_err;
+  ft->fiducial_area = calcFiducialArea(ipts);
+  return true;
 }
 
 
@@ -282,8 +254,11 @@ void RosRpp::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
 }
 
 
-RosRpp::RosRpp(ros::NodeHandle nh)
+RosRpp::RosRpp(double fiducialLen, bool doUndistort)
 {
+  this->fiducialLen = fiducialLen;
+  this->doUndistort = doUndistort;
+
   // Camera intrinsics
   K = cv::Mat::zeros(3, 3, CV_64F);
 
@@ -297,14 +272,6 @@ RosRpp::RosRpp(ros::NodeHandle nh)
   model = cv::Mat::zeros(3, 4, CV_64F); 
 
   haveCamInfo = false;
-
-  camInfoSub = nh.subscribe("/camera_info",
-			    1,
-			    &RosRpp::camInfoCallback,
-			    this);
-  
-  nh.param<double>("fiducial_len", fiducialLen, 0.146);
-  nh.param<bool>("undisort_points", doUndistort, false);
 
   /*
      Vertex ordering:
@@ -334,23 +301,4 @@ RosRpp::RosRpp(ros::NodeHandle nh)
   model.at<double>(1,3) =  fiducialLen / 2.0;
 
   currentFrame = 0;
-
-  tfPub = nh.advertise<fiducial_pose::FiducialTransform>("fiducial_transforms", 3);
-
-  verticesSub = nh.subscribe("vertices",
-			     1,
-			     &RosRpp::fiducialCallback,
-			     this);
 } 
-
-
-int main(int argc, char *argv[]) 
-{
-  ros::init(argc, argv, "rpp_pose");
-  ros::NodeHandle node;
-  RosRpp RosRpp(node);
-  ROS_INFO("rpp_pose started");
-
-  ros::spin();
-}
-

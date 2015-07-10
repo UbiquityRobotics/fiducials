@@ -4,8 +4,8 @@
   <arg name="respawn" default="false" />
 	
   <node name="$(arg camera_node)" pkg="pgr_camera_driver" type="pgr_camera_node" respawn="$(arg respawn)" output="screen">
-        <param name="width" type="int" value="2048" /> # Default 640
-        <param name="height" type="int" value="2048" /> # Default 480
+        <param name="width" type="int" value="640" /> # Default 640
+        <param name="height" type="int" value="480" /> # Default 480
         <param name="format" value="Y8" />
         <param name="frame_rate" type="int" value="5" />
         <param name="streaming_mode" type="str" value="polled_mode" />
