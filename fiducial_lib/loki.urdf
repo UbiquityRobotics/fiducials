@@ -3,13 +3,22 @@
   <link name="base_link">
   </link>
 
+  <link name="sonar_0">
+  </link>
+
+  <joint name="base_sonar_0" type="fixed">
+    <parent link="base_link"/>
+    <child link="sonar_0"/>
+    <origin rpy="0 0 -1.57" xyz="-0.117 -0.055 0"/>
+  </joint>
+
   <link name="sonar_1">
   </link>
 
   <joint name="base_sonar_1" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_1"/>
-    <origin rpy="0 0 -1.57" xyz="-0.117 -0.055 0"/>
+    <origin rpy="0 0 -1.17" xyz="0.0540476 -0.0508134 0"/>
   </joint>
 
   <link name="sonar_2">
@@ -18,7 +27,7 @@
   <joint name="base_sonar_2" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_2"/>
-    <origin rpy="0 0 -1.17" xyz="0.0540476 -0.0508134 0"/>
+    <origin rpy="0 0 -0.79" xyz="0.0718909 -0.0388909 0"/>
   </joint>
 
   <link name="sonar_3">
@@ -27,7 +36,7 @@
   <joint name="base_sonar_3" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_3"/>
-    <origin rpy="0 0 -0.79" xyz="0.0718909 -0.0388909 0"/>
+    <origin rpy="0 0 -0.39" xyz="0.0838134 -0.0210476 0"/>
   </joint>
 
   <link name="sonar_4">
@@ -36,7 +45,7 @@
   <joint name="base_sonar_4" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_4"/>
-    <origin rpy="0 0 -0.39" xyz="0.0838134 -0.0210476 0"/>
+    <origin rpy="0 0 0" xyz="0.088 0 0"/>
   </joint>
 
   <link name="sonar_5">
@@ -45,7 +54,7 @@
   <joint name="base_sonar_5" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_5"/>
-    <origin rpy="0 0 0" xyz="0.088 0 0"/>
+    <origin rpy="0 0 0.39" xyz="0.0838134 0.0210476 0"/>
   </joint>
 
   <link name="sonar_6">
@@ -54,7 +63,7 @@
   <joint name="base_sonar_6" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_6"/>
-    <origin rpy="0 0 0.39" xyz="0.0838134 0.0210476 0"/>
+    <origin rpy="0 0 0.79" xyz="0.0718909 0.0388909 0"/>
   </joint>
 
   <link name="sonar_7">
@@ -63,7 +72,7 @@
   <joint name="base_sonar_7" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_7"/>
-    <origin rpy="0 0 0.79" xyz="0.0718909 0.0388909 0"/>
+    <origin rpy="0 0 1.17" xyz="0.0540476 0.0508134 0"/>
   </joint>
 
   <link name="sonar_8">
@@ -72,7 +81,7 @@
   <joint name="base_sonar_8" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_8"/>
-    <origin rpy="0 0 1.17" xyz="0.0540476 0.0508134 0"/>
+    <origin rpy="0 0 1.57" xyz="-0.117 0.055 0"/>
   </joint>
 
   <link name="sonar_9">
@@ -81,7 +90,7 @@
   <joint name="base_sonar_9" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_9"/>
-    <origin rpy="0 0 1.57" xyz="-0.117 0.055 0"/>
+    <origin rpy="0 0 1.96349541" xyz="-0.138047589 0.050813374 0"/>
   </joint>
 
   <link name="sonar_10">
@@ -90,7 +99,7 @@
   <joint name="base_sonar_10" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_10"/>
-    <origin rpy="0 0 1.96349541" xyz="-0.138047589 0.050813374 0"/>
+    <origin rpy="0 0 2.35619449" xyz="-0.155890873 0.038890873 0"/>
   </joint>
 
   <link name="sonar_11">
@@ -99,7 +108,7 @@
   <joint name="base_sonar_11" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_11"/>
-    <origin rpy="0 0 2.35619449" xyz="-0.155890873 0.038890873 0"/>
+    <origin rpy="0 0 2.74889357" xyz="-0.167813374 0.021047589 0"/>
   </joint>
 
   <link name="sonar_12">
@@ -108,7 +117,7 @@
   <joint name="base_sonar_12" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_12"/>
-    <origin rpy="0 0 2.74889357" xyz="-0.167813374 0.021047589 0"/>
+    <origin rpy="0 0 3.14159265" xyz="-0.172 0 0"/>
   </joint>
 
   <link name="sonar_13">
@@ -117,7 +126,7 @@
   <joint name="base_sonar_13" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_13"/>
-    <origin rpy="0 0 3.14159265" xyz="-0.172 0 0"/>
+    <origin rpy="0 0 -2.74889357" xyz="-0.167813374 -0.021047589 0"/>
   </joint>
 
   <link name="sonar_14">
@@ -126,7 +135,7 @@
   <joint name="base_sonar_14" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_14"/>
-    <origin rpy="0 0 -2.74889357" xyz="-0.167813374 -0.021047589 0"/>
+    <origin rpy="0 0 -2.35619449" xyz="-0.155890873 -0.038890873 0"/>
   </joint>
 
   <link name="sonar_15">
@@ -135,15 +144,6 @@
   <joint name="base_sonar_15" type="fixed">
     <parent link="base_link"/>
     <child link="sonar_15"/>
-    <origin rpy="0 0 -2.35619449" xyz="-0.155890873 -0.038890873 0"/>
-  </joint>
-
-  <link name="sonar_16">
-  </link>
-
-  <joint name="base_sonar_16" type="fixed">
-    <parent link="base_link"/>
-    <child link="sonar_16"/>
     <origin rpy="0 0 -1.96349541" xyz="-0.138047589 -0.050813374 0"/>
   </joint>
 
