@@ -17,7 +17,7 @@
         pkg="nodelet" type="nodelet"
         args="load gscam/GSCamNodelet standalone_nodelet" 
        output="screen">
-    <param name="camera_name" value="default"/>
+    <param name="camera_name" value="loki2"/>
     <param name="camera_info_url"
            value="file://$(arg calibration_file)"/>
     <param name="gscam_config"
