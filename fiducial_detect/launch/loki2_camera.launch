@@ -1,0 +1,31 @@
+<launch>
+  <arg name="camera_node" default="camera_node" />
+  <arg name="calibration_file"
+   default="$(find fiducial_detect)/camera_info/loki2.yaml" />
+  <arg name="respawn" default="false" />
+  <arg name="DEVICE" default="/dev/video0"/>
+  <!-- The GStreamer framerate needs to be an integral fraction -->
+  <arg name="WIDTH" default="1280"/>
+  <arg name="HEIGHT" default="960"/>
+  <arg name="FPS" default="30/1"/>
+
+  <node name="standalone_nodelet" args="manager"
+        pkg="nodelet" type="nodelet"
+        output="screen"/>
+
+  <node name="$(arg camera_node)"
+        pkg="nodelet" type="nodelet"
+        args="load gscam/GSCamNodelet standalone_nodelet" 
+       output="screen">
+    <param name="camera_name" value="default"/>
+    <param name="camera_info_url"
+           value="$(arg calibration_file)"/>
+    <param name="gscam_config"
+           value="v4l2src device=$(arg DEVICE) ! video/x-raw-rgb,width=$(arg WIDTH),height=$(arg HEIGHT),framerate=$(arg FPS) ! ffmpegcolorspace"/>
+    <param name="frame_id" value="/raspi_camera_frame"/>
+    <param name="sync_sink" value="true"/>
+
+    <param name="width" type="int" value="$(arg WIDTH)" /> # Default 640
+    <param name="height" type="int" value="$(arg HEIGHT)" /> # Default 480
+   </node>                 
+</launch>
