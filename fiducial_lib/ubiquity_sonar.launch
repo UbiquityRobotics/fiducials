@@ -1,0 +1,5 @@
+<launch>
+  <param name="robot_description"
+   textfile="$(find robot_configurations)/$(env ROS_HOST_NAME)/loki.urdf" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+</launch>
