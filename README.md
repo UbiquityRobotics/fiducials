@@ -191,7 +191,6 @@ To generate a map quickly, run this:
 To run the navigation:
 
         roslaunch fiducial_slam navigation_noscan.launch
-        rosrun map_server map_server fiducial_detect/map.yaml
 
 ## Map Creation
 
