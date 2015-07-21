@@ -21,4 +21,7 @@
     <rosparam file="$(find fiducial_detect)/config_noscan/global_costmap.yaml"
               command="load" ns="global_costmap"/>
   </node>
+
+  <node pkg="map_server" type="map_server" name="map_server" 
+      args="$(find fiducial_detect)/map.yaml"/>
 </launch>
