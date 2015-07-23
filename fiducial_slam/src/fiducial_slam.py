@@ -164,7 +164,6 @@ class FiducialSlam:
        self.visibleMarkers = {}
        self.mapPublished = False
        self.numFiducialsVisible = 0
-       self.threadLock = threading.Lock()
        self.pose = None
        self.robotQuat = None
        self.robotXyz = None
@@ -249,24 +248,27 @@ class FiducialSlam:
             If this is a new frame, process pairs tfs from the previous one
             """
             self.updatePose()
-            # Only update the map if the robot has moved significantly, to 
-            # avoid the map variances decaying from repeated observations
-            if self.lastUpdateXyz is None:
-                self.updateMap()
-                self.lastUpdateXyz = self.robotXyz
-                self.lastUpdateYaw = self.robotYaw
-            else:
-                dist = numpy.linalg.norm(self.lastUpdateXyz - self.robotXyz)
-                angle = self.lastUpdateYaw - self.robotYaw
-                print "Distance moved", dist, angle
-                if self.mappingMode or dist > MIN_UPDATE_TRANSLATION or angle > MIN_UPDATE_ROTATION:
+            if not self.pose is None:
+                robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
+                robotQuat = numpy.array(quaternion_from_matrix(self.pose))
+                (r, p, robotYaw) = euler_from_quaternion(robotQuat)
+                # Only update the map if the robot has moved significantly, to 
+                # avoid the map variances decaying from repeated observations
+                if self.lastUpdateXyz is None:
                     self.updateMap()
-                    self.lastUpdateXyz = self.robotXyz
-                    self.lastUpdateYaw = self.robotYaw
-            self.threadLock.acquire()
+                    self.lastUpdateXyz = robotXyz
+                    self.lastUpdateYaw = robotYaw
+                else:
+                    dist = numpy.linalg.norm(self.lastUpdateXyz - robotXyz)
+                    angle = self.lastUpdateYaw - self.robotYaw
+                    print "Distance moved", dist, angle
+                    if self.mappingMode or dist > MIN_UPDATE_TRANSLATION \
+                      or angle > MIN_UPDATE_ROTATION:
+                        self.updateMap()
+                        self.lastUpdateXyz = robotXyz
+                        self.lastUpdateYaw = robotYaw
             self.numFiducialsVisible = len(self.tfs.keys())
             self.publishMarkers()
-            self.threadLock.release()
             self.tfs = {}
             self.currentSeq = seq
         """ 
@@ -413,7 +415,14 @@ class FiducialSlam:
             print "pose ALL %f %f %f %f %f %f %f %d" % (xyz[0], xyz[1], xyz[2],
                                                   rad2deg(r), rad2deg(p), rad2deg(y), 
                                                   variance, self.currentSeq)
-            self.publishTransform(position, orientation)
+            self.pose = numpy.dot(translation_matrix((position[0], 
+                                                      position[1],
+                                                      position[2])),
+                                  quaternion_matrix((orientation[0],
+                                                     orientation[1],
+                                                     orientation[2],
+                                                     orientation[3])))
+            self.publishTransform()
 
     def publishMarkers(self):
         self.numFiducials = len(self.tfs.keys())
@@ -473,58 +482,47 @@ class FiducialSlam:
             
 
     """
-    Publish the transform
+    Publish the transform in self.pose
     """
-    def publishTransform(self, trans, rot):
-        pose = numpy.dot(translation_matrix((trans[0], trans[1], trans[2])),
-                         quaternion_matrix((rot[0], rot[1], rot[2], rot[3])))
-
-        robotXyz = numpy.array(translation_from_matrix(pose))[:3]
-        robotQuat = numpy.array(quaternion_from_matrix(pose))
-        (r, p, yaw) = euler_from_quaternion(robotQuat)
-        robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
-        m = PoseWithCovarianceStamped()
-        m.header.frame_id = self.mapFrame
-        m.header.stamp = rospy.Time.now()
-        m.pose.pose.orientation.x = robotQuat[0]
-        m.pose.pose.orientation.y = robotQuat[1]
-        m.pose.pose.orientation.z = robotQuat[2]
-        m.pose.pose.orientation.w = robotQuat[3]
-        m.pose.pose.position.x = robotXyz[0]
-        m.pose.pose.position.y = robotXyz[1]
-        m.pose.pose.position.z = robotXyz[2]
-        """
-        These values are designed to work with robot_localization.
-        See http://wiki.ros.org/robot_localization/Tutorials/Migration%20from%20robot_pose_ekf
-        """
-        m.pose.covariance = [0.1,  0,    0,     0,     0,     0,
-                             0,    0.1,  0,     0,     0,     0,
-                             0,    0,    0.1,   0,     0,     0,
-                             0,    0,    0,     0.1,   0,     0,
-                             0,    0,    0,     0,     0.1,   0,
-                             0,    0,    0,     0,     0,     0.1]
-        self.posePub.publish(m)
-        self.threadLock.acquire()
-        if self.odomFrame != "":
-            t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
-            odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, t)
-            odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
-                             quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
-            pose = numpy.dot(pose, odom)
-        robotXyz = numpy.array(translation_from_matrix(pose))[:3]
-        robotQuat = numpy.array(quaternion_from_matrix(pose))
-        (r, p, yaw) = euler_from_quaternion(robotQuat)
-        robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
-        self.pose = pose
-        self.robotYaw = yaw
-        self.robotQuat = robotQuat
-        self.robotXyz = robotXyz
-        self.threadLock.release()
-        self.sendTransform()
-
-
-    def sendTransform(self):
-        self.threadLock.acquire()
+    def publishTransform(self):
+        print "publish Transform", self.pose
+        if not self.pose is None:
+            robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
+            robotQuat = numpy.array(quaternion_from_matrix(self.pose))
+            (r, p, yaw) = euler_from_quaternion(robotQuat)
+            robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
+            m = PoseWithCovarianceStamped()
+            m.header.frame_id = self.mapFrame
+            m.header.stamp = rospy.Time.now()
+            m.pose.pose.orientation.x = robotQuat[0]
+            m.pose.pose.orientation.y = robotQuat[1]
+            m.pose.pose.orientation.z = robotQuat[2]
+            m.pose.pose.orientation.w = robotQuat[3]
+            m.pose.pose.position.x = robotXyz[0]
+            m.pose.pose.position.y = robotXyz[1]
+            m.pose.pose.position.z = robotXyz[2]
+            """
+            These values are designed to work with robot_localization.
+            See http://wiki.ros.org/robot_localization/Tutorials/Migration%20from%20robot_pose_ekf
+            """
+            m.pose.covariance = [0.1,  0,    0,     0,     0,     0,
+                                 0,    0.1,  0,     0,     0,     0,
+                                 0,    0,    0.1,   0,     0,     0,
+                                 0,    0,    0,     0.1,   0,     0,
+                                 0,    0,    0,     0,     0.1,   0,
+                                 0,    0,    0,     0,     0,     0.1]
+            self.posePub.publish(m)
+            if self.odomFrame != "":
+                t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
+                odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, t)
+                odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
+                                 quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
+                pose = numpy.dot(self.pose, odom)
+            robotXyz = numpy.array(translation_from_matrix(pose))[:3]
+            robotQuat = numpy.array(quaternion_from_matrix(pose))
+            (r, p, yaw) = euler_from_quaternion(robotQuat)
+            robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
+            self.robotYaw = yaw
         if not self.mapPublished:
             self.mapPublished = True
             print "publishing map"
@@ -536,19 +534,18 @@ class FiducialSlam:
             for fid in self.visibleMarkers.keys():
                 if not self.tfs.has_key(fid):
                     self.publishMarker(fid)
-        if (not self.pose == None) and self.sendTf:
+        if not self.pose is None and self.sendTf:
             if self.odomFrame != "":
                 toFrame = self.odomFrame
                 fromFrame = self.mapFrame
             else:
                 toFrame = self.poseFrame
                 fromFrame = self.mapFrame
-            self.br.sendTransform(self.robotXyz, self.robotQuat,
+            self.br.sendTransform(robotXyz, robotQuat,
                                   rospy.Time.now(),
                                   toFrame,
                                   fromFrame)
             self.lastTfPubTime = rospy.get_time()
-        self.threadLock.release()
 
 if __name__ == "__main__":
     node = FiducialSlam()
@@ -557,7 +554,7 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         age = rospy.get_time() - node.lastTfPubTime
         if age > 0.1:
-            node.sendTransform()
+            node.publishTransform()
         rate.sleep()
     node.close()
     rospy.loginfo("Fiducial Slam ended")
