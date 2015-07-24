@@ -1,0 +1,65 @@
+<launch>
+  <arg name="mapping_mode" default="false"/>
+
+  <!-- Camera -->
+  <include file="$(find fiducial_detect)/launch/ubiquity_camera.launch"/>
+  
+  <!-- Camera transform -->
+  <include file="$(find fiducial_detect)/launch/raspi_pose.launch"/>
+  
+  <!-- Robot State Publisher -->
+  <param name="robot_description"
+   textfile="$(find robot_configurations)/$(env ROS_HOSTNAME)/loki.urdf" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher"
+   type="state_publisher">
+  </node>
+
+  <!-- ROS Arduino Bridge -->
+  <include file="$(find ros_arduino_python)/launch/ubiquity_arduino.launch"/>
+
+  <!-- Joystick Input -->
+  <include file="$(find joy_input)/launch/joystick.launch"/>
+
+  <!-- Fiducial detection -->
+  <include file="$(find fiducial_detect)/launch/fiducial_no_odom.launch">
+    <arg name="camera" value="/camera"/>
+    <arg name="image" value="image_raw"/>
+    <arg name="fiducial_len" value="0.200"/>     <!-- default 0.145 mjWall 0.09  mjGar 0.135 wayne .200 -->
+    <arg name="undistort_points" value="true"/>
+  </include>
+
+  <!-- Fiducial slam -->
+  <include file="$(find fiducial_slam)/launch/fiducial_slam.launch">
+    <arg name="mapping_mode" value="$(arg mapping_mode)"/>
+    <arg name="camera_frame" value="raspi_camera_frame"/>
+    <arg name="map_frame" value="map"/>
+    <arg name="odom_frame" value="odom"/>
+    <arg name="pose_frame" value="base_link"/>
+  </include>
+
+  <!-- map node -->
+  <node pkg="map_server" type="map_server" name="map_server" output="screen"
+    args="$(find robot_configurations)/$(env ROS_HOSTNAME)/map.yaml" />
+
+  <!-- move_base node -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base"
+        output="screen">
+
+    <remap from="/cmd_vel" to="/cmd_vel_mux/input/navigation"/>
+
+    <rosparam file="$(find robot_configurations)/$(env ROS_HOSTNAME)/dagny_nav.yaml" command="load"/>
+    <rosparam file="$(find robot_configurations)/$(env ROS_HOSTNAME)/local_planner.yaml" command="load"/>
+  
+    <!-- local costmap parameters. Small laser scanner on /scan -->
+    <rosparam file="$(find robot_configurations)/$(env ROS_HOSTNAME)/common_costmap.yaml"
+              command="load" ns="local_costmap"/>
+    <rosparam file="$(find robot_configurations)/$(env ROS_HOSTNAME)/local_costmap.yaml"
+              command="load" ns="local_costmap"/>
+  
+    <!-- global costmap parameters. Should just be a static map. -->
+    <rosparam file="$(find robot_configurations)/$(env ROS_HOSTNAME)/common_costmap.yaml"
+              command="load" ns="global_costmap"/>
+    <rosparam file="$(find robot_configurations)/$(env ROS_HOSTNAME)/global_costmap.yaml"
+              command="load" ns="global_costmap"/>
+  </node>
+</launch>
