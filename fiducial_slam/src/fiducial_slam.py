@@ -44,6 +44,8 @@ MIN_UPDATE_ROTATION = math.pi/4.0
 # Used to make an estimeate of error, based on tilt
 CEILING_HEIGHT = 2.77
 
+# How far in the future to stamp our tfs
+FUTURE = 2.5
 
 """
 Radians to degrees
@@ -485,7 +487,6 @@ class FiducialSlam:
     Publish the transform in self.pose
     """
     def publishTransform(self):
-        print "publish Transform", self.pose
         if not self.pose is None:
             robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
             robotQuat = numpy.array(quaternion_from_matrix(self.pose))
@@ -542,7 +543,7 @@ class FiducialSlam:
                 toFrame = self.poseFrame
                 fromFrame = self.mapFrame
             self.br.sendTransform(robotXyz, robotQuat,
-                                  rospy.Time.now(),
+                                  rospy.Time.now() + rospy.Duration(FUTURE),
                                   toFrame,
                                   fromFrame)
             self.lastTfPubTime = rospy.get_time()
@@ -553,8 +554,8 @@ if __name__ == "__main__":
     rate = rospy.Rate(10.0)
     while not rospy.is_shutdown():
         age = rospy.get_time() - node.lastTfPubTime
-        if age > 0.1:
-            node.publishTransform()
+        #if age > 0.1:
+        #    node.publishTransform()
         rate.sleep()
     node.close()
     rospy.loginfo("Fiducial Slam ended")
