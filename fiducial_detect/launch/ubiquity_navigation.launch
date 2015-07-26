@@ -3,7 +3,7 @@
 
   <!-- Camera -->
   <include file="$(find fiducial_detect)/launch/ubiquity_camera.launch"/>
-  
+
   <!-- Camera transform -->
   <include file="$(find fiducial_detect)/launch/raspi_pose.launch"/>
   
@@ -24,7 +24,7 @@
   <include file="$(find fiducial_detect)/launch/fiducial_no_odom.launch">
     <arg name="camera" value="/camera"/>
     <arg name="image" value="image_raw"/>
-    <arg name="fiducial_len" value="0.200"/>     <!-- default 0.145 mjWall 0.09  mjGar 0.135 wayne .200 -->
+    <arg name="fiducial_len" value="0.145"/>     <!-- default 0.145 mjWall 0.09  mjGar 0.135 wayne .200 -->
     <arg name="undistort_points" value="true"/>
   </include>
 
@@ -41,11 +41,13 @@
   <node pkg="map_server" type="map_server" name="map_server" output="screen"
     args="$(find robot_configurations)/$(env ROS_HOSTNAME)/map.yaml" />
 
-  <!-- move_base node -->
+  <!-- Navigation with noscan mode running the move_base node -->
   <node pkg="move_base" type="move_base" respawn="false" name="move_base"
         output="screen">
 
+    <!-- Remove this re-map so this launch is like the working navigation_noscan.launch
     <remap from="/cmd_vel" to="/cmd_vel_mux/input/navigation"/>
+    -->
 
     <rosparam file="$(find robot_configurations)/$(env ROS_HOSTNAME)/dagny_nav.yaml" command="load"/>
     <rosparam file="$(find robot_configurations)/$(env ROS_HOSTNAME)/local_planner.yaml" command="load"/>
