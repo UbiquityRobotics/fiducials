@@ -7,6 +7,7 @@
   <arg name="map_frame"/>
   <arg name="odom_frame"/>
   <arg name="pose_frame"/>
+  <arg name="publish_tf" default="true"/>
 
 
   <node type="fiducial_slam.py" pkg="fiducial_slam" output="screen" name="fiducial_slam">
@@ -18,6 +19,7 @@
     <param name="map_frame" value="$(arg map_frame)" />
     <param name="odom_frame" value="$(arg odom_frame)" />
     <param name="pose_frame" value="$(arg pose_frame)" />
+    <param name="pubish_tf" value="$(arg publish_tf)" />
     <remap to="/fiducial_detect/fiducial_transforms" from="/fiducial_transforms"/>
   </node>
 </launch>
