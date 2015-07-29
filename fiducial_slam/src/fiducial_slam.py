@@ -44,8 +44,6 @@ MIN_UPDATE_ROTATION = math.pi/4.0
 # Used to make an estimeate of error, based on tilt
 CEILING_HEIGHT = 2.77
 
-# How far in the future to stamp our tfs
-FUTURE = 2.5
 
 """
 Radians to degrees
@@ -152,6 +150,8 @@ class FiducialSlam:
        self.mapFileName = rospy.get_param("~map_file", "map.txt")
        self.obsFileName = rospy.get_param("~obs_file", "obs.txt")
        self.transFileName = rospy.get_param("~trans_file", "trans.txt")
+       # How much to future date our tfs
+       self.future = rospy.get_param("~future", 0.0)
        print "frames: odom", self.odomFrame, "map:", self.mapFrame, "pose", self.poseFrame
        self.obsFile = open(self.obsFileName, "a")
        self.transFile = open(self.transFileName, "a")
@@ -397,9 +397,9 @@ class FiducialSlam:
 
             (r, p, y) = euler_from_quaternion(quat)
             thisvar  = angularError3D(r, p , 0.0)
-            print "pose %d %f %f %f %f %f %f %f" % (t, xyz[0], xyz[1], xyz[2],
+            rospy.loginfo("pose %d %f %f %f %f %f %f %f" % (t, xyz[0], xyz[1], xyz[2],
                                                  rad2deg(r), rad2deg(p), rad2deg(y),
-                                                 thisvar)
+                                                 thisvar))
 
             if position is None:
                 position = xyz
@@ -414,9 +414,9 @@ class FiducialSlam:
         if not position is None:
             (r, p, y) = euler_from_quaternion(orientation)
             xyz = position
-            print "pose ALL %f %f %f %f %f %f %f %d" % (xyz[0], xyz[1], xyz[2],
+            rospy.loginfo("pose ALL %f %f %f %f %f %f %f %d" % (xyz[0], xyz[1], xyz[2],
                                                   rad2deg(r), rad2deg(p), rad2deg(y), 
-                                                  variance, self.currentSeq)
+                                                  variance, self.currentSeq))
             self.pose = numpy.dot(translation_matrix((position[0], 
                                                       position[1],
                                                       position[2])),
@@ -506,12 +506,12 @@ class FiducialSlam:
             These values are designed to work with robot_localization.
             See http://wiki.ros.org/robot_localization/Tutorials/Migration%20from%20robot_pose_ekf
             """
-            m.pose.covariance = [0.1,  0,    0,     0,     0,     0,
-                                 0,    0.1,  0,     0,     0,     0,
-                                 0,    0,    0.1,   0,     0,     0,
-                                 0,    0,    0,     0.1,   0,     0,
-                                 0,    0,    0,     0,     0.1,   0,
-                                 0,    0,    0,     0,     0,     0.1]
+            m.pose.covariance = [0.01,  0,     0,      0,     0,     0,
+                                 0,     0.01,  0,      0,     0,     0,
+                                 0,     0,     0.01,   0,     0,     0,
+                                 0,     0,     0,      0.01,  0,     0,
+                                 0,     0,     0,      0,     0.01,  0,
+                                 0,     0,     0,      0,     0,     0.01]
             self.posePub.publish(m)
             if self.odomFrame != "":
                 t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
@@ -543,7 +543,7 @@ class FiducialSlam:
                 toFrame = self.poseFrame
                 fromFrame = self.mapFrame
             self.br.sendTransform(robotXyz, robotQuat,
-                                  rospy.Time.now() + rospy.Duration(FUTURE),
+                                  rospy.Time.now() + rospy.Duration(self.future),
                                   toFrame,
                                   fromFrame)
             self.lastTfPubTime = rospy.get_time()
