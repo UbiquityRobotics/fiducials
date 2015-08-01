@@ -14,8 +14,10 @@
   <include file="$(find fiducial_detect)/launch/fiducial_no_odom.launch">
     <arg name="camera" value="/camera"/>
     <arg name="image" value="image_raw"/>
-    <arg name="fiducial_len" value="0.145"/>     <!-- default 0.145 mjWall 0.09  mjGar 0.135 -->
     <arg name="undistort_points" value="true"/>
+    
+    <!-- fiducial_len common values default 0.145, mjWall 0.09  mjGar 0.135 wayne 0.200 -->
+    <arg name="fiducial_len" value="$(optenv FIDUCIAL_LEN 0.145)" />
   </include>
 
   <!-- Fiducial slam -->
