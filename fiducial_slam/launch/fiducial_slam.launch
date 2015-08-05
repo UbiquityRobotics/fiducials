@@ -19,7 +19,7 @@
     <param name="map_frame" value="$(arg map_frame)" />
     <param name="odom_frame" value="$(arg odom_frame)" />
     <param name="pose_frame" value="$(arg pose_frame)" />
-    <param name="pubish_tf" value="$(arg publish_tf)" />
+    <param name="publish_tf" value="$(arg publish_tf)" />
     <remap to="/fiducial_detect/fiducial_transforms" from="/fiducial_transforms"/>
   </node>
 </launch>
