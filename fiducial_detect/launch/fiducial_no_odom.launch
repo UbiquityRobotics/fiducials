@@ -3,10 +3,8 @@
   <!-- namespace for camera input -->
   <arg name="camera" default="/camera"/>
   <arg name="image" default="image_rect"/>
+  <arg name="fiducial_len" default="0.146"/>
   <arg name="undistort_points" default="false"/>
-
-  <!-- fiducial_len common values default 0.145, mjWall 0.09  mjGar 0.135 wayne 0.200 -->
-  <arg name="fiducial_len" value="$(optenv FIDUCIAL_LEN 0.145)" />
 
   <node pkg="fiducial_detect" name="fiducial_detect"
     type="fiducial_detect" output="screen" respawn="true">
@@ -20,5 +18,6 @@
     <param name="undistort_points" value="$(arg undistort_points)"/>
     <remap from="fiducial_detect/camera" to="$(arg camera)/$(arg image)"/>
     <remap from="fiducial_detect/camera_info" to="$(arg camera)/camera_info"/>
+
   </node>
 </launch>

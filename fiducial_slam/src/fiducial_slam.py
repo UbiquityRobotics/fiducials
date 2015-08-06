@@ -160,7 +160,8 @@ class FiducialSlam:
        self.numFiducials = 0
        self.fiducials = {}
        #self.addOriginFiducial(543)
-       self.br = tf.TransformBroadcaster()
+       if self.sendTf:
+           self.br = tf.TransformBroadcaster()
        self.lr = tf.TransformListener()
        self.markerPub = rospy.Publisher("fiducials", Marker)
        self.visibleMarkers = {}
@@ -535,7 +536,7 @@ class FiducialSlam:
             for fid in self.visibleMarkers.keys():
                 if not self.tfs.has_key(fid):
                     self.publishMarker(fid)
-        if not self.pose is None and self.sendTf:
+        if self.sendTf and not self.pose is None:
             if self.odomFrame != "":
                 toFrame = self.odomFrame
                 fromFrame = self.mapFrame
