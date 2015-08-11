@@ -1,10 +1,11 @@
 <launch>
 
   <!--
-     This transform is for a raspi camera mounted on a Loki with the
-     ribbon cable facing away from the Pi  MJ 26 Jul 2015
+     This transform is for a raspi camera mounted on a Loki.
+     The default value of CAMERA_YAW is with the camera oriented
+     such that the ribbon cable facing towards the front wheels.
   -->
-   
+  
   <node type="static_transform_publisher" pkg="tf" name="camera_pose"
-        args="-0.14 0 0 0 0 0 base_link raspi_camera_frame 100"/> 
+        args="-0.14 0 0 $(optenv CAMERA_YAW 1.57079632679) 0 0 base_link raspi_camera_frame 100"/> 
 </launch>
