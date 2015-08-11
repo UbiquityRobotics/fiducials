@@ -197,9 +197,11 @@ To run the navigation:
 To create an empty map file with fiducial 301 at the origin:
 
         mkdir -p ~/.ros/slam
-        echo '301 0.0 0.0 0.0 180.0 -0.0 0.0 0.0 1' > ~/ros/slam/map.txt
+        echo '301 0.0 0.0 0.0 0.0 180.0 0.0 0.0 1' > ~/ros/slam/map.txt
 
 The format of this file is id x y z pan tilt roll numObservations
+This assumes the fiducial is on the ceiling, and the 180 degree rotation is used
+so that the pose of fiducials is determined in the co-ordinate system of the floor.
 
 
 ## Nodes

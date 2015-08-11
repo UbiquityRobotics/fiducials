@@ -233,13 +233,9 @@ class FiducialSlam:
             f = self.fiducials[fid]
             pos = f.position
             off = numpy.dot(translation_matrix(numpy.array((-1.0, -1.0, 0.0))), f.pose44())
-            print fid, translation_from_matrix(off)[:3]
             off = numpy.dot(translation_matrix(numpy.array((1.0, -1.0, 0.0))), f.pose44())
-            print fid, translation_from_matrix(off)[:3]
             off = numpy.dot(translation_matrix(numpy.array((1.0, 1.0, 0.0))), f.pose44())
-            print fid, translation_from_matrix(off)[:3]
             off = numpy.dot(translation_matrix(numpy.array((-1.0, 1.0, 0.0))), f.pose44())
-            print fid, translation_from_matrix(off)[:3]
 
     """
     Called when a FiducialTransform is received
@@ -318,19 +314,19 @@ class FiducialSlam:
         if len(fid1.links) == 1 and f1 in fid1.links:
 	    return
 
-        posef1 = fid1.pose44()
+        P_fid1 = fid1.pose44()
 
-        (trans1, trans1Inv, oerr1, ierr1) = self.tfs[f1]
-        (trans2, trans2Inv, oerr2, ierr2) = self.tfs[f2]
+        (T_camFid1, T_fid1Cam, oerr1, ierr1) = self.tfs[f1]
+        (T_camFid2, T_fid2Cam, oerr2, ierr2) = self.tfs[f2]
 
         # transform form fiducial f1 to f2
-        trans = numpy.dot(trans1Inv, trans2)
+        T_fid1Fid2 = numpy.dot(T_fid1Cam, T_camFid2)
                              
         # pose of f1 transformed by trans
-        posef2 = numpy.dot(posef1, trans)
+        P_fid2 = numpy.dot(P_fid1, T_fid1Fid2)
 
-        xyz = numpy.array(translation_from_matrix(posef2))[:3]
-        quat = numpy.array(quaternion_from_matrix(posef2))
+        xyz = numpy.array(translation_from_matrix(P_fid2))[:3]
+        quat = numpy.array(quaternion_from_matrix(P_fid2))
         (r, p, yaw) = euler_from_quaternion(quat)
 
         self.obsFile.write("%d %d %d %r %r %r %r %r %r %r %r %r %r\n" % \
@@ -376,31 +372,33 @@ class FiducialSlam:
         camera = None
         try:
             t = self.lr.getLatestCommonTime(self.poseFrame, self.cameraFrame)
-            camt, camr = self.lr.lookupTransform(self.poseFrame, self.cameraFrame, t)
-            camera = numpy.dot(translation_matrix((camt[0], camt[1], camt[2])),
-                     quaternion_matrix((camr[0], camr[1], camr[2], camr[3])))
+            ct, cr = self.lr.lookupTransform(self.poseFrame, self.cameraFrame, t)
+            T_CamBase = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
+                       quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
         except:
-            rospy.logerr("Unable to lookup transfrom from camera to robot")
+            rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s)" % \
+                         (self.poseFrame, self.cameraFrame))
+            return
         
         for t in self.tfs.keys():
             if not self.fiducials.has_key(t):
                 rospy.logwarn("No path to %d" % t)
                 continue
-            (trans, invTrans, oerr, ierr) = self.tfs[t]
-            posef1 = self.fiducials[t].pose44()
+            (T_CamFid, T_FidCam, oerr, ierr) = self.tfs[t]
+            T_WorldFid = self.fiducials[t].pose44()
 
-            txpose = numpy.dot(posef1, invTrans)
-            if not camera is None:
-                txpose = numpy.dot(txpose, camera)
+            T_WorldCam = numpy.dot(T_WorldFid, T_FidCam)
+            T_WorldBase = numpy.dot(T_WorldCam, T_CamBase)
 
-            xyz = numpy.array(translation_from_matrix(txpose))[:3]
-            quat = numpy.array(quaternion_from_matrix(txpose))
-
+            xyz = numpy.array(translation_from_matrix(T_WorldBase))[:3]
+            quat = numpy.array(quaternion_from_matrix(T_WorldBase))
             (r, p, y) = euler_from_quaternion(quat)
+
             thisvar  = angularError3D(r, p , 0.0)
-            rospy.loginfo("pose %d %f %f %f %f %f %f %f" % (t, xyz[0], xyz[1], xyz[2],
-                                                 rad2deg(r), rad2deg(p), rad2deg(y),
-                                                 thisvar))
+            rospy.loginfo("pose %d %f %f %f %f %f %f %f" % \
+                             (t, xyz[0], xyz[1], xyz[2],
+                              rad2deg(r), rad2deg(p), rad2deg(y),
+                              thisvar))
 
             if position is None:
                 position = xyz
@@ -415,9 +413,10 @@ class FiducialSlam:
         if not position is None:
             (r, p, y) = euler_from_quaternion(orientation)
             xyz = position
-            rospy.loginfo("pose ALL %f %f %f %f %f %f %f %d" % (xyz[0], xyz[1], xyz[2],
-                                                  rad2deg(r), rad2deg(p), rad2deg(y), 
-                                                  variance, self.currentSeq))
+            rospy.loginfo("pose ALL %f %f %f %f %f %f %f %d" % \
+                            (xyz[0], xyz[1], xyz[2],
+                             rad2deg(r), rad2deg(p), rad2deg(y), 
+                             variance, self.currentSeq))
             self.pose = numpy.dot(translation_matrix((position[0], 
                                                       position[1],
                                                       position[2])),
@@ -515,11 +514,16 @@ class FiducialSlam:
                                  0,     0,     0,      0,     0,     0.01]
             self.posePub.publish(m)
             if self.odomFrame != "":
-                t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
-                odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, t)
-                odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
+                try: 
+                    t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
+                    odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, t)
+                    odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
                                  quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
-                pose = numpy.dot(self.pose, odom)
+                    pose = numpy.dot(self.pose, odom)
+                except:
+                    rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
+                                 (self.poseFrame, self.odomFrame))
+            pose = self.pose
             robotXyz = numpy.array(translation_from_matrix(pose))[:3]
             robotQuat = numpy.array(quaternion_from_matrix(pose))
             (r, p, yaw) = euler_from_quaternion(robotQuat)
