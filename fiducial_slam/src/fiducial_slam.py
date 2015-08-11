@@ -1,6 +1,31 @@
 #!/usr/bin/python
 
 """
+Copyright (c) 2015, Ubiquity Robotics
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+* Neither the name of ubiquity_motor nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+"""
 Simultaneous location and mapping based on fiducial poses.
 Receives FiducialTransform messages and builds a map and estimates the
 camera pose from them
@@ -13,7 +38,7 @@ from tf2_msgs.msg import TFMessage
 from std_msgs.msg import String, ColorRGBA
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion, \
                               TransformStamped
-from visualization_msgs.msg import Marker
+from visualization_msgs.msg import Marker, MarkerArray
 
 from fiducial_pose.msg import Fiducial
 from fiducial_pose.msg import FiducialTransform
@@ -43,6 +68,9 @@ MIN_UPDATE_ROTATION = math.pi/4.0
 
 # Used to make an estimeate of error, based on tilt
 CEILING_HEIGHT = 2.77
+
+# How long to wait before marking a seen marker as unseen
+UNSEEN_TIME = 1.5
 
 
 """
@@ -112,6 +140,8 @@ class Fiducial:
         self.variance = None
         self.observations = 0
         self.links = []
+        self.publishedMarker = False
+        self.lastSeenTime = 0
 
     """
     Return pose as a 4x4 matrix
@@ -159,14 +189,12 @@ class FiducialSlam:
        self.currentSeq = None
        self.numFiducials = 0
        self.fiducials = {}
-       #self.addOriginFiducial(543)
+       self.mapPublished = False
        if self.sendTf:
            self.br = tf.TransformBroadcaster()
        self.lr = tf.TransformListener()
-       self.markerPub = rospy.Publisher("fiducials", Marker)
+       self.markerPub = rospy.Publisher("fiducials", Marker, queue_size=20)
        self.visibleMarkers = {}
-       self.mapPublished = False
-       self.numFiducialsVisible = 0
        self.pose = None
        self.robotQuat = None
        self.robotXyz = None
@@ -175,10 +203,9 @@ class FiducialSlam:
        self.lastUpdateYaw = None
        self.lastTfPubTime = rospy.get_time()
        self.loadMap()
-       self.showVertices()
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
-       self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped)
+       self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped, queue_size=1)
 
 
     def close(self):
@@ -266,8 +293,6 @@ class FiducialSlam:
                         self.updateMap()
                         self.lastUpdateXyz = robotXyz
                         self.lastUpdateYaw = robotYaw
-            self.numFiducialsVisible = len(self.tfs.keys())
-            self.publishMarkers()
             self.tfs = {}
             self.currentSeq = seq
         """ 
@@ -284,7 +309,7 @@ class FiducialSlam:
                                  (id, seq, trans.x, trans.y, trans.z, 
                                   rot.x, rot.y, rot.z, rot.w,
                                   m.object_error, m.image_error, m.fiducial_area))
-    
+         
         
     """
     Update the map with fiducial pairs
@@ -384,6 +409,9 @@ class FiducialSlam:
             if not self.fiducials.has_key(t):
                 rospy.logwarn("No path to %d" % t)
                 continue
+
+            self.fiducials[t].lastSeenTime = rospy.get_time()
+
             (T_CamFid, T_FidCam, oerr, ierr) = self.tfs[t]
             T_WorldFid = self.fiducials[t].pose44()
 
@@ -426,62 +454,98 @@ class FiducialSlam:
                                                      orientation[3])))
             self.publishTransform()
 
-    def publishMarkers(self):
-        self.numFiducials = len(self.tfs.keys())
-        for fid in self.tfs.keys():
-            if self.fiducials.has_key(fid):
-	        self.publishMarker(fid)
-        for fid in self.visibleMarkers.keys():
-	    self.publishMarker(fid)
-
-    def publishMarker(self, fiducialId):
+    def makeMarker(self, fiducialId, visible=False):
+        fiducial = self.fiducials[fiducialId]
         marker = Marker()
         marker.type = Marker.CUBE
         marker.action = Marker.ADD
         
-        fiducial = self.fiducials[fiducialId]
         position = fiducial.position
         marker.pose = Pose(Point(position[0], position[1], position[2]),
                            Quaternion(0, 0, 0, 1))
         marker.scale.x = 0.15
         marker.scale.y = 0.15
         marker.scale.z = 0.15
-        if self.tfs.has_key(fiducialId):
+        if visible:
             marker.color = ColorRGBA(1, 0, 0, 1)
-            self.visibleMarkers[fiducialId] = True
         else:
             marker.color = ColorRGBA(0, 1, 0, 1)
-            if self.visibleMarkers.has_key(fiducialId):
-                del self.visibleMarkers[fiducialId]
         marker.id = fiducialId
         marker.ns = "fiducial_namespace"
         marker.header.frame_id = "/map"
-        self.markerPub.publish(marker)
 
-        marker.pose.position.z += (marker.scale.z/2.0) + 0.05  # draw text above marker
-        marker.color.r = marker.color.g = marker.color.b = 1.0 # white
-        marker.scale.y = marker.scale.z = 0.1
-        marker.id = fiducialId + 10000
-        marker.ns = "fiducial_namespace_text"
-        marker.type = Marker.TEXT_VIEW_FACING
-        marker.text = str(fiducialId)
-        self.markerPub.publish(marker)
+        text = Marker()
+        text.header.frame_id = "/map"
+        text.color = ColorRGBA(1, 1, 1, 1) # white
+        text.scale.x = text.scale.y = text.scale.z = 0.1
+        text.pose.position.x = marker.pose.position.x
+        text.pose.position.y = marker.pose.position.y
+        text.pose.position.z += (marker.scale.z/2.0) + 0.1  # draw text above marker
+        text.id = fiducialId + 10000
+        text.ns = "fiducial_namespace_text"
+        text.type = Marker.TEXT_VIEW_FACING
+        text.text = str(fiducialId)
+        text.action = Marker.ADD
 
-        marker.type = Marker.LINE_LIST
-        marker.pose.position.x = 0.0
-        marker.pose.position.y = 0.0
-        marker.pose.position.z = 0.0
-        marker.color = ColorRGBA(0, 0, 1, 1)
-        marker.scale.x = 0.05
+        links = Marker()
+        links.ns = "fiducial_namespace"
+        links.header.frame_id = "/map"
+        links.action = Marker.ADD
+        links.type = Marker.LINE_LIST
+        links.pose.position.x = 0.0
+        links.pose.position.y = 0.0
+        links.pose.position.z = 0.0
+        links.color = ColorRGBA(0, 0, 1, 1)
+        links.scale.x = 0.05
         for fid2 in fiducial.links:
             if self.fiducials.has_key(fid2):
                 position2 = self.fiducials[fid2].position
-                marker.points.append(Point(position[0], position[1], position[2]))
-                marker.points.append(Point(position2[0], position2[1], position[2]))
-                marker.id = fiducialId + 20000
-                marker.ns = "fiducial_namespace_link"
+                links.points.append(Point(position[0], position[1], position[2]))
+                links.points.append(Point(position2[0], position2[1], position[2]))
+        links.id = fiducialId + 20000
+        links.ns = "fiducial_namespace_link"
+
+        return marker, text, links
+
+
+    def publishMarker(self, fiducialId, visible=False):
+        marker, text, links = self.makeMarker(fiducialId, visible)
         self.markerPub.publish(marker)
+        self.markerPub.publish(text)
+        self.markerPub.publish(links)
+
             
+    """
+    Publish the next unpublished marker in the map.
+    This should be called repeatedly until all markers are published
+    """
+    def publishNextMarker(self):
+        if self.mapPublished:
+            return
+        for fid in self.fiducials.keys():
+            if not self.fiducials[fid].publishedMarker:
+                self.publishMarker(fid)
+                self.fiducials[fid].publishedMarker = True
+                return
+        self.mapPublished = True
+        print "Map published"
+
+    """
+    Update markers with visibility colors
+    """
+    def publishMarkers(self):
+        self.publishNextMarker()
+        t = rospy.get_time()
+        for fid in self.tfs.keys():
+            if self.fiducials.has_key(fid):
+                self.visibleMarkers[fid] =  True
+        for fid in self.visibleMarkers.keys():
+            if t - self.fiducials[fid].lastSeenTime > UNSEEN_TIME:
+                self.publishMarker(fid, False)
+                del self.visibleMarkers[fid]
+            else:
+                self.publishMarker(fid, True)
+
 
     """
     Publish the transform in self.pose
@@ -529,17 +593,6 @@ class FiducialSlam:
             (r, p, yaw) = euler_from_quaternion(robotQuat)
             robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
             self.robotYaw = yaw
-        if not self.mapPublished:
-            self.mapPublished = True
-            print "publishing map"
-            for fid in self.fiducials.keys():
-               rospy.sleep(.1)
-               self.publishMarker(fid)
-            print "published map"
-        if self.numFiducialsVisible == 0:
-            for fid in self.visibleMarkers.keys():
-                if not self.tfs.has_key(fid):
-                    self.publishMarker(fid)
         if self.sendTf and not self.pose is None:
             if self.odomFrame != "":
                 toFrame = self.odomFrame
@@ -558,9 +611,7 @@ if __name__ == "__main__":
     rospy.loginfo("Fiducial Slam started")
     rate = rospy.Rate(10.0)
     while not rospy.is_shutdown():
-        age = rospy.get_time() - node.lastTfPubTime
-        #if age > 0.1:
-        #    node.publishTransform()
+        node.publishMarkers()
         rate.sleep()
     node.close()
     rospy.loginfo("Fiducial Slam ended")
