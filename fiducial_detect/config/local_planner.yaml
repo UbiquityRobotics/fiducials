@@ -4,16 +4,23 @@ DWAPlannerROS:
    acc_lim_x: 0.5
    acc_lim_y: 0.0
 
-   max_trans_vel: 0.50
+   max_trans_vel: 0.40
    min_trans_vel: 0.15
-   max_vel_x: 0.50
-   min_vel_x: 0.15
+   max_vel_x: 0.40
+   min_vel_x: -0.4
    max_vel_y: 0
    min_vel_y: 0
+   holonomic_robot: false
 
-   max_rot_vel: 1.0
+   min_in_place_vel_theta: 0.2
+   max_vel_theta: 1.0
+   min_vel_theta: -1.0
+   escape_vel: -0.2
+
+   max_rot_vel: 1.5
    min_rot_vel: 0.31
 
+   xy_goal_tolerance:  0.10
    yaw_goal_tolerance: 0.1
 
    sim_time: 1.0
