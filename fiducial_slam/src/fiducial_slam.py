@@ -396,8 +396,10 @@ class FiducialSlam:
         orientation = None
         camera = None
         try:
-            t = self.lr.getLatestCommonTime(self.poseFrame, self.cameraFrame)
-            ct, cr = self.lr.lookupTransform(self.poseFrame, self.cameraFrame, t)
+            t = self.lr.getLatestCommonTime(self.cameraFrame,
+                                            self.poseFrame)
+            ct, cr = self.lr.lookupTransform(self.cameraFrame,
+                                             self.poseFrame, t)
             T_CamBase = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
                        quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
         except:
