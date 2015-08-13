@@ -409,23 +409,23 @@ class FiducialSlam:
 
 	    return
 
-        (T_camFid, T_fidCam, oerr1, ierr1) = self.tfs[f1]
+        (T_camFid, T_fidCam, oerr1, ierr1) = self.tfs[f]
 
         P_fid = numpy.dot(T_worldCam, T_camFid)
 
-        self.fiducials[f1] = Fiducial(f1)
+        self.fiducials[f] = Fiducial(f)
                              
         xyz = numpy.array(translation_from_matrix(P_fid))[:3]
         quat = numpy.array(quaternion_from_matrix(P_fid))
         (r, p, yaw) = euler_from_quaternion(quat)
 
         variance = 0.3 # TODO: look at AMCL variance
-        self.fiducials[f1].update(xyz, quat, variance)
+        self.fiducials[f].update(xyz, quat, variance)
 
-        print "%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f1, xyz[0], xyz[1], xyz[2],
+        print "%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f, xyz[0], xyz[1], xyz[2],
             rad2deg(r), rad2deg(p), rad2deg(yaw), variance)
           
-        p = self.fiducials[f1].position
+        p = self.fiducials[f].position
         self.saveMap()
 
 
