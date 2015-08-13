@@ -508,7 +508,7 @@ void Fiducials__image_show(Fiducials fiducials, bool show) {
     CV_Image original_image = fiducials->original_image;
 
     // Create the window we need:
-    String window_name = "Example1";
+    String_Const window_name = "Example1";
     if (show) {
         cvNamedWindow(window_name, CV__window_auto_size);
     }
