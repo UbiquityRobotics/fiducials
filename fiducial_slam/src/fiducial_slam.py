@@ -177,6 +177,7 @@ class FiducialSlam:
        self.cameraFrame = rospy.get_param("~camera_frame", "camera")
        self.sendTf = rospy.get_param("~publish_tf", True)
        self.mappingMode = rospy.get_param("~mapping_mode", True)
+       self.useExternalPose = rospy.get_param("~use_external_pose", False)
        self.mapFileName = rospy.get_param("~map_file", "map.txt")
        self.obsFileName = rospy.get_param("~obs_file", "obs.txt")
        self.transFileName = rospy.get_param("~trans_file", "trans.txt")
@@ -273,6 +274,10 @@ class FiducialSlam:
             """
             If this is a new frame, process pairs tfs from the previous one
             """
+            if self.useExternalPose:
+                for f in self.tfs.keys():
+                    if not self.fiducials.has_key(f):
+                        self.updateMapFromExternal(f)
             self.updatePose()
             if not self.pose is None:
                 robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
@@ -315,13 +320,13 @@ class FiducialSlam:
     Update the map with fiducial pairs
     """
     def updateMap(self):
-        for t1 in self.tfs.keys():
-            for t2 in self.tfs.keys():
-                if t1 == t2:
+        for f1 in self.tfs.keys():
+            for f2 in self.tfs.keys():
+                if f1 == f2:
                     continue
-                if not self.fiducials.has_key(t1):
+                if not self.fiducials.has_key(f1):
                     continue
-                self.updateMapPair(t1, t2)
+                self.updateMapPair(f1, f2)
 
     """
     Update the map with the new transform between the fiducial pair
@@ -385,7 +390,44 @@ class FiducialSlam:
             fid2.links.append(f1)
         if not f2 in fid1.links:
             fid1.links.append(f2)
-           
+
+    """
+    Update the map with a new fiducial based on an external robot pose
+    """
+    def updateMapFromExternal(self, f):
+        rospy.logerr("update from external %d" % f)
+        try:
+            t = self.lr.getLatestCommonTime(self.mapFrame,
+                                            self.cameraFrame)
+            ct, cr = self.lr.lookupTransform(self.mapFrame,
+                                             self.cameraFrame, t)
+            T_worldCam = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
+                           quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
+        except:
+            rospy.logerr("Unable to lookup transfrom from map to camera (%s to %s)" % \
+                         (self.mapFrame, self.cameraFrame))
+
+	    return
+
+        (T_camFid, T_fidCam, oerr1, ierr1) = self.tfs[f1]
+
+        P_fid = numpy.dot(T_worldCam, T_camFid)
+
+        self.fiducials[f1] = Fiducial(f1)
+                             
+        xyz = numpy.array(translation_from_matrix(P_fid))[:3]
+        quat = numpy.array(quaternion_from_matrix(P_fid))
+        (r, p, yaw) = euler_from_quaternion(quat)
+
+        variance = 0.3 # TODO: look at AMCL variance
+        self.fiducials[f1].update(xyz, quat, variance)
+
+        print "%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f1, xyz[0], xyz[1], xyz[2],
+            rad2deg(r), rad2deg(p), rad2deg(yaw), variance)
+          
+        p = self.fiducials[f1].position
+        self.saveMap()
+
 
     """ 
     Estimate the pose of the camera from the fiducial to camera
@@ -400,7 +442,7 @@ class FiducialSlam:
                                             self.poseFrame)
             ct, cr = self.lr.lookupTransform(self.cameraFrame,
                                              self.poseFrame, t)
-            T_CamBase = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
+            T_camBase = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
                        quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
         except:
             rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s)" % \
@@ -414,14 +456,14 @@ class FiducialSlam:
 
             self.fiducials[t].lastSeenTime = rospy.get_time()
 
-            (T_CamFid, T_FidCam, oerr, ierr) = self.tfs[t]
-            T_WorldFid = self.fiducials[t].pose44()
+            (T_camFid, T_fidCam, oerr, ierr) = self.tfs[t]
+            T_worldFid = self.fiducials[t].pose44()
 
-            T_WorldCam = numpy.dot(T_WorldFid, T_FidCam)
-            T_WorldBase = numpy.dot(T_WorldCam, T_CamBase)
+            T_worldCam = numpy.dot(T_worldFid, T_fidCam)
+            T_worldBase = numpy.dot(T_worldCam, T_camBase)
 
-            xyz = numpy.array(translation_from_matrix(T_WorldBase))[:3]
-            quat = numpy.array(quaternion_from_matrix(T_WorldBase))
+            xyz = numpy.array(translation_from_matrix(T_worldBase))[:3]
+            quat = numpy.array(quaternion_from_matrix(T_worldBase))
             (r, p, y) = euler_from_quaternion(quat)
 
             thisvar  = angularError3D(r, p , 0.0)
