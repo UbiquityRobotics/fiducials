@@ -8,6 +8,7 @@
   <arg name="odom_frame" default="odom"/>
   <arg name="pose_frame" default="base_link"/>
   <arg name="publish_tf" default="true"/>
+  <arg name="use_external_pose" default="true"/>
 
 
   <node type="fiducial_slam.py" pkg="fiducial_slam" output="screen" name="fiducial_slam">
@@ -20,6 +21,7 @@
     <param name="odom_frame" value="$(arg odom_frame)" />
     <param name="pose_frame" value="$(arg pose_frame)" />
     <param name="publish_tf" value="$(arg publish_tf)" />
+    <param name="use_external_pose" value="$(arg use_external_pose)" />
     <remap to="/fiducial_detect/fiducial_transforms" from="/fiducial_transforms"/>
   </node>
 </launch>

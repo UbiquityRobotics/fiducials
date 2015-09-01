@@ -375,6 +375,7 @@ class FiducialSlam:
         variance  = angularError3D(r, p , yaw)
         # and take into account the variance of the reference fiducial
         # we convolve the gaussians, which is achieved by adding the variances
+        print "*** %f var %f %f" % (f1, self.fiducials[f1].variance, variance)
         variance = variance + self.fiducials[f1].variance
         self.fiducials[f2].update(xyz, quat, variance)
 
@@ -422,7 +423,7 @@ class FiducialSlam:
         variance = 0.3 # TODO: look at AMCL variance
         self.fiducials[f].update(xyz, quat, variance)
 
-        print "%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f, xyz[0], xyz[1], xyz[2],
+        print "%d updated from external to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f, xyz[0], xyz[1], xyz[2],
             rad2deg(r), rad2deg(p), rad2deg(yaw), variance)
           
         p = self.fiducials[f].position
@@ -524,6 +525,7 @@ class FiducialSlam:
         text.scale.x = text.scale.y = text.scale.z = 0.1
         text.pose.position.x = marker.pose.position.x
         text.pose.position.y = marker.pose.position.y
+        text.pose.position.z = marker.pose.position.z
         text.pose.position.z += (marker.scale.z/2.0) + 0.1  # draw text above marker
         text.id = fiducialId + 10000
         text.ns = "fiducial_namespace_text"
@@ -631,7 +633,8 @@ class FiducialSlam:
                 except:
                     rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
                                  (self.poseFrame, self.odomFrame))
-            pose = self.pose
+            else:
+                pose = self.pose
             robotXyz = numpy.array(translation_from_matrix(pose))[:3]
             robotQuat = numpy.array(quaternion_from_matrix(pose))
             (r, p, yaw) = euler_from_quaternion(robotQuat)
