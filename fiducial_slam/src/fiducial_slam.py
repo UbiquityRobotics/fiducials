@@ -275,8 +275,12 @@ class FiducialSlam:
             If this is a new frame, process pairs tfs from the previous one
             """
             if self.useExternalPose:
+                fiducialKnown = False
                 for f in self.tfs.keys():
-                    if not self.fiducials.has_key(f):
+                    if self.fiducials.has_key(f):
+                        fiducialKnown = True 
+                if not fiducialKnown:
+                    for f in self.tfs.keys():
                         self.updateMapFromExternal(f)
             self.updatePose()
             if not self.pose is None:

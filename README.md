@@ -37,7 +37,7 @@ Fiduical tags are generated using the following commands:
 	cd /tmp
         rosrun fiducial_lib Tags num ...
 
-Thus, the following command will generate `tag42.svg` and `tagr43.svg`:
+Thus, the following command will generate `tag42.svg` and `tag43.svg`:
 
         rosrun fiducial_lib Tags 42 43
 
@@ -206,67 +206,92 @@ so that the pose of fiducials is determined in the co-ordinate system of the flo
 
 ## Nodes
 
-### fiducial_detect fducial_detect
+### fiducial_detect fiducial_detect
 
-This node finds fiducial markers in an image stream and publishes their vertices (corner points),
-and estimates their 3D pose and publishes that as a transform.  It also has 2D SLAM built in.
+This node finds fiducial markers in images stream and publishes their vertices
+(corner points) and estimates 3D transforms from the camera to the fiducials.
+It also has 2D SLAM built in.
 
 #### Parameters
 
-**tag_height** Name of the tag_height file (default `Tag_Heights.xml`).  This file is used to specify the height of the fiducials for 2D slam,
-but is required to exist even if 2D slam is not used.
 
-**map_file** Name of the file where the generated 2D SLAM-based map should be stored (default `ROS_MAP`).
+**tag_height** Name of the tag_height file (default `Tag_Heights.xml`).  This
+file is used to specify the height of the fiducials for 2D slam, but is 
+required to exist even if 2D slam is not used.
+
+**map_file** Name of the file where the generated 2D SLAM-based map should be
+stored (default `ROS_MAP`).
 
 **log_file** Name of the log file (default `fiducuals.log.txt`).
 
-**data_directory** Name of the directory where tag_height and map_file reside, relative to `~/.ros`.
+**data_directory** Name of the directory where tag_height and map_file reside,
+relative to `~/.ros`.
 
-**odom_frame** If this is set to a non-empty string, then the result of the localization is published as a correction to odometry.
-For example, the odometry publishes the tf from map to odom, and this node publishes the tf from odom to base_link, with the tf from
+**odom_frame** If this is set to a non-empty string, then the result of the
+localization is published as a correction to odometry.
+For example, the odometry publishes the tf from map to odom, and this node
+publishes the tf from odom to base_link, with the tf from
 map to odom removed. Default: not set.
  
 **map_frame** The name of the map (world) frame.  Default `map`.
 
 **pose_frame** The frame for our tf. Default `base_link`.
 
-**publish_images** If `true`, images containing fiducials are published. Default `false`.
+**publish_images** If `true`, images containing fiducials are published. Default
+`false`.
 
-**publish_images** If `true`, 'interesting' images containing fiducials are published. Default `false`. This is for debug purposes.
+**publish_interesting_images** If `true`, 'interesting' images containing fiducials are
+published. Default `false`. This is for debug purposes.
 
-**publish_tf** If `true`, transforms are published. Default `true`.
+**publish_tf** If `true`, transforms are published. Default `false`.
 
-**publish_markers** If `true`, visualization markers are published. Default `true`.
+**publish_markers** If `true`, visualization markers are published. Default 
+`false`.
+
+**estimate_pose** If `true`, 3D pose estimation is performed and fiducial
+transforms are published. Default `true`.
+
+**fiducial_len** The length of one side of a fiducial in meters, used by the
+pose estimation.  Default 0.146.
+
+**undistort_points** If `false`, it is assumed that the input is an undistorted
+image, and the vertices are used directly to calculate the fiducial transform.
+If it is `true`, then the vertices are undistorted first. This is faster, but
+less accurate.  Default `false`.
+
 
 #### Published Topics
 
-**fiducuals** A topic of `visualization_msgs/Marker` messages that can be viewed in RViz for debugging, if that option is selected.
+**fiducuals** A topic of `visualization_msgs/Marker` messages that can be viewed
+in rviz for debugging, if that option is selected.
 
-**vertices** A topic of `fiducial_detect/Fiducial*` messages with the detected fiducial vertices.
+**vertices** A topic of `fiducial_detect/Fiducial*` messages with the detected
+fiducial vertices.
 
-**fiducials_images** An `ImageTransport*` of images containing fiducials, if that option is selected.
+**fiducials_images** An `ImageTransport*` of images containing fiducials, if that
+option is selected.
 
-**interesting_images** `ImageTransport*` of interesting images, if that option is selected.
+**interesting_images** `ImageTransport*` of interesting images, if that option
+is selected.
 
-**fiducial_len** The length of a fiducial, in meters. Default `0.146`.
-
-**undisort_points** If `true`, then the detected points are undistorted. Default `false`. This option should only be set if the 
-input image is not undistorted.
-
-**fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with the computed fiducial pose.
+**fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages 
+with the computed fiducial pose.
 
 #### Subscribed Topics
 
 **camera** An `ImageTransport` of the images to be processed.
 
-**camera_info** A topic of `sensor_msgs/CameraInfo` messages with the camera intrinsic parameters.
+**camera_info** A topic of `sensor_msgs/CameraInfo` messages with the camera
+intrinsic parameters.
 
 
 ### fiducial_slam fiducial_slam.py
 
-This node performs 3D Simultaneous Localization and Mapping (SLAM) from the fiducial transforms.
-For the mapping part, pairs of transforms are combined to determine the position of fiducials based on existing observations.
-For the localization part, fiducial transforms are combined with fiducial poses to estimate the camera pose (and hence the robot pose).
+This node performs 3D Simultaneous Localization and Mapping (SLAM) from the 
+fiducial transforms. For the mapping part, pairs of transforms are combined
+to determine the position of fiducials based on existing observations.
+For the localization part, fiducial transforms are combined with fiducial poses
+to estimate the camera pose (and hence the robot pose).
 
 #### Parameters
 
@@ -280,9 +305,7 @@ For the localization part, fiducial transforms are combined with fiducial poses 
 For example, the odometry publishes the tf from map to odom, and this node publishes the tf from odom to base_link, with the tf from
 map to odom removed. Default: not set.
  
-**camera_frame** The name of the camera frame.  Default `camera`. If the
-transform from camera_frame to pose_frame cannot be looked up, then it is
-assumed that the camera is at pose_frame.
+**camera_frame** The name of the camera frame.  Default `camera`.
 
 **map_frame** The name of the map (world) frame.  Default `map`.
 
@@ -292,17 +315,57 @@ assumed that the camera is at pose_frame.
 
 **mapping_mode** If `true` the map updated and saved more frequently.
 
+**use_external_pose** If `true` then the node will attempt to use an external 
+estimate of the robot pose (eg from AMCL) to estimate the pose of fiducials
+if no known fiducials are observed.
+
+**future** Amount of time (in seconds) to future-date published transforms.
+Default 0.0.
+
+
 #### Published Topics
 
-**fiducuals** A topic of `visualization_msgs/Marker` messages that can be viewed in RViz for debugging.
+**fiducuals** A topic of `visualization_msgs/Marker` messages that can be viewed
+in rviz for debugging.
 
-**fidicual_pose** a topic of `geometry_msgs/PoseWithCovarianceStamped` containing the computed pose.
+**fidicual_pose** a topic of `geometry_msgs/PoseWithCovarianceStamped` containing
+the computed pose.
+
+**tf** Transforms
+
 
 #### Subscribed Topics
 
-**fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with fiducial pose.
+**fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages with
+fiducial pose.
 
-## RViz
+**tf** Transforms
+
+### fiducial_slam init_amcl.py
+
+This node will reinitialize amcl by republishing the pose reported from 
+fiducial_slamp.py to amcl as an initial pose.
+
+#### Parameters
+
+**cov_thresh** The threshold of covariance reported in *amcl_pose* for
+reinitializing it.  Default 0.2.
+
+#### Published Topics
+
+**initial_pose** (geometry_msgs/PoseWithCovarianceStamped) The initial pose 
+sent to AMCL
+
+#### Subscribed Topics
+
+**amcl_pose** (geometry_msgs/PoseWithCovarianceStamped) The pose from AMCL. The
+covariance of this is examined to determine if AMCL needs re-initializing.
+
+**fiducial_pose** (geometry_msgs/PoseWithCovarianceStamped) The pose from 
+fiducial_slam.py
+
+
+## Visualization with rviz
 
 In order to see the fiducials during map building:
 

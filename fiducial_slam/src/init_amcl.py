@@ -46,6 +46,8 @@ class InitAMCL:
     def __init__(self):
        rospy.init_node('init_amcl')
        self.lastAmclPose = None
+       self.isInitialized = False
+       self.cov_thresh = rospy.get_param("~cov_thresh", 0.2)
        self.initPub = rospy.Publisher("/initialpose", 
                                         PoseWithCovarianceStamped, 
                                         queue_size=1)
@@ -62,8 +64,10 @@ class InitAMCL:
 
     def fiducialPose(self, m):
         #print "fiducial_pose", m
-        if self.lastAmclPose.pose.covariance[0] > 0.2:
+        if self.lastAmclPose.pose.covariance[0] > self.cov_thresh \
+        or not self.isInitialized:
             self.initPub.publish(m)
+            self.isInitialized = True
 
 if __name__ == "__main__":
     node = InitAMCL()
