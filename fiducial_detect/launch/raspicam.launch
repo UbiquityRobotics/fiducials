@@ -1,0 +1,19 @@
+<launch>
+  <node type="raspicam_node" pkg="raspicam" name="raspicam_node"
+     output="screen">
+ 
+     <param name="camera_name" value="loki2"/>
+     <param name="camera_info_url" value="file://$(find fiducial_detect)/camera_info/loki2.yaml"/>
+     <param name="width" value="1280"/>
+     <param name="height" value="960"/>
+<!--
+     <param name="srrc_publishing_mode" value="1" />
+-->
+
+     <remap from="/raspicam_node/camera/camera_info" to="/camera/camera_info"/>
+  </node>
+
+  <node name="republish" type="republish" pkg="image_transport" output="screen"
+     args="compressed in:=/raspicam_node/camera/image raw out:=/camera" />
+</launch>
+
