@@ -1,3 +1,14 @@
+<!--
+
+  Launch file for the raspicam_node.  This node is optimized for the
+  raspberry pi hardware.
+
+  See 
+    https://github.com/UbiquityRobotics/raspicam_node
+  for details.
+
+-->
+
 <launch>
   <node type="raspicam_node" pkg="raspicam" name="raspicam_node"
      output="screen">

@@ -5,7 +5,7 @@
   <arg name="mapping_mode" default="false"/>
 
   <!-- Camera -->
-  <include file="$(find fiducial_detect)/launch/raspi_camera.launch"/>
+  <include file="$(find fiducial_detect)/launch/raspicam.launch"/>
   
   <!-- Camera transform -->
   <include file="$(find fiducial_detect)/launch/raspi_pose.launch"/>

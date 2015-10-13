@@ -1,3 +1,13 @@
+<!-- 
+
+  This launch file is for the raspberry pi camera using gscam.
+  The raspicam_node is recommended instead.  See
+ 
+    https://github.com/UbiquityRobotics/raspicam_node
+
+-->
+
+
 <launch>
   <arg name="camera_node" default="camera_node" />
   <arg name="calibration_file" default="" />
