@@ -25,6 +25,6 @@
   </node>
 
   <node name="republish" type="republish" pkg="image_transport" output="screen"
-     args="compressed in:=/raspicam_node/camera/image raw out:=/camera" />
+     args="compressed in:=/raspicam_node/camera/image raw out:=/camera/image_raw" />
 </launch>
 
