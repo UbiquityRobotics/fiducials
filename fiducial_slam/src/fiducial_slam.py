@@ -108,9 +108,6 @@ def angularError3D(r, p, y):
     return variance
 
 
-
-
-
 """
 Weighted average of linear quantities
 """
@@ -183,6 +180,8 @@ class FiducialSlam:
        self.transFileName = rospy.get_param("~trans_file", "trans.txt")
        # How much to future date our tfs
        self.future = rospy.get_param("~future", 0.0)
+       # Republish tf
+       self.republishTf = rospy.get_param("~republish_tf", True)
        print "frames: odom", self.odomFrame, "map:", self.mapFrame, "pose", self.poseFrame
        self.obsFile = open(self.obsFileName, "a")
        self.transFile = open(self.transFileName, "a")
@@ -202,7 +201,7 @@ class FiducialSlam:
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
-       self.lastTfPubTime = rospy.get_time()
+       self.lastTfPubTime = 0
        self.loadMap()
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
@@ -501,7 +500,7 @@ class FiducialSlam:
                                                      orientation[1],
                                                      orientation[2],
                                                      orientation[3])))
-            self.publishTransform()
+            self.computeTransform()
 
     def makeMarker(self, fiducialId, visible=False):
         fiducial = self.fiducials[fiducialId]
@@ -600,69 +599,83 @@ class FiducialSlam:
     """
     Publish the transform in self.pose
     """
-    def publishTransform(self):
-        if not self.pose is None:
-            robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
-            robotQuat = numpy.array(quaternion_from_matrix(self.pose))
-            (r, p, yaw) = euler_from_quaternion(robotQuat)
-            robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
-            m = PoseWithCovarianceStamped()
-            m.header.frame_id = self.mapFrame
-            m.header.stamp = rospy.Time.now()
-            m.pose.pose.orientation.x = robotQuat[0]
-            m.pose.pose.orientation.y = robotQuat[1]
-            m.pose.pose.orientation.z = robotQuat[2]
-            m.pose.pose.orientation.w = robotQuat[3]
-            m.pose.pose.position.x = robotXyz[0]
-            m.pose.pose.position.y = robotXyz[1]
-            m.pose.pose.position.z = robotXyz[2]
-            """
-            These values are designed to work with robot_localization.
-            See http://wiki.ros.org/robot_localization/Tutorials/Migration%20from%20robot_pose_ekf
-            """
-            m.pose.covariance = [0.01,  0,     0,      0,     0,     0,
-                                 0,     0.01,  0,      0,     0,     0,
-                                 0,     0,     0.01,   0,     0,     0,
-                                 0,     0,     0,      0.01,  0,     0,
-                                 0,     0,     0,      0,     0.01,  0,
-                                 0,     0,     0,      0,     0,     0.01]
-            self.posePub.publish(m)
-            if self.odomFrame != "":
-                try: 
-                    t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
-                    odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, t)
-                    odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
+    def computeTransform(self):
+        if self.pose is None:
+            return
+        robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
+        robotQuat = numpy.array(quaternion_from_matrix(self.pose))
+        (r, p, yaw) = euler_from_quaternion(robotQuat)
+        robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
+        m = PoseWithCovarianceStamped()
+        m.header.frame_id = self.mapFrame
+        m.header.stamp = rospy.Time.now()
+        m.pose.pose.orientation.x = robotQuat[0]
+        m.pose.pose.orientation.y = robotQuat[1]
+        m.pose.pose.orientation.z = robotQuat[2]
+        m.pose.pose.orientation.w = robotQuat[3]
+        m.pose.pose.position.x = robotXyz[0]
+        m.pose.pose.position.y = robotXyz[1]
+        m.pose.pose.position.z = robotXyz[2]
+        """
+        These values are designed to work with robot_localization.
+        See http://wiki.ros.org/robot_localization/Tutorials/Migration%20from%20robot_pose_ekf
+        """
+        m.pose.covariance = [0.01,  0,     0,      0,     0,     0,
+                             0,     0.01,  0,      0,     0,     0,
+                             0,     0,     0.01,   0,     0,     0,
+                             0,     0,     0,      0.01,  0,     0,
+                             0,     0,     0,      0,     0.01,  0,
+                             0,     0,     0,      0,     0,     0.01]
+        self.posePub.publish(m)
+        if self.odomFrame != "":
+            try: 
+                t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
+                odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, t)
+                odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
                                  quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
-                    pose = numpy.dot(self.pose, odom)
-                except:
-                    rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
-                                 (self.poseFrame, self.odomFrame))
-            else:
-                pose = self.pose
-            robotXyz = numpy.array(translation_from_matrix(pose))[:3]
-            robotQuat = numpy.array(quaternion_from_matrix(pose))
-            (r, p, yaw) = euler_from_quaternion(robotQuat)
-            robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
-            self.robotYaw = yaw
-        if self.sendTf and not self.pose is None:
+                pose = numpy.dot(self.pose, odom)
+            except:
+                rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
+                             (self.poseFrame, self.odomFrame))
+                return
+        else:
+            pose = self.pose
+        self.robotXyz = numpy.array(translation_from_matrix(pose))[:3]
+        robotQuat = numpy.array(quaternion_from_matrix(pose))
+        (r, p, yaw) = euler_from_quaternion(robotQuat)
+        self.robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
+        self.robotYaw = yaw
+        self.publishTransform()
+
+    def publishTransform(self):
+        if self.sendTf and not self.robotXyz is None:
             if self.odomFrame != "":
                 toFrame = self.odomFrame
                 fromFrame = self.mapFrame
             else:
                 toFrame = self.poseFrame
                 fromFrame = self.mapFrame
-            self.br.sendTransform(robotXyz, robotQuat,
+            self.br.sendTransform(self.robotXyz,
+                                  self.robotQuat,
                                   rospy.Time.now() + rospy.Duration(self.future),
                                   toFrame,
                                   fromFrame)
             self.lastTfPubTime = rospy.get_time()
 
+    def run(self):
+        hz = 10.0
+        rospy.loginfo("Fiducial Slam started")
+        rate = rospy.Rate(hz)
+        while not rospy.is_shutdown():
+            dt = rospy.get_time() - self.lastTfPubTime
+            #rospy.loginfo("Tf age %f", dt)
+            if self.republishTf and dt >= 1.0/hz:
+                self.publishTransform()
+            self.publishMarkers()
+            rate.sleep()
+        self.close()
+        rospy.loginfo("Fiducial Slam ended")
+
 if __name__ == "__main__":
     node = FiducialSlam()
-    rospy.loginfo("Fiducial Slam started")
-    rate = rospy.Rate(10.0)
-    while not rospy.is_shutdown():
-        node.publishMarkers()
-        rate.sleep()
-    node.close()
-    rospy.loginfo("Fiducial Slam ended")
+    node.run()

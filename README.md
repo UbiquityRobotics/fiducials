@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Simultaneous Localization and Mapping Using Fiducial Markers
 
 ## Overview
@@ -313,6 +313,8 @@ map to odom removed. Default: not set.
 **pose_frame** The frame for our tf. Default `base_link`.
 
 **publish_tf** If `true`, transforms are published. Default `true`.
+
+**republish_tf** If `true`, transforms are republished until a new pose is calculated. Default `true`.
 
 **mapping_mode** If `true` the map updated and saved more frequently.
 
