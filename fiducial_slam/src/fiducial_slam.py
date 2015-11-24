@@ -495,7 +495,7 @@ class FiducialSlam:
                              variance, self.currentSeq))
             self.pose = numpy.dot(translation_matrix((position[0], 
                                                       position[1],
-                                                      position[2])),
+                                                      0)),
                                   quaternion_matrix((orientation[0],
                                                      orientation[1],
                                                      orientation[2],
