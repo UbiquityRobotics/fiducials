@@ -1,0 +1,48 @@
+<!--
+   Run the 3d fiducial localization for a raspi
+-->
+<launch>
+  <arg name="mapping_mode" default="false"/>
+
+  <!-- Camera -->
+<!--
+  <include file="$(find fiducial_detect)/launch/ubiquity_camera.launch"/>
+-->
+  
+  <!-- Camera transform -->
+  <include file="$(find fiducial_detect)/launch/raspi_pose.launch"/>
+  
+  <!-- ROS Arduino Bridge -->
+<!--
+  <include file="$(find ros_arduino_python)/launch/ubiquity_arduino.launch"/>
+-->
+  <!-- Joystick Input -->
+<!--
+  <include file="$(find joy_input)/launch/joystick.launch"/>
+-->
+
+  <!-- Fiducial detection -->
+  <include file="$(find fiducial_detect)/launch/fiducial_no_odom.launch">
+    <arg name="camera" value="/camera"/>
+    <arg name="image" value="image_raw"/>
+    <arg name="undistort_points" value="true"/>
+
+    <!-- fiducial_len common values default 0.145, mjWall 0.09  mjGar 0.135 wayne 0.200 -->
+    <arg name="fiducial_len" value="$(optenv FIDUCIAL_LEN 0.145)" />
+  </include>
+
+  <!-- Fiducial slam -->
+  <include file="$(find fiducial_slam)/launch/fiducial_slam.launch">
+    <arg name="mapping_mode" value="$(arg mapping_mode)"/>
+    <arg name="camera_frame" value="raspi_camera_frame"/>
+    <arg name="map_frame" value="map"/>
+    <arg name="odom_frame" value="odom"/>
+    <arg name="pose_frame" value="base_link"/>
+    <arg name="publish_tf" value="true"/>
+  </include>
+
+  <!-- Unscented Kalman Filter -->
+<!--
+  <include file="$(find fiducial_slam)/launch/ukf.launch"/>
+-->
+</launch>
