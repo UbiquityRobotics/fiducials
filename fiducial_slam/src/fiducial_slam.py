@@ -187,6 +187,7 @@ class FiducialSlam:
        self.transFile = open(self.transFileName, "a")
        self.tfs = {}
        self.currentSeq = None
+       self.imageTime = None
        self.numFiducials = 0
        self.fiducials = {}
        self.mapPublished = False
@@ -270,10 +271,12 @@ class FiducialSlam:
     def newTf(self, m):
         seq = m.image_seq
         if seq != self.currentSeq:
+            self.imageTime = m.header.stamp
             """
             If this is a new frame, process pairs tfs from the previous one
             """
             if self.useExternalPose:
+                # XXXX needs to be verified with respect to time
                 fiducialKnown = False
                 for f in self.tfs.keys():
                     if self.fiducials.has_key(f):
@@ -401,10 +404,9 @@ class FiducialSlam:
     def updateMapFromExternal(self, f):
         rospy.logerr("update from external %d" % f)
         try:
-            t = self.lr.getLatestCommonTime(self.mapFrame,
-                                            self.cameraFrame)
             ct, cr = self.lr.lookupTransform(self.mapFrame,
-                                             self.cameraFrame, t)
+                                             self.cameraFrame, 
+                                             self.imageTime)
             T_worldCam = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
                            quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
         except:
@@ -442,10 +444,9 @@ class FiducialSlam:
         orientation = None
         camera = None
         try:
-            t = self.lr.getLatestCommonTime(self.cameraFrame,
-                                            self.poseFrame)
             ct, cr = self.lr.lookupTransform(self.cameraFrame,
-                                             self.poseFrame, t)
+                                             self.poseFrame,
+                                             self.imageTime)
             T_camBase = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
                        quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
         except:
@@ -458,7 +459,7 @@ class FiducialSlam:
                 rospy.logwarn("No path to %d" % t)
                 continue
 
-            self.fiducials[t].lastSeenTime = rospy.get_time()
+            self.fiducials[t].lastSeenTime = self.imageTime
 
             (T_camFid, T_fidCam, oerr, ierr) = self.tfs[t]
             T_worldFid = self.fiducials[t].pose44()
@@ -584,7 +585,7 @@ class FiducialSlam:
     """
     def publishMarkers(self):
         self.publishNextMarker()
-        t = rospy.get_time()
+        t = self.imageTime
         for fid in self.tfs.keys():
             if self.fiducials.has_key(fid):
                 self.visibleMarkers[fid] =  True
@@ -608,7 +609,7 @@ class FiducialSlam:
         robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
         m = PoseWithCovarianceStamped()
         m.header.frame_id = self.mapFrame
-        m.header.stamp = rospy.Time.now()
+        m.header.stamp = self.imageTime
         m.pose.pose.orientation.x = robotQuat[0]
         m.pose.pose.orientation.y = robotQuat[1]
         m.pose.pose.orientation.z = robotQuat[2]
@@ -629,8 +630,9 @@ class FiducialSlam:
         self.posePub.publish(m)
         if self.odomFrame != "":
             try: 
-                t = self.lr.getLatestCommonTime(self.poseFrame, self.odomFrame)
-                odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, t)
+                if self.imageTime is None:
+                    rospy.logerr("imageTime is bogus!")
+                odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, self.imageTime)
                 odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
                                  quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
                 pose = numpy.dot(self.pose, odom)
@@ -669,7 +671,7 @@ class FiducialSlam:
         while not rospy.is_shutdown():
             dt = rospy.get_time() - self.lastTfPubTime
             #rospy.loginfo("Tf age %f", dt)
-            if self.republishTf and dt >= 1.0/hz:
+            if self.republishTf:
                 self.publishTransform()
             self.publishMarkers()
             rate.sleep()

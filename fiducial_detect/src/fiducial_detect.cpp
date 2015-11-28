@@ -90,6 +90,7 @@ class FiducialsNode {
     std::string last_camera_frame;
 
     int last_image_seq;
+    ros::Time last_image_time;
 
     // if set, we publish the images that contain fiducials
     bool publish_images;
@@ -210,7 +211,7 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     ROS_INFO("fiducial: id=%d dir=%d diag=%f (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
        id, direction, world_diagonal, x0, y0, x1, y1, x2, y2, x3, y3);
 
-    fid.header.stamp = ros::Time::now();
+    fid.header.stamp = last_image_time;
     fid.header.frame_id = last_camera_frame;
     fid.image_seq = last_image_seq;
     fid.direction = direction;
@@ -415,6 +416,8 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image");
     last_camera_frame = msg->header.frame_id;
     last_image_seq = msg->header.seq;
+    last_image_time = msg->header.stamp;
+
     try {
         cv_bridge::CvImageConstPtr cv_img;
         cv_img = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8);
