@@ -211,6 +211,7 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     ROS_INFO("fiducial: id=%d dir=%d diag=%f (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
        id, direction, world_diagonal, x0, y0, x1, y1, x2, y2, x3, y3);
 
+    fid.header.seq = last_image_seq;
     fid.header.stamp = last_image_time;
     fid.header.frame_id = last_camera_frame;
     fid.image_seq = last_image_seq;
@@ -228,6 +229,9 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
         geometry_msgs::Transform trans;
 	ft.transform = trans;
 	if (pose_est->fiducialCallback(&fid, &ft)) {
+	    ft.image_seq = last_image_seq;
+	    ft.header.seq = last_image_seq;
+	    ft.header.stamp = last_image_time;
 	    pose_pub->publish(ft);
         }
     }

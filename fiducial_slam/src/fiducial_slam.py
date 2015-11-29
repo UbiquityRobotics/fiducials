@@ -138,7 +138,7 @@ class Fiducial:
         self.observations = 0
         self.links = []
         self.publishedMarker = False
-        self.lastSeenTime = 0
+        self.lastSeenTime = rospy.Time(0,0)
 
     """
     Return pose as a 4x4 matrix
@@ -193,7 +193,7 @@ class FiducialSlam:
        self.mapPublished = False
        if self.sendTf:
            self.br = tf.TransformBroadcaster()
-       self.lr = tf.TransformListener()
+       self.lr = tf.TransformListener(True, rospy.Duration(10))
        self.markerPub = rospy.Publisher("fiducials", Marker, queue_size=20)
        self.visibleMarkers = {}
        self.pose = None
@@ -590,7 +590,7 @@ class FiducialSlam:
             if self.fiducials.has_key(fid):
                 self.visibleMarkers[fid] =  True
         for fid in self.visibleMarkers.keys():
-            if t - self.fiducials[fid].lastSeenTime > UNSEEN_TIME:
+            if (t - self.fiducials[fid].lastSeenTime).to_sec() > UNSEEN_TIME:
                 self.publishMarker(fid, False)
                 del self.visibleMarkers[fid]
             else:

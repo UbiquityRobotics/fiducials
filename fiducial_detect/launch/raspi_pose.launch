@@ -7,5 +7,5 @@
   -->
   
   <node type="static_transform_publisher" pkg="tf" name="camera_pose"
-        args="-0.14 0 0 $(optenv CAMERA_YAW -1.57079632679) 0 0 base_link raspi_camera_frame 100"/> 
+        args="-0.04 0.16 0 $(optenv CAMERA_YAW -1.57079632679) 0 0 base_link raspi_camera_frame 100"/> 
 </launch>

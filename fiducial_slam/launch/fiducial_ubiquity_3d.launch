@@ -11,10 +11,14 @@
   <include file="$(find fiducial_detect)/launch/raspi_pose.launch"/>
   
   <!-- ROS Arduino Bridge -->
+<!--
   <include file="$(find ros_arduino_python)/launch/ubiquity_arduino.launch"/>
+-->
 
   <!-- Joystick Input -->
+<!--
   <include file="$(find joy_input)/launch/joystick.launch"/>
+-->
 
   <!-- Fiducial detection -->
   <include file="$(find fiducial_detect)/launch/fiducial_no_odom.launch">
