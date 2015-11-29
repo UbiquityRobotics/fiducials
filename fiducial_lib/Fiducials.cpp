@@ -464,7 +464,8 @@ void Fiducials__location_announce(void *announce_object, int id,
 void Fiducials__fiducial_announce(void *announce_object,
     int id, int direction, double world_diagonal,
     double x1, double y1, double x2, double y2,
-    double x3, double y3, double x4, double y4) {
+    double x3, double y3, double x4, double y4,
+    int time_secs, int time_nsecs, int image_seq) {
     File__format(stderr,
        "Fiducial: id=%d dir=%d diag=%.2f (%.2f,%.2f), " /* + */
        "(%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
@@ -478,8 +479,12 @@ void Fiducials__fiducial_announce(void *announce_object,
 /// *Fiducials__image_set*() will set the original image for *fiducials*
 /// to *image*.
 
-void Fiducials__image_set(Fiducials fiducials, CV_Image image) {
+void Fiducials__image_set(Fiducials fiducials, CV_Image image, int time_secs, 
+			  int time_nsecs, int image_seq) {
     fiducials->original_image = image;
+    fiducials->time_secs = time_secs;
+    fiducials->time_nsecs = time_nsecs;
+    fiducials->image_seq = image_seq;
 }
 
 /// @brief Is a HighGUI interface to show the current image.
@@ -1289,7 +1294,9 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                                 vertices[0][0], vertices[0][1],
                                 vertices[1][0], vertices[1][1],
                                 vertices[2][0], vertices[2][1],
-                                vertices[3][0], vertices[3][1]);
+                                vertices[3][0], vertices[3][1],
+				fiducials->time_secs, fiducials->time_nsecs,
+				fiducials->image_seq);
 
                             if (debug_index == 11) {
                                 camera_tag->initialize(tag,
