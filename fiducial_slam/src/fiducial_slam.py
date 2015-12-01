@@ -194,6 +194,7 @@ class FiducialSlam:
            self.br = tf.TransformBroadcaster()
        self.lr = tf.TransformListener(True, rospy.Duration(10))
        self.markerPub = rospy.Publisher("fiducials", Marker, queue_size=20)
+       self.publishLock = threading.Lock()
        self.visibleMarkers = {}
        self.pose = None
        self.robotQuat = None
@@ -201,7 +202,6 @@ class FiducialSlam:
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
-       self.lastTfPubTime = 0
        self.loadMap()
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
@@ -637,15 +637,18 @@ class FiducialSlam:
                 return
         else:
             pose = self.pose
+        self.publishLock.acquire()
         self.robotXyz = numpy.array(translation_from_matrix(pose))[:3]
         robotQuat = numpy.array(quaternion_from_matrix(pose))
         (r, p, yaw) = euler_from_quaternion(robotQuat)
         self.robotQuat = quaternion_from_euler(0.0, 0.0, yaw) 
         self.robotYaw = yaw
+        self.publishLock.release()
         self.publishTransform()
 
     def publishTransform(self):
         if self.sendTf and not self.robotXyz is None:
+            self.publishLock.acquire()
             if self.odomFrame != "":
                 toFrame = self.odomFrame
                 fromFrame = self.mapFrame
@@ -657,15 +660,13 @@ class FiducialSlam:
                                   rospy.Time.now() + rospy.Duration(self.future),
                                   toFrame,
                                   fromFrame)
-            self.lastTfPubTime = rospy.get_time()
+            self.publishLock.release()
 
     def run(self):
         hz = 10.0
         rospy.loginfo("Fiducial Slam started")
         rate = rospy.Rate(hz)
         while not rospy.is_shutdown():
-            dt = rospy.get_time() - self.lastTfPubTime
-            #rospy.loginfo("Tf age %f", dt)
             if self.republishTf:
                 self.publishTransform()
             self.publishMarkers()
