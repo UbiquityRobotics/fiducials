@@ -473,7 +473,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
         ROS_ERROR("cv_bridge exception: %s", e.what());
     }
 
-    pose_pub.publish(fiducialTransformArray);
+    pose_pub->publish(fiducialTransformArray);
     ROS_INFO("Finished processing image seq %d", last_image_seq);
 }
 

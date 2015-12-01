@@ -269,7 +269,7 @@ class FiducialSlam:
     """
     def newTf(self, msg):
         self.currentSeq = msg.image_seq
-        self.imageTime = m.header.stamp
+        self.imageTime = msg.header.stamp
         self.tfs = {}
         rospy.loginfo("got tfs from image seq %d", self.currentSeq)
 
@@ -282,7 +282,7 @@ class FiducialSlam:
             invMat = numpy.linalg.inv(mat)
             self.tfs[id] = (mat, invMat, m.object_error, m.image_error)
             self.transFile.write("%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n" % \
-                                 (id, seq, trans.x, trans.y, trans.z, 
+                                 (id, self.currentSeq, trans.x, trans.y, trans.z, 
                                   rot.x, rot.y, rot.z, rot.w,
                                   m.object_error, m.image_error, m.fiducial_area))
         """
