@@ -56,12 +56,14 @@
 
 #include "fiducial_pose/Fiducial.h"
 #include "fiducial_pose/FiducialTransform.h"
+#include "fiducial_pose/FiducialTransformArray.h"
 
 class FiducialsNode {
   private:
     ros::Publisher * marker_pub;
     ros::Publisher * vertices_pub;
     ros::Publisher * pose_pub;
+    fiducial_pose::FiducialTransformArray fiducialTransformArray;
 
     ros::Subscriber caminfo_sub;
     image_transport::Subscriber img_sub;
@@ -235,10 +237,7 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
         geometry_msgs::Transform trans;
 	ft.transform = trans;
 	if (pose_est->fiducialCallback(&fid, &ft)) {
-	    ft.image_seq = last_image_seq;
-	    ft.header.seq = image_seq;
-	    ft.header.stamp = ros::Time(time_secs, time_nsecs);
-	    pose_pub->publish(ft);
+	  fiducialTransformArray.transforms.push_back(ft);
         }
     }
 }
@@ -422,11 +421,16 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
     }
 }
 
-void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
-    ROS_INFO("Got image");
+void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
+ {
     last_camera_frame = msg->header.frame_id;
     last_image_seq = msg->header.seq;
     last_image_time = msg->header.stamp;
+    ROS_INFO("Got image seq %d", last_image_seq);
+
+    fiducialTransformArray.transforms.clear();
+    fiducialTransformArray.header.stamp = msg->header.stamp;
+    fiducialTransformArray.image_seq = msg->header.seq;
 
     try {
         cv_bridge::CvImageConstPtr cv_img;
@@ -454,6 +458,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         Fiducials__image_set(fiducials, image, last_image_time.sec,
 			     last_image_time.nsec, last_image_seq);
         Fiducials_Results results = Fiducials__process(fiducials);
+	ROS_INFO("Processed image");
 	if (publish_images) {
   	    if (results->map_changed) {
 	        image_pub.publish(msg);
@@ -467,6 +472,9 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     } catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
     }
+
+    pose_pub.publish(fiducialTransformArray);
+    ROS_INFO("Finished processing image seq %d", last_image_seq);
 }
 
 FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buffer) {
@@ -533,7 +541,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
     vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::Fiducial>("vertices", 1));
 
     if (estimate_pose) {
-        pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransform>("fiducial_transforms", 1)); 
+        pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("fiducial_transforms", 1)); 
         pose_est = new RosRpp(fiducial_len, undistort_points);
     }
     else {

@@ -205,10 +205,12 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
 	   t1.x(), t1.y(), t1.z(),
 	   r2d(r), r2d(p), r2d(y));
   
+  /*
   ft->header.stamp = frameTime;
   char t1name[32];
   sprintf(t1name, "fiducial_%d", msg->fiducial_id);
   ft->header.frame_id = t1name;
+  */
 
   ft->transform.translation.x = t1.x();
   ft->transform.translation.y = t1.y();		
@@ -219,7 +221,7 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
   ft->transform.rotation.y = q.y();
   ft->transform.rotation.z = q.z();
   ft->fiducial_id = msg->fiducial_id;
-  ft->image_seq = msg->image_seq;
+  //  ft->image_seq = msg->image_seq;
   ft->image_error = img_err;
   ft->object_error = obj_err;
   ft->fiducial_area = calcFiducialArea(ipts);

@@ -16,6 +16,7 @@ add_message_files(
    FILES
    Fiducial.msg
    FiducialTransform.msg
+   FiducialTransformArray.msg
 )
 
 generate_messages(

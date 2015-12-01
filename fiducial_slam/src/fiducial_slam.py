@@ -40,8 +40,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
                               TransformStamped
 from visualization_msgs.msg import Marker, MarkerArray
 
-from fiducial_pose.msg import Fiducial
-from fiducial_pose.msg import FiducialTransform
+from fiducial_pose.msg import Fiducial, FiducialTransform, FiducialTransformArray
 
 from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                translation_matrix, quaternion_matrix, \
@@ -205,7 +204,7 @@ class FiducialSlam:
        self.lastTfPubTime = 0
        self.loadMap()
        self.position = None
-       rospy.Subscriber("/fiducial_transforms", FiducialTransform, self.newTf)
+       rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
        self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped, queue_size=1)
 
 
@@ -266,61 +265,57 @@ class FiducialSlam:
             off = numpy.dot(translation_matrix(numpy.array((-1.0, 1.0, 0.0))), f.pose44())
 
     """
-    Called when a FiducialTransform is received
+    Called when a FiducialTransformArray is received
     """
-    def newTf(self, m):
-        seq = m.image_seq
-        if seq != self.currentSeq:
-            self.imageTime = m.header.stamp
-            """
-            If this is a new frame, process pairs tfs from the previous one
-            """
-            if self.useExternalPose:
-                # XXXX needs to be verified with respect to time
-                fiducialKnown = False
-                for f in self.tfs.keys():
-                    if self.fiducials.has_key(f):
-                        fiducialKnown = True 
-                if not fiducialKnown:
-                    for f in self.tfs.keys():
-                        self.updateMapFromExternal(f)
-            self.updatePose()
-            if not self.pose is None:
-                robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
-                robotQuat = numpy.array(quaternion_from_matrix(self.pose))
-                (r, p, robotYaw) = euler_from_quaternion(robotQuat)
-                # Only update the map if the robot has moved significantly, to 
-                # avoid the map variances decaying from repeated observations
-                if self.lastUpdateXyz is None:
-                    self.updateMap()
-                    self.lastUpdateXyz = robotXyz
-                    self.lastUpdateYaw = robotYaw
-                else:
-                    dist = numpy.linalg.norm(self.lastUpdateXyz - robotXyz)
-                    angle = self.lastUpdateYaw - self.robotYaw
-                    print "Distance moved", dist, angle
-                    if self.mappingMode or dist > MIN_UPDATE_TRANSLATION \
-                      or angle > MIN_UPDATE_ROTATION:
-                        self.updateMap()
-                        self.lastUpdateXyz = robotXyz
-                        self.lastUpdateYaw = robotYaw
-            self.tfs = {}
-            self.currentSeq = seq
-        """ 
-        This may be called multiple times per frame, so we store the tf
-        """
-        id = m.fiducial_id
-        trans = m.transform.translation
-        rot = m.transform.rotation
-        mat = numpy.dot(translation_matrix((trans.x, trans.y, trans.z)),
-                        quaternion_matrix((rot.x, rot.y, rot.z, rot.w)))
-        invMat = numpy.linalg.inv(mat)
-        self.tfs[id] = (mat, invMat, m.object_error, m.image_error)
-        self.transFile.write("%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n" % \
+    def newTf(self, msg):
+        self.currentSeq = msg.image_seq
+        self.imageTime = m.header.stamp
+        self.tfs = {}
+        rospy.loginfo("got tfs from image seq %d", self.currentSeq)
+
+        for m in msg.transforms:
+            id = m.fiducial_id
+            trans = m.transform.translation
+            rot = m.transform.rotation
+            mat = numpy.dot(translation_matrix((trans.x, trans.y, trans.z)),
+                            quaternion_matrix((rot.x, rot.y, rot.z, rot.w)))
+            invMat = numpy.linalg.inv(mat)
+            self.tfs[id] = (mat, invMat, m.object_error, m.image_error)
+            self.transFile.write("%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n" % \
                                  (id, seq, trans.x, trans.y, trans.z, 
                                   rot.x, rot.y, rot.z, rot.w,
                                   m.object_error, m.image_error, m.fiducial_area))
-         
+        """
+        if self.useExternalPose:
+            # XXXX needs to be verified with respect to time
+            fiducialKnown = False
+            for f in self.tfs.keys():
+            if self.fiducials.has_key(f):
+                fiducialKnown = True 
+                if not fiducialKnown:
+                    for f in self.tfs.keys():
+                        self.updateMapFromExternal(f)
+        """
+        self.updatePose()
+        if not self.pose is None:
+            robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
+            robotQuat = numpy.array(quaternion_from_matrix(self.pose))
+            (r, p, robotYaw) = euler_from_quaternion(robotQuat)
+            # Only update the map if the robot has moved significantly, to 
+            # avoid the map variances decaying from repeated observations
+            if self.lastUpdateXyz is None:
+                self.updateMap()
+                self.lastUpdateXyz = robotXyz
+                self.lastUpdateYaw = robotYaw
+            else:
+                dist = numpy.linalg.norm(self.lastUpdateXyz - robotXyz)
+                angle = self.lastUpdateYaw - self.robotYaw
+                print "Distance moved", dist, angle
+                if self.mappingMode or dist > MIN_UPDATE_TRANSLATION \
+                   or angle > MIN_UPDATE_ROTATION:
+                    self.updateMap()
+                    self.lastUpdateXyz = robotXyz
+                    self.lastUpdateYaw = robotYaw
         
     """
     Update the map with fiducial pairs
