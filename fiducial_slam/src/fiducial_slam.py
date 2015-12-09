@@ -71,6 +71,11 @@ CEILING_HEIGHT = 2.77
 # How long to wait before marking a seen marker as unseen
 UNSEEN_TIME = 1.5
 
+def mkdirnotex(filename):  
+    dir=os.path.dirname(filename)  
+    print "Directory", dir
+    if not os.path.exists(dir):  
+        os.makedirs(dir)  
 
 """
 Radians to degrees
@@ -177,6 +182,9 @@ class FiducialSlam:
        self.mapFileName = rospy.get_param("~map_file", "map.txt")
        self.obsFileName = rospy.get_param("~obs_file", "obs.txt")
        self.transFileName = rospy.get_param("~trans_file", "trans.txt")
+       mkdirnotex(self.mapFileName)
+       mkdirnotex(self.obsFileName)
+       mkdirnotex(self.transFileName)
        # How much to future date our tfs
        self.future = rospy.get_param("~future", 0.0)
        # Republish tf
