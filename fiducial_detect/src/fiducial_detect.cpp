@@ -143,13 +143,11 @@ class FiducialsNode {
     static void fiducial_announce(void *t,
     int id, int direction, double world_diagonal,
         double x0, double y0, double x1, double y1,
-	double x2, double y2, double x3, double y3,
-	int time_secs, int time_nsecs, int image_seq);
+	double x2, double y2, double x3, double y3);
 
     void fiducial_cb(int id, int direction, double world_diagonal,
         double x0, double y0, double x1, double y1,
-	double x2, double y2, double x3, double y3,
-	int time_secs, int time_nsecs, int image_seq);
+	double x2, double y2, double x3, double y3);
 
     void imageCallback(const sensor_msgs::ImageConstPtr & msg);
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr & msg);
@@ -200,27 +198,24 @@ void FiducialsNode::tag_announce(void *t, int id, double x, double y, double z,
 void FiducialsNode::fiducial_announce(void *t,
     int id, int direction, double world_diagonal,
     double x0, double y0, double x1, double y1,
-    double x2, double y2, double x3, double y3,
-    int time_secs, int time_nsecs, int image_seq) {
+    double x2, double y2, double x3, double y3)
+{
 
     FiducialsNode * ths = (FiducialsNode*)t;
     ths->fiducial_cb(id, direction, world_diagonal, 
-		     x0, y0, x1, y1, x2, y2, x3, y3,
-		     time_secs, time_nsecs, image_seq);
+		     x0, y0, x1, y1, x2, y2, x3, y3);
 }
 
 void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     double x0, double y0, double x1, double y1,
-    double x2, double y2, double x3, double y3,
-    int time_secs, int time_nsecs, int image_seq)
+    double x2, double y2, double x3, double y3)
 {
     fiducial_pose::Fiducial fid;
 
     ROS_INFO("fiducial: id=%d dir=%d diag=%f (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
        id, direction, world_diagonal, x0, y0, x1, y1, x2, y2, x3, y3);
 
-    fid.header.seq = image_seq;
-    fid.header.stamp = ros::Time(time_secs, time_nsecs);
+    fid.header.stamp = last_image_time;
     fid.header.frame_id = last_camera_frame;
     fid.image_seq = last_image_seq;
     fid.direction = direction;
@@ -451,12 +446,12 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
 	    fiducials_create->map_base_name = map_file.c_str();
 	    fiducials_create->tag_heights_file_name = tag_height_file.c_str();
             fiducials_create->fiducial_announce_routine = fiducial_announce;
+            fiducials_create->do_2d_slam = publish_tf;
 
 	    // Create *fiducials* object using first image:
             fiducials = Fiducials__create(image, fiducials_create);
         }
-        Fiducials__image_set(fiducials, image, last_image_time.sec,
-			     last_image_time.nsec, last_image_seq);
+        Fiducials__image_set(fiducials, image);
         Fiducials_Results results = Fiducials__process(fiducials);
 	ROS_INFO("Processed image");
 	if (publish_images) {
@@ -498,26 +493,29 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
     position_color.b = 1.0f;
     position_color.a = 1.0f;
 
-    nh.param<std::string>("tag_height", tag_height_file, "Tag_Heights.xml");
+    nh.param<std::string>("tag_height", tag_height_file, "");
     nh.param<std::string>("data_directory", data_directory, ".");
     nh.param<std::string>("map_file", map_file, "ROS_Map");
     nh.param<std::string>("log_file", log_file, "fiducials.log.txt");
     nh.param<std::string>("map_frame", world_frame, "map");
     nh.param<std::string>("pose_frame", pose_frame, "base_link");
-    ROS_INFO("Publishing transform from %s to %s", world_frame.c_str(),
-        pose_frame.c_str());
+    nh.param<bool>("publish_tf", publish_tf, false);
 
-    if( nh.hasParam("odom_frame") ) {
-      use_odom = true;
-      nh.getParam("odom_frame", odom_frame);
-      ROS_INFO("Using odometry frame %s", odom_frame.c_str());
-    } else {
-      use_odom = false;
-      ROS_INFO("Not using odometry");
+    if (publish_tf) {
+      ROS_INFO("Publishing transform from %s to %s", world_frame.c_str(),
+               pose_frame.c_str());
+
+      if(nh.hasParam("odom_frame") ) {
+        use_odom = true;
+        nh.getParam("odom_frame", odom_frame);
+        ROS_INFO("Using odometry frame %s", odom_frame.c_str());
+      } else {
+        use_odom = false;
+        ROS_INFO("Not using odometry");
+      }
     }
 
     nh.param<bool>("publish_images", publish_images, false);
-    nh.param<bool>("publish_tf", publish_tf, false);
     nh.param<bool>("publish_markers", publish_markers, false);
     nh.param<bool>("estimate_pose", estimate_pose, true);
     nh.param<bool>("publish_interesting_images", publish_interesting_images, 

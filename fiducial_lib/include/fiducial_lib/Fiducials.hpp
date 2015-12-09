@@ -26,8 +26,7 @@ typedef void (*Fiducials_Tag_Announce_Routine)(void *announce_object,
 typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
     int id, int direction, double world_diagonal,
     double x1, double y1, double x2, double y2,
-    double x3, double y3, double x4, double y4,
-    int time_secs, int time_nsecs, int image_seq);
+    double x3, double y3, double x4, double y4);
 
 
 // #include everything else:
@@ -71,7 +70,6 @@ struct Fiducials__Struct {
     Map map;
     CV_Point origin;
     CV_Image original_image;
-    int time_secs, time_nsecs, image_seq;
     int **mappings;
     CV_Image map_x;
     CV_Image map_y;
@@ -105,6 +103,7 @@ struct Fiducials_Create__Struct {
     String_Const log_file_name;
     String_Const map_base_name;
     String_Const tag_heights_file_name;
+    bool do_2d_slam;
 };
 
 struct Fiducials_Results__Struct {
@@ -119,8 +118,7 @@ extern void Fiducials__arc_announce(void *announce_object,
 extern Fiducials Fiducials__create(
   CV_Image original_image, Fiducials_Create fiducials_create);
 extern void Fiducials__free(Fiducials fiduicals);
-extern void Fiducials__image_set(Fiducials fiducials, CV_Image image,
-				 int time_sec, int time_nsec, int image_sxfeq);
+extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, bool show);
 extern void Fiducials__location_announce(void *object, int id,
   double x, double y, double z, double bearing);

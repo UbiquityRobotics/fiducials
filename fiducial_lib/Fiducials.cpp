@@ -464,8 +464,7 @@ void Fiducials__location_announce(void *announce_object, int id,
 void Fiducials__fiducial_announce(void *announce_object,
     int id, int direction, double world_diagonal,
     double x1, double y1, double x2, double y2,
-    double x3, double y3, double x4, double y4,
-    int time_secs, int time_nsecs, int image_seq) {
+    double x3, double y3, double x4, double y4) {
     File__format(stderr,
        "Fiducial: id=%d dir=%d diag=%.2f (%.2f,%.2f), " /* + */
        "(%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f)",
@@ -479,12 +478,9 @@ void Fiducials__fiducial_announce(void *announce_object,
 /// *Fiducials__image_set*() will set the original image for *fiducials*
 /// to *image*.
 
-void Fiducials__image_set(Fiducials fiducials, CV_Image image, int time_secs, 
-			  int time_nsecs, int image_seq) {
+void Fiducials__image_set(Fiducials fiducials, CV_Image image)
+{
     fiducials->original_image = image;
-    fiducials->time_secs = time_secs;
-    fiducials->time_nsecs = time_nsecs;
-    fiducials->image_seq = image_seq;
 }
 
 /// @brief Is a HighGUI interface to show the current image.
@@ -784,9 +780,12 @@ Fiducials Fiducials__create(
     }
 
     // Create the *map*:
-    Map map = Map__create(fiducials_path, map_base_name, announce_object,
-      arc_announce_routine, tag_announce_routine,
-      tag_heights_file_name, "Fiducials__new:Map__create");
+    Map map = (Map)0;
+    if (fiducials_create->do_2d_slam) {
+        Map map = Map__create(fiducials_path, map_base_name, announce_object,
+          arc_announce_routine, tag_announce_routine,
+          tag_heights_file_name, "Fiducials__new:Map__create");
+     }
 
     Fiducials_Results results =
       Memory__new(Fiducials_Results, "Fiducials__create");
@@ -802,7 +801,7 @@ Fiducials Fiducials__create(
        fiducials->fiducial_announce_routine = Fiducials__fiducial_announce;
     fiducials->announce_object = announce_object;
     fiducials->blue = CV_Scalar__rgb(0.0, 0.0, 1.0);
-    fiducials->blur = (bool)1;
+    fiducials->blur = (bool)0;
     fiducials->corners = CV_Point2D32F_Vector__create(4);
     fiducials->cyan = CV_Scalar__rgb(0.0, 1.0, 1.0);
     fiducials->debug_image = CV_Image__create(image_size, CV__depth_8u, 3);
@@ -850,7 +849,8 @@ Fiducials Fiducials__create(
 
 void Fiducials__free(Fiducials fiducials) {
     // Write the map out if it changed:
-    Map__save(fiducials->map);
+    if (fiducials->map)
+      Map__save(fiducials->map);
 
     // Free up some *CV_Scalar* colors:
     CV_Scalar__free(fiducials->blue);
@@ -881,7 +881,8 @@ void Fiducials__free(Fiducials fiducials) {
     }
 
     // Relaase the *Map*:
-    Map__free(fiducials->map);
+    if (fiducials->map)
+      Map__free(fiducials->map);
 
     // Finally release *fiducials*:
     Memory__free((Memory)fiducials);
@@ -894,7 +895,8 @@ void Fiducials__free(Fiducials fiducials) {
 /// *fiducials* to be saved.
 
 void Fiducials__map_save(Fiducials fiducials) {
-    Map__save(fiducials->map);
+    if (fiducials->map)
+      Map__save(fiducials->map);
 }
 
 /// @brief Process the current image associated with *fiducials*.
@@ -1279,9 +1281,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                             // Allocate a *camera_tag*:
                             CameraTag * camera_tag = new CameraTag();
 
-                            // Load up *camera_tag* to get center, twist, etc.:
-                            Tag * tag = Map__tag_lookup(map, tag_id);
-
                             double vertices[4][2];
                             for (unsigned int index = 0; index < 4; index++) {
                               CV_Point2D32F pt = CV_Point2D32F_Vector__fetch1(corners, index);
@@ -1290,38 +1289,40 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                             }                            
                             fiducials->fiducial_announce_routine(
                                 fiducials->announce_object, tag_id,
-                                direction_index, tag->world_diagonal,
+                                direction_index, 0.0,
                                 vertices[0][0], vertices[0][1],
                                 vertices[1][0], vertices[1][1],
                                 vertices[2][0], vertices[2][1],
-                                vertices[3][0], vertices[3][1],
-				fiducials->time_secs, fiducials->time_nsecs,
-				fiducials->image_seq);
+                                vertices[3][0], vertices[3][1]);
 
-                            if (debug_index == 11) {
-                                camera_tag->initialize(tag,
-                                  direction_index, corners, debug_image);
-                            } else {
-                                camera_tag->initialize(tag,
-                                  direction_index, corners, (CV_Image)0);
+                            if (map) {
+                                // Load up *camera_tag* to get center, twist, etc.:
+                                Tag * tag = Map__tag_lookup(map, tag_id);
+                                if (debug_index == 11) {
+                                    camera_tag->initialize(tag,
+                                      direction_index, corners, debug_image);
+                                } else {
+                                    camera_tag->initialize(tag,
+                                      direction_index, corners, (CV_Image)0);
+                                }
+                                fiducials->current_visibles.push_back(tag);
+                                File__format(log_file, "Tag: %d x=%f y=%f\n",
+                                  tag->id, tag->x, tag->y);
+
+                                // Record the maximum *camera_diagonal*:
+                                double camera_diagonal = camera_tag->diagonal;
+                                double diagonal =
+                                  camera_diagonal;
+                                if (diagonal  > tag->diagonal) {
+                                    tag->diagonal = diagonal;
+                                    tag->updated = (bool)1;
+                                }
+
+                                // Append *camera_tag* to *camera_tags*:
+                                fiducials->camera_tags.push_back(camera_tag);
+                                //File__format(log_file,
+                                //  "Found %d\n", camera_tag->tag->id);
                             }
-                            fiducials->current_visibles.push_back(tag);
-                            File__format(log_file, "Tag: %d x=%f y=%f\n",
-                              tag->id, tag->x, tag->y);
-
-                            // Record the maximum *camera_diagonal*:
-                            double camera_diagonal = camera_tag->diagonal;
-                            double diagonal =
-                              camera_diagonal;
-                            if (diagonal  > tag->diagonal) {
-                                tag->diagonal = diagonal;
-                                tag->updated = (bool)1;
-                            }
-
-                            // Append *camera_tag* to *camera_tags*:
-                            fiducials->camera_tags.push_back(camera_tag);
-                            //File__format(log_file,
-                            //  "Found %d\n", camera_tag->tag->id);
                         }
                     }
                 }
@@ -1329,6 +1330,10 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
         }
     }
 
+    if (!map) {
+        return results;
+    }
+ 
     // Just for consistency sort *camera_tags*:
     std::sort(fiducials->camera_tags.begin(), fiducials->camera_tags.end(),
         CameraTag::less);

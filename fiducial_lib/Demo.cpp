@@ -80,7 +80,7 @@ int main(int arguments_size, char *arguments[]) {
         for (unsigned int index = 0; index < size; index++) {
             String image_file_name = image_file_names[index];
             image = CV_Image__pnm_read(image_file_name);
-            Fiducials__image_set(fiducials, image, 0, 0, 0);
+            Fiducials__image_set(fiducials, image);
             Fiducials__process(fiducials);
         }
 
