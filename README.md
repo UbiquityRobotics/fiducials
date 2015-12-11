@@ -198,11 +198,18 @@ To run the navigation:
 To create an empty map file with fiducial 301 at the origin:
 
         mkdir -p ~/.ros/slam
-        echo '301 0.0 0.0 0.0 0.0 180.0 0.0 0.0 1' > ~/ros/slam/map.txt
+        echo '301 0.0 0.0 0.0 180.0 0.0 180.0 0.0 1' > ~/ros/slam/map.txt
 
 The format of this file is id x y z pan tilt roll numObservations
-This assumes the fiducial is on the ceiling, and the 180 degree rotation is used
-so that the pose of fiducials is determined in the co-ordinate system of the floor.
+This assumes the fiducial is on the ceiling, and the 180 degree rotations are used
+so that the pose of fiducials is determined in the co-ordinate system of the floor.  Note that incresed accuracy can be gained by specifying the height of the fiducial (z), and that this can also be determined from the output of 
+`fiducial_slamp.py`.
+
+It is important that the transform from base link to the camera frame is
+correctly specified.  This launch files are currently in transition, but
+at the moment, `fiducial_detect/launch/raspi_pose.launch` is where this tf
+is specified. 
+
 
 
 ## Nodes
@@ -217,8 +224,7 @@ It also has 2D SLAM built in.
 
 
 **tag_height** Name of the tag_height file (default `Tag_Heights.xml`).  This
-file is used to specify the height of the fiducials for 2D slam, but is 
-required to exist even if 2D slam is not used.
+file is used to specify the height of the fiducials for 2D slam.
 
 **map_file** Name of the file where the generated 2D SLAM-based map should be
 stored (default `ROS_MAP`).
