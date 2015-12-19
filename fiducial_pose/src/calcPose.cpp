@@ -178,7 +178,9 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
   double obj_err;
   double img_err;
 
-  if(!RPP::Rpp(model, ipts, rotation, translation, iterations, obj_err, img_err)) {
+  std::vector<RPP::Solution> sol;
+
+  if(!RPP::Rpp(model, ipts, rotation, translation, iterations, obj_err, img_err, sol)) {
     ROS_ERROR("Cannot find transform for fiducial %d", msg->fiducial_id);
     return false;
   }
@@ -193,6 +195,13 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
   tf::Vector3 t1(translation.at<double>(0), translation.at<double>(1), translation.at<double>(2));
 
   tf::Transform trans1(m1, t1);
+
+  tf::Vector3 po(0, 0, 0);
+  tf::Vector3 pz(1, 0, 0);
+
+  tf::Vector3 v1 = trans1 * po;
+ 
+  ROS_INFO("vz transformed %f %f %f", v1.x(), v1.y(), v1.z());
 
   frameTransforms[msg->fiducial_id] = trans1;
   t1 = trans1.getOrigin();

@@ -11,7 +11,7 @@ namespace RPP
 {
 
 bool Rpp(const Mat &model_3D, const Mat &iprts,
-         Mat &Rlu, Mat &tlu, int &it1, double &obj_err1, double &img_err1)
+         Mat &Rlu, Mat &tlu, int &it1, double &obj_err1, double &img_err1, vector<Solution> sol)
 {
     // get a first guess of the pose.
 	if(Rlu.data) {
@@ -22,7 +22,7 @@ bool Rpp(const Mat &model_3D, const Mat &iprts,
 	}
 
     // get 2nd Pose
-    vector <Solution> sol;
+//    vector <Solution> sol;
     bool status = Get2ndPose_Exact(iprts, model_3D, Rlu, tlu, sol);
 
     if(!status) {
@@ -33,6 +33,8 @@ bool Rpp(const Mat &model_3D, const Mat &iprts,
     int bestIdx=-1;
     double lowestErr = 1e6;
 
+    printf("Num solutions %lu\n", sol.size());
+
     for(unsigned int i=0; i < sol.size(); i++) {
         ObjPose(model_3D, iprts, sol[i].R, Rlu, sol[i].t, it1, obj_err1, img_err1);
 
@@ -40,8 +42,10 @@ bool Rpp(const Mat &model_3D, const Mat &iprts,
         sol[i].obj_err = obj_err1;
         sol[i].img_err = img_err1;
 
-        if(obj_err1 < lowestErr) {
-            lowestErr = obj_err1;
+        printf("sol %d ierr %f oerr %f\n", i, img_err1, obj_err1);
+
+        if(img_err1 < lowestErr) {
+            lowestErr = img_err1;
             bestIdx = i;
         }
     }
@@ -52,13 +56,13 @@ bool Rpp(const Mat &model_3D, const Mat &iprts,
     img_err1 = sol[bestIdx].img_err;
 
 
-    //printf("Best solution: %d\n", bestIdx);
+    printf("Best solution: %d\n", bestIdx);
 
-    //printf("Final R\n");
-    //Print(Rlu);
+    printf("Final R\n");
+    Print(Rlu);
 
-    //printf("Final t\n");
-    //Print(tlu);
+    printf("Final t\n");
+    Print(tlu);
 
     return true;
 }
