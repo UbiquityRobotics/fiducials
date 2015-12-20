@@ -180,11 +180,21 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
 
   std::vector<RPP::Solution> sol;
 
+  std::map<int, cv::Mat>::iterator it;
+
+  it = prevRots.find(msg->fiducial_id);
+  if (it == prevRots.end()) 
+     rotation = cv::Mat();
+  else 
+     rotation = it->second;
+
   if(!RPP::Rpp(model, ipts, rotation, translation, iterations, obj_err, img_err, sol)) {
     ROS_ERROR("Cannot find transform for fiducial %d", msg->fiducial_id);
     return false;
   }
     
+  prevRots[msg->fiducial_id] = rotation;
+
   ROS_INFO("fid %d iterations %d object error %f image error %f", 
 	   msg->fiducial_id, iterations, obj_err, img_err);
     

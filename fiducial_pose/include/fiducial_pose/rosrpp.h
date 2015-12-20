@@ -20,6 +20,8 @@ class RosRpp {
   bool doUndistort;
   double fiducialLen;
 
+  std::map<int, cv::Mat>prevRots;
+
 public:
   RosRpp(double fiducialLen, bool doUndistort);
 
