@@ -14,9 +14,10 @@
     <param name="pose_frame" value="slam" />
     <param name="publish_images" value="true" />
     <param name="publish_tf" value="false" />
+    <param name="image_transport" value="compressed" />
     <param name="fiducial_len" value="$(arg fiducial_len)"/>
     <param name="undistort_points" value="$(arg undistort_points)"/>
-    <remap from="fiducial_detect/camera" to="$(arg camera)/$(arg image)"/>
+    <remap from="fiducial_detect/camera/compressed" to="$(arg camera)/$(arg image)"/>
     <remap from="fiducial_detect/camera_info" to="$(arg camera)/camera_info"/>
 
   </node>

@@ -67,6 +67,7 @@ class FiducialsNode {
 
     ros::Subscriber caminfo_sub;
     image_transport::Subscriber img_sub;
+    bool processing_image;
   
     RosRpp * pose_est;
 
@@ -122,6 +123,7 @@ class FiducialsNode {
     std::string map_file;
     std::string log_file;
 
+
     geometry_msgs::Pose scale_position(double x, double y, double z,
         double theta);
     visualization_msgs::Marker createMarker(std::string ns, int id);
@@ -150,11 +152,22 @@ class FiducialsNode {
 	double x2, double y2, double x3, double y3);
 
     void imageCallback(const sensor_msgs::ImageConstPtr & msg);
+    void processImage(const sensor_msgs::ImageConstPtr & msg);
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr & msg);
 
+    boost::thread* update_thread;
   public:
     FiducialsNode(ros::NodeHandle &nh);
+    ~FiducialsNode();
 };
+
+FiducialsNode::~FiducialsNode() {
+  if (update_thread) {
+    update_thread->join();
+    delete update_thread;
+    update_thread = NULL;
+  }
+}
 
 geometry_msgs::Pose FiducialsNode::scale_position(double x, double y, 
     double z, double theta) {
@@ -417,7 +430,25 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
- {
+{
+    if (!processing_image) {
+        processing_image = true;
+	if (update_thread) {
+	  update_thread->join();
+	  delete update_thread;
+	  update_thread = NULL;
+	}
+        processing_image = true;
+	update_thread = new boost::thread(boost::bind(&FiducialsNode::processImage, this, msg));
+    } else {
+        ROS_INFO("Dropping image");
+    }
+}
+
+void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
+{
+    processing_image = true;
+
     last_camera_frame = msg->header.frame_id;
     last_image_seq = msg->header.seq;
     last_image_time = msg->header.stamp;
@@ -470,9 +501,12 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
 
     pose_pub->publish(fiducialTransformArray);
     ROS_INFO("Finished processing image seq %d", last_image_seq);
+    processing_image = false;
 }
 
 FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buffer) {
+    processing_image = false;
+    update_thread = NULL;
     fiducial_namespace = "fiducials";
     position_namespace = "position";
     // Define tags to be green
@@ -549,6 +583,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
     fiducials = NULL;
 
 
+    
 
     img_sub = img_transport.subscribe("camera", 1,
                                       &FiducialsNode::imageCallback, this);

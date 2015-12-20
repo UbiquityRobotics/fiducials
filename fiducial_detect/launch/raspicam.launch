@@ -22,13 +22,13 @@
      <param name="srrc_publishing_mode" value="1" />
 -->
 
-     <remap from="/raspicam_node/camera/camera_info" to="/camera/camera_info"/>
+	<!--     <remap from="/raspicam_node/camera/camera_info" to="/camera/camera_info"/> -->
   </node>
 
-  <node name="throttle" type="throttle" pkg="topic_tools" output="screen"
-     args="messages /raspicam_node/camera/image/compressed 1.0 /raspicam_node/camera/image_slow/compressed"/>
+<!--  <node name="throttle" type="throttle" pkg="topic_tools" output="screen"
+     args="messages /raspicam_node/camera/image/compressed 1.0 /raspicam_node/camera/image_slow/compressed"/>-->
 
-  <node name="republish" type="republish" pkg="image_transport" output="screen"
-     args="compressed in:=/raspicam_node/camera/image_slow raw out:=/camera/image_raw" />
+<!--  <node name="republish" type="republish" pkg="image_transport" output="screen"
+     args="compressed in:=/raspicam_node/camera/image_slow raw out:=/camera/image_raw" />-->
 </launch>
 

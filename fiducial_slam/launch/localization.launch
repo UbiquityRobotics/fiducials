@@ -23,8 +23,8 @@
 
   <!-- Fiducial detection -->
   <include file="$(find fiducial_detect)/launch/fiducial_no_odom.launch">
-    <arg name="camera" value="/camera"/>
-    <arg name="image" value="image_raw"/>
+    <arg name="camera" value="/raspicam_node/camera" />
+    <arg name="image" value="image/compressed"/>
     <arg name="undistort_points" value="true"/>
 
     <!-- fiducial_len common values default 0.145, mjWall 0.09  mjGar 0.135 wayne 0.200 -->
