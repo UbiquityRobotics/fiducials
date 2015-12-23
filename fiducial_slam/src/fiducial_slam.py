@@ -71,6 +71,7 @@ CEILING_HEIGHT = 2.77
 # How long to wait before marking a seen marker as unseen
 UNSEEN_TIME = 1.5
 
+
 def mkdirnotex(filename):  
     dir=os.path.dirname(filename)  
     print "Directory", dir
@@ -182,6 +183,7 @@ class FiducialSlam:
        self.mapFileName = rospy.get_param("~map_file", "map.txt")
        self.obsFileName = rospy.get_param("~obs_file", "obs.txt")
        self.transFileName = rospy.get_param("~trans_file", "trans.txt")
+       self.fiducialsAreLevel = rospy.get_param("~fiducials_are_level", True)
        mkdirnotex(self.mapFileName)
        mkdirnotex(self.obsFileName)
        mkdirnotex(self.transFileName)
@@ -386,6 +388,11 @@ class FiducialSlam:
         # we convolve the gaussians, which is achieved by adding the variances
         print "*** %f var %f %f" % (f1, self.fiducials[f1].variance, variance)
         variance = variance + self.fiducials[f1].variance
+        
+        if self.fiducialsAreLevel:
+            (r, p, yaw) = euler_from_quaternion(quat)
+            quat = quaternion_from_euler(0, 0, yaw)
+
         self.fiducials[f2].update(xyz, quat, variance)
 
         print "%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f2, xyz[0], xyz[1], xyz[2],
@@ -415,7 +422,6 @@ class FiducialSlam:
         except:
             rospy.logerr("Unable to lookup transfrom from map to camera (%s to %s)" % \
                          (self.mapFrame, self.cameraFrame))
-
 	    return
 
         (T_camFid, T_fidCam, oerr1, ierr1) = self.tfs[f]
@@ -450,13 +456,14 @@ class FiducialSlam:
             ct, cr = self.lr.lookupTransform(self.cameraFrame,
                                              self.poseFrame,
                                              self.imageTime)
-            T_camBase = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
-                       quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
         except:
             rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s)" % \
                          (self.poseFrame, self.cameraFrame))
             return
         
+        T_camBase = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
+                              quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
+
         for t in self.tfs.keys():
             if not self.fiducials.has_key(t):
                 rospy.logwarn("No path to %d" % t)
@@ -473,6 +480,9 @@ class FiducialSlam:
             xyz = numpy.array(translation_from_matrix(T_worldBase))[:3]
             quat = numpy.array(quaternion_from_matrix(T_worldBase))
             (r, p, y) = euler_from_quaternion(quat)
+
+            if self.fiducialsAreLevel:
+                quat = quaternion_from_euler(0, 0, y)
 
             thisvar  = angularError3D(r, p , 0.0)
             rospy.loginfo("pose %d %f %f %f %f %f %f %f" % \
@@ -640,6 +650,7 @@ class FiducialSlam:
                                  quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
                 pose = numpy.dot(self.pose, odom)
             except:
+                traceback.print_exc()
                 rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
                              (self.poseFrame, self.odomFrame))
                 return

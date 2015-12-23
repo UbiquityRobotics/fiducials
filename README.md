@@ -266,6 +266,9 @@ image, and the vertices are used directly to calculate the fiducial transform.
 If it is `true`, then the vertices are undistorted first. This is faster, but
 less accurate.  Default `false`.
 
+**fiducials_are_level** If `true`, it is assumed that all fiducials are level, as
+would be the case on ceiling mounted fiducials. In this case only 3DOF are estimated.
+Default `true`.
 
 #### Published Topics
 
