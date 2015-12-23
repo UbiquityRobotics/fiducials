@@ -390,8 +390,9 @@ class FiducialSlam:
         variance = variance + self.fiducials[f1].variance
         
         if self.fiducialsAreLevel:
+            (r1, p1, y1) = euler_from_quaternion(fid1.orientation)
             (r, p, yaw) = euler_from_quaternion(quat)
-            quat = quaternion_from_euler(0, 0, yaw)
+            quat = quaternion_from_euler(r1, p1, yaw)
 
         self.fiducials[f2].update(xyz, quat, variance)
 
