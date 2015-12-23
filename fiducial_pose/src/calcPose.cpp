@@ -170,6 +170,42 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
       break;
   }
 
+#if 0
+  // This was an attempt to replace RPP with OpenCV's pose estimation.
+  // It seemed to be more noisy, probably because it is not designed to work with coplanar points.
+
+  std::vector<cv::Point2f> imagePoints;
+  std::vector<cv::Point3f> model2;
+  for (int i=0; i<4; i++) {
+      imagePoints.push_back(cv::Point2f(ipts.at<double>(0, i), ipts.at<double>(1, i)));
+      model2.push_back(cv::Point3f(model.at<double>(0, i), model.at<double>(1, i), model.at<double>(2, i)));
+      ROS_INFO("model %f %f %f", model.at<double>(0, i), model.at<double>(1, i), model.at<double>(2, i));
+  }
+
+  cv::Mat rvec(3,1,cv::DataType<double>::type);
+  cv::Mat tvec(3,1,cv::DataType<double>::type);
+
+  cv::solvePnP(model2, imagePoints, K, dist, rvec, tvec, false, CV_EPNP);
+
+  ROS_INFO("tvec %lf %lf %lf", tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
+  ROS_INFO("rvec %lf %lf %lf", r2d(rvec.at<double>(0, 0)), r2d(rvec.at<double>(1, 0)), r2d(rvec.at<double>(2, 0)));
+
+  tf::Vector3 translation(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
+  tf::Quaternion rotation;
+  rotation.setRPY(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0));
+  tf::Transform transform(rotation, translation);
+
+  ft->transform.translation.x = translation.x();
+  ft->transform.translation.y = translation.y();		
+  ft->transform.translation.z = translation.z(); 
+
+  ft->transform.rotation.w = rotation.w();
+  ft->transform.rotation.x = rotation.x();
+  ft->transform.rotation.y = rotation.y();
+  ft->transform.rotation.z = rotation.z();
+  ft->fiducial_id = msg->fiducial_id;
+#else
+
   undistortPoints(ipts, K, dist, doUndistort);
     
   cv::Mat rotation;
@@ -195,23 +231,37 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
     
   prevRots[msg->fiducial_id] = rotation;
 
-  ROS_INFO("fid %d iterations %d object error %f image error %f", 
-	   msg->fiducial_id, iterations, obj_err, img_err);
+  //ROS_INFO("fid %d iterations %d object error %f image error %f", 
+  //	   msg->fiducial_id, iterations, obj_err, img_err);
     
+  /*
+  ROS_INFO("fid %d solutions %lu", msg->fiducial_id, sol.size());
+  for (unsigned int i=0; i<sol.size(); i++) {
+    double r, p, y;
+    tf::Matrix3x3 m(sol[i].R.at<double>(0,0), sol[i].R.at<double>(0,1), sol[i].R.at<double>(0,2),
+		    sol[i].R.at<double>(1,0), sol[i].R.at<double>(1,1), sol[i].R.at<double>(1,2),
+		    sol[i].R.at<double>(2,0), sol[i].R.at<double>(2,1), sol[i].R.at<double>(2,2));
+
+    tf::Vector3 t(translation.at<double>(0), translation.at<double>(1), translation.at<double>(2));    
+    
+    tf::Transform trans(m, t);
+
+    for (int j=0; j<4; j++) {
+      tf::Vector3 pi(model.at<double>(0,j), model.at<double>(1,j), 0);
+      tf::Vector3 pw = trans * pi;
+      ROS_INFO("vertex %d %f %f %f", j, pw.x(), pw.y(), pw.z());
+    }
+    m.getRPY(r, p, y);
+    ROS_INFO("fid %d sol %d R: %.2f %.2f %.2f", msg->fiducial_id, i, r2d(r), r2d(p), r2d(y));
+  }
+  */
+
   tf::Matrix3x3 m1(rotation.at<double>(0,0), rotation.at<double>(0,1), rotation.at<double>(0,2),
 		   rotation.at<double>(1,0), rotation.at<double>(1,1), rotation.at<double>(1,2),
 		   rotation.at<double>(2,0), rotation.at<double>(2,1), rotation.at<double>(2,2));
-
-  tf::Vector3 t1(translation.at<double>(0), translation.at<double>(1), translation.at<double>(2));
+  tf::Vector3 t1(translation.at<double>(0), translation.at<double>(1), translation.at<double>(2));    
 
   tf::Transform trans1(m1, t1);
-
-  tf::Vector3 po(0, 0, 0);
-  tf::Vector3 pz(1, 0, 0);
-
-  tf::Vector3 v1 = trans1 * po;
- 
-  ROS_INFO("vz transformed %f %f %f", v1.x(), v1.y(), v1.z());
 
   frameTransforms[msg->fiducial_id] = trans1;
   t1 = trans1.getOrigin();
@@ -239,11 +289,13 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
   ft->transform.rotation.x = q.x();
   ft->transform.rotation.y = q.y();
   ft->transform.rotation.z = q.z();
+  
   ft->fiducial_id = msg->fiducial_id;
   //  ft->image_seq = msg->image_seq;
   ft->image_error = img_err;
   ft->object_error = obj_err;
   ft->fiducial_area = calcFiducialArea(ipts);
+#endif
   return true;
 }
 

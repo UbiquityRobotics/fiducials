@@ -90,7 +90,7 @@ public:
 };
 
 bool Rpp(const cv::Mat &model_3D, const cv::Mat &iprts,
-            cv::Mat &Rlu, cv::Mat &tlu, int &it1, double &obj_err1, double &img_err1, std::vector<Solution>sol);
+            cv::Mat &Rlu, cv::Mat &tlu, int &it1, double &obj_err1, double &img_err1, std::vector<Solution>&sol);
 
 void ObjPose(const cv::Mat P, cv::Mat Qp, cv::Mat initR,
              cv::Mat &R, cv::Mat &t, int &it, double &obj_err, double &img_err);
