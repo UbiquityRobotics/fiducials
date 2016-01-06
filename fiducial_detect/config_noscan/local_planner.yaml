@@ -24,7 +24,7 @@ DWAPlannerROS:
    max_rot_vel: 1.5
    min_rot_vel: -1.5
 
-   xy_goal_tolerance:  0.30
+   xy_goal_tolerance:  0.15
    yaw_goal_tolerance: 0.01
 
    vx_samples: 20
