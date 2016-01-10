@@ -565,7 +565,7 @@ class FiducialSlam:
             if self.fiducials.has_key(fid2):
                 position2 = self.fiducials[fid2].position
                 links.points.append(Point(position[0], position[1], position[2]))
-                links.points.append(Point(position2[0], position2[1], position[2]))
+                links.points.append(Point(position2[0], position2[1], position2[2]))
         links.id = fiducialId + 20000
         links.ns = "fiducial_namespace_link"
 
