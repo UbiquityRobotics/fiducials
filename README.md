@@ -176,27 +176,6 @@ points to this file:
 After this step, when you run the camera, you should no longer
 get the calibration file error.
 
-## Running Fiducials
-
-(The localization and navigation commands are the same.)
-
-To run the localization:
-
-        mkdir -p ~/.ros/fiducials	# Only do once
-        roslaunch fiducial_slam fiducial_pgr_3d.launch
-
-On a Raspberry PI with camera:
-
-        roslaunch fiducial_slam fiducial_raspi_3d.launch
-
-To generate a map quickly, run this:
-
-        roslaunch fiducial_slam fiducial_raspi_3d_map.launch
-
-To run the navigation:
-
-        roslaunch fiducial_slam navigation_noscan.launch
-
 ## Map Creation
 
 To create an empty map file with fiducial 301 at the origin:
@@ -214,6 +193,20 @@ correctly specified.  This launch files are currently in transition, but
 at the moment, `fiducial_detect/launch/raspi_pose.launch` is where this tf
 is specified. 
 
+
+## Running Fiducials
+
+The following command launches fiducial localization:
+
+        roslaunch fiducial_slam fiducial_raspi_3d.launch
+
+An alternative command to generate a map quickly:
+
+        roslaunch fiducial_slam fiducial_raspi_3d_map.launch
+
+To run the navigation:
+
+        roslaunch fiducial_slam navigation_noscan.launch
 
 
 ## Nodes
