@@ -206,7 +206,7 @@ An alternative command to generate a map quickly:
 
 To run the navigation:
 
-        roslaunch fiducial_slam navigation_noscan.launch
+        roslaunch fiducial_detect navigation_noscan.launch
 
 
 ## Nodes
