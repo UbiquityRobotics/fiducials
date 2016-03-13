@@ -39,11 +39,14 @@ First, create a ROS catkin workspace, if you don't already have one:
      $ cd ~/catkin_ws/src
      $ catkin_init_workspace
 
-Then git the source:
+Then get the source:
 
-     $ git clone https://github.com/UbiquityRobotics/fiducials 
-     $ git clone https://github.com/UbiquityRobotics/raspicam_node
-## How do you compile these?  TODO
+
+    $ git clone https://github.com/UbiquityRobotics/fiducials 
+    $ git clone https://github.com/UbiquityRobotics/raspicam_node 
+    $ cd ..
+    $ catkin_make    
+
 
 Install inkscape
 
@@ -120,6 +123,8 @@ is specified.
 
         roslaunch fiducial_detect fiducial_rviz.launch
 
+**TODO** specify which topics to view, or refer to a .rviz files to do this.
+
 3. Then perform a quick map generation:
 
         roslaunch fiducial_slam fiducial_raspi_3d_map.launch
@@ -148,7 +153,7 @@ While building the map, you should start to see something that looks as follows:
 
 * Blue lines connect pairs of fiducials that have shown
   up in the camera view at the same time.  The map is constructed
-  by stringing together fiducial pairs.
+  by combining fiducial pairs.
   
 ## Appendix 1. Formats and Programs  
 
