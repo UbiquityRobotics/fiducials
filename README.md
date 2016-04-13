@@ -99,7 +99,7 @@ On Ubiquity Robotics robots the camera in already installed and calibrated. For 
 To create an empty map file with fiducial 301 (the id of 301 is arbitrary) at the origin:
 
         mkdir -p ~/.ros/slam
-        echo '301 0.0 0.0 0.0 180.0 0.0 180.0 0.0 1' > ~/ros/slam/map.txt
+        echo '301 0.0 0.0 0.0 180.0 0.0 180.0 0.0 1' > ~/.ros/slam/map.txt
 
 The format of this file is id x y z pan tilt roll numObservations.
 
