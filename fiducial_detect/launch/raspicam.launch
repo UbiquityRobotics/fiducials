@@ -23,7 +23,7 @@
     -->
 
     <remap from="/raspicam_node/camera/camera_info" to="/camera/camera_info"/>
-    <remap from="/raspicam_node/camera/image/compressed" to="/camera/image_raw"/>
+    <remap from="/raspicam_node/camera/image/compressed" to="/camera/compressed"/>
   </node>
 
 <!--  <node name="throttle" type="throttle" pkg="topic_tools" output="screen"
