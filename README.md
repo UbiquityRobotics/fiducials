@@ -123,7 +123,9 @@ is specified.
 
         roslaunch fiducial_detect fiducial_rviz.launch
 
-**TODO** specify which topics to view, or refer to a .rviz files to do this.
+Note that the robot node should be running (so that the transform from odom to base_link is published)
+and at aleat one of the fiducials that is in the the map should have been observed before rviz 
+can display anything in the map frame.
 
 3. Then perform a quick map generation:
 
