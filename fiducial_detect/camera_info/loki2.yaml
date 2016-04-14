@@ -1,6 +1,6 @@
 image_width: 1280
 image_height: 960
-camera_name: loki2
+camera_name: raspicam
 camera_matrix:
   rows: 3
   cols: 3
