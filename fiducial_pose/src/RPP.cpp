@@ -33,16 +33,12 @@ bool Rpp(const Mat &model_3D, const Mat &iprts,
     int bestIdx=-1;
     double lowestErr = 1e6;
 
-    printf("Num solutions %lu\n", sol.size());
-
     for(unsigned int i=0; i < sol.size(); i++) {
         ObjPose(model_3D, iprts, sol[i].R, Rlu, sol[i].t, it1, obj_err1, img_err1);
 
         sol[i].R = Rlu;
         sol[i].obj_err = obj_err1;
         sol[i].img_err = img_err1;
-
-        printf("sol %d ierr %f oerr %f\n", i, img_err1, obj_err1);
 
         if(img_err1 < lowestErr) {
             lowestErr = img_err1;
@@ -153,7 +149,6 @@ void ObjPose(const Mat _P, Mat Qp, Mat initR,
 
             old_err += (x*x + y*y + z*z);
         }
-	printf("initR is set error %lf\n", old_err);
     }
     else {
         // no initial guess; use weak-perspective approximation
@@ -162,7 +157,6 @@ void ObjPose(const Mat _P, Mat Qp, Mat initR,
 
         //printf("SVD\n");
         //Print(Ri);
-	printf("initR is not set error %lf\n", old_err);
     }
 
     // compute next pose estimate
