@@ -80,7 +80,7 @@ void undistortPoints(cv::Mat pts, cv::Mat K, cv::Mat dist, bool doUndistort)
       src.at<cv::Vec2d>(0, i)[0] = pts.at<double>(0, i);
       src.at<cv::Vec2d>(0, i)[1] = pts.at<double>(1, i);
     }
-    cv::vector<cv::Point2f> dest;
+    std::vector<cv::Point2f> dest;
     cv::undistortPoints(src, dst, K, dist);
 
     for (int i=0; i<pts.cols; i++) {
