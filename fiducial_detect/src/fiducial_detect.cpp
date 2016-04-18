@@ -98,16 +98,12 @@ class FiducialsNode {
     // if set, we publish the images that contain fiducials
     bool publish_images;
 
-    // if set, we publish the images that are "interesting", for debugging
-    bool publish_interesting_images;
-
     // pose estimtion params
     bool estimate_pose;
     double fiducial_len;
     bool undistort_points;
   
     image_transport::Publisher image_pub;
-    image_transport::Publisher interesting_image_pub;
 
     const double scale;
     std::string fiducial_namespace;
@@ -123,6 +119,7 @@ class FiducialsNode {
     std::string map_file;
     std::string log_file;
 
+    std::vector<fiducial_pose::Fiducial> detected_fiducials;
 
     geometry_msgs::Pose scale_position(double x, double y, double z,
         double theta);
@@ -239,7 +236,8 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     fid.x3 = x3; fid.y3 = y3;
 
     vertices_pub->publish(fid);
-    
+    detected_fiducials.push_back(fid);
+
     if (estimate_pose) {
         fiducial_pose::FiducialTransform ft;
         geometry_msgs::Transform trans;
@@ -486,14 +484,15 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
         Fiducials_Results results = Fiducials__process(fiducials);
 	ROS_INFO("Processed image");
 	if (publish_images) {
-  	    if (results->map_changed) {
-	        image_pub.publish(msg);
-            }
-        }
-	if (publish_interesting_images) {
-	  if (results->image_interesting) {
-	      interesting_image_pub.publish(msg);
+	  for (unsigned i=0; i < detected_fiducials.size(); i++) {
+	    fiducial_pose::Fiducial& fid = detected_fiducials[i];
+	    cvLine(image, cvPoint(fid.x0, fid.y0), cvPoint(fid.x1, fid.y1), CV_RGB(255, 0, 0));
+	    cvLine(image, cvPoint(fid.x1, fid.y1), cvPoint(fid.x2, fid.y2), CV_RGB(255, 0, 0));
+	    cvLine(image, cvPoint(fid.x2, fid.y2), cvPoint(fid.x3, fid.y3), CV_RGB(255, 0, 0));
+	    cvLine(image, cvPoint(fid.x3, fid.y3), cvPoint(fid.x0, fid.y0), CV_RGB(255, 0, 0));
 	  }
+	  detected_fiducials.clear();
+	  image_pub.publish(msg);
 	}
     } catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -552,8 +551,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
     nh.param<bool>("publish_images", publish_images, false);
     nh.param<bool>("publish_markers", publish_markers, false);
     nh.param<bool>("estimate_pose", estimate_pose, true);
-    nh.param<bool>("publish_interesting_images", publish_interesting_images, 
-		   false);
+
     nh.param<double>("fiducial_len", fiducial_len, 0.146);
     nh.param<bool>("undistort_points", undistort_points, false);
 
@@ -561,9 +559,6 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
 
     if (publish_images) {
         image_pub = img_transport.advertise("fiducial_images", 1);
-    }
-    if (publish_interesting_images) {
-        interesting_image_pub = img_transport.advertise("interesting_images", 1);
     }
 
     if (publish_markers) {
