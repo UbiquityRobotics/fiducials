@@ -5,6 +5,11 @@
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+#include <opencv2/core/version.hpp>
+
+#if CV_MAJOR_VERSION == 3
+#include <opencv2/calib3d/calib3d_c.h>
+#endif
 
 #include "Memory.hpp"
 #include "String.hpp"
