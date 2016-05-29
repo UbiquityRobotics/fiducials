@@ -651,7 +651,6 @@ class FiducialSlam:
                                  quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
                 pose = numpy.dot(self.pose, odom)
             except:
-                traceback.print_exc()
                 rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
                              (self.poseFrame, self.odomFrame))
                 return
