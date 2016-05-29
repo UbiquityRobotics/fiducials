@@ -486,10 +486,10 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
 	if (publish_images) {
 	  for (unsigned i=0; i < detected_fiducials.size(); i++) {
 	    fiducial_pose::Fiducial& fid = detected_fiducials[i];
-	    cvLine(image, cvPoint(fid.x0, fid.y0), cvPoint(fid.x1, fid.y1), CV_RGB(255, 0, 0));
-	    cvLine(image, cvPoint(fid.x1, fid.y1), cvPoint(fid.x2, fid.y2), CV_RGB(255, 0, 0));
-	    cvLine(image, cvPoint(fid.x2, fid.y2), cvPoint(fid.x3, fid.y3), CV_RGB(255, 0, 0));
-	    cvLine(image, cvPoint(fid.x3, fid.y3), cvPoint(fid.x0, fid.y0), CV_RGB(255, 0, 0));
+	    cvLine(image, cvPoint(fid.x0, fid.y0), cvPoint(fid.x1, fid.y1), CV_RGB(255, 0, 0), 3);
+	    cvLine(image, cvPoint(fid.x1, fid.y1), cvPoint(fid.x2, fid.y2), CV_RGB(255, 0, 0), 3);
+	    cvLine(image, cvPoint(fid.x2, fid.y2), cvPoint(fid.x3, fid.y3), CV_RGB(255, 0, 0), 3);
+	    cvLine(image, cvPoint(fid.x3, fid.y3), cvPoint(fid.x0, fid.y0), CV_RGB(255, 0, 0), 3);
 	  }
 	  detected_fiducials.clear();
 	  image_pub.publish(msg);
