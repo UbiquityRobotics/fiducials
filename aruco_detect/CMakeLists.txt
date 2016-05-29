@@ -1,0 +1,49 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(aruco_detect)
+
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  tf2_geometry_msgs
+  tf2_ros
+  tf2
+  visualization_msgs
+  image_transport
+  cv_bridge
+  sensor_msgs
+  std_msgs
+)
+find_package(orocos_kdl REQUIRED)
+
+catkin_package()
+
+###########
+## Build ##
+###########
+
+
+
+include_directories(${catkin_INCLUDE_DIRS} /opt/ros/indigo/include/opencv-3.1.0-dev/)
+
+link_directories(${orocos_kdl_LIBRARY_DIRS})
+
+add_executable(aruco_detect src/aruco_detect.cpp)
+target_link_libraries(aruco_detect ${catkin_LIBRARIES}
+                                    /opt/ros/indigo/lib/libopencv_aruco3.so.3.1
+                                    /opt/ros/indigo/lib/libopencv_imgproc3.so.3.1
+                                    /opt/ros/indigo/lib/libopencv_core3.so.3.1
+                                    /opt/ros/indigo/lib/libopencv_highgui3.so.3.1.0)
+
+#############
+## Install ##
+#############
+
+## Mark executables and/or libraries for installation
+install(TARGETS aruco_detect
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+

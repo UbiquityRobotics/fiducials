@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package>
+  <name>aruco_detect</name>
+  <version>0.1.0</version>
+  <description>Fiducial detection based on the aruco library</description>
+
+  <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
+
+  <license>BSD</license>
+
+  <author email="jimv@mrjim.com">Jim Vaughan</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>libopencv-dev</build_depend>
+
+ 
+  <run_depend>roscpp</run_depend>
+  <run_depend>tf2_geometry_msgs</run_depend>
+  <run_depend>tf2_ros</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>visualization_msgs</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>cv_bridge</run_depend>
+
+
+</package>
