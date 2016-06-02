@@ -145,6 +145,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                      tvecs[i][0], tvecs[i][1], tvecs[i][2],
                      rvecs[i][0], rvecs[i][1], rvecs[i][2]);
 
+            double angle = norm(rvecs[i]);
+            Vec3d axis = rvecs[i] / angle;
+            ROS_INFO("angle %f axis %f %f %f", angle, axis[0], axis[1], axis[2]);
+
             fiducial_pose::FiducialTransform ft;
             ft.fiducial_id = ids[i];
 
@@ -153,7 +157,8 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             ft.transform.translation.z = tvecs[i][2];
             
             tf2::Quaternion q;
-            q.setRPY(rvecs[i][0], rvecs[i][1], rvecs[i][2]);
+            q.setRotation(tf2::Vector3(axis[0], axis[1], axis[2]), angle);
+
             ft.transform.rotation.w = q.w();
             ft.transform.rotation.x = q.x();
             ft.transform.rotation.y = q.y();

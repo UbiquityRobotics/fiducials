@@ -2,7 +2,7 @@
    Run the fiducial_slam node
 -->
 <launch>
-  <arg name="mapping_mode" default="false"/>
+  <arg name="mapping_mode" default="true"/>
   <arg name="camera_frame" default="raspi_camera_frame"/>
   <arg name="map_frame" default="map"/>
   <arg name="odom_frame" default="odom"/>
