@@ -3,14 +3,12 @@ cmake_minimum_required(VERSION 2.8)
 project(fiducial_pose)
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  sensor_msgs
-  std_msgs
-  geometry_msgs
-  tf
-)
+   roscpp
+   message_generation
+   OpenCV
+   geometry_msgs)
 
-find_package(OpenCV REQUIRED)
+#find_package(OpenCV REQUIRED)
 
 add_message_files(
    FILES
@@ -31,7 +29,7 @@ catkin_package(
 )
 
 
-include_directories(include ${OpenCV_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
 
 add_library(rpp_pose src/Rpoly.cpp src/RPP.cpp src/calcPose.cpp)

@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   sensor_msgs
   std_msgs
+  fiducial_pose
 )
 find_package(orocos_kdl REQUIRED)
 
@@ -25,16 +26,12 @@ catkin_package()
 
 
 
-include_directories(${catkin_INCLUDE_DIRS} /opt/ros/indigo/include/opencv-3.1.0-dev/)
+include_directories(${catkin_INCLUDE_DIRS})
 
 link_directories(${orocos_kdl_LIBRARY_DIRS})
 
 add_executable(aruco_detect src/aruco_detect.cpp)
-target_link_libraries(aruco_detect ${catkin_LIBRARIES}
-                                    /opt/ros/indigo/lib/libopencv_aruco3.so.3.1
-                                    /opt/ros/indigo/lib/libopencv_imgproc3.so.3.1
-                                    /opt/ros/indigo/lib/libopencv_core3.so.3.1
-                                    /opt/ros/indigo/lib/libopencv_highgui3.so.3.1.0)
+target_link_libraries(aruco_detect ${catkin_LIBRARIES})
 
 #############
 ## Install ##
