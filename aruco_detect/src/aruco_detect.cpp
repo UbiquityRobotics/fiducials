@@ -81,7 +81,7 @@ class FiducialsNode {
     image_transport::Publisher image_pub;
 
     aruco::DetectorParameters detectorParams;
-    aruco::Dictionary dictionary;
+    cv::Ptr<aruco::Dictionary> dictionary;
 
     void imageCallback(const sensor_msgs::ImageConstPtr & msg);
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr & msg);
