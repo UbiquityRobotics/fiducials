@@ -142,7 +142,7 @@ unsigned int Map__arc_update(Map map, CameraTag *camera_from, CameraTag *camera_
     // To minimize camera distortion effects, we want to use images where
     // *from* and *to* are about equidistant from the image center.  Thus,
     // we want to minimum the absolute value of the distance difference:
-    double goodness = abs(camera_from_polar_distance - camera_to_polar_distance);
+    double goodness = std::abs(camera_from_polar_distance - camera_to_polar_distance);
 
     // Now see if the new *goodness* is better than the previous one:
     //File__format(stderr,
