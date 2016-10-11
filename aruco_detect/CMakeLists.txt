@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(orocos_kdl REQUIRED)
 
-catkin_package()
+catkin_package(INCLUDE_DIRS include)
 
 ###########
 ## Build ##
@@ -26,12 +26,15 @@ catkin_package()
 
 
 
-include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS} include)
 
 link_directories(${orocos_kdl_LIBRARY_DIRS})
 
 add_executable(aruco_detect src/aruco_detect.cpp)
+add_executable(test_board src/test_board.cpp)
+
 target_link_libraries(aruco_detect ${catkin_LIBRARIES})
+target_link_libraries(test_board ${catkin_LIBRARIES})
 
 #############
 ## Install ##
