@@ -5,6 +5,9 @@ Generate an Aruco Board object from a fiducial map
 
 */
 
+#ifndef ARUCO_MAP_BOARD_H
+#define ARUCO_MAP_BOARD_H
+
 #include <math.h>
 
 #include <tf2/LinearMath/Vector3.h>
@@ -14,11 +17,12 @@ Generate an Aruco Board object from a fiducial map
 
 #include <list>
 
-#define BUFSIZE 1024
 
 class MapBoard : public cv::aruco::Board {
 
 public:
+	const static int BUFSIZE = 1024;
+
 	MapBoard() {}
 
 	MapBoard(cv::Ptr<cv::aruco::Dictionary> dictionary) 
@@ -46,7 +50,7 @@ public:
 		return(cv::Point3f(v.x(), v.y(), v.z()));
 	}
 
-	int readMap(char *file, double len)
+	int readMap(const char *file, double len)
 	{
 		FILE *fp = fopen(file, "r");
 		if (fp == NULL) {
@@ -102,3 +106,5 @@ public:
 		}
 	}
 };
+
+#endif
