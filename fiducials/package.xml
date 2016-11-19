@@ -40,10 +40,10 @@
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
 
-  <run_depend>fiducial_detect</run_depend>
-  <run_depend>fiducial_lib</run_depend>
-  <run_depend>fiducial_pose</run_depend>
-  <run_depend>fiducial_slam</run_depend>
+  <exec_depend>fiducial_detect</exec_depend>
+  <exec_depend>fiducial_lib</exec_depend>
+  <exec_depend>fiducial_pose</exec_depend>
+  <exec_depend>fiducial_slam</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
