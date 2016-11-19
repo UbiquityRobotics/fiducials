@@ -1,9 +1,0 @@
-<launch>
-
-<!--
- This is for magni B measured on 12/10/15
--->
-
-  <node type="static_transform_publisher" pkg="tf" name="camera_pose"
-        args="0.0254 0.14605 0.1651 $(optenv CAMERA_YAW -1.57079632679) 0 0 base_link raspi_camera_frame 100"/> 
-</launch>
