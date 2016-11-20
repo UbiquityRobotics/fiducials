@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>fiducial_pose</name>
-  <version>1.0.0</version>
+  <version>0.0.1</version>
   <description>ROS node to estimate 3D pose with RosbustPlanarPose</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
@@ -15,10 +15,12 @@
 
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>libopencv-dev</build_depend>
-
-  <run_depend>geometry_msgs</run_depend>
+  <depend>roscpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf</depend>
+  <depend>opencv3</depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 </package>

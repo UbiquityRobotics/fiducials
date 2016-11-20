@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>fiducial_detect</name>
-  <version>0.1.0</version>
+  <version>0.0.1</version>
   <description>The fiducials_ros package</description>
 
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
@@ -23,6 +23,8 @@
   <build_depend>cv_bridge</build_depend>
   <build_depend>orocos_kdl</build_depend>
   <build_depend>libopencv-dev</build_depend>
+  <build_depend>fiducial_lib</build_depend>
+  <build_depend>fiducial_pose</build_depend>
 
  
   <run_depend>orocos_kdl</run_depend>
