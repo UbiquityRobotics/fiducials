@@ -22,5 +22,6 @@
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>opencv3</depend>
+  <depend>fiducial_pose</depend>
 
 </package>
