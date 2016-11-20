@@ -4,14 +4,16 @@
   <version>0.1.1</version>
   <description>The fiducials package</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
+  <!-- One maintainer tag required, multiple allowed, one person per tag -->
+  <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
+  <maintainer email="send2arohan@gmail.com">Rohan Agrawal</maintainer> 
   <maintainer email="wayne@gramlich.net">Wayne Gramlich</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>BSD</license>
 
   <author email="wayne@gramlich.net">Wayne Gramlich</author>
 
@@ -20,5 +22,6 @@
 
   <depend>angles</depend>
   <build_depend>opencv3</build_depend>
+  <build_export_depend>opencv3</build_export_depend>
 
 </package>
