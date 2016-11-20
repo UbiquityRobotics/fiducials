@@ -39,6 +39,9 @@ target_link_libraries(rpp_pose m ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_dependencies(rpp_pose fiducial_detect_gencpp fiducial_pose_gencpp)
 
-install(PROGRAMS
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(TARGETS rpp_pose
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
