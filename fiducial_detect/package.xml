@@ -4,7 +4,8 @@
   <version>0.1.0</version>
   <description>The fiducials_ros package</description>
 
-  <maintainer email="namniart@gmail.com">Austin Hendrix</maintainer>
+  <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
+  <maintainer email="send2rohan@gmail.com">Rohan Agrawal</maintainer>
 
   <license>BSD</license>
 
