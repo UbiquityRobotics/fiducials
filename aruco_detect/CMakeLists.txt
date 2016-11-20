@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 2.8.3)
 project(aruco_detect)
 
@@ -16,9 +17,11 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   fiducial_pose
 )
-find_package(orocos_kdl REQUIRED)
 
-catkin_package(INCLUDE_DIRS include)
+find_package(OpenCV REQUIRED)
+
+catkin_package(INCLUDE_DIRS include
+  DEPENDS OpenCV)
 
 ###########
 ## Build ##
@@ -27,14 +30,15 @@ catkin_package(INCLUDE_DIRS include)
 
 
 include_directories(${catkin_INCLUDE_DIRS} include)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 link_directories(${orocos_kdl_LIBRARY_DIRS})
 
 add_executable(aruco_detect src/aruco_detect.cpp)
 add_executable(test_board src/test_board.cpp)
 
-target_link_libraries(aruco_detect ${catkin_LIBRARIES})
-target_link_libraries(test_board ${catkin_LIBRARIES})
+target_link_libraries(aruco_detect ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(test_board ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 #############
 ## Install ##
