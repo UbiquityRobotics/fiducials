@@ -1,6 +1,8 @@
 
 # Simultaneous Localization and Mapping Using Fiducial Markers
+Travis:  [![Build Status](https://travis-ci.org/UbiquityRobotics/fiducials.svg?branch=indigo-devel)](https://travis-ci.org/UbiquityRobotics/fiducials)
 
+Jenkins: [![Build Status](http://build.ros.org/buildStatus/icon?job=Idev__fiducials__ubuntu_trusty_amd64)](http://build.ros.org/job/Idev__fiducials__ubuntu_trusty_amd64/)
 ## Overview
 
 This package implements a system that uses ceiling mounted
