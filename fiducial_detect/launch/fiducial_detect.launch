@@ -1,7 +1,7 @@
 <!-- Run the fiducial_detect node -->
 <launch>
   <!-- namespace for camera input -->
-  <arg name="camera" default="/raspicam_node/camera"/>
+  <arg name="camera" default="/camera"/>
   <arg name="image" default="image_rect"/>
   <arg name="fiducial_len" default="0.146"/>
   <arg name="undistort_points" default="false"/>
