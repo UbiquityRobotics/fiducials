@@ -50,7 +50,8 @@ install(DIRECTORY launch/
 ###########
 
 if(CATKIN_ENABLE_TESTING)
-        find_package(rostest REQUIRED)
+        find_package(rostest REQUIRED 
+                     COMPONENTS fiducial_pose)
         
         add_rostest(test/detect_board.xml)
 endif()
