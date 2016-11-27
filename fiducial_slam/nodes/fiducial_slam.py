@@ -46,7 +46,7 @@ from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                translation_matrix, quaternion_matrix, \
                                translation_from_matrix, quaternion_from_matrix, \
                                quaternion_from_euler
-import tf
+import tf2_ros
 import rosbag
 
 from math import pi, sqrt
@@ -201,8 +201,9 @@ class FiducialSlam:
        self.fiducials = {}
        self.mapPublished = False
        if self.sendTf:
-           self.br = tf.TransformBroadcaster()
-       self.lr = tf.TransformListener(True, rospy.Duration(10))
+           self.br = tf2_ros.TransformBroadcaster()
+       self.tfBuffer = tf2_ros.Buffer()
+       self.lr = tf2_ros.TransformListener(self.tfBuffer)
        self.markerPub = rospy.Publisher("fiducials", Marker, queue_size=20)
        self.publishLock = threading.Lock()
        self.visibleMarkers = {}
@@ -415,11 +416,13 @@ class FiducialSlam:
     def updateMapFromExternal(self, f):
         rospy.logerr("update from external %d" % f)
         try:
-            ct, cr = self.lr.lookupTransform(self.mapFrame,
+            trans = self.tfBuffer.lookup_transform(self.mapFrame,
                                              self.cameraFrame, 
                                              self.imageTime)
-            T_worldCam = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
-                           quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
+            ct = trans.transform.translation
+            cr = trans.transform.rotation
+            T_worldCam = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
+                              quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
         except:
             rospy.logerr("Unable to lookup transfrom from map to camera (%s to %s)" % \
                          (self.mapFrame, self.cameraFrame))
@@ -454,16 +457,18 @@ class FiducialSlam:
         orientation = None
         camera = None
         try:
-            ct, cr = self.lr.lookupTransform(self.cameraFrame,
+            trans = self.tfBuffer.lookup_transform(self.cameraFrame,
                                              self.poseFrame,
                                              self.imageTime)
         except:
             rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s)" % \
-                         (self.poseFrame, self.cameraFrame))
+                         (self.cameraFrame, self.poseFrame))
             return
         
-        T_camBase = numpy.dot(translation_matrix((ct[0], ct[1], ct[2])),
-                              quaternion_matrix((cr[0], cr[1], cr[2], cr[3])))
+        ct = trans.transform.translation
+        cr = trans.transform.rotation
+        T_camBase = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
+                              quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
 
         for t in self.tfs.keys():
             if not self.fiducials.has_key(t):
@@ -646,9 +651,11 @@ class FiducialSlam:
             try: 
                 if self.imageTime is None:
                     rospy.logerr("imageTime is bogus!")
-                odomt, odomr = self.lr.lookupTransform(self.poseFrame, self.odomFrame, self.imageTime)
-                odom = numpy.dot(translation_matrix((odomt[0], odomt[1], odomt[2])),
-                                 quaternion_matrix((odomr[0], odomr[1], odomr[2], odomr[3])))
+                trans = self.tfBuffer.lookup_transform(self.poseFrame, self.odomFrame, self.imageTime)
+                ct = trans.transform.translation
+                cr = trans.transform.rotation
+                odom = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
+                              quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
                 pose = numpy.dot(self.pose, odom)
             except:
                 rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
