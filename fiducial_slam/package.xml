@@ -17,6 +17,10 @@
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
 
+  <run_depend>rospy</run_depend>
+
+  <test_depend>rostest</test_depend>
+ 
   <buildtool_depend>catkin</buildtool_depend>
 
 </package>
