@@ -454,6 +454,7 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
 
     fiducialTransformArray.transforms.clear();
     fiducialTransformArray.header.stamp = msg->header.stamp;
+    fiducialTransformArray.header.frame_id = msg->header.frame_id;
     fiducialTransformArray.image_seq = msg->header.seq;
 
     try {

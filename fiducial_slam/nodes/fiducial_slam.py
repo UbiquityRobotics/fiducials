@@ -176,7 +176,6 @@ class FiducialSlam:
        self.odomFrame = rospy.get_param("~odom_frame", "")
        self.poseFrame = rospy.get_param("~pose_frame", "base_link")
        self.mapFrame = rospy.get_param("~map_frame", "map")
-       self.cameraFrame = rospy.get_param("~camera_frame", "camera")
        self.sendTf = rospy.get_param("~publish_tf", True)
        self.mappingMode = rospy.get_param("~mapping_mode", True)
        self.useExternalPose = rospy.get_param("~use_external_pose", False)
@@ -185,7 +184,8 @@ class FiducialSlam:
        self.obsFileName = os.path.expanduser(rospy.get_param("~obs_file", "obs.txt"))
        self.transFileName = os.path.expanduser(rospy.get_param("~trans_file", "trans.txt"))
        self.fiducialsAreLevel = rospy.get_param("~fiducials_are_level", True)
-       mkdirnotex(self.initialMapFileName)
+       if self.initialMapFileName:
+           mkdirnotex(self.initialMapFileName)
        mkdirnotex(self.mapFileName)
        mkdirnotex(self.obsFileName)
        mkdirnotex(self.transFileName)
@@ -215,7 +215,8 @@ class FiducialSlam:
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
-       self.loadMap(self.initialMapFileName)
+       if self.initialMapFileName:     
+           self.loadMap(self.initialMapFileName)
        self.loadMap(self.mapFileName)
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
@@ -297,7 +298,7 @@ class FiducialSlam:
             mat = numpy.dot(translation_matrix((trans.x, trans.y, trans.z)),
                             quaternion_matrix((rot.x, rot.y, rot.z, rot.w)))
             invMat = numpy.linalg.inv(mat)
-            self.tfs[id] = (mat, invMat, m.object_error, m.image_error)
+            self.tfs[id] = (mat, invMat, m.object_error, m.image_error, msg.header.frame_id)
             self.transFile.write("%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n" % \
                                  (id, self.currentSeq, trans.x, trans.y, trans.z, 
                                   rot.x, rot.y, rot.z, rot.w,
@@ -364,8 +365,8 @@ class FiducialSlam:
 
         P_fid1 = fid1.pose44()
 
-        (T_camFid1, T_fid1Cam, oerr1, ierr1) = self.tfs[f1]
-        (T_camFid2, T_fid2Cam, oerr2, ierr2) = self.tfs[f2]
+        (T_camFid1, T_fid1Cam, oerr1, ierr1, frame1) = self.tfs[f1]
+        (T_camFid2, T_fid2Cam, oerr2, ierr2, frame2) = self.tfs[f2]
 
         # transform form fiducial f1 to f2
         T_fid1Fid2 = numpy.dot(T_fid1Cam, T_camFid2)
@@ -421,20 +422,19 @@ class FiducialSlam:
     """
     def updateMapFromExternal(self, f):
         rospy.logerr("update from external %d" % f)
+        (T_camFid, T_fidCam, oerr1, ierr1, frame) = self.tfs[f]
         try:
             trans = self.tfBuffer.lookup_transform(self.mapFrame,
-                                             self.cameraFrame, 
-                                             self.imageTime)
+                                             frame, self.imageTime)
             ct = trans.transform.translation
             cr = trans.transform.rotation
             T_worldCam = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
                               quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
         except:
             rospy.logerr("Unable to lookup transfrom from map to camera (%s to %s)" % \
-                         (self.mapFrame, self.cameraFrame))
+                         (self.mapFrame, frame))
 	    return
 
-        (T_camFid, T_fidCam, oerr1, ierr1) = self.tfs[f]
 
         P_fid = numpy.dot(T_worldCam, T_camFid)
 
@@ -462,28 +462,31 @@ class FiducialSlam:
         position = None
         orientation = None
         camera = None
-        try:
-            trans = self.tfBuffer.lookup_transform(self.cameraFrame,
-                                             self.poseFrame,
-                                             self.imageTime)
-        except:
-            rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s)" % \
-                         (self.cameraFrame, self.poseFrame))
-            return
-        
-        ct = trans.transform.translation
-        cr = trans.transform.rotation
-        T_camBase = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
-                              quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
 
         for t in self.tfs.keys():
             if not self.fiducials.has_key(t):
                 rospy.logwarn("No path to %d" % t)
                 continue
 
+            (T_camFid, T_fidCam, oerr, ierr, frame) = self.tfs[t]
+
+            try:
+                trans = self.tfBuffer.lookup_transform(frame,
+                                                 self.poseFrame,
+                                                 self.imageTime)
+            except:
+                rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s)" % \
+                             (frame, self.poseFrame))
+                return
+        
+            ct = trans.transform.translation
+            cr = trans.transform.rotation
+            T_camBase = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
+                                  quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
+
+
             self.fiducials[t].lastSeenTime = self.imageTime
 
-            (T_camFid, T_fidCam, oerr, ierr) = self.tfs[t]
             T_worldFid = self.fiducials[t].pose44()
 
             T_worldCam = numpy.dot(T_worldFid, T_fidCam)
