@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(fiducial_detect)
 
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   fiducial_lib
   fiducial_pose
@@ -10,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   visualization_msgs
   image_transport
+  compressed_image_transport
   cv_bridge
   sensor_msgs
   std_msgs
@@ -21,6 +25,8 @@ catkin_package()
 ###########
 ## Build ##
 ###########
+
+
 
 include_directories(${catkin_INCLUDE_DIRS})
 
@@ -44,14 +50,3 @@ install(TARGETS fiducial_detect
 install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 ) 
-
-###########
-## Tests ##
-###########
-
-if(CATKIN_ENABLE_TESTING)
-        find_package(rostest REQUIRED 
-                     COMPONENTS fiducial_pose)
-        
-        add_rostest(test/detect_board.xml)
-endif()
