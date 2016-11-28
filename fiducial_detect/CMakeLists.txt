@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   visualization_msgs
   image_transport
+  compressed_image_transport
   cv_bridge
   sensor_msgs
   std_msgs
