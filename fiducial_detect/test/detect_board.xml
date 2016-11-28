@@ -15,7 +15,7 @@
      args="--clock -l $(find fiducial_detect)/test/fiducial_board_611.bag"/>
 
   <test test-name="vertices_test" pkg="fiducial_detect" type="vertices_test.py" name="vertices_test1" >
-    <param name="expected" value="610 767 17 767 183 929 180 930 14"/>
+    <param name="expected" value="610 930 14 767 17 767 183 929 180"/>
   </test>
 
 </launch>

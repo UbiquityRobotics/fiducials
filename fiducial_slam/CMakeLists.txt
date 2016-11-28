@@ -32,7 +32,8 @@ catkin_install_python(PROGRAMS scripts/move_origin.py nodes/init_amcl.py nodes/f
 ###########
 
 if(CATKIN_ENABLE_TESTING)
-        find_package(rostest REQUIRED)
+        find_package(rostest REQUIRED
+                     COMPONENTS tf2_ros)
 
         add_rostest(test/create_map.xml)
         add_rostest(test/localization_test.xml)

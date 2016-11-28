@@ -117,6 +117,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
     fiducial_pose::FiducialTransformArray fta;
     fta.header.stamp = msg->header.stamp;
+    fta.header.frame_id = msg->header.frame_id;
     fta.image_seq = msg->header.seq;
 
     try {
