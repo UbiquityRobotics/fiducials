@@ -675,17 +675,22 @@ class FiducialSlam:
     def publishTransform(self):
         if self.sendTf and not self.robotXyz is None:
             self.publishLock.acquire()
+            t = TransformStamped()
             if self.odomFrame != "":
-                toFrame = self.odomFrame
-                fromFrame = self.mapFrame
+                t.child_frame_id = self.odomFrame
+                t.header.frame_id = self.mapFrame
             else:
-                toFrame = self.poseFrame
-                fromFrame = self.mapFrame
-            self.br.sendTransform(self.robotXyz,
-                                  self.robotQuat,
-                                  rospy.Time.now() + rospy.Duration(self.future),
-                                  toFrame,
-                                  fromFrame)
+                t.child_frame_id = self.poseFrame
+                t.header.frame_id = self.mapFrame
+            t.header.stamp = rospy.Time.now() + rospy.Duration(self.future)
+            t.transform.translation.x = self.robotXyz[0]
+            t.transform.translation.y = self.robotXyz[1]
+            t.transform.translation.z = self.robotXyz[2]
+            t.transform.rotation.x = self.robotQuat[0]
+            t.transform.rotation.y = self.robotQuat[1]
+            t.transform.rotation.z = self.robotQuat[2]
+            t.transform.rotation.w = self.robotQuat[3]
+            self.br.sendTransform(t)
             self.publishLock.release()
 
     def run(self):
