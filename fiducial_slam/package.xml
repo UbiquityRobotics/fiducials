@@ -17,9 +17,11 @@
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
   <depend>visualization_msgs</depend>
-  <depend>image_transport</depend>
   <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>tf2_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>rospy</depend>
 
   <test_depend>rostest</test_depend>
