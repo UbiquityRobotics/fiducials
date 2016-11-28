@@ -12,12 +12,11 @@ find_package(catkin REQUIRED COMPONENTS
    sensor_msgs
    visualization_msgs)
 
+catkin_package()
+
 #############
 ## Install ##
 #############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/groovy/api/catkin/html/adv_user_guide/variables.html
 
 install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
