@@ -26,4 +26,5 @@
   <depend>fiducial_lib</depend>
   <depend>fiducial_pose</depend>
 
+  <test_depend>rostest</test_depend>
 </package>
