@@ -38,7 +38,7 @@ class MapTest(unittest.TestCase):
         t = 0
         while t < TIMEOUT:
             lines = self.countlines(filename)
-            print("map has %d lines %d needed", lines, minLines)
+            print("map has %d lines %d needed" % (lines, minLines))
             if lines >= minLines:
                 return 
         else:
