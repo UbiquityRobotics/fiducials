@@ -180,10 +180,12 @@ class FiducialSlam:
        self.sendTf = rospy.get_param("~publish_tf", True)
        self.mappingMode = rospy.get_param("~mapping_mode", True)
        self.useExternalPose = rospy.get_param("~use_external_pose", False)
+       self.initialMapFileName = os.path.expanduser(rospy.get_param("~initial_map_file", ""))
        self.mapFileName = os.path.expanduser(rospy.get_param("~map_file", "map.txt"))
        self.obsFileName = os.path.expanduser(rospy.get_param("~obs_file", "obs.txt"))
        self.transFileName = os.path.expanduser(rospy.get_param("~trans_file", "trans.txt"))
        self.fiducialsAreLevel = rospy.get_param("~fiducials_are_level", True)
+       mkdirnotex(self.initialMapFileName)
        mkdirnotex(self.mapFileName)
        mkdirnotex(self.obsFileName)
        mkdirnotex(self.transFileName)
@@ -213,14 +215,15 @@ class FiducialSlam:
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
-       self.loadMap()
+       self.loadMap(self.initialMapFileName)
+       self.loadMap(self.mapFileName)
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
        self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped, queue_size=1)
 
 
     def close(self):
-        self.saveMap()
+        self.saveMap(self.mapFileName)
         self.obsFile.close()
         self.transFile.close()
 
@@ -228,9 +231,9 @@ class FiducialSlam:
     """
     Save current map to file
     """
-    def saveMap(self):
+    def saveMap(self, filename):
         print "** save map **"
-        file = open(self.mapFileName, "w")
+        file = open(filename, "w")
         fids = self.fiducials.keys()
         fids.sort()
         for fid in fids:
@@ -247,19 +250,22 @@ class FiducialSlam:
     """
     Load map from file
     """
-    def loadMap(self):
-        file = open(self.mapFileName, "r")
-        for line in file.readlines():
-            words = line.split()
-            fid = int(words[0])
-            f = Fiducial(fid)
-            f.position = numpy.array((float(words[1]), float(words[2]), float(words[3])))
-            f.orientation = quaternion_from_euler(deg2rad(words[4]), deg2rad(words[5]), deg2rad(words[6]))
-            f.variance = float(words[7])
-            f.observations = int(words[8])
-            f.links = map(int, words[9:])
-            self.fiducials[fid] = f
-        file.close()
+    def loadMap(self, filename):
+        try:
+            file = open(filename, "r")
+            for line in file.readlines():
+                words = line.split()
+                fid = int(words[0])
+                f = Fiducial(fid)
+                f.position = numpy.array((float(words[1]), float(words[2]), float(words[3])))
+                f.orientation = quaternion_from_euler(deg2rad(words[4]), deg2rad(words[5]), deg2rad(words[6]))
+                f.variance = float(words[7])
+                f.observations = int(words[8])
+                f.links = map(int, words[9:])
+                self.fiducials[fid] = f
+            file.close()
+        except:
+	        rospy.logerr("could not load map %s", filename)
 
     """
     Print out fiducual vertices
@@ -403,7 +409,7 @@ class FiducialSlam:
         p = self.fiducials[f2].position
 
         if self.mappingMode or addedNew:
-            self.saveMap()
+            self.saveMap(self.mapFileName)
 
         if not f1 in fid2.links:
             fid2.links.append(f1)
@@ -445,7 +451,7 @@ class FiducialSlam:
             rad2deg(r), rad2deg(p), rad2deg(yaw), variance)
           
         p = self.fiducials[f].position
-        self.saveMap()
+        self.saveMap(self.mapFileName)
 
 
     """ 
@@ -701,7 +707,10 @@ class FiducialSlam:
             if self.republishTf:
                 self.publishTransform()
             self.publishMarkers()
-            rate.sleep()
+            try:
+                rate.sleep()
+            except:
+                pass
         self.close()
         rospy.loginfo("Fiducial Slam ended")
 

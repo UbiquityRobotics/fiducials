@@ -22,10 +22,13 @@ class MapTest(unittest.TestCase):
         super(MapTest, self).__init__(*args)
 
     def countlines(self, filename):
-        file = open(filename, "r")
-        count = len(file.readlines())
-        file.close()
-        return count
+        try:
+            file = open(filename, "r")
+            count = len(file.readlines())
+            file.close()
+            return count
+        except:
+            return 0
 
     def test_map(self):
         rospy.init_node('test_map')
