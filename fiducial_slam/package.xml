@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>fiducial_slam</name>
   <version>0.1.2</version>
   <description>Hercules sensor fusion exploration</description>
@@ -16,7 +16,16 @@
 
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
+  <depend>visualization_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>rospy</depend>
 
+  <test_depend>rostest</test_depend>
+ 
   <buildtool_depend>catkin</buildtool_depend>
 
 </package>

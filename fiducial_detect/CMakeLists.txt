@@ -50,3 +50,13 @@ install(TARGETS fiducial_detect
 install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 ) 
+
+###########
+## Tests ##
+###########
+
+if(CATKIN_ENABLE_TESTING)
+        find_package(rostest REQUIRED)
+        
+        add_rostest(test/detect_board.xml)
+endif()
