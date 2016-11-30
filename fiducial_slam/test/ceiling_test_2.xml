@@ -24,9 +24,9 @@
     <param name="pose_frame" value="base_link" />
   </node>
 
-  <node name="rosbag" pkg="rosbag" type="play" args="--clock -l $(find fiducial_slam)/test/ceiling_test_2.bag"/>
+  <node name="rosbag" pkg="rosbag" type="play" args="--clock -l $(find fiducial_slam)/test/ceiling_markers_2.bag"/>
 
-  <test test-name="map_test" pkg="fiducial_slam" type="map_test.py" name="map_test2">
+  <test test-name="ceiling_map_test" pkg="fiducial_slam" type="map_test.py" name="map_test2">
     <param name="map_file" value="$(find fiducial_slam)/test/map2.txt" />
     <param name="min_lines" value="8" />
   </test>
