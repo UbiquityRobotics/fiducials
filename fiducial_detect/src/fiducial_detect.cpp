@@ -566,10 +566,10 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
         marker_pub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("fiducials", 1));
     }
    
-    vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::Fiducial>("vertices", 1));
+    vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::Fiducial>("/fiducial_vertices", 1));
 
     if (estimate_pose) {
-        pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("fiducial_transforms", 1)); 
+        pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("/fiducial_transforms", 1)); 
         pose_est = new RosRpp(fiducial_len, undistort_points);
     }
     else {
@@ -581,10 +581,10 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buff
 
     
 
-    img_sub = img_transport.subscribe("camera", 1,
+    img_sub = img_transport.subscribe("/camera", 1,
                                       &FiducialsNode::imageCallback, this);
 
-    caminfo_sub = nh.subscribe("camera_info", 1,
+    caminfo_sub = nh.subscribe("/camera_info", 1,
 			       &FiducialsNode::camInfoCallback, this);
 
     ROS_INFO("Fiducials Localization ready");

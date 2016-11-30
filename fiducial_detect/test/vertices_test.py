@@ -72,7 +72,7 @@ class VerticesTest(unittest.TestCase):
             print("expected")
             print(expected)
         print("test_vertices");
-        sub = rospy.Subscriber('/fiducial_detect/vertices', Fiducial, self.callback)
+        sub = rospy.Subscriber('/fiducial_vertices', Fiducial, self.callback)
         t = 0
         while t < TIMEOUT and not self.verified:
             time.sleep(0.5)

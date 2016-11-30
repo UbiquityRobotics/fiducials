@@ -7,8 +7,8 @@
     <param name="image_transport" value="compressed" />
     <param name="fiducial_len" value="0.145"/>
     <param name="undistort_points" value="false"/>
-    <remap from="fiducial_detect/camera/compressed" to="/raspicam_node/camera/image/compressed"/>
-    <remap from="fiducial_detect/camera_info" to="/raspicam_node/camera/camera_info"/>
+    <remap from="/camera/compressed" to="/raspicam_node/camera/image/compressed"/>
+    <remap from="/camera_info" to="/raspicam_node/camera/camera_info"/>
   </node>
 
   <node name="rosbag" pkg="rosbag" type="play" 
