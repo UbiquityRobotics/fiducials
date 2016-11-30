@@ -41,6 +41,7 @@ class MapTest(unittest.TestCase):
             print("map has %d lines %d needed" % (lines, minLines))
             if lines >= minLines:
                 return 
+	    time.sleep(0.5)
         else:
             self.fail("Not enough map entries")
         
