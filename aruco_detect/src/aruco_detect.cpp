@@ -168,8 +168,8 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             fta.transforms.push_back(ft);
         }
 
-        cv::imshow("image", cv_ptr->image);
-        cv::waitKey(2);
+        //cv::imshow("image", cv_ptr->image);
+        ////cv::waitKey(2);
 	image_pub.publish(cv_ptr->toImageMsg());
 
         pose_pub->publish(fta);
@@ -195,11 +195,11 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<bool>("publish_images", publish_images, false);
     nh.param<double>("fiducial_len", fiducial_len, 0.14);
 
-    image_pub = it.advertise("fiducial_images", 1);
+    image_pub = it.advertise("/fiducial_images", 1);
 
-    vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::Fiducial>("vertices", 1));
+    vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::Fiducial>("/fiducial_vertices", 1));
 
-    pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("fiducial_transforms", 1)); 
+    pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("/fiducial_transforms", 1)); 
     
     dictionary = aruco::getPredefinedDictionary(aruco::DICT_5X5_1000);
 
@@ -207,9 +207,9 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     detectorParams.doCornerRefinement = true;
 
     img_sub = it.subscribe("/camera", 1,
-                                      &FiducialsNode::imageCallback, this);
+                           &FiducialsNode::imageCallback, this);
 
-    caminfo_sub = nh.subscribe("camera_info", 1,
+    caminfo_sub = nh.subscribe("/camera_info", 1,
 			       &FiducialsNode::camInfoCallback, this);
 
     ROS_INFO("Aruco detection ready");
