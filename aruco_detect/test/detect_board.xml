@@ -1,0 +1,21 @@
+<launch>
+  <param name="/use_sim_time" value="true"/>
+
+  <node pkg="aruco_detect" name="aruco_detect" type="aruco_detect" output="screen">
+    <param name="map_frame" value="odom" />
+    <param name="pose_frame" value="slam" />
+    <param name="image_transport" value="compressed" />
+    <param name="fiducial_len" value="0.145"/>
+    <remap from="/camera/compressed" to="/raspicam_node/image/compressed"/>
+    <remap from="/camera_info" to="/raspicam_node/camera_info"/>
+  </node>
+
+  <node name="rosbag" pkg="rosbag" type="play" 
+     args="--clock -l $(find aruco_detect)/test/aruco_marker.bag"/>
+
+  <test test-name="vertices_test" pkg="fiducial_detect" type="vertices_test.py" name="vertices_test1" >
+    <param name="expected" value="1 722 304 794 378 794 380 796 306"/>
+  </test>
+
+</launch>
+

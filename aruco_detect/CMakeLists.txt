@@ -51,3 +51,13 @@ install(TARGETS aruco_detect
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+###########
+## Tests ##
+###########
+
+if(CATKIN_ENABLE_TESTING)
+        find_package(rostest REQUIRED)
+
+        add_rostest(test/detect_board.xml)
+endif()
+

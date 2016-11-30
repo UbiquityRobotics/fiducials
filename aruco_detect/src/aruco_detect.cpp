@@ -130,8 +130,28 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids);
         ROS_INFO("Detectd %d markers", (int)ids.size());
  
+        for (int i=0; i<ids.size(); i++) {
+            fiducial_pose::Fiducial fid;
+            fid.header.stamp = msg->header.stamp;
+            fid.header.frame_id = msg->header.frame_id;
+            fid.image_seq = msg->header.seq;
+            fid.fiducial_id = ids[i];
+            
+            fid.x0 = corners[i][0].x;
+            fid.y0 = corners[i][0].y;
+            fid.x1 = corners[i][1].x;
+            fid.y1 = corners[i][1].y;
+            fid.x2 = corners[i][2].x;
+            fid.y2 = corners[i][2].y;
+            fid.x3 = corners[i][3].x;
+            fid.y3 = corners[i][3].y;
+
+            vertices_pub->publish(fid);
+        }
+
         if (!haveCamInfo) {
             ROS_ERROR("No camera intrinsics");
+            return;
         }
 
         aruco::estimatePoseSingleMarkers(corners, fiducial_len, K, dist, rvecs, tvecs);
@@ -166,6 +186,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             ft.transform.rotation.z = q.z();
 
             fta.transforms.push_back(ft);
+
         }
 
         //cv::imshow("image", cv_ptr->image);
