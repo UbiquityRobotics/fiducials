@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find fiducial_slam)/fiducials.rviz"/>
+</launch>
