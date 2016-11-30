@@ -37,5 +37,12 @@ if(CATKIN_ENABLE_TESTING)
 
         add_rostest(test/create_map.xml)
         add_rostest(test/localization_test.xml)
+
+        catkin_download_test_data(${PROJECT_NAME}ceiling_test_2.bag,
+                                  http://www.fxpal.com/robots/ceiling_test_2.bag
+                                  DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
+                                  MD5 8bb6288af2beca55002fea7e66cab324) 
+
+        add_rostest(test/ceiling_test_2.xml)
 endif()
 
