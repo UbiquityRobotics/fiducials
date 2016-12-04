@@ -33,7 +33,7 @@
   <test test-name="ceiling_map_test" pkg="fiducial_slam" type="map_test.py" name="map_test" time-limit="300.0">
     <param name="map_file" value="$(find fiducial_slam)/test/map2.txt" />
     <param name="min_lines" value="16" />
-    <param name="expect" value="16 0 9.64 0" />
+    <param name="expect" value="16 0 9.7 0" />
   </test>
 </launch>
 
