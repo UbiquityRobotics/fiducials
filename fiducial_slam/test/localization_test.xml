@@ -1,3 +1,7 @@
+<!--
+  Verify a sensible pose is computed when a set of fiducial transforms 
+  is sent to fiducial_slam.
+-->
 <launch>
   <param name="/use_sim_time" value="true"/>
 
