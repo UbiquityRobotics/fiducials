@@ -46,7 +46,7 @@ class MapTest(unittest.TestCase):
                 print("Fiducial %s found in correct position" % fid)
                 return True
             else:
-                print("Fiducial %s position incorrect: %s %s %s" & (elems[1], elems[2], elems[3]))
+                print("Fiducial %s position incorrect: %s %s %s" % (fid, elems[1], elems[2], elems[3]))
                 return False
         print("Fiducial %s not found" % fid)
         return False
