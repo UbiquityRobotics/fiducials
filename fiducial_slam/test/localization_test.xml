@@ -1,3 +1,7 @@
+<!--
+  Verify a sensible pose is computed when a set of fiducial transforms 
+  is sent to fiducial_slam.
+-->
 <launch>
   <param name="/use_sim_time" value="true"/>
 
@@ -17,14 +21,13 @@
     <param name="map_file" value="$(find fiducial_slam)/test/map.txt" />
     <param name="obs_file" value="$(find fiducial_slam)/test/obs.txt" />
     <param name="trans_file" value="$(find fiducial_slam)/test/trans.txt" />
-    <param name="mapping_mode" value="true" />
     <param name="camera_frame" value="base_link" />
     <param name="odom_frame" value="" />
     <param name="pose_frame" value="base_link" />
   </node>
 
   <node name="rosbag" pkg="rosbag" type="play"
-     args="--clock -l $(find fiducial_detect)/test/fiducial_board_611.bag"/>
+     args="--clock -d 5 $(find fiducial_detect)/test/fiducial_board_611.bag"/>
 
   <test test-name="localization_test" pkg="fiducial_slam" type="localization_test.py" name="localization_test1">
     <param name="expectedx" value="-0.157"/>

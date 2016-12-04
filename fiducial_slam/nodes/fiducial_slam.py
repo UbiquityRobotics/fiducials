@@ -215,9 +215,13 @@ class FiducialSlam:
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
+       loaded = False
        if self.initialMapFileName:     
-           self.loadMap(self.initialMapFileName)
-       self.loadMap(self.mapFileName)
+           loaded = self.loadMap(self.initialMapFileName)
+       else:
+           loaded = self.loadMap(self.mapFileName)
+       if not loaded:
+           rospy.logerr("could not load map %s", filename)
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
        self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped, queue_size=1)
@@ -265,8 +269,9 @@ class FiducialSlam:
                 f.links = map(int, words[9:])
                 self.fiducials[fid] = f
             file.close()
+            return True
         except:
-	        rospy.logerr("could not load map %s", filename)
+            return False
 
     """
     Print out fiducual vertices
@@ -291,6 +296,9 @@ class FiducialSlam:
         self.tfs = {}
         rospy.loginfo("got tfs from image seq %d", self.currentSeq)
 
+        numKnown = 0
+        numUnknown = 0
+        mapUpdated = False
         for m in msg.transforms:
             id = m.fiducial_id
             trans = m.transform.translation
@@ -303,6 +311,13 @@ class FiducialSlam:
                                  (id, self.currentSeq, trans.x, trans.y, trans.z, 
                                   rot.x, rot.y, rot.z, rot.w,
                                   m.object_error, m.image_error, m.fiducial_area))
+            if self.fiducials.has_key(id):
+                numKnown += 1
+            else:
+                numUnknown += 1
+        if numUnknown > 0 and numUnknown > 0:
+            self.updateMap()
+            mapUpdated = True
         """
         if self.useExternalPose:
             # XXXX needs to be verified with respect to time
@@ -310,9 +325,9 @@ class FiducialSlam:
             for f in self.tfs.keys():
             if self.fiducials.has_key(f):
                 fiducialKnown = True 
-                if not fiducialKnown:
-                    for f in self.tfs.keys():
-                        self.updateMapFromExternal(f)
+            if not fiducialKnown:
+                for f in self.tfs.keys():
+                    self.updateMapFromExternal(f)
         """
         self.updatePose()
         if not self.pose is None:
@@ -321,8 +336,9 @@ class FiducialSlam:
             (r, p, robotYaw) = euler_from_quaternion(robotQuat)
             # Only update the map if the robot has moved significantly, to 
             # avoid the map variances decaying from repeated observations
-            if self.lastUpdateXyz is None:
-                self.updateMap()
+            if self.lastUpdateXyz is None or mapUpdated:
+                if not mapUpdated:
+                    self.updateMap()
                 self.lastUpdateXyz = robotXyz
                 self.lastUpdateYaw = robotYaw
             else:
@@ -388,6 +404,7 @@ class FiducialSlam:
         if not self.fiducials.has_key(f2):
             self.fiducials[f2] = Fiducial(f2)
             addedNew = True
+            rospy.loginfo("New fiducial %s" % f2)
             
         fid2 = self.fiducials[f2]
 
@@ -587,10 +604,13 @@ class FiducialSlam:
 
 
     def publishMarker(self, fiducialId, visible=False):
-        marker, text, links = self.makeMarker(fiducialId, visible)
-        self.markerPub.publish(marker)
-        self.markerPub.publish(text)
-        self.markerPub.publish(links)
+        try:
+            marker, text, links = self.makeMarker(fiducialId, visible)
+            self.markerPub.publish(marker)
+            self.markerPub.publish(text)
+            self.markerPub.publish(links)
+        except:
+	    rospy.loginfo("Problem publishing marker %s" % markerId)
 
             
     """

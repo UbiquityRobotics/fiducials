@@ -77,6 +77,7 @@ class FiducialsNode {
     bool haveCamInfo;
     cv::Mat K;
     cv::Mat dist;
+    int frameNum;
   
     image_transport::Publisher image_pub;
 
@@ -112,6 +113,7 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image");
+    frameNum++;
 
     cv_bridge::CvImagePtr cv_ptr;
 
@@ -150,7 +152,9 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         }
 
         if (!haveCamInfo) {
-            ROS_ERROR("No camera intrinsics");
+            if (frameNum > 5) {
+                ROS_ERROR("No camera intrinsics");
+            }
             return;
         }
 
@@ -205,6 +209,8 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
 FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 {
+    frameNum = 0;
+
     // Camera intrinsics
     K = cv::Mat::zeros(3, 3, CV_64F);
 

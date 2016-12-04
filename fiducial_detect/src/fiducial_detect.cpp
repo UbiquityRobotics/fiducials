@@ -68,6 +68,8 @@ class FiducialsNode {
     ros::Subscriber caminfo_sub;
     image_transport::Subscriber img_sub;
     bool processing_image;
+    int frameNum;
+    bool haveCamInfo;
   
     RosRpp * pose_est;
 
@@ -239,6 +241,9 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     detected_fiducials.push_back(fid);
 
     if (estimate_pose) {
+        if (!haveCamInfo && frameNum < 5) {
+            return;
+        }
         fiducial_pose::FiducialTransform ft;
         geometry_msgs::Transform trans;
 	ft.transform = trans;
@@ -425,6 +430,7 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
     if (pose_est) {
         pose_est->camInfoCallback(msg);
     }
+    haveCamInfo = true;
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
@@ -446,6 +452,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
 void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
 {
     processing_image = true;
+    frameNum++;
 
     last_camera_frame = msg->header.frame_id;
     last_image_seq = msg->header.seq;
@@ -505,6 +512,8 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
 }
 
 FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : scale(0.75), tf_sub(tf_buffer) {
+    frameNum = 0;
+    haveCamInfo = false;
     processing_image = false;
     update_thread = NULL;
     fiducial_namespace = "fiducials";

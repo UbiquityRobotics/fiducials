@@ -7,11 +7,14 @@ Jenkins: [![Build Status](http://build.ros.org/view/Kdev/job/Kdev__fiducials__ub
 ## Overview
 
 This package implements a system that uses ceiling mounted
-fiducials (think QR Codes) to allow a robot to identify
+fiducial markers (think QR Codes) to allow a robot to identify
 its location and orientation.  It does this by constructing
-a map of the ceiling fiducials.  Once the map has been
-constructed, the robot can identify its location by locating
-itself relative to one or more ceiling fiducials.
+a map of the ceiling fiducials.  The position of one fiducial
+needs to be specified, then a map of the fiducials is built 
+up from observing pairs of markers in the same image. 
+Once the map has been constructed, the robot can identify
+its location by locating itself relative to one or more 
+ceiling fiducials.
 
 
 ## Installing software
@@ -166,6 +169,37 @@ pose estimation.  Default 0.146.
 image, and the vertices are used directly to calculate the fiducial transform.
 If it is `true`, then the vertices are undistorted first. This is faster, but
 less accurate.  Default `false`.
+
+
+#### Published Topics
+
+
+**/fiducial_vertices** A topic of `fiducial_detect/Fiducial*` messages with the detected
+fiducial vertices.
+
+
+**/fiducial_transforms** A topic of `fiducial_pose/FiducialTransform` messages 
+with the computed fiducial pose.
+
+#### Subscribed Topics
+
+**camera** An `ImageTransport` of the images to be processed.
+
+**camera_info** A topic of `sensor_msgs/CameraInfo` messages with the camera
+intrinsic parameters.
+
+
+### aruco_detect aruco_detect
+
+This node finds aruco markers in images stream and publishes their vertices
+(corner points) and estimates 3D transforms from the camera to the fiducials.
+It is based on the [Aruco](http://docs.opencv.org/trunk/d5/dae/tutorial_aruco_detection.html)
+contributed module to OpenCV. It is an alternative to fiducial_detect
+
+#### Parameters
+
+**fiducial_len** The length of one side of a fiducial in meters, used by the
+pose estimation.  Default 0.146.
 
 
 #### Published Topics
