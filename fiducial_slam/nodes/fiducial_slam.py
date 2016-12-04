@@ -215,9 +215,13 @@ class FiducialSlam:
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
+       loaded = False
        if self.initialMapFileName:     
-           self.loadMap(self.initialMapFileName)
-       self.loadMap(self.mapFileName)
+           loaded = self.loadMap(self.initialMapFileName)
+       else:
+           loaded = self.loadMap(self.mapFileName)
+       if not loaded:
+           rospy.logerr("could not load map %s", filename)
        self.position = None
        rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
        self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped, queue_size=1)
@@ -265,8 +269,9 @@ class FiducialSlam:
                 f.links = map(int, words[9:])
                 self.fiducials[fid] = f
             file.close()
+            return True
         except:
-	        rospy.logerr("could not load map %s", filename)
+            return False
 
     """
     Print out fiducual vertices
@@ -320,9 +325,9 @@ class FiducialSlam:
             for f in self.tfs.keys():
             if self.fiducials.has_key(f):
                 fiducialKnown = True 
-                if not fiducialKnown:
-                    for f in self.tfs.keys():
-                        self.updateMapFromExternal(f)
+            if not fiducialKnown:
+                for f in self.tfs.keys():
+                    self.updateMapFromExternal(f)
         """
         self.updatePose()
         if not self.pose is None:
@@ -599,10 +604,13 @@ class FiducialSlam:
 
 
     def publishMarker(self, fiducialId, visible=False):
-        marker, text, links = self.makeMarker(fiducialId, visible)
-        self.markerPub.publish(marker)
-        self.markerPub.publish(text)
-        self.markerPub.publish(links)
+        try:
+            marker, text, links = self.makeMarker(fiducialId, visible)
+            self.markerPub.publish(marker)
+            self.markerPub.publish(text)
+            self.markerPub.publish(links)
+        except:
+	    rospy.loginfo("Problem publishing marker %s" % markerId)
 
             
     """
