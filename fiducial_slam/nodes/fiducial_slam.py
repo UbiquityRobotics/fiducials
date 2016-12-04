@@ -291,6 +291,9 @@ class FiducialSlam:
         self.tfs = {}
         rospy.loginfo("got tfs from image seq %d", self.currentSeq)
 
+        numKnown = 0
+        numUnknown = 0
+        mapUpdated = False
         for m in msg.transforms:
             id = m.fiducial_id
             trans = m.transform.translation
@@ -303,6 +306,13 @@ class FiducialSlam:
                                  (id, self.currentSeq, trans.x, trans.y, trans.z, 
                                   rot.x, rot.y, rot.z, rot.w,
                                   m.object_error, m.image_error, m.fiducial_area))
+            if self.fiducials.has_key(id):
+                numKnown += 1
+            else:
+                numUnknown += 1
+        if numUnknown > 0 and numUnknown > 0:
+            self.updateMap()
+            mapUpdated = True
         """
         if self.useExternalPose:
             # XXXX needs to be verified with respect to time
@@ -321,8 +331,9 @@ class FiducialSlam:
             (r, p, robotYaw) = euler_from_quaternion(robotQuat)
             # Only update the map if the robot has moved significantly, to 
             # avoid the map variances decaying from repeated observations
-            if self.lastUpdateXyz is None:
-                self.updateMap()
+            if self.lastUpdateXyz is None or mapUpdated:
+                if not mapUpdated:
+                    self.updateMap()
                 self.lastUpdateXyz = robotXyz
                 self.lastUpdateYaw = robotYaw
             else:
@@ -388,6 +399,7 @@ class FiducialSlam:
         if not self.fiducials.has_key(f2):
             self.fiducials[f2] = Fiducial(f2)
             addedNew = True
+            rospy.loginfo("New fiducial %s" % f2)
             
         fid2 = self.fiducials[f2]
 
