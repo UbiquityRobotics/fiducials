@@ -93,10 +93,9 @@ You can print the .pdfs using using `evince`:
 
 To create an empty map file with fiducial 301 (the id of 301 is arbitrary) at the origin:
 
-        $ mkdir -p ~/.ros/slam
-        $ echo '301 0.0 0.0 0.0 180.0 0.0 180.0 0.0 1' > ~/.ros/slam/map.txt
+        $ rosrun fiducial_slam init_map.py 301
 
-This assumes the fiducial is on the ceiling, and the 180 degree rotations are used
+This assumes the fiducial is on the ceiling, and sets up the rotation of the fiducial
 so that the pose of fiducials is determined in the co-ordinate system of the floor.  
 Increased accuracy can be gained by specifying the height of the fiducial (z), 
 and that this can also be determined from the output of `fiducial_slam.py`.  
