@@ -60,3 +60,9 @@ install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   PATTERN ".svn" EXCLUDE
 )
+
+catkin_install_python(PROGRAMS scripts/create_markers.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
