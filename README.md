@@ -42,61 +42,30 @@ Then get the source:
     $ catkin_make    
 
 
-Install inkscape
-
-     $ sudo apt-get install inkscape
-
 ## Generating fiducials
 
 The fiducials are typically generated from the laptop/desktop.
 
-Fiducial tags are generated using the following commands:
+Fiducial tags can generated using the create_markers.py utility.
+It takes as arguments the start and end fiducial numbers and an
+output file name.  For example, following commands, generates
+fiducials 100 to 200:
 
 	$ cd /tmp
-        $ rosrun fiducial_lib Tags num ...
+    $ rosrun fiducial_lib create_markers.py 100 200 tags.pdf
 
-Thus, the following command will generate `tag42.svg` and `tag43.svg`:
-
-        $ rosrun fiducial_lib Tags 42 43
-
-To generate a 100 at a time, use the following command:
-
-        $ rosrun fiducial_lib Tags 17{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9}
-
-This will generate `tag1700.svg` through `tag1799.svg`.
-
-To convert the `.svg` files to to `.pdf` files use the`inkscape`
-program and the following commands:
-
-Convert a single .svg to a single .pdf:
-
-        $ inkscape --without-gui --export-pdf=tag42.pdf tag42.svg
-
-Convert a bunch at a time:
-
-        $ for n in 17{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9} ; do \
-           inkscape --without-gui --export-pdf=tag$n.pdf tag$n.svg ; \
-           done
-
-Merge the pdf files:
-
-        $ sudo apt-get install poppler-utils
-        $ pdfunite tag17??.pdf tags17xx.pdf
-        $ rm tag*.svg
-
-You can print the .pdfs using using `evince`:
+You can print the PDF files using using `evince`:
 
 	$ sudo apt-get install evince
-        $ evince tags17xx.pdf
+    $ evince tags.pdf
 
 ## Map Creation
 
 To create an empty map file with fiducial 301 (the id of 301 is arbitrary) at the origin:
 
-        $ mkdir -p ~/.ros/slam
-        $ echo '301 0.0 0.0 0.0 180.0 0.0 180.0 0.0 1' > ~/.ros/slam/map.txt
+        $ rosrun fiducial_slam init_map.py 301
 
-This assumes the fiducial is on the ceiling, and the 180 degree rotations are used
+This assumes the fiducial is on the ceiling, and sets up the rotation of the fiducial
 so that the pose of fiducials is determined in the co-ordinate system of the floor.  
 Increased accuracy can be gained by specifying the height of the fiducial (z), 
 and that this can also be determined from the output of `fiducial_slam.py`.  
