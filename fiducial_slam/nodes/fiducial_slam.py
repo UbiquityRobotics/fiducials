@@ -610,7 +610,7 @@ class FiducialSlam:
             self.markerPub.publish(text)
             self.markerPub.publish(links)
         except:
-	    rospy.loginfo("Problem publishing marker %s" % markerId)
+            rospy.loginfo("Problem publishing marker %s" % fiducialId)
 
             
     """
