@@ -12,7 +12,7 @@ import rospy
 import rostest
 
 NAME='map'
-EPSILON=0.1
+EPSILON=0.2
 
 """
 A node to verify the map created by fiducial_slam. It will verify that the specified map file contains
@@ -46,7 +46,7 @@ class MapTest(unittest.TestCase):
                 print("Fiducial %s found in correct position" % fid)
                 return True
             else:
-                print("Fiducial %s position incorrect: %s %s %s" % (fid, elems[1], elems[2], elems[3]))
+                self.fail("Fiducial %s position incorrect: %s %s %s" % (fid, elems[1], elems[2], elems[3]))
                 return False
         print("Fiducial %s not found" % fid)
         return False
@@ -70,8 +70,6 @@ class MapTest(unittest.TestCase):
                 (fid, x, y, z) = expect.split()
                 if self.checkposition(fid, x, y, z):
                     return
-                else:
-                    self.fail("Fiducial %s not found in correct position" % fid)
 	    time.sleep(0.5)
         
 if __name__ == '__main__':
