@@ -121,6 +121,7 @@ with the computed fiducial pose.
 * `camera_info` A topic of `sensor_msgs/CameraInfo` messages with the camera
 intrinsic parameters.
 
+---
 
 ### aruco_detect aruco_detect
 
@@ -151,6 +152,8 @@ with the computed fiducial pose.
 
 * `camera_info` A topic of type `sensor_msgs/CameraInfo` messages with the camera
 intrinsic parameters.
+
+---
 
 ### fiducial_slam fiducial_slam.py
 
@@ -210,6 +213,8 @@ the computed pose.
 fiducial pose.
 
 * `/tf` Transforms
+
+---
 
 ### fiducial_slam init_amcl.py
 
