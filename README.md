@@ -107,7 +107,7 @@ less accurate.  Default `false`.
 #### Published Topics
 
 
-* `/fiducial_vertices`  A topic of type `fiducial_detect/Fiducial*` messages with the detected
+* `/fiducial_vertices`  A topic of type `fiducial_pose/Fiducial` messages with the detected
 fiducial vertices.
 
 
@@ -139,7 +139,7 @@ pose estimation.  Default 0.146.
 #### Published Topics
 
 
-* `/fiducial_vertices` A topic of type `fiducial_detect/Fiducial*` messages with the detected
+* `/fiducial_vertices` A topic of type `fiducial_pose/Fiducial` messages with the detected
 fiducial vertices.
 
 
