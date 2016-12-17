@@ -16,7 +16,7 @@
   <node name="rosbag" pkg="rosbag" type="play" 
      args="--clock -l $(find aruco_detect)/test/aruco_marker.bag"/>
 
-  <test test-name="vertices_test" pkg="fiducial_detect" type="vertices_test.py" name="vertices_test1" >
+  <test test-name="vertices_test" pkg="aruco_detect" type="vertices_test.py" name="vertices_test1" >
     <param name="expected" value="1 722 304 794 378 794 380 796 306"/>
   </test>
 
