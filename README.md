@@ -17,31 +17,6 @@ its location by locating itself relative to one or more
 ceiling fiducials.
 
 
-## Installing software
-
-First you must install ROS (Robot Operating System),
-see [install ROS](http://wiki.ros.org/ROS/Installation) for more details.
-
-To install from binary packages:
-
-     $ sudo apt-get install ros-install-fiducials
-
-Or, alternatively, to build from source:
-
-Create a ROS catkin workspace, if you don't already have one:
-
-     $ mkdir -p ~/catkin_ws/src
-     $ cd ~/catkin_ws/src
-     $ catkin_init_workspace
-
-Then get the source:
-
-    $ git clone https://github.com/UbiquityRobotics/fiducials 
-    $ git clone https://github.com/UbiquityRobotics/raspicam_node 
-    $ cd ..
-    $ catkin_make    
-
-
 ## Generating fiducials
 
 The fiducials are typically generated from the laptop/desktop.
@@ -106,17 +81,6 @@ While building the map, you should start to see something that looks as follows:
   up in the camera view at the same time.  The map is constructed
   by combining fiducial pairs.
   
-
-### Tags
-
-The Tags program is used to generate .svg files for tags.  Running Tags:
-
-    Tags 41 42
-
-will generate tag41.svg and tag42.svg.  To print:
-
-    inkscape --without-gui --export-pdf=tag41.pdf tag41.svg
-
 	
 ## Nodes
 
@@ -128,13 +92,13 @@ It also has 2D SLAM built in.
 
 #### Parameters
 
-**estimate_pose** If `true`, 3D pose estimation is performed and fiducial
+* `estimate_pose` If `true`, 3D pose estimation is performed and fiducial
 transforms are published. Default `true`.
 
-**fiducial_len** The length of one side of a fiducial in meters, used by the
+* `fiducial_len` The length of one side of a fiducial in meters, used by the
 pose estimation.  Default 0.146.
 
-**undistort_points** If `false`, it is assumed that the input is an undistorted
+* `undistort_points` If `false`, it is assumed that the input is an undistorted
 image, and the vertices are used directly to calculate the fiducial transform.
 If it is `true`, then the vertices are undistorted first. This is faster, but
 less accurate.  Default `false`.
