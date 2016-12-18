@@ -76,16 +76,16 @@ TEST_F(ArucoImagesTest, tag_01_d7_14cm) {
     loop_rate.sleep();
   }
 
-  ASSERT_EQ(30, vertices.fiducial_id);
+  ASSERT_EQ(1, vertices.fiducial_id);
 
-  ASSERT_DOUBLE_EQ(788.7144775390625000, vertices.x0);
-  ASSERT_DOUBLE_EQ(424.7263488769531250, vertices.y0);
-  ASSERT_DOUBLE_EQ(797.6848144531250000, vertices.x1);
-  ASSERT_DOUBLE_EQ(664.1170654296875000, vertices.y1);
-  ASSERT_DOUBLE_EQ(552.2851562500000000, vertices.x2);
-  ASSERT_DOUBLE_EQ(668.5111083984375000, vertices.y2);
-  ASSERT_DOUBLE_EQ(551.7211303710937500, vertices.x3);
-  ASSERT_DOUBLE_EQ(426.8039855957031250, vertices.y3);
+  ASSERT_DOUBLE_EQ(570, vertices.x0);
+  ASSERT_DOUBLE_EQ(202, vertices.y0);
+  ASSERT_DOUBLE_EQ(777, vertices.x1);
+  ASSERT_DOUBLE_EQ(207, vertices.y1);
+  ASSERT_DOUBLE_EQ(768, vertices.x2);
+  ASSERT_DOUBLE_EQ(415, vertices.y2);
+  ASSERT_DOUBLE_EQ(566, vertices.x3);
+  ASSERT_DOUBLE_EQ(409, vertices.y3);
 }
 
 int main(int argc, char** argv)
