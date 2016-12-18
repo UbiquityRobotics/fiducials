@@ -62,4 +62,4 @@ fiducial pose.
 
 ### Services
 
-*  /initialize_fiducial_map  Clears the map and reinitializes it with the contents of the specified `fiducial_slam/FiducialMapEntryArray`.
+*  `/initialize_fiducial_map` Clears the map and reinitializes it with the contents of the specified `fiducial_slam/FiducialMapEntryArray`.
