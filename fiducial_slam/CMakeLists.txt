@@ -10,8 +10,31 @@ find_package(catkin REQUIRED COMPONENTS
    tf2_msgs
    geometry_msgs
    sensor_msgs
-   visualization_msgs)
+   visualization_msgs
+   message_generation
+)
 
+##############
+## Messages ##
+##############
+
+add_message_files(
+   FILES
+   FiducialMapEntry.msg
+   FiducialMapEntryArray.msg
+)
+
+
+##############
+## Services ##
+##############
+
+add_service_files(
+  FILES
+  InitializeMap.srv
+)
+
+generate_messages()
 catkin_package()
 
 #############
@@ -23,7 +46,7 @@ install(DIRECTORY launch/
 )
 
 catkin_install_python(PROGRAMS scripts/move_origin.py scripts/init_map.py
-        nodes/init_amcl.py nodes/fiducial_slam.py
+        nodes/init_amcl.py nodes/fiducial_slam_node.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

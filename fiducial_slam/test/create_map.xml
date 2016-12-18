@@ -8,7 +8,7 @@
   <node name="camera_pose" pkg="tf2_ros" type="static_transform_publisher" 
         args="0.0 0.0 0.0 0.0 0.0 0.0 0.0 base_link raspicam" />
 
-  <node type="fiducial_slam.py" pkg="fiducial_slam" name="fiducial_slam">
+  <node type="fiducial_slam_node.py" pkg="fiducial_slam" name="fiducial_slam">
     <param name="initial_map_file" value="$(find fiducial_slam)/test/610_initial_map.txt" />
     <param name="map_file" value="$(find fiducial_slam)/test/map.txt" />
     <param name="obs_file" value="$(find fiducial_slam)/test/obs.txt" />
