@@ -46,7 +46,7 @@ install(DIRECTORY launch/
 )
 
 catkin_install_python(PROGRAMS scripts/move_origin.py scripts/init_map.py
-        nodes/init_amcl.py nodes/fiducial_slam.py
+        nodes/init_amcl.py nodes/fiducial_slam_node.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
