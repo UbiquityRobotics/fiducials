@@ -1,4 +1,4 @@
-## fiducial_slam fiducial_slam.py
+## fiducial_slam fiducial_slam_node.py
 
 This node performs 3D Simultaneous Localization and Mapping (SLAM) from the 
 fiducial transforms. For the mapping part, pairs of transforms are combined
@@ -47,6 +47,8 @@ in rviz for debugging.
 * `/fiducial_pose` a topic of `geometry_msgs/PoseWithCovarianceStamped` containing
 the computed pose.
 
+*  /fiducial_map  fiducial_slam/FiducialMapEntryArray
+
 * `tf` Transforms
 
 
@@ -56,3 +58,8 @@ the computed pose.
 fiducial pose.
 
 * `/tf` Transforms
+
+### Services
+
+*  /initialize_fiducial_map  Clears the map and reinitializes it with the contents of the specified
+fiducial_slam/FiducialMapEntryArray.
