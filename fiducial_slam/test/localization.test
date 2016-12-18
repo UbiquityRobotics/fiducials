@@ -14,7 +14,7 @@
     <remap from="/camera_info" to="/camera_info"/>
   </node>
 
-  <node type="fiducial_slam.py" pkg="fiducial_slam" name="fiducial_slam">
+  <node type="fiducial_slam_node.py" pkg="fiducial_slam" name="fiducial_slam">
     <param name="initial_map_file" value="$(find fiducial_slam)/test/initial_map.txt" />
     <param name="map_file" value="/tmp/test/map.txt" />
     <param name="obs_file" value="/tmp/test/obs.txt" />

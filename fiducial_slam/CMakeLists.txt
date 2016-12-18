@@ -10,8 +10,31 @@ find_package(catkin REQUIRED COMPONENTS
    tf2_msgs
    geometry_msgs
    sensor_msgs
-   visualization_msgs)
+   visualization_msgs
+   message_generation
+)
 
+##############
+## Messages ##
+##############
+
+add_message_files(
+   FILES
+   FiducialMapEntry.msg
+   FiducialMapEntryArray.msg
+)
+
+
+##############
+## Services ##
+##############
+
+add_service_files(
+  FILES
+  InitializeMap.srv
+)
+
+generate_messages()
 catkin_package()
 
 #############
