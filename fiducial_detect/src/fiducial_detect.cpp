@@ -431,6 +431,8 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
         pose_est->camInfoCallback(msg);
     }
     haveCamInfo = true;
+
+    last_camera_frame = msg->header.frame_id;
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
@@ -454,14 +456,13 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
     processing_image = true;
     frameNum++;
 
-    last_camera_frame = msg->header.frame_id;
     last_image_seq = msg->header.seq;
     last_image_time = msg->header.stamp;
     ROS_INFO("Got image seq %d", last_image_seq);
 
     fiducialTransformArray.transforms.clear();
     fiducialTransformArray.header.stamp = msg->header.stamp;
-    fiducialTransformArray.header.frame_id = msg->header.frame_id;
+    fiducialTransformArray.header.frame_id = last_camera_frame;
     fiducialTransformArray.image_seq = msg->header.seq;
 
     try {
