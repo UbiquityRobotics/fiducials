@@ -1,0 +1,31 @@
+<!--
+  Verify a sensible pose is computed when a set of fiducial transforms 
+  is sent to fiducial_slam.
+-->
+<launch>
+  <node name="camera_pose" pkg="tf2_ros" type="static_transform_publisher"
+        args="0.0 0.0 0.0 0.0 0.0 0.0 0.0 base_link camera" />
+
+ <node pkg="fiducial_detect" name="fiducial_detect" type="fiducial_detect">
+    <param name="image_transport" value="compressed" />
+    <param name="fiducial_len" value="0.145"/>
+    <param name="undistort_points" value="false"/>
+    <remap from="/camera/compressed" to="/camera/image/compressed"/>
+    <remap from="/camera_info" to="/camera_info"/>
+  </node>
+
+  <node type="fiducial_slam.py" pkg="fiducial_slam" name="fiducial_slam">
+    <param name="initial_map_file" value="$(find fiducial_slam)/test/initial_map.txt" />
+    <param name="map_file" value="/tmp/test/map.txt" />
+    <param name="obs_file" value="/tmp/test/obs.txt" />
+    <param name="trans_file" value="/tmp/test/trans.txt" />
+    <param name="camera_frame" value="base_link" />
+    <param name="odom_frame" value="" />
+    <param name="pose_frame" value="base_link" />
+  </node>
+
+  <test test-name="localization_test" pkg="fiducial_slam" type="localization_test">
+    <param name="image_directory" value="$(find fiducial_slam)/test/test_images/"/>
+  </test>
+</launch>
+

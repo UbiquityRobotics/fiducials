@@ -34,8 +34,15 @@ catkin_install_python(PROGRAMS scripts/move_origin.py scripts/init_map.py
 
 
 if(CATKIN_ENABLE_TESTING)
-        find_package(rostest REQUIRED
-                     COMPONENTS tf2_ros)
+        find_package(rostest REQUIRED COMPONENTS 
+        tf2_ros)
+
+        find_package(catkin REQUIRED COMPONENTS
+          roscpp
+          cv_bridge
+          image_transport)
+
+        find_package(OpenCV REQUIRED)
 
         # We are not using the big bag test right now
 
@@ -45,8 +52,15 @@ if(CATKIN_ENABLE_TESTING)
         #                           MD5 05b69d64ab02d79ec4fa4be3a7de05af) 
 
         add_rostest(test/create_map.xml)
-        add_rostest(test/localization_test.xml)
-
         # add_rostest(test/ceiling_test_2.xml)
+
+        include_directories(${catkin_INCLUDE_DIRS})
+
+        # Tests need c++11
+        add_definitions(-std=c++11)
+        add_rostest_gtest(localization_test 
+          test/localization.test 
+          test/localization_test.cpp)
+        target_link_libraries(localization_test ${catkin_LIBRARIES} ${OpenCV_LIBS})
 endif()
 
