@@ -1,0 +1,16 @@
+<launch>
+  <!-- <param name="/use_sim_time" value="true"/> -->
+
+  <node pkg="aruco_detect" name="aruco_detect" type="aruco_detect">
+    <param name="image_transport" value="compressed" />
+    <param name="fiducial_len" value="0.145"/>
+    <remap from="/camera/compressed" to="/camera/image/compressed"/>
+    <remap from="/camera_info" to="/camera_info"/>
+  </node>
+
+  <test test-name="aruco_images_test" pkg="aruco_detect" type="aruco_images_test">
+    <param name="image_directory" value="$(find aruco_detect)/test/test_images/"/>
+  </test>
+
+</launch>
+

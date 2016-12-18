@@ -58,6 +58,12 @@ install(TARGETS aruco_detect
 if(CATKIN_ENABLE_TESTING)
         find_package(rostest REQUIRED)
 
-        add_rostest(test/detect_board.xml)
+        # Tests need c++11
+        add_definitions(-std=c++11)
+        
+        add_rostest_gtest(aruco_images_test 
+          test/aruco_images.test 
+          test/aruco_images_test.cpp)
+        target_link_libraries(aruco_images_test ${catkin_LIBRARIES})
 endif()
 
