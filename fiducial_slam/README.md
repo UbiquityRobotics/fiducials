@@ -44,10 +44,10 @@ Default `true`.
 * `/fiducials` A topic of `visualization_msgs/Marker` messages that can be viewed
 in rviz for debugging.
 
-* `/fiducial_pose` a topic of `geometry_msgs/PoseWithCovarianceStamped` containing
+* `/fiducial_pose` A topic of `geometry_msgs/PoseWithCovarianceStamped` containing
 the computed pose.
 
-*  `/fiducial_map`  a topic of `fiducial_slam/FiducialMapEntryArray` containing
+*  `/fiducial_map`  A topic of `fiducial_slam/FiducialMapEntryArray` containing
 the current state of the map.
 
 * `tf` Transforms
