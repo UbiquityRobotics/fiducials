@@ -27,7 +27,7 @@
   </node>
 
   <node name="rosbag" pkg="rosbag" type="play"
-     args="--clock -d 5 $(find fiducial_detect)/test/fiducial_board_611.bag"/>
+     args="--clock -d 5 $(find fiducial_slam)/test/fiducial_board_611.bag"/>
 
   <test test-name="localization_test" pkg="fiducial_slam" type="localization_test.py" name="localization_test1">
     <param name="expectedx" value="-0.157"/>
