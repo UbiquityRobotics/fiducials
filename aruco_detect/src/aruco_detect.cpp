@@ -230,7 +230,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     
     dictionary = aruco::getPredefinedDictionary(aruco::DICT_5X5_1000);
 
-
+    detectorParams = new aruco::DetectorParameters();
     detectorParams->doCornerRefinement = true;
 
     img_sub = it.subscribe("/camera", 1,
