@@ -2,9 +2,9 @@
   <!-- <param name="/use_sim_time" value="true"/> -->
 
   <node pkg="aruco_detect" name="aruco_detect" type="aruco_detect">
-    <param name="image_transport" value="compressed" />
+    <param name="image_transport" value="raw" />
     <param name="fiducial_len" value="0.145"/>
-    <remap from="/camera/compressed" to="/camera/image/compressed"/>
+    <remap from="/camera/" to="/camera/image/"/>
     <remap from="/camera_info" to="/camera_info"/>
   </node>
 
