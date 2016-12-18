@@ -78,14 +78,14 @@ TEST_F(ArucoImagesTest, tag_01_d7_14cm) {
 
   ASSERT_EQ(1, vertices.fiducial_id);
 
-  ASSERT_DOUBLE_EQ(570, vertices.x0);
-  ASSERT_DOUBLE_EQ(202, vertices.y0);
-  ASSERT_DOUBLE_EQ(777, vertices.x1);
-  ASSERT_DOUBLE_EQ(207, vertices.y1);
-  ASSERT_DOUBLE_EQ(768, vertices.x2);
-  ASSERT_DOUBLE_EQ(415, vertices.y2);
-  ASSERT_DOUBLE_EQ(566, vertices.x3);
-  ASSERT_DOUBLE_EQ(409, vertices.y3);
+  ASSERT_FLOAT_EQ(570.01550293, vertices.x0);
+  ASSERT_FLOAT_EQ(201.488723755, vertices.y0);
+  ASSERT_FLOAT_EQ(777.376831055, vertices.x1);
+  ASSERT_FLOAT_EQ(206.782989502, vertices.y1);
+  ASSERT_FLOAT_EQ(767.969238281, vertices.x2);
+  ASSERT_FLOAT_EQ(415.378875732, vertices.y2);
+  ASSERT_FLOAT_EQ(565.813293457, vertices.x3);
+  ASSERT_FLOAT_EQ(409.257019043, vertices.y3);
 }
 
 int main(int argc, char** argv)
