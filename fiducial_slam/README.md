@@ -1,4 +1,4 @@
-### fiducial_slam fiducial_slam.py
+## fiducial_slam fiducial_slam.py
 
 This node performs 3D Simultaneous Localization and Mapping (SLAM) from the 
 fiducial transforms. For the mapping part, pairs of transforms are combined
@@ -6,7 +6,7 @@ to determine the position of fiducials based on existing observations.
 For the localization part, fiducial transforms are combined with fiducial poses
 to estimate the camera pose (and hence the robot pose).
 
-#### Parameters
+### Parameters
 
 * `map_file` Path to the file containing the generated map (this must exist). Default `map.txt`.
 
@@ -39,7 +39,7 @@ Default 0.0.
 * `fiducials_are_level` If `true`, it is assumed that all fiducials are level, as would be the case on ceiling mounted fiducials. In this case only 3DOF are estimated.
 Default `true`.
 
-#### Published Topics
+### Published Topics
 
 * `/fiducials` A topic of `visualization_msgs/Marker` messages that can be viewed
 in rviz for debugging.
@@ -50,7 +50,7 @@ the computed pose.
 * `tf` Transforms
 
 
-#### Subscribed Topics
+### Subscribed Topics
 
 * `/fiducial_transforms` A topic of `fiducial_pose/FiducialTransform` messages with
 fiducial pose.
