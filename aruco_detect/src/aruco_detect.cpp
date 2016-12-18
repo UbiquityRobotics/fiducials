@@ -81,7 +81,7 @@ class FiducialsNode {
   
     image_transport::Publisher image_pub;
 
-    aruco::DetectorParameters detectorParams;
+    cv::Ptr<aruco::DetectorParameters> detectorParams;
     cv::Ptr<aruco::Dictionary> dictionary;
 
     void imageCallback(const sensor_msgs::ImageConstPtr & msg);
@@ -129,7 +129,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         vector <vector <Point2f> > corners, rejected;
         vector <Vec3d>  rvecs, tvecs;
 
-        aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids);
+        aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
         ROS_INFO("Detectd %d markers", (int)ids.size());
  
         for (int i=0; i<ids.size(); i++) {
@@ -231,7 +231,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     dictionary = aruco::getPredefinedDictionary(aruco::DICT_5X5_1000);
 
 
-    detectorParams.doCornerRefinement = true;
+    detectorParams->doCornerRefinement = true;
 
     img_sub = it.subscribe("/camera", 1,
                            &FiducialsNode::imageCallback, this);
