@@ -57,6 +57,12 @@ install(DIRECTORY launch/
 
 if(CATKIN_ENABLE_TESTING)
         find_package(rostest REQUIRED)
+
+        # Tests need c++11
+        add_definitions(-std=c++11)
         
-        add_rostest(test/detect_board.xml)
+        add_rostest_gtest(fiducial_images_test 
+          test/fiducial_images.test 
+          test/fiducial_images_test.cpp)
+        target_link_libraries(fiducial_images_test ${catkin_LIBRARIES})
 endif()
