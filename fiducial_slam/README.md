@@ -50,7 +50,7 @@ the computed pose.
 *  `/fiducial_map`  A topic of `fiducial_slam/FiducialMapEntryArray` containing
 the current state of the map.
 
-* `tf` Transforms
+* `/tf` Transforms
 
 
 ### Subscribed Topics
