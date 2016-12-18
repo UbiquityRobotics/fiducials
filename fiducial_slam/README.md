@@ -47,7 +47,8 @@ in rviz for debugging.
 * `/fiducial_pose` a topic of `geometry_msgs/PoseWithCovarianceStamped` containing
 the computed pose.
 
-*  /fiducial_map  fiducial_slam/FiducialMapEntryArray
+*  /fiducial_map  a topic of `fiducial_slam/FiducialMapEntryArray` containing
+the current state of the map.
 
 * `tf` Transforms
 
@@ -61,5 +62,4 @@ fiducial pose.
 
 ### Services
 
-*  /initialize_fiducial_map  Clears the map and reinitializes it with the contents of the specified
-fiducial_slam/FiducialMapEntryArray.
+*  /initialize_fiducial_map  Clears the map and reinitializes it with the contents of the specified `fiducial_slam/FiducialMapEntryArray`.
