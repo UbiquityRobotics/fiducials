@@ -1,0 +1,1 @@
+FiducialMapEntry[] fiducials

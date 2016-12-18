@@ -40,14 +40,17 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
                               TransformStamped
 from visualization_msgs.msg import Marker, MarkerArray
 
+from fiducial_slam.msg import FiducialMapEntry, FiducialMapEntryArray
 from fiducial_pose.msg import Fiducial, FiducialTransform, FiducialTransformArray
 
 from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                translation_matrix, quaternion_matrix, \
                                translation_from_matrix, quaternion_from_matrix, \
                                quaternion_from_euler
+
+from fiducial_slam.srv import InitializeMap
+
 import tf2_ros
-import rosbag
 
 from math import pi, sqrt
 import sys
@@ -223,8 +226,10 @@ class FiducialSlam:
        if not loaded:
            rospy.logerr("could not load map %s", filename)
        self.position = None
-       rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
        self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped, queue_size=1)
+       self.mapPub = rospy.Publisher("/fiducial_map", FiducialMapEntryArray, queue_size=100) 
+       rospy.Service('initialize_fiducial_map', InitializeMap, self.initializeMap)
+       rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
 
 
     def close(self):
@@ -232,6 +237,39 @@ class FiducialSlam:
         self.obsFile.close()
         self.transFile.close()
 
+
+    """
+    InitiailzeMap service
+    """
+    def initializeMap(self, msg):
+        print "InitializeMap service call"
+        self.fiducials = {}
+        for fid in msg.fiducials:
+            f = Fiducial(fid.fiducial_id)
+            f.position = numpy.array(fid.x, fid.y, fid.z)
+            f.orientation = quaternion_from_euler(fid.rx, fid.ry, fid.rz)
+            self.fiducials[fid] = f
+
+    """ 
+    Publish map
+    """
+    def publishMap(self):
+        fmea = FiducialMapEntryArray()
+        fids = self.fiducials.keys()
+        fids.sort()
+        for fid in fids:
+            f = self.fiducials[fid]
+            fme = FiducialMapEntry()
+            fme.fiducial_id = fid
+            fme.x = f.position[0]
+            fme.y = f.position[1]
+            fme.z = f.position[2]
+            (r, p, y) = euler_from_quaternion(f.orientation)
+            fme.rx = r
+            fme.ry = p
+            fme.rz = y
+            fmea.fiducials.append(fme)
+        self.mapPub.publish(fmea)
 
     """
     Save current map to file
@@ -251,6 +289,7 @@ class FiducialSlam:
                f.variance, f.observations,
                ' '.join(map(str, f.links))))
         file.close()
+        self.publishMap()
 
     """
     Load map from file
@@ -626,7 +665,7 @@ class FiducialSlam:
                 self.fiducials[fid].publishedMarker = True
                 return
         self.mapPublished = True
-        print "Map published"
+        print "Markers published"
 
     """
     Update markers with visibility colors
@@ -726,10 +765,14 @@ class FiducialSlam:
         hz = 10.0
         rospy.loginfo("Fiducial Slam started")
         rate = rospy.Rate(hz)
+        tick = 0
         while not rospy.is_shutdown():
             if self.republishTf:
                 self.publishTransform()
             self.publishMarkers()
+            tick += 1
+            if (tick % 10) == 0:
+                self.publishMap()
             try:
                 rate.sleep()
             except:
