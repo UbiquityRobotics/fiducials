@@ -37,14 +37,16 @@ if(CATKIN_ENABLE_TESTING)
         find_package(rostest REQUIRED
                      COMPONENTS tf2_ros)
 
-        catkin_download_test_data(${PROJECT_NAME}_ceilingline.bag
-                                  http://www.fxpal.com/robots/ceilingline.bag
-                                  DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
-                                  MD5 05b69d64ab02d79ec4fa4be3a7de05af) 
+        # We are not using the big bag test right now
+
+        # catkin_download_test_data(${PROJECT_NAME}_ceilingline.bag
+        #                           http://www.fxpal.com/robots/ceilingline.bag
+        #                           DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
+        #                           MD5 05b69d64ab02d79ec4fa4be3a7de05af) 
 
         add_rostest(test/create_map.xml)
         add_rostest(test/localization_test.xml)
 
-        add_rostest(test/ceiling_test_2.xml)
+        # add_rostest(test/ceiling_test_2.xml)
 endif()
 
