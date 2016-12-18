@@ -78,6 +78,7 @@ class FiducialsNode {
     cv::Mat K;
     cv::Mat dist;
     int frameNum;
+    std::string frameId;
   
     image_transport::Publisher image_pub;
 
@@ -109,6 +110,7 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
     }
 
     haveCamInfo = true;
+    frameId = msg->header.frame_id;
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
@@ -119,7 +121,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
     fiducial_pose::FiducialTransformArray fta;
     fta.header.stamp = msg->header.stamp;
-    fta.header.frame_id = msg->header.frame_id;
+    fta.header.frame_id = frameId;
     fta.image_seq = msg->header.seq;
 
     try {
@@ -135,7 +137,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         for (int i=0; i<ids.size(); i++) {
             fiducial_pose::Fiducial fid;
             fid.header.stamp = msg->header.stamp;
-            fid.header.frame_id = msg->header.frame_id;
+            fid.header.frame_id =frameId;
             fid.image_seq = msg->header.seq;
             fid.fiducial_id = ids[i];
             
