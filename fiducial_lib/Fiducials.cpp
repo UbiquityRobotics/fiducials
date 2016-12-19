@@ -503,7 +503,6 @@ void Fiducials__image_set(Fiducials fiducials, CV_Image image)
 void Fiducials__image_show(Fiducials fiducials, bool show) {
     // Grab some values out of *fiduicals*:
     CV_Image debug_image = fiducials->debug_image;
-    CV_Image gray_image = fiducials->gray_image;
     CV_Image original_image = fiducials->original_image;
 
     // Create the window we need:
@@ -617,22 +616,12 @@ Fiducials Fiducials__create(
 
     // Grab some values from *fiducials_create*:
     String_Const fiducials_path = fiducials_create->fiducials_path;
-    String_Const lens_calibrate_file_name =
-      fiducials_create->lens_calibrate_file_name;
     Memory announce_object = fiducials_create->announce_object;
-    Fiducials_Arc_Announce_Routine arc_announce_routine =
-      fiducials_create->arc_announce_routine;
     Fiducials_Location_Announce_Routine location_announce_routine =
       fiducials_create->location_announce_routine;
-    Fiducials_Tag_Announce_Routine tag_announce_routine =
-      fiducials_create->tag_announce_routine;
     Fiducials_Fiducial_Announce_Routine  fiducial_announce_routine = 
       fiducials_create->fiducial_announce_routine; 
     String_Const log_file_name = fiducials_create->log_file_name;
-    String_Const map_base_name = fiducials_create->map_base_name;
-    String_Const tag_heights_file_name =
-      fiducials_create->tag_heights_file_name;
-
     // Get *log_file* open if *log_file_name* is not null:
     File log_file = stderr;
     if (log_file_name != (String_Const)0) {
@@ -648,58 +637,6 @@ Fiducials Fiducials__create(
 
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
-
-    static int north_mapping[64] = {
-        //corner1              corner0
-         0,  1,  2,  3,  4,  5,  6,  7,
-         8,  9, 10, 11, 12, 13, 14, 15,
-        16, 17, 18, 19, 20, 21, 22, 23,
-        24, 25, 26, 27, 28, 29, 30, 31,
-        32, 33, 34, 35, 36, 37, 38, 39,
-        40, 41, 42, 43, 44, 45, 46, 47,
-        48, 49, 50, 51, 52, 53, 54, 55,
-        56, 57, 58, 59, 60, 61, 62, 63,
-        //corner2              corner3
-    };
-
-    static int west_mapping[64] = {
-        //corner1              corner0
-         7, 15, 23, 31, 39, 47, 55, 63,
-         6, 14, 22, 30, 38, 46, 54, 62,
-         5, 13, 21, 29, 37, 45, 53, 61,
-         4, 12, 20, 28, 36, 44, 52, 60,
-         3, 11, 19, 27, 35, 43, 51, 59,
-         2, 10, 18, 26, 34, 42, 50, 58,
-         1,  9, 17, 25, 33, 41, 49, 57,
-         0,  8, 16, 24, 32, 40, 48, 56,
-        //corner2              corner3
-    };
-
-    static int south_mapping[64] = {
-        //corner1              corner0
-        63, 62, 61, 60, 59, 58, 57, 56,
-        55, 54, 53, 52, 51, 50, 49, 48,
-        47, 46, 45, 44, 43, 42, 41, 40,
-        39, 38, 37, 36, 35, 34, 33, 32,
-        31, 30, 29, 28, 27, 26, 25, 24,
-        23, 22, 21, 20, 19, 18, 17, 16,
-        15, 14, 13, 12, 11, 10,  9,  8,
-         7,  6,  5,  4,  3,  2,  1,  0,
-        //corner2              corner3
-    };
-
-    static int east_mapping[64] = {
-        //corner1              corner0
-        56, 48, 40, 32, 24, 16,  8,  0,
-        57, 49, 41, 33, 25, 17,  9,  1,
-        58, 50, 42, 34, 26, 18, 10,  2,
-        59, 51, 43, 35, 27, 19, 11,  3,
-        60, 52, 44, 36, 28, 20, 12,  4,
-        61, 53, 45, 37, 29, 21, 13,  5,
-        62, 54, 46, 38, 30, 22, 14,  6,
-        63, 55, 47, 39, 31, 23, 15,  7,
-        //corner2              corner3
-    };
 
     static int north_mapping_flipped[64] = {
         //corner1              corner0
@@ -769,13 +706,6 @@ Fiducials Fiducials__create(
 
     CV_Image map_x = (CV_Image)0;
     CV_Image map_y = (CV_Image)0;
-    if (lens_calibrate_file_name != (String)0) {
-        String full_lens_calibrate_file_name =
-          String__format("%s/%s", fiducials_path, lens_calibrate_file_name);
-        assert (CV__undistortion_setup(
-          full_lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
-        String__free(full_lens_calibrate_file_name);
-    }
 
     Fiducials_Results results =
       Memory__new(Fiducials_Results, "Fiducials__create");
@@ -784,7 +714,6 @@ Fiducials Fiducials__create(
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
     fiducials = new(fiducials) Fiducials__Struct();
-    fiducials->arc_announce_routine = arc_announce_routine;
     if (fiducial_announce_routine != NULL) 
        fiducials->fiducial_announce_routine = fiducial_announce_routine;
     else
@@ -850,21 +779,6 @@ void Fiducials__free(Fiducials fiducials) {
     CV_Size__free(fiducials->size_5x5);
     CV_Size__free(fiducials->size_m1xm1);
 
-    // Free up the storage associated with *locations*:
-    unsigned int locations_size = fiducials->locations.size();
-    for (unsigned int index = 0; index < locations_size; index++) {
-        Location * location = fiducials->locations[index];
-        // Kludge: memory double free?!!!
-        // delete location;
-    }
-
-    unsigned int locations_path_size = fiducials->locations_path.size();
-    for (unsigned int index = 0; index < locations_path_size; index++) {
-        Location * location = fiducials->locations_path[index];
-        // Kludge: memory double free?!!!
-        //Location__free(location);
-    }
-
     // Finally release *fiducials*:
     Memory__free((Memory)fiducials);
 }
@@ -900,9 +814,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     CV_Image original_image = fiducials->original_image;
     Fiducials_Results results = fiducials->results;
     CV_Image temporary_gray_image = fiducials->temporary_gray_image;
-    Fiducials_Location_Announce_Routine location_announce_routine =
-      fiducials->location_announce_routine;
-    unsigned int sequence_number = fiducials->sequence_number++;
 
     // For *debug_level* 0, we show the original image in color:
     if (debug_index == 0) {
@@ -1166,9 +1077,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                     if (debug_index == 10) {
                         CV_Scalar red = fiducials->red;
                         CV_Scalar green = fiducials->green;
-                        CV_Scalar cyan = fiducials->cyan;
-                        CV_Scalar blue = fiducials->blue;
-
                         // Show white bits as {red} and black bits as {green}:
                         CV_Scalar color = red;
                         if (bit) {
@@ -1678,15 +1586,6 @@ void Fiducials__sample_points_compute(
         i = i + 1;
     }
 
-    CV_Point2D32F sample_point0 =
-      CV_Point2D32F_Vector__fetch1(sample_points, 0);
-    CV_Point2D32F sample_point7 =
-      CV_Point2D32F_Vector__fetch1(sample_points, 7);
-    CV_Point2D32F sample_point56 =
-      CV_Point2D32F_Vector__fetch1(sample_points, 56);
-    CV_Point2D32F sample_point63 =
-      CV_Point2D32F_Vector__fetch1(sample_points, 63);
-
     // clockwise direction.  Bit 0 will be closest to corners[1], bit 7
     // will be closest to corners[0], bit 56 closest to corners[2] and
     // bit 63 closest to corners[3].
@@ -1741,15 +1640,10 @@ void Fiducials__tag_announce(void *announce_object, int id,
 static struct Fiducials_Create__Struct fiducials_create_struct =
 {
     (String_Const)0,                                // fiducials_path
-    (String_Const)0,                                // lens_calibrate_file_name
     (void *)0,                                        // announce_object
-    (Fiducials_Arc_Announce_Routine)0,                // arc_announce_routine
     (Fiducials_Location_Announce_Routine)0,        // location_announce_routine
-    (Fiducials_Tag_Announce_Routine)0,                // tag_announce_routine
     (Fiducials_Fiducial_Announce_Routine)0,            // fiducial_announce_routine
     (String_Const)0,                                // log_file_name
-    (String_Const)0,                                // map_base_name
-    (String_Const)0,                                // tag_heights_file_name
 };
 
 /// @brief Returns the one and only *Fiducials_Create* object.

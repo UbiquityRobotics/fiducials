@@ -92,28 +92,13 @@ private:
     const double scale;
 
     Fiducials fiducials;
-    std::string tag_height_file;
     std::string data_directory;
-    std::string map_file;
     std::string log_file;
 
     std::vector<fiducial_pose::Fiducial> detected_fiducials;
 
     geometry_msgs::Pose scale_position(double x, double y, double z,
                                        double theta);
-    visualization_msgs::Marker createMarker(std::string ns, int id);
-
-    static void arc_announce(void *t, int from_id, double from_x, double from_y,
-                             double from_z, int to_id, double to_x, double to_y,
-                             double to_z, double goodness,
-                             bool in_spanning_tree);
-
-    static void tag_announce(void *t, int id, double x, double y, double z,
-                             double twist, double diagonal,
-                             double distance_per_pixel, bool visible,
-                             int hop_count);
-    void tag_cb(int id, double x, double y, double z, double twist, double dx,
-                double dy, double dz, bool visible);
 
     static void location_announce(void *t, int id, double x, double y, double z,
                                   double bearing);
@@ -157,24 +142,6 @@ geometry_msgs::Pose FiducialsNode::scale_position(double x, double y, double z,
     res.orientation = tf::createQuaternionMsgFromYaw(theta);
 
     return res;
-}
-
-void FiducialsNode::arc_announce(void *t, int from_id, double from_x,
-                                 double from_y, double from_z, int to_id,
-                                 double to_x, double to_y, double to_z,
-                                 double goodness, bool in_spanning_tree) {}
-
-void FiducialsNode::tag_announce(void *t, int id, double x, double y, double z,
-                                 double twist, double diagonal,
-                                 double distance_per_pixel, bool visible,
-                                 int hop_count) {
-    ROS_INFO("tag_announce:id=%d x=%f y=%f twist=%f", id, x, y, twist);
-    FiducialsNode *ths = (FiducialsNode *)t;
-    // sqrt(2) = 1.414213...
-    double dx = (diagonal * distance_per_pixel) / 1.4142135623730950488016887;
-    double dy = dx;
-    double dz = 1.0;
-    ths->tag_cb(id, x, y, z, twist, dx, dy, dz, visible);
 }
 
 void FiducialsNode::fiducial_announce(void *t, int id, int direction,
@@ -225,18 +192,6 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
             fiducialTransformArray.transforms.push_back(ft);
         }
     }
-}
-
-void FiducialsNode::tag_cb(int id, double x, double y, double z, double twist,
-                           double dx, double dy, double dz, bool visible) {
-}
-
-tf2::Transform msg_to_tf(geometry_msgs::TransformStamped &msg) {
-    return tf2::Transform(
-        tf2::Quaternion(msg.transform.rotation.x, msg.transform.rotation.y,
-                        msg.transform.rotation.z, msg.transform.rotation.w),
-        tf2::Vector3(msg.transform.translation.x, msg.transform.translation.y,
-                     msg.transform.translation.z));
 }
 
 void FiducialsNode::location_announce(void *t, int id, double x, double y,
@@ -299,14 +254,9 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr &msg) {
                 Fiducials_Create__one_and_only();
                 
             fiducials_create->fiducials_path = data_directory.c_str();
-            fiducials_create->lens_calibrate_file_name = (String_Const)0;
             fiducials_create->announce_object = (Memory) this;
-            fiducials_create->arc_announce_routine = arc_announce;
             fiducials_create->location_announce_routine = location_announce;
-            fiducials_create->tag_announce_routine = tag_announce;
             fiducials_create->log_file_name = log_file.c_str();
-            fiducials_create->map_base_name = map_file.c_str();
-            fiducials_create->tag_heights_file_name = tag_height_file.c_str();
             fiducials_create->fiducial_announce_routine = fiducial_announce;
 
             // Create *fiducials* object using first image:
@@ -345,9 +295,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle &nh) : scale(0.75) {
     processing_image = false;
     update_thread = NULL;
 
-    nh.param<std::string>("tag_height", tag_height_file, "");
     nh.param<std::string>("data_directory", data_directory, ".");
-    nh.param<std::string>("map_file", map_file, "ROS_Map");
     nh.param<std::string>("log_file", log_file, "fiducials.log.txt");
 
     nh.param<bool>("publish_images", publish_images, false);
