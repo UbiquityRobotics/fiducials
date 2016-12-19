@@ -10,9 +10,6 @@ typedef struct Fiducials_Results__Struct *Fiducials_Results;
 #include <assert.h>
 #include <sys/time.h>
 
-typedef void (*Fiducials_Location_Announce_Routine)(void *announce_object,
-  int id, double x, double y, double z, double bearing);
-
 typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
     int id, int direction, double world_diagonal,
     double x1, double y1, double x2, double y2,
@@ -48,7 +45,6 @@ struct Fiducials__Struct {
     CV_Size image_size;
     double last_x;
     double last_y;
-    Fiducials_Location_Announce_Routine location_announce_routine;
     Fiducials_Fiducial_Announce_Routine fiducial_announce_routine;
     File log_file;
     CV_Point origin;
@@ -76,7 +72,6 @@ struct Fiducials__Struct {
 struct Fiducials_Create__Struct {
     String_Const fiducials_path;  
     Memory announce_object;
-    Fiducials_Location_Announce_Routine location_announce_routine;
     Fiducials_Fiducial_Announce_Routine fiducial_announce_routine;
     String_Const log_file_name;
 };
@@ -86,17 +81,11 @@ struct Fiducials_Results__Struct {
     bool image_interesting;
 };
 
-extern void Fiducials__arc_announce(void *announce_object,
-  int from_id, double from_x, double from_y, double from_z,
-  int to_id, double to_x, double to_y, double to_z,
-  double goodness, bool in_spanning_tree);
 extern Fiducials Fiducials__create(
   CV_Image original_image, Fiducials_Create fiducials_create);
 extern void Fiducials__free(Fiducials fiduicals);
 extern void Fiducials__image_set(Fiducials fiducials, CV_Image image);
 extern void Fiducials__image_show(Fiducials fiducials, bool show);
-extern void Fiducials__location_announce(void *object, int id,
-  double x, double y, double z, double bearing);
 extern int Fiducials__point_sample(
   Fiducials fiducials, CV_Point2D32F point);
 extern int Fiducials__points_maximum(Fiducials fiducials,
@@ -110,10 +99,6 @@ extern void Fiducials__sample_points_compute(
   CV_Point2D32F_Vector corners, CV_Point2D32F_Vector sample_points);
 extern void Fiducials__sample_points_helper(
   String_Const label, CV_Point2D32F corner, CV_Point2D32F sample_point);
-extern void Fiducials__tag_announce(void *announce_object,
-  int id, double x, double y, double z, double twist,
-  double diagonal, double distance_per_pixel,
-  bool visible, int hop_count);
 extern Fiducials_Create Fiducials_Create__one_and_only(void);
 
 #endif // !defined(FIDUCIALS_H_INCLUDED)

@@ -100,10 +100,6 @@ private:
     geometry_msgs::Pose scale_position(double x, double y, double z,
                                        double theta);
 
-    static void location_announce(void *t, int id, double x, double y, double z,
-                                  double bearing);
-    void location_cb(int id, double x, double y, double z, double bearing);
-
     static void fiducial_announce(void *t, int id, int direction,
                                   double world_diagonal, double x0, double y0,
                                   double x1, double y1, double x2, double y2,
@@ -194,16 +190,6 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     }
 }
 
-void FiducialsNode::location_announce(void *t, int id, double x, double y,
-                                      double z, double bearing) {
-    FiducialsNode *ths = (FiducialsNode *)t;
-    ths->location_cb(id, x, y, z, bearing);
-}
-
-void FiducialsNode::location_cb(int id, double x, double y, double z,
-                                double bearing) {
-}
-
 void FiducialsNode::camInfoCallback(
     const sensor_msgs::CameraInfo::ConstPtr &msg) {
     if (pose_est) {
@@ -255,7 +241,6 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr &msg) {
                 
             fiducials_create->fiducials_path = data_directory.c_str();
             fiducials_create->announce_object = (Memory) this;
-            fiducials_create->location_announce_routine = location_announce;
             fiducials_create->log_file_name = log_file.c_str();
             fiducials_create->fiducial_announce_routine = fiducial_announce;
 

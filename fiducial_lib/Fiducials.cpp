@@ -388,58 +388,6 @@
 // transformation cancel one another out.  Thus, the there is no
 // work needed to tweak the equations above.
 
-
-/// @brief Callback routine that prints a new *Arc* object when it shows up.
-/// @param announce_object is unused (other routines might us it).
-/// @param from_id is the tag identifier that has the lower tag id number.
-/// @param from_x is the X coordinate of the from tag.
-/// @param from_y is the Y coordinate of the from tag.
-/// @param from_z is the Z coordinate of the from tag.
-/// @param to_id is the tag identifier that has the higher tag id number.
-/// @param to_x is the X coordinate of the to tag.
-/// @param to_y is the Y coordinate of the to tag.
-/// @param to_z is the Z coordinate of the to tag.
-/// @param goodness is the distance between the arc center point and the camera.
-/// @param in_spanning_tree is true if the arc is in the spanning tree.
-///
-/// *Fiducials__arc_announce*() is a callback routine that can be called
-/// whenever an arc data structure is modified.  The announce routine is
-/// specified as an argument to *Map__create*().
-
-// FIXME: Why isn't the from_twist and to_twist included???!!!
-// FIXME: Why don't we just pass the *Arc* object???!!!
-
-void Fiducials__arc_announce(void *announce_object,
-  int from_id, double from_x, double from_y, double from_z,
-  int to_id, double to_x, double to_y, double to_z,
-  double goodness, bool in_spanning_tree) {
-    File__format(stderr,
-      "Arc: from=(%d, %f, %f, %f,) to=(%d, %f, %f, %f) %f %d\n",
-      from_id, from_x, from_y, from_z,
-      to_id, to_x, to_y, to_z,
-      goodness, in_spanning_tree);
-}
-
-/// @brief Callback routine that prints out location when it changes.
-/// @param announce_object is unused.
-/// @param id is ???
-/// @param x is the X location of the robot.
-/// @param y is the Y location of the robot.
-/// @param z is the Y location of the robot (currently ignored.)
-/// @param bearing is the robot bearin in radians.
-///
-/// *Fiducials__location_announce*() is a callback routine that can be
-/// calld to print out the location information.  The location announce
-/// routine is a field of the *Fiducials_Create__Struct*.
-
-//FIXME: Why don't we just pass in a *Location* object???!!!
-
-void Fiducials__location_announce(void *announce_object, int id,
-  double x, double y, double z, double bearing) {
-    File__format(stderr,
-      "Location: id=%d x=%f y=%f bearing=%f\n", id, x, y, bearing);
-}
-
 /// @brief Callback routine tthat prints out the fidicial information.
 /// @param announce_object is unused.
 /// @param id is the tag id.
@@ -617,8 +565,6 @@ Fiducials Fiducials__create(
     // Grab some values from *fiducials_create*:
     String_Const fiducials_path = fiducials_create->fiducials_path;
     Memory announce_object = fiducials_create->announce_object;
-    Fiducials_Location_Announce_Routine location_announce_routine =
-      fiducials_create->location_announce_routine;
     Fiducials_Fiducial_Announce_Routine  fiducial_announce_routine = 
       fiducials_create->fiducial_announce_routine; 
     String_Const log_file_name = fiducials_create->log_file_name;
@@ -732,7 +678,6 @@ Fiducials Fiducials__create(
     fiducials->image_size = image_size;
     fiducials->last_x = 0.0;
     fiducials->last_y = 0.0;
-    fiducials->location_announce_routine = location_announce_routine;
     fiducials->log_file = log_file;
     fiducials->map_x = map_x;
     fiducials->map_y = map_y;
@@ -1609,39 +1554,10 @@ void Fiducials__sample_points_compute(
 //      (int)sample_point_x, (int)sample_point_y);
 //}
 
-/// @brief Print out tag update information.
-/// @param announce_object is an opaque object from *Map*->*announce_object*.
-/// @param id is the tag id.
-/// @param x is the tag X location.
-/// @param y is the tag Y location.
-/// @param z is the tag Z location.
-/// @param twist is the tag twist in radians.
-/// @param diagonal is the tag diagonal distance.
-/// @param distance_per_pixel is the distance per pixel.
-/// @param visible is (*bool*)1 if the tag is currently in camera
-///        field of view, and (*bool*)0 otherwise.
-/// @param hop_count is the hop count along the spanning tree to the origin.
-///
-/// *Fiducials_tag_announce*() is a tag announce routine that can be
-/// fed into *Fiducials__create*() as a routine to call each time a
-/// tag is updated.
-
-void Fiducials__tag_announce(void *announce_object, int id,
-  double x, double y, double z, double twist, double diagonal,
-  double distance_per_pixel, bool visible, int hop_count) {
-    String_Const visible_text = "";
-    if (!visible) {
-        visible_text = "*** No longer visible ***";
-    }
-    File__format(stderr, "id=%d x=%f y=%f twist=%f %s\n",
-      id, x, y, twist, visible_text);
-}
-
 static struct Fiducials_Create__Struct fiducials_create_struct =
 {
     (String_Const)0,                                // fiducials_path
     (void *)0,                                        // announce_object
-    (Fiducials_Location_Announce_Routine)0,        // location_announce_routine
     (Fiducials_Fiducial_Announce_Routine)0,            // fiducial_announce_routine
     (String_Const)0,                                // log_file_name
 };
