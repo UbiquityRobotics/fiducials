@@ -6,15 +6,13 @@
 
 #include <opencv2/highgui/highgui_c.h>
 
-#include "Camera_Tag.hpp"
 #include "CRC.hpp"
 #include "CV.hpp"
 #include "File.hpp"
 #include "FEC.hpp"
 #include "Fiducials.hpp"
-#include "Map.hpp"
 #include "String.hpp"
-#include "Tag.hpp"
+#include "Location.hpp"
 
 // Introduction:
 //
@@ -390,58 +388,6 @@
 // transformation cancel one another out.  Thus, the there is no
 // work needed to tweak the equations above.
 
-
-/// @brief Callback routine that prints a new *Arc* object when it shows up.
-/// @param announce_object is unused (other routines might us it).
-/// @param from_id is the tag identifier that has the lower tag id number.
-/// @param from_x is the X coordinate of the from tag.
-/// @param from_y is the Y coordinate of the from tag.
-/// @param from_z is the Z coordinate of the from tag.
-/// @param to_id is the tag identifier that has the higher tag id number.
-/// @param to_x is the X coordinate of the to tag.
-/// @param to_y is the Y coordinate of the to tag.
-/// @param to_z is the Z coordinate of the to tag.
-/// @param goodness is the distance between the arc center point and the camera.
-/// @param in_spanning_tree is true if the arc is in the spanning tree.
-///
-/// *Fiducials__arc_announce*() is a callback routine that can be called
-/// whenever an arc data structure is modified.  The announce routine is
-/// specified as an argument to *Map__create*().
-
-// FIXME: Why isn't the from_twist and to_twist included???!!!
-// FIXME: Why don't we just pass the *Arc* object???!!!
-
-void Fiducials__arc_announce(void *announce_object,
-  int from_id, double from_x, double from_y, double from_z,
-  int to_id, double to_x, double to_y, double to_z,
-  double goodness, bool in_spanning_tree) {
-    File__format(stderr,
-      "Arc: from=(%d, %f, %f, %f,) to=(%d, %f, %f, %f) %f %d\n",
-      from_id, from_x, from_y, from_z,
-      to_id, to_x, to_y, to_z,
-      goodness, in_spanning_tree);
-}
-
-/// @brief Callback routine that prints out location when it changes.
-/// @param announce_object is unused.
-/// @param id is ???
-/// @param x is the X location of the robot.
-/// @param y is the Y location of the robot.
-/// @param z is the Y location of the robot (currently ignored.)
-/// @param bearing is the robot bearin in radians.
-///
-/// *Fiducials__location_announce*() is a callback routine that can be
-/// calld to print out the location information.  The location announce
-/// routine is a field of the *Fiducials_Create__Struct*.
-
-//FIXME: Why don't we just pass in a *Location* object???!!!
-
-void Fiducials__location_announce(void *announce_object, int id,
-  double x, double y, double z, double bearing) {
-    File__format(stderr,
-      "Location: id=%d x=%f y=%f bearing=%f\n", id, x, y, bearing);
-}
-
 /// @brief Callback routine tthat prints out the fidicial information.
 /// @param announce_object is unused.
 /// @param id is the tag id.
@@ -505,7 +451,6 @@ void Fiducials__image_set(Fiducials fiducials, CV_Image image)
 void Fiducials__image_show(Fiducials fiducials, bool show) {
     // Grab some values out of *fiduicals*:
     CV_Image debug_image = fiducials->debug_image;
-    CV_Image gray_image = fiducials->gray_image;
     CV_Image original_image = fiducials->original_image;
 
     // Create the window we need:
@@ -619,22 +564,10 @@ Fiducials Fiducials__create(
 
     // Grab some values from *fiducials_create*:
     String_Const fiducials_path = fiducials_create->fiducials_path;
-    String_Const lens_calibrate_file_name =
-      fiducials_create->lens_calibrate_file_name;
     Memory announce_object = fiducials_create->announce_object;
-    Fiducials_Arc_Announce_Routine arc_announce_routine =
-      fiducials_create->arc_announce_routine;
-    Fiducials_Location_Announce_Routine location_announce_routine =
-      fiducials_create->location_announce_routine;
-    Fiducials_Tag_Announce_Routine tag_announce_routine =
-      fiducials_create->tag_announce_routine;
     Fiducials_Fiducial_Announce_Routine  fiducial_announce_routine = 
       fiducials_create->fiducial_announce_routine; 
     String_Const log_file_name = fiducials_create->log_file_name;
-    String_Const map_base_name = fiducials_create->map_base_name;
-    String_Const tag_heights_file_name =
-      fiducials_create->tag_heights_file_name;
-
     // Get *log_file* open if *log_file_name* is not null:
     File log_file = stderr;
     if (log_file_name != (String_Const)0) {
@@ -650,58 +583,6 @@ Fiducials Fiducials__create(
 
     // The north/west/south/east mappings must reside in static
     // memory rather than on the stack:
-
-    static int north_mapping[64] = {
-        //corner1              corner0
-         0,  1,  2,  3,  4,  5,  6,  7,
-         8,  9, 10, 11, 12, 13, 14, 15,
-        16, 17, 18, 19, 20, 21, 22, 23,
-        24, 25, 26, 27, 28, 29, 30, 31,
-        32, 33, 34, 35, 36, 37, 38, 39,
-        40, 41, 42, 43, 44, 45, 46, 47,
-        48, 49, 50, 51, 52, 53, 54, 55,
-        56, 57, 58, 59, 60, 61, 62, 63,
-        //corner2              corner3
-    };
-
-    static int west_mapping[64] = {
-        //corner1              corner0
-         7, 15, 23, 31, 39, 47, 55, 63,
-         6, 14, 22, 30, 38, 46, 54, 62,
-         5, 13, 21, 29, 37, 45, 53, 61,
-         4, 12, 20, 28, 36, 44, 52, 60,
-         3, 11, 19, 27, 35, 43, 51, 59,
-         2, 10, 18, 26, 34, 42, 50, 58,
-         1,  9, 17, 25, 33, 41, 49, 57,
-         0,  8, 16, 24, 32, 40, 48, 56,
-        //corner2              corner3
-    };
-
-    static int south_mapping[64] = {
-        //corner1              corner0
-        63, 62, 61, 60, 59, 58, 57, 56,
-        55, 54, 53, 52, 51, 50, 49, 48,
-        47, 46, 45, 44, 43, 42, 41, 40,
-        39, 38, 37, 36, 35, 34, 33, 32,
-        31, 30, 29, 28, 27, 26, 25, 24,
-        23, 22, 21, 20, 19, 18, 17, 16,
-        15, 14, 13, 12, 11, 10,  9,  8,
-         7,  6,  5,  4,  3,  2,  1,  0,
-        //corner2              corner3
-    };
-
-    static int east_mapping[64] = {
-        //corner1              corner0
-        56, 48, 40, 32, 24, 16,  8,  0,
-        57, 49, 41, 33, 25, 17,  9,  1,
-        58, 50, 42, 34, 26, 18, 10,  2,
-        59, 51, 43, 35, 27, 19, 11,  3,
-        60, 52, 44, 36, 28, 20, 12,  4,
-        61, 53, 45, 37, 29, 21, 13,  5,
-        62, 54, 46, 38, 30, 22, 14,  6,
-        63, 55, 47, 39, 31, 23, 15,  7,
-        //corner2              corner3
-    };
 
     static int north_mapping_flipped[64] = {
         //corner1              corner0
@@ -771,21 +652,6 @@ Fiducials Fiducials__create(
 
     CV_Image map_x = (CV_Image)0;
     CV_Image map_y = (CV_Image)0;
-    if (lens_calibrate_file_name != (String)0) {
-        String full_lens_calibrate_file_name =
-          String__format("%s/%s", fiducials_path, lens_calibrate_file_name);
-        assert (CV__undistortion_setup(
-          full_lens_calibrate_file_name, width, height, &map_x, &map_y) == 0);
-        String__free(full_lens_calibrate_file_name);
-    }
-
-    // Create the *map*:
-    Map map = (Map)0;
-    if (fiducials_create->do_2d_slam) {
-        Map map = Map__create(fiducials_path, map_base_name, announce_object,
-          arc_announce_routine, tag_announce_routine,
-          tag_heights_file_name, "Fiducials__new:Map__create");
-     }
 
     Fiducials_Results results =
       Memory__new(Fiducials_Results, "Fiducials__create");
@@ -794,7 +660,6 @@ Fiducials Fiducials__create(
     // Create and load *fiducials*:
     Fiducials fiducials = Memory__new(Fiducials, "Fiducials__create");
     fiducials = new(fiducials) Fiducials__Struct();
-    fiducials->arc_announce_routine = arc_announce_routine;
     if (fiducial_announce_routine != NULL) 
        fiducials->fiducial_announce_routine = fiducial_announce_routine;
     else
@@ -813,9 +678,7 @@ Fiducials Fiducials__create(
     fiducials->image_size = image_size;
     fiducials->last_x = 0.0;
     fiducials->last_y = 0.0;
-    fiducials->location_announce_routine = location_announce_routine;
     fiducials->log_file = log_file;
-    fiducials->map = map;
     fiducials->map_x = map_x;
     fiducials->map_y = map_y;
     fiducials->mappings = &mappings[0];
@@ -848,10 +711,6 @@ Fiducials Fiducials__create(
 /// *Fiducials__free*() releases the storage associated with *fiducials*.
 
 void Fiducials__free(Fiducials fiducials) {
-    // Write the map out if it changed:
-    if (fiducials->map)
-      Map__save(fiducials->map);
-
     // Free up some *CV_Scalar* colors:
     CV_Scalar__free(fiducials->blue);
     CV_Scalar__free(fiducials->cyan);
@@ -865,25 +724,6 @@ void Fiducials__free(Fiducials fiducials) {
     CV_Size__free(fiducials->size_5x5);
     CV_Size__free(fiducials->size_m1xm1);
 
-    // Free up the storage associated with *locations*:
-    unsigned int locations_size = fiducials->locations.size();
-    for (unsigned int index = 0; index < locations_size; index++) {
-        Location * location = fiducials->locations[index];
-        // Kludge: memory double free?!!!
-        // delete location;
-    }
-
-    unsigned int locations_path_size = fiducials->locations_path.size();
-    for (unsigned int index = 0; index < locations_path_size; index++) {
-        Location * location = fiducials->locations_path[index];
-        // Kludge: memory double free?!!!
-        //Location__free(location);
-    }
-
-    // Relaase the *Map*:
-    if (fiducials->map)
-      Map__free(fiducials->map);
-
     // Finally release *fiducials*:
     Memory__free((Memory)fiducials);
 }
@@ -895,8 +735,6 @@ void Fiducials__free(Fiducials fiducials) {
 /// *fiducials* to be saved.
 
 void Fiducials__map_save(Fiducials fiducials) {
-    if (fiducials->map)
-      Map__save(fiducials->map);
 }
 
 /// @brief Process the current image associated with *fiducials*.
@@ -921,9 +759,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     CV_Image original_image = fiducials->original_image;
     Fiducials_Results results = fiducials->results;
     CV_Image temporary_gray_image = fiducials->temporary_gray_image;
-    Fiducials_Location_Announce_Routine location_announce_routine =
-      fiducials->location_announce_routine;
-    unsigned int sequence_number = fiducials->sequence_number++;
 
     // For *debug_level* 0, we show the original image in color:
     if (debug_index == 0) {
@@ -1017,7 +852,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
     }
 
     // Iterate over all of the *contours*:
-    Map map = fiducials->map;
     unsigned int contours_count = 0;
     for (CV_Sequence contour = contours; contour != (CV_Sequence)0;
       contour = CV_Sequence__next_get(contour)) {
@@ -1188,9 +1022,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                     if (debug_index == 10) {
                         CV_Scalar red = fiducials->red;
                         CV_Scalar green = fiducials->green;
-                        CV_Scalar cyan = fiducials->cyan;
-                        CV_Scalar blue = fiducials->blue;
-
                         // Show white bits as {red} and black bits as {green}:
                         CV_Scalar color = red;
                         if (bit) {
@@ -1278,9 +1109,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                                   "CRC correct, Tag=%d\n", tag_id);
                             }
 
-                            // Allocate a *camera_tag*:
-                            CameraTag * camera_tag = new CameraTag();
-
                             double vertices[4][2];
                             for (unsigned int index = 0; index < 4; index++) {
                               CV_Point2D32F pt = CV_Point2D32F_Vector__fetch1(corners, index);
@@ -1294,236 +1122,12 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                                 vertices[1][0], vertices[1][1],
                                 vertices[2][0], vertices[2][1],
                                 vertices[3][0], vertices[3][1]);
-
-                            if (map) {
-                                // Load up *camera_tag* to get center, twist, etc.:
-                                Tag * tag = Map__tag_lookup(map, tag_id);
-                                if (debug_index == 11) {
-                                    camera_tag->initialize(tag,
-                                      direction_index, corners, debug_image);
-                                } else {
-                                    camera_tag->initialize(tag,
-                                      direction_index, corners, (CV_Image)0);
-                                }
-                                fiducials->current_visibles.push_back(tag);
-                                File__format(log_file, "Tag: %d x=%f y=%f\n",
-                                  tag->id, tag->x, tag->y);
-
-                                // Record the maximum *camera_diagonal*:
-                                double camera_diagonal = camera_tag->diagonal;
-                                double diagonal =
-                                  camera_diagonal;
-                                if (diagonal  > tag->diagonal) {
-                                    tag->diagonal = diagonal;
-                                    tag->updated = (bool)1;
-                                }
-
-                                // Append *camera_tag* to *camera_tags*:
-                                fiducials->camera_tags.push_back(camera_tag);
-                                //File__format(log_file,
-                                //  "Found %d\n", camera_tag->tag->id);
-                            }
                         }
                     }
                 }
             }
         }
     }
-
-    if (!map) {
-        return results;
-    }
- 
-    // Just for consistency sort *camera_tags*:
-    std::sort(fiducials->camera_tags.begin(), fiducials->camera_tags.end(),
-        CameraTag::less);
-
-    // Sweep through all *camera_tag* pairs to generate associated *Arc*'s:
-    unsigned int camera_tags_size = fiducials->camera_tags.size();
-    if (camera_tags_size >= 2) {
-        // Iterate through all pairs, using a "triangle" scan:
-        for (unsigned int tag1_index = 0;
-          tag1_index < camera_tags_size - 1; tag1_index++) {
-            CameraTag * camera_tag1 = fiducials->camera_tags[tag1_index];
-        
-            for (unsigned int tag2_index = tag1_index + 1;
-              tag2_index < camera_tags_size; tag2_index++) {
-                CameraTag * camera_tag2 = fiducials->camera_tags[tag2_index];
-                assert (camera_tag1->tag->id != camera_tag2->tag->id);
-                if (Map__arc_update(map,
-                  camera_tag1, camera_tag2, gray_image, sequence_number) > 0) {
-                    results->map_changed = (bool)1;
-                }
-            }
-        }
-    }
-
-    fiducials->locations.clear();
-    results->image_interesting = (bool)0;
-    if (camera_tags_size > 0) {
-        double pi = 3.14159265358979323846264;
-        unsigned int half_width = CV_Image__width_get(gray_image) >> 1;
-        unsigned int half_height = CV_Image__height_get(gray_image) >> 1;
-        //File__format(log_file,
-        //  "half_width=%d half_height=%d\n", half_width, half_height);
-        for (unsigned int index = 0; index < camera_tags_size; index++) {
-            CameraTag * camera_tag = fiducials->camera_tags[index];
-            Tag * tag = camera_tag->tag;
-            //File__format(log_file,
-            //  "[%d]:tag_id=%d tag_x=%f tag_y=%f tag_twist=%f\n",
-            //  index, tag->id, tag->x, tag->y, tag->twist * 180.0 / pi);
-            double camera_dx = camera_tag->x - half_width;
-            double camera_dy = camera_tag->y - half_height;
-            //File__format(log_file,
-            //  "[%d]:camera_dx=%f camera_dy=%f camera_twist=%f\n",
-            //  index, camera_dx, camera_dy, camera_tag->twist * 180.0 / pi);
-            double polar_distance = hypot(camera_dx, camera_dy);
-            double polar_angle = atan2(camera_dy, camera_dx);
-            //File__format(log_file,
-            //  "[%d]:polar_distance=%f polar_angle=%f\n", index,
-            //  polar_distance, polar_angle * 180.0 / pi);
-            double floor_distance = 
-              polar_distance * tag->world_diagonal / tag->diagonal;
-            double angle =
-              angles::normalize_angle(polar_angle + pi - camera_tag->twist);
-            //File__format(log_file,
-            //  "[%d]:floor_distance=%f angle=%f\n",
-            //  index, floor_distance, angle * 180.0 / pi);
-            double x = tag->x + floor_distance * cos(angle);
-            double y = tag->y + floor_distance * sin(angle);
-            double bearing =
-              angles::normalize_angle(camera_tag->twist + tag->twist);
-
-            // FIXME: Kludge,  There is a sign error somewhere in the code
-            // causes the "sign" on the X axis to be inverted.  We kludge
-            // around the problem with the following disgusting code:
-            bearing = angles::normalize_angle(bearing - pi / 2.0);
-            bearing = -bearing;
-            bearing = angles::normalize_angle(bearing + pi / 2.0);
-
-            //File__format(log_file, "[%d]:x=%f:y=%f:bearing=%f\n",
-            //  index, x, y, bearing * 180.0 / pi);
-            unsigned int location_index = fiducials->locations.size();
-            Location * location = new Location(tag->id,
-              x, y, bearing, floor_distance, location_index);
-            fiducials->locations.push_back(location);
-        }
-
-        // Compute closest location:
-        Location * closest_location = NULL;
-        unsigned int locations_size = fiducials->locations.size();
-        for (unsigned int index = 0; index < locations_size; index++) {
-          Location * location = fiducials->locations[index];
-            if (closest_location == NULL) {
-                closest_location = location;
-            } else {
-                if (location->goodness < closest_location->goodness) {
-                    closest_location = location;
-                }
-            }
-        }
-
-        if (closest_location != NULL) {
-            fiducials->locations_path.push_back(closest_location);
-            //File__format(log_file,
-            //  "Location: x=%f y=%f bearing=%f goodness=%f index=%d\n",
-            //  closest_location->x, closest_location->y,
-            //  closest_location->bearing * 180.0 / pi,
-            //  closest_location->goodness, closest_location->index);
-
-            double change_dx = closest_location->x - fiducials->last_x;
-            double change_dy = closest_location->y - fiducials->last_y;
-            double change = hypot(change_dx, change_dy);
-            if (change > 0.1) {
-                results->image_interesting = (bool)1;
-            }
-            fiducials->last_x = closest_location->x;
-            fiducials->last_y = closest_location->y;
-
-            // send rviz marker message here
-            File__format(log_file,
-              "Location: id=%d x=%f y=%f bearing=%f\n",
-              closest_location->id, closest_location->x, closest_location->y,
-              closest_location->bearing);
-            location_announce_routine(fiducials->announce_object,
-              closest_location->id, closest_location->x, closest_location->y,
-              /* z */ 0.0, closest_location->bearing);
-        }
-    }
-
-    // Visit each *current_tag* in *current_visibles*:
-    unsigned int current_visibles_size = fiducials->current_visibles.size();
-    for (unsigned int current_visibles_index = 0;
-      current_visibles_index < current_visibles_size;
-      current_visibles_index++) {
-        Tag * current_visible =
-          fiducials->current_visibles[current_visibles_index];
-        //File__format(log_file, "Current[%d]:%d\n",
-        //  current_visibles_index, current_visible->id);
-
-        // Always announce *current_visible* as visible:
-        current_visible->visible = (bool)1;
-        if( current_visible->updated ) {
-            Map__tag_announce(map, current_visible,
-                (bool)1, original_image, sequence_number);
-            current_visible->updated = (bool)0;
-        }
-    }
-
-    // Identifiy tags that are no longer visible:
-    unsigned int previous_visibles_size = fiducials->previous_visibles.size();
-    for (unsigned int previous_visibles_index = 0;
-       previous_visibles_index < previous_visibles_size;
-       previous_visibles_index++) {
-        Tag * previous_visible =
-          fiducials->previous_visibles[previous_visibles_index];
-        //File__format(log_file, "Previous[%d]:%d\n",
-        //  previous_visibles_index, previous_visible->id);
-
-        // Now look to see if *previous_visible* is in *current_visibles*:
-        Tag * current_visible = NULL;
-        for (unsigned int current_visibles_index = 0;
-          current_visibles_index < current_visibles_size;
-          current_visibles_index++) {
-            current_visible = 
-              fiducials->current_visibles[current_visibles_index];
-            if (current_visible == previous_visible) {
-                break;
-            }
-            current_visible = NULL;
-        }        
-
-        // *current_visible* is null if it was not found:
-        if (current_visible == NULL) {
-            // Not found => announce the tag as no longer visible:
-            previous_visible->visible = (bool)0;
-            Map__tag_announce(map,
-              previous_visible, (bool)0, original_image, sequence_number);
-        }
-    }
-    // Clear *previous_visibles* and swap *current_visible* with
-    // *previous_visibles*:
-    fiducials->current_visibles = fiducials->previous_visibles;
-    fiducials->previous_visibles.clear();
-    //File__format(log_file, "current_visibles=0x%x previous_visibles=0x%x\n",
-    //  current_visibles, previous_visibles);
-
-    // Clean out *camera_tags*:
-    for( unsigned int i=0; i<fiducials->camera_tags.size(); i++ ) {
-      delete fiducials->camera_tags[i];
-    }
-    fiducials->camera_tags.clear();
-
-    // Flip the debug image:
-    if (fiducials->y_flip) {
-        CV_Image__flip(debug_image, debug_image, 0);
-    }
-
-    // Update the map:
-    Map__update(map, original_image, sequence_number);
-
-    File__format(log_file, "\n");
-    File__flush(log_file);
 
     return results;
 }
@@ -1927,15 +1531,6 @@ void Fiducials__sample_points_compute(
         i = i + 1;
     }
 
-    CV_Point2D32F sample_point0 =
-      CV_Point2D32F_Vector__fetch1(sample_points, 0);
-    CV_Point2D32F sample_point7 =
-      CV_Point2D32F_Vector__fetch1(sample_points, 7);
-    CV_Point2D32F sample_point56 =
-      CV_Point2D32F_Vector__fetch1(sample_points, 56);
-    CV_Point2D32F sample_point63 =
-      CV_Point2D32F_Vector__fetch1(sample_points, 63);
-
     // clockwise direction.  Bit 0 will be closest to corners[1], bit 7
     // will be closest to corners[0], bit 56 closest to corners[2] and
     // bit 63 closest to corners[3].
@@ -1959,46 +1554,12 @@ void Fiducials__sample_points_compute(
 //      (int)sample_point_x, (int)sample_point_y);
 //}
 
-/// @brief Print out tag update information.
-/// @param announce_object is an opaque object from *Map*->*announce_object*.
-/// @param id is the tag id.
-/// @param x is the tag X location.
-/// @param y is the tag Y location.
-/// @param z is the tag Z location.
-/// @param twist is the tag twist in radians.
-/// @param diagonal is the tag diagonal distance.
-/// @param distance_per_pixel is the distance per pixel.
-/// @param visible is (*bool*)1 if the tag is currently in camera
-///        field of view, and (*bool*)0 otherwise.
-/// @param hop_count is the hop count along the spanning tree to the origin.
-///
-/// *Fiducials_tag_announce*() is a tag announce routine that can be
-/// fed into *Fiducials__create*() as a routine to call each time a
-/// tag is updated.
-
-void Fiducials__tag_announce(void *announce_object, int id,
-  double x, double y, double z, double twist, double diagonal,
-  double distance_per_pixel, bool visible, int hop_count) {
-    String_Const visible_text = "";
-    if (!visible) {
-        visible_text = "*** No longer visible ***";
-    }
-    File__format(stderr, "id=%d x=%f y=%f twist=%f %s\n",
-      id, x, y, twist, visible_text);
-}
-
 static struct Fiducials_Create__Struct fiducials_create_struct =
 {
     (String_Const)0,                                // fiducials_path
-    (String_Const)0,                                // lens_calibrate_file_name
     (void *)0,                                        // announce_object
-    (Fiducials_Arc_Announce_Routine)0,                // arc_announce_routine
-    (Fiducials_Location_Announce_Routine)0,        // location_announce_routine
-    (Fiducials_Tag_Announce_Routine)0,                // tag_announce_routine
     (Fiducials_Fiducial_Announce_Routine)0,            // fiducial_announce_routine
     (String_Const)0,                                // log_file_name
-    (String_Const)0,                                // map_base_name
-    (String_Const)0,                                // tag_heights_file_name
 };
 
 /// @brief Returns the one and only *Fiducials_Create* object.
