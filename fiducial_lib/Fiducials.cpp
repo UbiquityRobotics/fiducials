@@ -6,14 +6,12 @@
 
 #include <opencv2/highgui/highgui_c.h>
 
-#include "Camera_Tag.hpp"
 #include "CRC.hpp"
 #include "CV.hpp"
 #include "File.hpp"
 #include "FEC.hpp"
 #include "Fiducials.hpp"
 #include "String.hpp"
-#include "Tag.hpp"
 #include "Location.hpp"
 
 // Introduction:
@@ -1257,9 +1255,6 @@ Fiducials_Results Fiducials__process(Fiducials fiducials) {
                                 File__format(log_file,
                                   "CRC correct, Tag=%d\n", tag_id);
                             }
-
-                            // Allocate a *camera_tag*:
-                            CameraTag * camera_tag = new CameraTag();
 
                             double vertices[4][2];
                             for (unsigned int index = 0; index < 4; index++) {

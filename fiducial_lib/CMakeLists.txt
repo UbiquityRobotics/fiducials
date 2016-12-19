@@ -26,7 +26,7 @@ add_library(fiducials_base
 add_library(fiducials_cv CV.cpp)
 target_link_libraries(fiducials_cv fiducials_base ${OpenCV_LIBS})
 
-add_library(fiducials Fiducials.cpp Camera_Tag.cpp Tag.cpp)
+add_library(fiducials Fiducials.cpp)
 target_link_libraries(fiducials fiducials_base fiducials_cv)
 
 add_executable(Tags Tags.cpp)

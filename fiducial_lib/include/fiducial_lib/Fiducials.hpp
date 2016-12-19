@@ -35,7 +35,6 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 #include "File.hpp"
 #include "FEC.hpp"
 #include "String.hpp"
-#include "Tag.hpp"
 #include "Location.hpp"
 
 class CameraTag;
@@ -49,7 +48,6 @@ struct Fiducials__Struct {
     CV_Scalar black;
     CV_Scalar blue;
     bool blur;
-    std::vector<CameraTag*> camera_tags;
     CV_Point2D32F_Vector corners;
     CV_Scalar cyan;
     CV_Image debug_image;
