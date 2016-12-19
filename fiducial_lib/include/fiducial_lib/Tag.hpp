@@ -48,17 +48,11 @@
 #include "CV.hpp"
 #include "File.hpp"
 #include "SVG.hpp"
-#include "Map.hpp"
-
-class Arc;
 
 /// @brief A *Tag_Struct* represents the location and orientation of one 
 /// ceiling fiducial tag.
 class Tag {
   public:
-    /// @brief List *Arc*'s connected to this *Tag*.
-    std::vector<Arc*> arcs_;
-
     /// @brief Fiducial tag diagnal distance in camera pixels.
     double diagonal;
 
@@ -73,9 +67,6 @@ class Tag {
 
     /// @brief Tag identifier.
     unsigned int id;
-
-    /// @brief Parent *Map* object.
-    Map map;
 
     /// @brief The twist from the floor X axis to the tag bottom edge.
     double twist;
@@ -99,46 +90,17 @@ class Tag {
     bool updated;
 
   public:
-    Tag(unsigned int id, Map map);
-
-    void arc_append(Arc *arc);
-    void bounding_box_update(BoundingBox *bounding_box);
+    Tag(unsigned int id);
 
     void initialize(double angle, double x, double y, double diagonal,
         unsigned int visit);
 
     void svg_write(SVG *svg);
     void write(File out_file);
-    void update_via_arc(Arc *arc, CV_Image image, unsigned int sequence_number);
 
     // static comparisons and file I/O
     static int equal(Tag *tag1, Tag *tag2);
     static bool less(Tag *tag1, Tag *tag2);
-    static Tag * read(File in_file, Map map);
-};
-
-/// @brief A *Tag_Height__Struct* represents a span of tags a the same
-/// ceiling height.
-class TagHeight {
-  public:
-    /// @brief Distance along one side of the tag in world units.
-    double world_diagonal;
-
-    /// @brief The first tag identifier in the span.
-    unsigned int first_id;
-
-    /// @brief The last tag identifier in the span.
-    unsigned int last_id;
-
-    /// @brief The fiducial height above the floor.
-    double z;
-
-  public:
-    static bool less(TagHeight *tag_height1, TagHeight *tag_height2);
-    static TagHeight *xml_read(File in_file);
-
-  private:
-    TagHeight() {}
 };
 
 // *Tag* routines;

@@ -14,6 +14,7 @@
 #include "Fiducials.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
+#include "Location.hpp"
 
 // Introduction:
 //

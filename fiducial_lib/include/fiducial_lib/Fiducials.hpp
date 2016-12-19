@@ -36,6 +36,7 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 #include "FEC.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
+#include "Location.hpp"
 
 class CameraTag;
 
@@ -50,7 +51,6 @@ struct Fiducials__Struct {
     bool blur;
     std::vector<CameraTag*> camera_tags;
     CV_Point2D32F_Vector corners;
-    std::vector<Tag*> current_visibles;
     CV_Scalar cyan;
     CV_Image debug_image;
     unsigned int debug_index;
@@ -66,14 +66,12 @@ struct Fiducials__Struct {
     std::vector<Location*> locations;
     std::vector<Location*> locations_path;
     File log_file;
-    Map map;
     CV_Point origin;
     CV_Image original_image;
     int **mappings;
     CV_Image map_x;
     CV_Image map_y;
     String_Const path;
-    std::vector<Tag*> previous_visibles;
     CV_Scalar purple;
     CV_Scalar red;
     CV_Point2D32F_Vector references;
