@@ -297,6 +297,7 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr &msg) {
             // Load up *fiducials_create*:
             Fiducials_Create fiducials_create =
                 Fiducials_Create__one_and_only();
+                
             fiducials_create->fiducials_path = data_directory.c_str();
             fiducials_create->lens_calibrate_file_name = (String_Const)0;
             fiducials_create->announce_object = (Memory) this;
@@ -307,7 +308,6 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr &msg) {
             fiducials_create->map_base_name = map_file.c_str();
             fiducials_create->tag_heights_file_name = tag_height_file.c_str();
             fiducials_create->fiducial_announce_routine = fiducial_announce;
-            fiducials_create->do_2d_slam = false;
 
             // Create *fiducials* object using first image:
             fiducials = Fiducials__create(image, fiducials_create);

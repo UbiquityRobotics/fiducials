@@ -34,7 +34,6 @@ typedef void (*Fiducials_Fiducial_Announce_Routine)(void *announce_object,
 #include "CV.hpp"
 #include "File.hpp"
 #include "FEC.hpp"
-#include "Map.hpp"
 #include "String.hpp"
 #include "Tag.hpp"
 
@@ -103,7 +102,6 @@ struct Fiducials_Create__Struct {
     String_Const log_file_name;
     String_Const map_base_name;
     String_Const tag_heights_file_name;
-    bool do_2d_slam;
 };
 
 struct Fiducials_Results__Struct {
