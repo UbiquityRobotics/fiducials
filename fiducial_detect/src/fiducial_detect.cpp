@@ -97,9 +97,6 @@ private:
 
     std::vector<fiducial_pose::Fiducial> detected_fiducials;
 
-    geometry_msgs::Pose scale_position(double x, double y, double z,
-                                       double theta);
-
     static void fiducial_announce(void *t, int id, int direction,
                                   double world_diagonal, double x0, double y0,
                                   double x1, double y1, double x2, double y2,
@@ -126,18 +123,6 @@ FiducialsNode::~FiducialsNode() {
         delete update_thread;
         update_thread = NULL;
     }
-}
-
-geometry_msgs::Pose FiducialsNode::scale_position(double x, double y, double z,
-                                                  double theta) {
-    geometry_msgs::Pose res;
-    res.position.x = x / scale;
-    res.position.y = y / scale;
-    res.position.z = z / scale;
-
-    res.orientation = tf::createQuaternionMsgFromYaw(theta);
-
-    return res;
 }
 
 void FiducialsNode::fiducial_announce(void *t, int id, int direction,
