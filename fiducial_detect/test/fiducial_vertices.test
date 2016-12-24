@@ -8,7 +8,7 @@
     <remap from="/camera" to="/camera/image"/>
   </node>
 
-  <test test-name="fiducial_images_test" pkg="fiducial_detect" type="fiducial_images_test">
+  <test test-name="fiducial_vertices_test" pkg="fiducial_detect" type="fiducial_vertices_test">
     <param name="image_directory" value="$(find fiducial_detect)/test/test_images/"/>
   </test>
 
