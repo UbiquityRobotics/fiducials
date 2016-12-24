@@ -65,4 +65,9 @@ if(CATKIN_ENABLE_TESTING)
           test/fiducial_vertices.test 
           test/fiducial_vertices_test.cpp)
         target_link_libraries(fiducial_vertices_test ${catkin_LIBRARIES})
+
+        add_rostest_gtest(fiducial_transform_test 
+          test/fiducial_transform.test 
+          test/fiducial_transform_test.cpp)
+        target_link_libraries(fiducial_transform_test ${catkin_LIBRARIES})
 endif()
