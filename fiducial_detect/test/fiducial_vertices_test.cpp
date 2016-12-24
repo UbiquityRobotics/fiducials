@@ -9,7 +9,7 @@
 #include <fiducial_pose/Fiducial.h>
 #include <fiducial_pose/FiducialTransformArray.h>
 
-class FiducialImagesTest : public ::testing::Test {
+class FiducialsVerticesTests : public ::testing::Test {
 protected:
   virtual void SetUp() { 
     it = new image_transport::ImageTransport(nh);
@@ -31,7 +31,7 @@ protected:
     ros::NodeHandle nh_priv("~");
     nh_priv.getParam("image_directory", image_directory);
 
-    vertices_sub = nh.subscribe("/fiducial_vertices", 1, &FiducialImagesTest::vertices_callback, this);
+    vertices_sub = nh.subscribe("/fiducial_vertices", 1, &FiducialsVerticesTests::vertices_callback, this);
     got_vertices = false;
   }
 
@@ -68,7 +68,7 @@ protected:
   ros::Subscriber vertices_sub;
 };
 
-TEST_F(FiducialImagesTest, fiducial_30) {
+TEST_F(FiducialsVerticesTests, fiducial_30) {
   ros::Rate loop_rate(5);
   while (nh.ok() && !got_vertices) {
     publish_image("fiducial_30.png");
@@ -88,7 +88,7 @@ TEST_F(FiducialImagesTest, fiducial_30) {
   ASSERT_DOUBLE_EQ(426.8039855957031250, vertices.y3);
 }
 
-TEST_F(FiducialImagesTest, fiducial_34) {
+TEST_F(FiducialsVerticesTests, fiducial_34) {
   ros::Rate loop_rate(5);
   while (nh.ok() && !got_vertices) {
     publish_image("fiducial_34.png");
@@ -108,7 +108,7 @@ TEST_F(FiducialImagesTest, fiducial_34) {
   ASSERT_DOUBLE_EQ(118.8109970092773437, vertices.y3);
 }
 
-TEST_F(FiducialImagesTest, fiducial_35) {
+TEST_F(FiducialsVerticesTests, fiducial_35) {
   ros::Rate loop_rate(5);
   while (nh.ok() && !got_vertices) {
     publish_image("fiducial_35.png");
@@ -132,6 +132,6 @@ int main(int argc, char** argv)
 {
 
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "FiducialImagesTest");
+  ros::init(argc, argv, "FiducialsVerticesTests");
   return RUN_ALL_TESTS();
 }
