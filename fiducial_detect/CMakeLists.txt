@@ -61,8 +61,8 @@ if(CATKIN_ENABLE_TESTING)
         # Tests need c++11
         add_definitions(-std=c++11)
         
-        add_rostest_gtest(fiducial_images_test 
-          test/fiducial_images.test 
-          test/fiducial_images_test.cpp)
-        target_link_libraries(fiducial_images_test ${catkin_LIBRARIES})
+        add_rostest_gtest(fiducial_vertices_test 
+          test/fiducial_vertices.test 
+          test/fiducial_vertices_test.cpp)
+        target_link_libraries(fiducial_vertices_test ${catkin_LIBRARIES})
 endif()
