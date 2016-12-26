@@ -54,14 +54,14 @@ correctly specified.  In the `magni_robot` package, this is specified in the URD
 
 2. In order to see the fiducials during map building, run rviz:
 
-        $ roslaunch fiducial_slam fiducial_rviz.launch
+        roslaunch fiducial_slam fiducial_rviz.launch
 
 Note that the robot node should be running (so that the transform from odom to base_link is published)
 and at at least one of the fiducials that is in the the map should have been observed before rviz 
 can display anything in the map frame.
 
-        $ roslaunch fiducial_detect fiducial_detect.launch
-        $ roslaunch fiducial_slam fiducial_slam.launch
+        roslaunch fiducial_detect fiducial_detect.launch
+        roslaunch fiducial_slam fiducial_slam.launch
 		
 At this point the robot should be capable of executing move_base and other navigation functions.		
 
