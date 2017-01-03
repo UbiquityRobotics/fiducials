@@ -92,6 +92,7 @@ public:
 				ids.push_back(id);
 			}
 		}
+        fclose(fp);
 		return ids.size();
 	}
 
