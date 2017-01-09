@@ -33,7 +33,7 @@ from tf.transformations import euler_from_quaternion, quaternion_slerp, \
 
 from fiducial_slam.srv import InitializeMap
 from fiducial_slam.msg import FiducialMapEntry, FiducialMapEntryArray
-from fiducial_slam.Fiducial import Fiducial
+from fiducial_slam.fiducial import Fiducial
 from fiducial_slam import mkdirnotex, rad2deg, deg2rad
 
 
@@ -127,7 +127,6 @@ class Map:
     Load map from file
     """
     def load(self, filename):
-        rospy.logerr("Loading map %s", filename)
         try:
             file = open(filename, "r")
             for line in file.readlines():
@@ -141,7 +140,6 @@ class Map:
                 f.links = map(int, words[9:])
                 self.fiducials[fid] = f
             file.close()
-	    rospy.logwarn("Loaded %d", len(self.fiducials.keys()))
             return True
         except:
             traceback.print_exc()

@@ -49,8 +49,8 @@ from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                quaternion_from_euler
 
 from fiducial_slam.srv import InitializeMap
-from fiducial_slam.Fiducial import Fiducial
-from fiducial_slam.Map import Map
+from fiducial_slam.fiducial import Fiducial
+from fiducial_slam.map import Map
 from fiducial_slam import mkdirnotex, rad2deg, deg2rad, updateLinear, updateAngular
 
 import tf2_ros
