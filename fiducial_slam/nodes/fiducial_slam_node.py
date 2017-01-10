@@ -79,22 +79,8 @@ UNSEEN_TIME = 1.5
 
 
 """
-Radians to degrees
-"""
-def rad2deg(rad):
-    return rad / math.pi * 180.0
-
-"""
-Degrees to radians
-"""
-def deg2rad(deg):
-    return float(deg) * math.pi / 180.0
-
-"""
 Distance from the nearest perpendicular
 """
-
-
 def angularError(r):
     r = r % 360
     rDiff = r % 90
@@ -136,14 +122,14 @@ class FiducialSlam:
        print "frames: odom", self.odomFrame, "map:", self.mapFrame, "pose", self.poseFrame
        self.obsFile = open(self.obsFileName, "a")
        self.transFile = open(self.transFileName, "a")
-       self.tfs = {}
        self.currentSeq = None
        self.imageTime = None
+       self.tfs = {}
        self.numFiducials = 0
        self.mapPublished = False
        if self.sendTf:
            self.br = tf2_ros.TransformBroadcaster()
-       self.tfBuffer = tf2_ros.Buffer()
+       self.tfBuffer = tf2_ros.Buffer(rospy.Time(30))
        self.lr = tf2_ros.TransformListener(self.tfBuffer)
        self.markerPub = rospy.Publisher("fiducials", Marker, queue_size=20)
        self.publishLock = threading.Lock()
@@ -164,7 +150,7 @@ class FiducialSlam:
 
     def close(self):
         self.map.save()
-	self.map.publish(self.mapPub)
+        self.map.publish(self.mapPub)
         self.obsFile.close()
         self.transFile.close()
 
@@ -174,8 +160,9 @@ class FiducialSlam:
     """
     def newTf(self, msg):
         self.currentSeq = msg.image_seq
-        self.imageTime = msg.header.stamp
-        self.tfs = {}
+        imageTime = msg.header.stamp
+        self.imageTime = imageTime
+        tfs = {}
         rospy.loginfo("got tfs from image seq %d", self.currentSeq)
 
         numKnown = 0
@@ -188,7 +175,7 @@ class FiducialSlam:
             mat = numpy.dot(translation_matrix((trans.x, trans.y, trans.z)),
                             quaternion_matrix((rot.x, rot.y, rot.z, rot.w)))
             invMat = numpy.linalg.inv(mat)
-            self.tfs[id] = (mat, invMat, m.object_error, m.image_error, msg.header.frame_id)
+            tfs[id] = (mat, invMat, m.object_error, m.image_error, msg.header.frame_id)
             self.transFile.write("%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n" % \
                                  (id, self.currentSeq, trans.x, trans.y, trans.z, 
                                   rot.x, rot.y, rot.z, rot.w,
@@ -197,21 +184,19 @@ class FiducialSlam:
                 numKnown += 1
             else:
                 numUnknown += 1
-        if numUnknown > 0 and numUnknown > 0:
-            self.updateMap()
+        self.tfs = tfs
+        if numUnknown > 0 and numKnown > 0:
+            self.updateMap(tfs, imageTime)
             mapUpdated = True
-        """
-        if self.useExternalPose:
-            # XXXX needs to be verified with respect to time
-            fiducialKnown = False
-            for f in self.tfs.keys():
-            if self.map.has_key(f):
-                fiducialKnown = True 
-            if not fiducialKnown:
-                for f in self.tfs.keys():
-                    self.updateMapFromExternal(f)
-        """
-        self.updatePose()
+        if self.useExternalPose and numKnown == 0:
+                # Add fiducial pose from external (eg AMCL) localization
+                f = tfs.keys()[0]
+                self.updateMapFromExternal(tfs, f, imageTime, self.mapFrame)
+        if numKnown == 0 and len(self.map.keys()) == 0:
+                # Auto initialize map from one of the fiducials
+                f = tfs.keys()[0]
+                self.updateMapFromExternal(tfs, f, imageTime, self.odomFrame)
+        self.updatePose(tfs, imageTime)
         if not self.pose is None:
             robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
             robotQuat = numpy.array(quaternion_from_matrix(self.pose))
@@ -220,7 +205,7 @@ class FiducialSlam:
             # avoid the map variances decaying from repeated observations
             if self.lastUpdateXyz is None or mapUpdated:
                 if not mapUpdated:
-                    self.updateMap()
+                    self.updateMap(tfs)
                 self.lastUpdateXyz = robotXyz
                 self.lastUpdateYaw = robotYaw
             else:
@@ -229,27 +214,27 @@ class FiducialSlam:
                 print "Distance moved", dist, angle
                 if self.mappingMode or dist > MIN_UPDATE_TRANSLATION \
                    or angle > MIN_UPDATE_ROTATION:
-                    self.updateMap()
+                    self.updateMap(tfs)
                     self.lastUpdateXyz = robotXyz
                     self.lastUpdateYaw = robotYaw
         
     """
     Update the map with fiducial pairs
     """
-    def updateMap(self):
-        for f1 in self.tfs.keys():
-            for f2 in self.tfs.keys():
+    def updateMap(self, tfs):
+        for f1 in tfs.keys():
+            for f2 in tfs.keys():
                 if f1 == f2:
                     continue
                 if not self.map.has_key(f1):
                     continue
-                self.updateMapPair(f1, f2)
+                self.updateMapPair(tfs, f1, f2)
 
     """
     Update the map with the new transform between the fiducial pair
     f1 and f2
     """
-    def updateMapPair(self, f1, f2):
+    def updateMapPair(self, tfs, f1, f2):
         fid1 = self.map[f1]
  
         # Don't update ground truth fidicuals
@@ -259,12 +244,12 @@ class FiducialSlam:
         
         # Don't update f2 if the only estimate of f1 came from it
         if len(fid1.links) == 1 and f1 in fid1.links:
-	    return
+            return
 
         P_fid1 = fid1.pose44()
 
-        (T_camFid1, T_fid1Cam, oerr1, ierr1, frame1) = self.tfs[f1]
-        (T_camFid2, T_fid2Cam, oerr2, ierr2, frame2) = self.tfs[f2]
+        (T_camFid1, T_fid1Cam, oerr1, ierr1, frame1) = tfs[f1]
+        (T_camFid2, T_fid2Cam, oerr2, ierr2, frame2) = tfs[f2]
 
         # transform form fiducial f1 to f2
         T_fid1Fid2 = numpy.dot(T_fid1Cam, T_camFid2)
@@ -310,7 +295,7 @@ class FiducialSlam:
 
         if self.mappingMode or addedNew:
             self.map.save()
-       	    self.map.publish(self.mapPub)
+            self.map.publish(self.mapPub)
 
         if not f1 in fid2.links:
             fid2.links.append(f1)
@@ -320,20 +305,19 @@ class FiducialSlam:
     """
     Update the map with a new fiducial based on an external robot pose
     """
-    def updateMapFromExternal(self, f):
+    def updateMapFromExternal(self, tfs, f, imageTime, worldFrame):
         rospy.logerr("update from external %d" % f)
-        (T_camFid, T_fidCam, oerr1, ierr1, frame) = self.tfs[f]
+        (T_camFid, T_fidCam, oerr1, ierr1, frame) = tfs[f]
         try:
-            trans = self.tfBuffer.lookup_transform(self.mapFrame,
-                                             frame, self.imageTime)
+            trans = self.tfBuffer.lookup_transform(worldFrame, frame, imageTime)
             ct = trans.transform.translation
             cr = trans.transform.rotation
             T_worldCam = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
                               quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
-        except:
-            rospy.logerr("Unable to lookup transfrom from map to camera (%s to %s)" % \
-                         (self.mapFrame, frame))
-	    return
+        except tf2_ros.TransformException:
+            rospy.logerr("Unable to lookup transfrom from world to camera (%s to %s) at %s" % \
+                         (worldFrame, frame, imageTime))
+            return
 
 
         P_fid = numpy.dot(T_worldCam, T_camFid)
@@ -344,7 +328,7 @@ class FiducialSlam:
         quat = numpy.array(quaternion_from_matrix(P_fid))
         (r, p, yaw) = euler_from_quaternion(quat)
 
-        variance = 0.3 # TODO: look at AMCL variance
+        variance = 0.3 # TODO:find something better
         self.map[f].update(xyz, quat, variance)
 
         print "%d updated from external to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f, xyz[0], xyz[1], xyz[2],
@@ -357,27 +341,27 @@ class FiducialSlam:
 
     """ 
     Estimate the pose of the camera from the fiducial to camera
-    transforms in self.tfs
+    transforms in tfs
     """
-    def updatePose(self):
+    def updatePose(self, tfs, imageTime):
         position = None
         orientation = None
         camera = None
 
-        for t in self.tfs.keys():
+        for t in tfs.keys():
             if not self.map.has_key(t):
                 rospy.logwarn("No path to %d" % t)
                 continue
 
-            (T_camFid, T_fidCam, oerr, ierr, frame) = self.tfs[t]
+            (T_camFid, T_fidCam, oerr, ierr, frame) = tfs[t]
 
             try:
                 trans = self.tfBuffer.lookup_transform(frame,
                                                  self.poseFrame,
-                                                 self.imageTime)
-            except:
-                rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s)" % \
-                             (frame, self.poseFrame))
+                                                 imageTime)
+            except tf2_ros.TransformException:
+                rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s) at %s" % \
+                             (frame, self.poseFrame, imageTime))
                 return
         
             ct = trans.transform.translation
@@ -386,7 +370,7 @@ class FiducialSlam:
                                   quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
 
 
-            self.map[t].lastSeenTime = self.imageTime
+            self.map[t].lastSeenTime =imageTime
 
             T_worldFid = self.map[t].pose44()
 
@@ -430,7 +414,7 @@ class FiducialSlam:
                                                      orientation[1],
                                                      orientation[2],
                                                      orientation[3])))
-            self.computeTransform()
+            self.computeTransform(imageTime)
 
     def makeMarker(self, fiducialId, visible=False):
         fiducial = self.map[fiducialId]
@@ -515,10 +499,10 @@ class FiducialSlam:
     """
     Update markers with visibility colors
     """
-    def publishMarkers(self):
+    def publishMarkers(self, tfs):
         self.publishNextMarker()
         t = self.imageTime
-        for fid in self.tfs.keys():
+        for fid in tfs.keys():
             if self.map.has_key(fid):
                 self.visibleMarkers[fid] =  True
         for fid in self.visibleMarkers.keys():
@@ -532,7 +516,7 @@ class FiducialSlam:
     """
     Publish the transform in self.pose
     """
-    def computeTransform(self):
+    def computeTransform(self, imageTime):
         if self.pose is None:
             return
         robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
@@ -564,15 +548,15 @@ class FiducialSlam:
             try: 
                 if self.imageTime is None:
                     rospy.logerr("imageTime is bogus!")
-                trans = self.tfBuffer.lookup_transform(self.poseFrame, self.odomFrame, self.imageTime)
+                trans = self.tfBuffer.lookup_transform(self.poseFrame, self.odomFrame, imageTime)
                 ct = trans.transform.translation
                 cr = trans.transform.rotation
                 odom = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
                               quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
                 pose = numpy.dot(self.pose, odom)
-            except:
-                rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
-                             (self.poseFrame, self.odomFrame))
+            except tf2_ros.TransformException:
+                rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s) at %s" % \
+                             (self.poseFrame, self.odomFrame, self.imageTime))
                 return
         else:
             pose = self.pose
@@ -614,7 +598,7 @@ class FiducialSlam:
         while not rospy.is_shutdown():
             if self.republishTf:
                 self.publishTransform()
-            self.publishMarkers()
+            self.publishMarkers(self.tfs)
             tick += 1
             if (tick % 10) == 0:
                 self.map.publish(self.mapPub)
