@@ -186,7 +186,7 @@ class FiducialSlam:
                 numUnknown += 1
         self.tfs = tfs
         if numUnknown > 0 and numKnown > 0:
-            self.updateMap(tfs, imageTime)
+            self.updateMap(tfs)
             mapUpdated = True
         if self.useExternalPose and numKnown == 0:
                 # Add fiducial pose from external (eg AMCL) localization
