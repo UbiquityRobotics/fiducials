@@ -77,6 +77,7 @@ if(CATKIN_ENABLE_TESTING)
         #                           MD5 05b69d64ab02d79ec4fa4be3a7de05af) 
 
         add_rostest(test/create_map.xml)
+        add_rostest(test/init_map.xml)
         # add_rostest(test/ceiling_test_2.xml)
 
         include_directories(${catkin_INCLUDE_DIRS})
