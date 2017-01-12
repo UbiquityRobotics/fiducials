@@ -2,7 +2,7 @@
 <package format="2">
   <name>fiducial_pose</name>
   <version>0.5.1</version>
-  <description>ROS node to estimate 3D pose with RosbustPlanarPose</description>
+  <description>Library to estimate 3D pose with RosbustPlanarPose</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>

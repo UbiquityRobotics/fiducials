@@ -2,7 +2,7 @@
 <package format="2">
   <name>fiducial_slam</name>
   <version>0.5.1</version>
-  <description>Hercules sensor fusion exploration</description>
+  <description>ROS node to build a 3D map of fiducials and estimate robot pose from fiducial transforms</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>

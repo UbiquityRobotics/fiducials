@@ -2,7 +2,7 @@
 <package format="2">
   <name>fiducial_detect</name>
   <version>0.5.1</version>
-  <description>The fiducials_ros package</description>
+  <description>ROS node to detect fiducial markers and determine their pose</description>
 
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
   <maintainer email="send2arohan@gmail.com">Rohan Agrawal</maintainer>

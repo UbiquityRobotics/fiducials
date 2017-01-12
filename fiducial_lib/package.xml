@@ -2,7 +2,7 @@
 <package format="2">
   <name>fiducial_lib</name>
   <version>0.5.1</version>
-  <description>The fiducials package</description>
+  <description>Library to detect fiducials in an image stream</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
