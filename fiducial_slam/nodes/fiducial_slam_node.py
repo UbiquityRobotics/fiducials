@@ -49,6 +49,9 @@ from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                quaternion_from_euler
 
 from fiducial_slam.srv import InitializeMap
+from fiducial_slam.fiducial import Fiducial
+from fiducial_slam.map import Map
+from fiducial_slam import mkdirnotex, rad2deg, deg2rad, updateLinear, updateAngular
 
 import tf2_ros
 
@@ -75,29 +78,9 @@ CEILING_HEIGHT = 2.77
 UNSEEN_TIME = 1.5
 
 
-def mkdirnotex(filename):  
-    dir=os.path.dirname(filename)  
-    print "Directory", dir
-    if not os.path.exists(dir):  
-        os.makedirs(dir)  
-
-"""
-Radians to degrees
-"""
-def rad2deg(rad):
-    return rad / math.pi * 180.0
-
-"""
-Degrees to radians
-"""
-def deg2rad(deg):
-    return float(deg) * math.pi / 180.0
-
 """
 Distance from the nearest perpendicular
 """
-
-
 def angularError(r):
     r = r % 360
     rDiff = r % 90
@@ -116,63 +99,6 @@ def angularError3D(r, p, y):
     return variance
 
 
-"""
-Weighted average of linear quantities
-"""
-def updateLinear(mean1, var1, mean2, var2):
-    newMean = (mean1 * var2 + mean2 * var1) / (var1 + var2)
-    newVar = 1.0 / (1.0/var1 + 1.0/var2)
-    return [newMean, newVar]
-
-
-"""
-Weighted average of quaternions
-"""
-def updateAngular(quat1, var1, quat2, var2):
-    newMean = quaternion_slerp(quat1, quat2, var1/(var1+var2))
-    newVar = 1.0 / (1.0/var1 + 1.0/var2)
-    return [newMean, newVar]
-
-
-"""
-Class to represent the pose and state of a single fiducial
-"""
-class Fiducial:
-    def __init__(self, id):
-        self.id = id
-        self.position = None
-        self.orientation = None
-        self.variance = None
-        self.observations = 0
-        self.links = []
-        self.publishedMarker = False
-        self.lastSeenTime = rospy.Time(0,0)
-
-    """
-    Return pose as a 4x4 matrix
-    """
-    def pose44(self):
-        return numpy.dot(translation_matrix(self.position),
-                         quaternion_matrix(self.orientation))
-
-    """
-    Update pose with a new observation
-    """
-    def update(self, newPosition, newOrientation, newVariance):
-        if self.observations == 0:
-            self.position = newPosition
-            self.orientation = numpy.array(newOrientation)
-            self.variance = newVariance
-            self.observations = 1
-            return
-        self.position, v1 = updateLinear(self.position, self.variance,
-                                         newPosition, newVariance)
-        self.orientation, v2 = updateAngular(self.orientation, self.variance,
-                                             newOrientation, newVariance)
-        self.variance = v1
-        self.observations += 1
-
-
 class FiducialSlam:
     def __init__(self):
        rospy.init_node('fiducial_slam')
@@ -187,9 +113,6 @@ class FiducialSlam:
        self.obsFileName = os.path.expanduser(rospy.get_param("~obs_file", "obs.txt"))
        self.transFileName = os.path.expanduser(rospy.get_param("~trans_file", "trans.txt"))
        self.fiducialsAreLevel = rospy.get_param("~fiducials_are_level", True)
-       if self.initialMapFileName:
-           mkdirnotex(self.initialMapFileName)
-       mkdirnotex(self.mapFileName)
        mkdirnotex(self.obsFileName)
        mkdirnotex(self.transFileName)
        # How much to future date our tfs
@@ -199,15 +122,14 @@ class FiducialSlam:
        print "frames: odom", self.odomFrame, "map:", self.mapFrame, "pose", self.poseFrame
        self.obsFile = open(self.obsFileName, "a")
        self.transFile = open(self.transFileName, "a")
-       self.tfs = {}
        self.currentSeq = None
        self.imageTime = None
+       self.tfs = {}
        self.numFiducials = 0
-       self.fiducials = {}
        self.mapPublished = False
        if self.sendTf:
            self.br = tf2_ros.TransformBroadcaster()
-       self.tfBuffer = tf2_ros.Buffer()
+       self.tfBuffer = tf2_ros.Buffer(rospy.Time(30))
        self.lr = tf2_ros.TransformListener(self.tfBuffer)
        self.markerPub = rospy.Publisher("fiducials", Marker, queue_size=20)
        self.publishLock = threading.Lock()
@@ -218,121 +140,29 @@ class FiducialSlam:
        self.robotYaw = 0.0
        self.lastUpdateXyz = None
        self.lastUpdateYaw = None
-       loaded = False
-       if self.initialMapFileName:     
-           loaded = self.loadMap(self.initialMapFileName)
-       else:
-           loaded = self.loadMap(self.mapFileName)
-       if not loaded:
-           rospy.logerr("could not load map %s", filename)
+       self.map = Map(self.mapFileName, self.initialMapFileName)
        self.position = None
        self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped, queue_size=1)
        self.mapPub = rospy.Publisher("/fiducial_map", FiducialMapEntryArray, queue_size=100) 
-       rospy.Service('initialize_fiducial_map', InitializeMap, self.initializeMap)
+       rospy.Service('initialize_fiducial_map', InitializeMap, self.map.initialize)
        rospy.Subscriber("/fiducial_transforms", FiducialTransformArray, self.newTf)
 
 
     def close(self):
-        self.saveMap(self.mapFileName)
+        self.map.save()
+        self.map.publish(self.mapPub)
         self.obsFile.close()
         self.transFile.close()
 
-
-    """
-    InitiailzeMap service
-    """
-    def initializeMap(self, msg):
-        print "InitializeMap service call"
-        self.fiducials = {}
-        for fid in msg.fiducials:
-            f = Fiducial(fid.fiducial_id)
-            f.position = numpy.array(fid.x, fid.y, fid.z)
-            f.orientation = quaternion_from_euler(fid.rx, fid.ry, fid.rz)
-            self.fiducials[fid] = f
-
-    """ 
-    Publish map
-    """
-    def publishMap(self):
-        fmea = FiducialMapEntryArray()
-        fids = self.fiducials.keys()
-        fids.sort()
-        for fid in fids:
-            f = self.fiducials[fid]
-            fme = FiducialMapEntry()
-            fme.fiducial_id = fid
-            fme.x = f.position[0]
-            fme.y = f.position[1]
-            fme.z = f.position[2]
-            (r, p, y) = euler_from_quaternion(f.orientation)
-            fme.rx = r
-            fme.ry = p
-            fme.rz = y
-            fmea.fiducials.append(fme)
-        self.mapPub.publish(fmea)
-
-    """
-    Save current map to file
-    """
-    def saveMap(self, filename):
-        print "** save map **"
-        file = open(filename, "w")
-        fids = self.fiducials.keys()
-        fids.sort()
-        for fid in fids:
-            f = self.fiducials[fid]
-            pos = f.position
-            (r, p, y) = euler_from_quaternion(f.orientation)
-            file.write("%d %r %r %r %r %r %r %r %d %s\n" % \
-              (f.id, pos[0], pos[1], pos[2],
-               rad2deg(r), rad2deg(p), rad2deg(y),
-               f.variance, f.observations,
-               ' '.join(map(str, f.links))))
-        file.close()
-        self.publishMap()
-
-    """
-    Load map from file
-    """
-    def loadMap(self, filename):
-        try:
-            file = open(filename, "r")
-            for line in file.readlines():
-                words = line.split()
-                fid = int(words[0])
-                f = Fiducial(fid)
-                f.position = numpy.array((float(words[1]), float(words[2]), float(words[3])))
-                f.orientation = quaternion_from_euler(deg2rad(words[4]), deg2rad(words[5]), deg2rad(words[6]))
-                f.variance = float(words[7])
-                f.observations = int(words[8])
-                f.links = map(int, words[9:])
-                self.fiducials[fid] = f
-            file.close()
-            return True
-        except:
-            return False
-
-    """
-    Print out fiducual vertices
-    """
-    def showVertices(self):
-        fids = self.fiducials.keys()
-        fids.sort()
-        for fid in fids:
-            f = self.fiducials[fid]
-            pos = f.position
-            off = numpy.dot(translation_matrix(numpy.array((-1.0, -1.0, 0.0))), f.pose44())
-            off = numpy.dot(translation_matrix(numpy.array((1.0, -1.0, 0.0))), f.pose44())
-            off = numpy.dot(translation_matrix(numpy.array((1.0, 1.0, 0.0))), f.pose44())
-            off = numpy.dot(translation_matrix(numpy.array((-1.0, 1.0, 0.0))), f.pose44())
 
     """
     Called when a FiducialTransformArray is received
     """
     def newTf(self, msg):
         self.currentSeq = msg.image_seq
-        self.imageTime = msg.header.stamp
-        self.tfs = {}
+        imageTime = msg.header.stamp
+        self.imageTime = imageTime
+        tfs = {}
         rospy.loginfo("got tfs from image seq %d", self.currentSeq)
 
         numKnown = 0
@@ -345,30 +175,28 @@ class FiducialSlam:
             mat = numpy.dot(translation_matrix((trans.x, trans.y, trans.z)),
                             quaternion_matrix((rot.x, rot.y, rot.z, rot.w)))
             invMat = numpy.linalg.inv(mat)
-            self.tfs[id] = (mat, invMat, m.object_error, m.image_error, msg.header.frame_id)
+            tfs[id] = (mat, invMat, m.object_error, m.image_error, msg.header.frame_id)
             self.transFile.write("%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n" % \
                                  (id, self.currentSeq, trans.x, trans.y, trans.z, 
                                   rot.x, rot.y, rot.z, rot.w,
                                   m.object_error, m.image_error, m.fiducial_area))
-            if self.fiducials.has_key(id):
+            if self.map.has_key(id):
                 numKnown += 1
             else:
                 numUnknown += 1
-        if numUnknown > 0 and numUnknown > 0:
-            self.updateMap()
+        self.tfs = tfs
+        if numUnknown > 0 and numKnown > 0:
+            self.updateMap(tfs)
             mapUpdated = True
-        """
-        if self.useExternalPose:
-            # XXXX needs to be verified with respect to time
-            fiducialKnown = False
-            for f in self.tfs.keys():
-            if self.fiducials.has_key(f):
-                fiducialKnown = True 
-            if not fiducialKnown:
-                for f in self.tfs.keys():
-                    self.updateMapFromExternal(f)
-        """
-        self.updatePose()
+        if self.useExternalPose and numKnown == 0:
+                # Add fiducial pose from external (eg AMCL) localization
+                f = tfs.keys()[0]
+                self.updateMapFromExternal(tfs, f, imageTime, self.mapFrame)
+        if numKnown == 0 and len(self.map.keys()) == 0:
+                # Auto initialize map from one of the fiducials
+                f = tfs.keys()[0]
+                self.updateMapFromExternal(tfs, f, imageTime, self.odomFrame)
+        self.updatePose(tfs, imageTime)
         if not self.pose is None:
             robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
             robotQuat = numpy.array(quaternion_from_matrix(self.pose))
@@ -377,7 +205,7 @@ class FiducialSlam:
             # avoid the map variances decaying from repeated observations
             if self.lastUpdateXyz is None or mapUpdated:
                 if not mapUpdated:
-                    self.updateMap()
+                    self.updateMap(tfs)
                 self.lastUpdateXyz = robotXyz
                 self.lastUpdateYaw = robotYaw
             else:
@@ -386,42 +214,42 @@ class FiducialSlam:
                 print "Distance moved", dist, angle
                 if self.mappingMode or dist > MIN_UPDATE_TRANSLATION \
                    or angle > MIN_UPDATE_ROTATION:
-                    self.updateMap()
+                    self.updateMap(tfs)
                     self.lastUpdateXyz = robotXyz
                     self.lastUpdateYaw = robotYaw
         
     """
     Update the map with fiducial pairs
     """
-    def updateMap(self):
-        for f1 in self.tfs.keys():
-            for f2 in self.tfs.keys():
+    def updateMap(self, tfs):
+        for f1 in tfs.keys():
+            for f2 in tfs.keys():
                 if f1 == f2:
                     continue
-                if not self.fiducials.has_key(f1):
+                if not self.map.has_key(f1):
                     continue
-                self.updateMapPair(f1, f2)
+                self.updateMapPair(tfs, f1, f2)
 
     """
     Update the map with the new transform between the fiducial pair
     f1 and f2
     """
-    def updateMapPair(self, f1, f2):
-        fid1 = self.fiducials[f1]
+    def updateMapPair(self, tfs, f1, f2):
+        fid1 = self.map[f1]
  
         # Don't update ground truth fidicuals
-        if self.fiducials.has_key(f2):
-            if self.fiducials[f2].variance == 0.0:
+        if self.map.has_key(f2):
+            if self.map[f2].variance == 0.0:
                 return
         
         # Don't update f2 if the only estimate of f1 came from it
         if len(fid1.links) == 1 and f1 in fid1.links:
-	    return
+            return
 
         P_fid1 = fid1.pose44()
 
-        (T_camFid1, T_fid1Cam, oerr1, ierr1, frame1) = self.tfs[f1]
-        (T_camFid2, T_fid2Cam, oerr2, ierr2, frame2) = self.tfs[f2]
+        (T_camFid1, T_fid1Cam, oerr1, ierr1, frame1) = tfs[f1]
+        (T_camFid2, T_fid2Cam, oerr2, ierr2, frame2) = tfs[f2]
 
         # transform form fiducial f1 to f2
         T_fid1Fid2 = numpy.dot(T_fid1Cam, T_camFid2)
@@ -440,33 +268,34 @@ class FiducialSlam:
                                 oerr1, ierr1, oerr2, ierr2))
                                                 
         addedNew = False
-        if not self.fiducials.has_key(f2):
-            self.fiducials[f2] = Fiducial(f2)
+        if not self.map.has_key(f2):
+            self.map[f2] = Fiducial(f2)
             addedNew = True
             rospy.loginfo("New fiducial %s" % f2)
             
-        fid2 = self.fiducials[f2]
+        fid2 = self.map[f2]
 
         variance  = angularError3D(r, p , yaw)
         # and take into account the variance of the reference fiducial
         # we convolve the gaussians, which is achieved by adding the variances
-        print "*** %f var %f %f" % (f1, self.fiducials[f1].variance, variance)
-        variance = variance + self.fiducials[f1].variance
+        print "*** %f var %f %f" % (f1, self.map[f1].variance, variance)
+        variance = variance + self.map[f1].variance
         
         if self.fiducialsAreLevel:
             (r1, p1, y1) = euler_from_quaternion(fid1.orientation)
             (r, p, yaw) = euler_from_quaternion(quat)
             quat = quaternion_from_euler(r1, p1, yaw)
 
-        self.fiducials[f2].update(xyz, quat, variance)
+        self.map[f2].update(xyz, quat, variance)
 
         print "%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f2, xyz[0], xyz[1], xyz[2],
             rad2deg(r), rad2deg(p), rad2deg(yaw), variance)
           
-        p = self.fiducials[f2].position
+        p = self.map[f2].position
 
         if self.mappingMode or addedNew:
-            self.saveMap(self.mapFileName)
+            self.map.save()
+            self.map.publish(self.mapPub)
 
         if not f1 in fid2.links:
             fid2.links.append(f1)
@@ -476,63 +305,63 @@ class FiducialSlam:
     """
     Update the map with a new fiducial based on an external robot pose
     """
-    def updateMapFromExternal(self, f):
+    def updateMapFromExternal(self, tfs, f, imageTime, worldFrame):
         rospy.logerr("update from external %d" % f)
-        (T_camFid, T_fidCam, oerr1, ierr1, frame) = self.tfs[f]
+        (T_camFid, T_fidCam, oerr1, ierr1, frame) = tfs[f]
         try:
-            trans = self.tfBuffer.lookup_transform(self.mapFrame,
-                                             frame, self.imageTime)
+            trans = self.tfBuffer.lookup_transform(worldFrame, frame, imageTime)
             ct = trans.transform.translation
             cr = trans.transform.rotation
             T_worldCam = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
                               quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
-        except:
-            rospy.logerr("Unable to lookup transfrom from map to camera (%s to %s)" % \
-                         (self.mapFrame, frame))
-	    return
+        except tf2_ros.TransformException:
+            rospy.logerr("Unable to lookup transfrom from world to camera (%s to %s) at %s" % \
+                         (worldFrame, frame, imageTime))
+            return
 
 
         P_fid = numpy.dot(T_worldCam, T_camFid)
 
-        self.fiducials[f] = Fiducial(f)
+        self.map[f] = Fiducial(f)
                              
         xyz = numpy.array(translation_from_matrix(P_fid))[:3]
         quat = numpy.array(quaternion_from_matrix(P_fid))
         (r, p, yaw) = euler_from_quaternion(quat)
 
-        variance = 0.3 # TODO: look at AMCL variance
-        self.fiducials[f].update(xyz, quat, variance)
+        variance = 0.3 # TODO:find something better
+        self.map[f].update(xyz, quat, variance)
 
         print "%d updated from external to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f, xyz[0], xyz[1], xyz[2],
             rad2deg(r), rad2deg(p), rad2deg(yaw), variance)
           
-        p = self.fiducials[f].position
-        self.saveMap(self.mapFileName)
+        p = self.map[f].position
+        self.map.save()
+        self.map.publish(self.mapPub)
 
 
     """ 
     Estimate the pose of the camera from the fiducial to camera
-    transforms in self.tfs
+    transforms in tfs
     """
-    def updatePose(self):
+    def updatePose(self, tfs, imageTime):
         position = None
         orientation = None
         camera = None
 
-        for t in self.tfs.keys():
-            if not self.fiducials.has_key(t):
+        for t in tfs.keys():
+            if not self.map.has_key(t):
                 rospy.logwarn("No path to %d" % t)
                 continue
 
-            (T_camFid, T_fidCam, oerr, ierr, frame) = self.tfs[t]
+            (T_camFid, T_fidCam, oerr, ierr, frame) = tfs[t]
 
             try:
                 trans = self.tfBuffer.lookup_transform(frame,
                                                  self.poseFrame,
-                                                 self.imageTime)
-            except:
-                rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s)" % \
-                             (frame, self.poseFrame))
+                                                 imageTime)
+            except tf2_ros.TransformException:
+                rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s) at %s" % \
+                             (frame, self.poseFrame, imageTime))
                 return
         
             ct = trans.transform.translation
@@ -541,9 +370,9 @@ class FiducialSlam:
                                   quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
 
 
-            self.fiducials[t].lastSeenTime = self.imageTime
+            self.map[t].lastSeenTime =imageTime
 
-            T_worldFid = self.fiducials[t].pose44()
+            T_worldFid = self.map[t].pose44()
 
             T_worldCam = numpy.dot(T_worldFid, T_fidCam)
             T_worldBase = numpy.dot(T_worldCam, T_camBase)
@@ -585,10 +414,10 @@ class FiducialSlam:
                                                      orientation[1],
                                                      orientation[2],
                                                      orientation[3])))
-            self.computeTransform()
+            self.computeTransform(imageTime)
 
     def makeMarker(self, fiducialId, visible=False):
-        fiducial = self.fiducials[fiducialId]
+        fiducial = self.map[fiducialId]
         marker = Marker()
         marker.type = Marker.CUBE
         marker.action = Marker.ADD
@@ -632,8 +461,8 @@ class FiducialSlam:
         links.color = ColorRGBA(0, 0, 1, 1)
         links.scale.x = 0.05
         for fid2 in fiducial.links:
-            if self.fiducials.has_key(fid2):
-                position2 = self.fiducials[fid2].position
+            if self.map.has_key(fid2):
+                position2 = self.map[fid2].position
                 links.points.append(Point(position[0], position[1], position[2]))
                 links.points.append(Point(position2[0], position2[1], position2[2]))
         links.id = fiducialId + 20000
@@ -659,10 +488,10 @@ class FiducialSlam:
     def publishNextMarker(self):
         if self.mapPublished:
             return
-        for fid in self.fiducials.keys():
-            if not self.fiducials[fid].publishedMarker:
+        for fid in self.map.keys():
+            if not self.map.fiducials[fid].publishedMarker:
                 self.publishMarker(fid)
-                self.fiducials[fid].publishedMarker = True
+                self.map.fiducials[fid].publishedMarker = True
                 return
         self.mapPublished = True
         print "Markers published"
@@ -670,14 +499,14 @@ class FiducialSlam:
     """
     Update markers with visibility colors
     """
-    def publishMarkers(self):
+    def publishMarkers(self, tfs):
         self.publishNextMarker()
         t = self.imageTime
-        for fid in self.tfs.keys():
-            if self.fiducials.has_key(fid):
+        for fid in tfs.keys():
+            if self.map.has_key(fid):
                 self.visibleMarkers[fid] =  True
         for fid in self.visibleMarkers.keys():
-            if (t - self.fiducials[fid].lastSeenTime).to_sec() > UNSEEN_TIME:
+            if (t - self.map[fid].lastSeenTime).to_sec() > UNSEEN_TIME:
                 self.publishMarker(fid, False)
                 del self.visibleMarkers[fid]
             else:
@@ -687,7 +516,7 @@ class FiducialSlam:
     """
     Publish the transform in self.pose
     """
-    def computeTransform(self):
+    def computeTransform(self, imageTime):
         if self.pose is None:
             return
         robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
@@ -719,15 +548,15 @@ class FiducialSlam:
             try: 
                 if self.imageTime is None:
                     rospy.logerr("imageTime is bogus!")
-                trans = self.tfBuffer.lookup_transform(self.poseFrame, self.odomFrame, self.imageTime)
+                trans = self.tfBuffer.lookup_transform(self.poseFrame, self.odomFrame, imageTime)
                 ct = trans.transform.translation
                 cr = trans.transform.rotation
                 odom = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
                               quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
                 pose = numpy.dot(self.pose, odom)
-            except:
-                rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s)" % \
-                             (self.poseFrame, self.odomFrame))
+            except tf2_ros.TransformException:
+                rospy.logerr("Unable to lookup transfrom from odom to robot (%s to %s) at %s" % \
+                             (self.poseFrame, self.odomFrame, self.imageTime))
                 return
         else:
             pose = self.pose
@@ -769,10 +598,10 @@ class FiducialSlam:
         while not rospy.is_shutdown():
             if self.republishTf:
                 self.publishTransform()
-            self.publishMarkers()
+            self.publishMarkers(self.tfs)
             tick += 1
             if (tick % 10) == 0:
-                self.publishMap()
+                self.map.publish(self.mapPub)
             try:
                 rate.sleep()
             except:

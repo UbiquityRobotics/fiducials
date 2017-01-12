@@ -4,7 +4,7 @@
 <launch>
   <arg name="mapping_mode" default="true"/>
   <arg name="map_frame" default="map"/>
-  <arg name="odom_frame" default=""/>
+  <arg name="odom_frame" default="odom"/>
   <arg name="pose_frame" default="base_link"/>
   <arg name="publish_tf" default="true"/>
   <arg name="use_external_pose" default="true"/>
