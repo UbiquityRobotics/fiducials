@@ -185,6 +185,8 @@ class FiducialSlam:
             else:
                 numUnknown += 1
         self.tfs = tfs
+        if numKnown == 0 and numUnknown == 0:
+            return
         if numUnknown > 0 and numKnown > 0:
             self.updateMap(tfs)
             mapUpdated = True
