@@ -221,8 +221,11 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
   
     haveCamInfo = false;
 
+    int dicno;
+
     nh.param<bool>("publish_images", publish_images, false);
     nh.param<double>("fiducial_len", fiducial_len, 0.14);
+    nh.param<int>("dictionary", dicno, 7);
 
     image_pub = it.advertise("/fiducial_images", 1);
 
@@ -230,7 +233,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
     pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("/fiducial_transforms", 1)); 
     
-    dictionary = aruco::getPredefinedDictionary(aruco::DICT_5X5_1000);
+    dictionary = aruco::getPredefinedDictionary(dicno);
 
     detectorParams = new aruco::DetectorParameters();
     detectorParams->doCornerRefinement = true;

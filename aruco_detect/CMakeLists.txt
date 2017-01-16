@@ -36,21 +36,26 @@ link_directories(${orocos_kdl_LIBRARY_DIRS})
 
 add_executable(aruco_detect src/aruco_detect.cpp)
 add_executable(test_board src/test_board.cpp)
+add_executable(create_marker src/create_marker.cpp)
 
 target_link_libraries(aruco_detect ${catkin_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries(test_board ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(create_marker ${OpenCV_LIBS})
 
 #############
 ## Install ##
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS aruco_detect
+install(TARGETS aruco_detect create_marker
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+catkin_install_python(PROGRAMS scripts/create_markers.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 ) 
