@@ -4,7 +4,7 @@
 -->
 <launch>
   <node name="camera_pose" pkg="tf2_ros" type="static_transform_publisher"
-        args="0.0 0.0 0.0 0.0 0.0 0.0 0.0 base_link camera" />
+        args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 base_link camera" />
 
  <node pkg="fiducial_detect" name="fiducial_detect" type="fiducial_detect">
     <param name="image_transport" value="compressed" />

@@ -6,10 +6,10 @@
   <param name="/use_sim_time" value="true"/>
 
   <node name="camera_pose" pkg="tf2_ros" type="static_transform_publisher" 
-        args="0.0 0.0 0.0 0.0 0.0 0.0 0.0 base_link raspicam" />
+        args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 base_link raspicam" />
 
   <node name="robot_pose" pkg="tf2_ros" type="static_transform_publisher" 
-        args="0.0 0.0 0.0 0.0 0.0 0.0 0.0 odom base_link" />
+        args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 odom base_link" />
 
   <node type="fiducial_slam_node.py" pkg="fiducial_slam" name="fiducial_slam">
     <param name="map_file" value="$(find fiducial_slam)/test/map3.txt" />
