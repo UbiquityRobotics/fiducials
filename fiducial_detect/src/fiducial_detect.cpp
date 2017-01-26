@@ -55,6 +55,7 @@
 #include "fiducial_pose/rosrpp.h"
 
 #include "fiducial_pose/Fiducial.h"
+#include "fiducial_pose/FiducialArray.h"
 #include "fiducial_pose/FiducialTransform.h"
 #include "fiducial_pose/FiducialTransformArray.h"
 
@@ -63,6 +64,7 @@ private:
     ros::Publisher vertices_pub;
     ros::Publisher pose_pub;
     fiducial_pose::FiducialTransformArray fiducialTransformArray;
+    fiducial_pose::FiducialArray fiducialVertexArray;
 
     ros::Subscriber caminfo_sub;
     image_transport::Subscriber img_sub;
@@ -95,7 +97,6 @@ private:
     std::string data_directory;
     std::string log_file;
 
-    std::vector<fiducial_pose::Fiducial> detected_fiducials;
 
     static void fiducial_announce(void *t, int id, int direction,
                                   double world_diagonal, double x0, double y0,
@@ -145,9 +146,6 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
         "(%.2f,%.2f)",
         id, direction, world_diagonal, x0, y0, x1, y1, x2, y2, x3, y3);
 
-    fid.header.stamp = last_image_time;
-    fid.header.frame_id = last_camera_frame;
-    fid.image_seq = last_image_seq;
     fid.direction = direction;
     fid.fiducial_id = id;
     fid.x0 = x0;
@@ -159,8 +157,7 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
     fid.x3 = x3;
     fid.y3 = y3;
 
-    vertices_pub.publish(fid);
-    detected_fiducials.push_back(fid);
+    fiducialVertexArray.fiducials.push_back(fid);
 
     if (estimate_pose) {
         if (!haveCamInfo && frameNum < 5) {
@@ -214,6 +211,11 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr &msg) {
     fiducialTransformArray.header.frame_id = last_camera_frame;
     fiducialTransformArray.image_seq = msg->header.seq;
 
+    fiducialVertexArray.fiducials.clear();
+    fiducialVertexArray.header.stamp = msg->header.stamp;
+    fiducialVertexArray.header.frame_id = last_camera_frame;
+    fiducialVertexArray.image_seq = msg->header.seq;
+
     try {
         cv_bridge::CvImageConstPtr cv_img;
         cv_img = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8);
@@ -234,10 +236,14 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr &msg) {
         }
         Fiducials__image_set(fiducials, image);
         Fiducials_Results results = Fiducials__process(fiducials);
+
+        pose_pub.publish(fiducialTransformArray);
+        vertices_pub.publish(fiducialVertexArray);
+ 
         ROS_INFO("Processed image");
         if (publish_images) {
-            for (unsigned i = 0; i < detected_fiducials.size(); i++) {
-                fiducial_pose::Fiducial &fid = detected_fiducials[i];
+            for (unsigned i = 0; i < fiducialVertexArray.fiducials.size(); i++) {
+                fiducial_pose::Fiducial &fid = fiducialVertexArray.fiducials[i];
                 cvLine(image, cvPoint(fid.x0, fid.y0), cvPoint(fid.x1, fid.y1),
                        CV_RGB(255, 0, 0), 3);
                 cvLine(image, cvPoint(fid.x1, fid.y1), cvPoint(fid.x2, fid.y2),
@@ -247,14 +253,16 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr &msg) {
                 cvLine(image, cvPoint(fid.x3, fid.y3), cvPoint(fid.x0, fid.y0),
                        CV_RGB(255, 0, 0), 3);
             }
-            detected_fiducials.clear();
             image_pub.publish(msg);
         }
+
+    fiducialVertexArray.fiducials.clear();
+    fiducialTransformArray.transforms.clear();
+
     } catch (cv_bridge::Exception &e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
     }
 
-    pose_pub.publish(fiducialTransformArray);
     ROS_INFO("Finished processing image seq %d", last_image_seq);
     processing_image = false;
 }
@@ -280,7 +288,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle &nh) : scale(0.75) {
         image_pub = img_transport.advertise("fiducial_images", 1);
     }
 
-    vertices_pub = nh.advertise<fiducial_pose::Fiducial>("/fiducial_vertices", 1);
+    vertices_pub = nh.advertise<fiducial_pose::FiducialArray>("/fiducial_vertices", 1);
 
     if (estimate_pose) {
         pose_pub =  nh.advertise<fiducial_pose::FiducialTransformArray>(

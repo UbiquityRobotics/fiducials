@@ -6,7 +6,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-#include <fiducial_pose/Fiducial.h>
+#include <fiducial_pose/FiducialArray.h>
 #include <fiducial_pose/FiducialTransformArray.h>
 
 class FiducialsVerticesTests : public ::testing::Test {
@@ -46,9 +46,9 @@ protected:
     CameraInfoPub.publish(c_info);
   }
 
-  void vertices_callback(const fiducial_pose::Fiducial& f) {
+  void vertices_callback(const fiducial_pose::FiducialArray& f) {
     got_vertices = true;
-    vertices = f;
+    fiducials = f;
   }
 
   ros::NodeHandle nh;
@@ -64,7 +64,7 @@ protected:
 
   // Set up subscribing
   bool got_vertices;
-  fiducial_pose::Fiducial vertices;
+  fiducial_pose::FiducialArray fiducials;
   ros::Subscriber vertices_sub;
 };
 
@@ -76,6 +76,10 @@ TEST_F(FiducialsVerticesTests, fiducial_30) {
     loop_rate.sleep();
   }
 
+  ASSERT_EQ(1,  fiducials.fiducials.size());
+
+  fiducial_pose::Fiducial& vertices = fiducials.fiducials[0];
+ 
   ASSERT_EQ(30, vertices.fiducial_id);
 
   ASSERT_DOUBLE_EQ(788.7144775390625000, vertices.x0);
@@ -96,6 +100,11 @@ TEST_F(FiducialsVerticesTests, fiducial_34) {
     loop_rate.sleep();
   }
 
+  int len = fiducials.fiducials.size();
+  ASSERT_LE(1, len);
+  
+  fiducial_pose::Fiducial& vertices = fiducials.fiducials[len-1];
+
   ASSERT_EQ(34, vertices.fiducial_id);
 
   ASSERT_DOUBLE_EQ(840.3661499023437500, vertices.x0);
@@ -115,6 +124,11 @@ TEST_F(FiducialsVerticesTests, fiducial_35) {
     ros::spinOnce();
     loop_rate.sleep();
   }
+
+  int len = fiducials.fiducials.size();
+  ASSERT_LE(1, len);
+  
+  fiducial_pose::Fiducial& vertices = fiducials.fiducials[len-1];
 
   ASSERT_EQ(35, vertices.fiducial_id);
 

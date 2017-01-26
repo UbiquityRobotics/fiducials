@@ -47,6 +47,7 @@
 #include <sensor_msgs/image_encodings.h>
 
 #include "fiducial_pose/Fiducial.h"
+#include "fiducial_pose/FiducialArray.h"
 #include "fiducial_pose/FiducialTransform.h"
 #include "fiducial_pose/FiducialTransformArray.h"
 
@@ -124,6 +125,11 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     fta.header.frame_id = frameId;
     fta.image_seq = msg->header.seq;
 
+    fiducial_pose::FiducialArray fva;
+    fva.header.stamp = msg->header.stamp;
+    fva.header.frame_id =frameId;
+    fva.image_seq = msg->header.seq;
+
     try {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         
@@ -136,9 +142,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
  
         for (int i=0; i<ids.size(); i++) {
             fiducial_pose::Fiducial fid;
-            fid.header.stamp = msg->header.stamp;
-            fid.header.frame_id =frameId;
-            fid.image_seq = msg->header.seq;
             fid.fiducial_id = ids[i];
             
             fid.x0 = corners[i][0].x;
@@ -149,9 +152,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             fid.y2 = corners[i][2].y;
             fid.x3 = corners[i][3].x;
             fid.y3 = corners[i][3].y;
-
-            vertices_pub->publish(fid);
+            fva.fiducials.push_back(fid);
         }
+
+        vertices_pub->publish(fva);
 
         if (!haveCamInfo) {
             if (frameNum > 5) {
@@ -229,7 +233,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
     image_pub = it.advertise("/fiducial_images", 1);
 
-    vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::Fiducial>("/fiducial_vertices", 1));
+    vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialArray>("/fiducial_vertices", 1));
 
     pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("/fiducial_transforms", 1)); 
     
