@@ -6,7 +6,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-#include <fiducial_pose/Fiducial.h>
+#include <fiducial_pose/FiducialArray.h>
 #include <fiducial_pose/FiducialTransformArray.h>
 
 class ArucoImagesTest : public ::testing::Test {
@@ -46,9 +46,9 @@ protected:
     CameraInfoPub.publish(c_info);
   }
 
-  void vertices_callback(const fiducial_pose::Fiducial& f) {
+  void vertices_callback(const fiducial_pose::FiducialArray& f) {
     got_vertices = true;
-    vertices = f;
+    fiducials = f;
   }
 
   ros::NodeHandle nh;
@@ -64,7 +64,7 @@ protected:
 
   // Set up subscribing
   bool got_vertices;
-  fiducial_pose::Fiducial vertices;
+  fiducial_pose::FiducialArray fiducials;
   ros::Subscriber vertices_sub;
 };
 
@@ -76,6 +76,9 @@ TEST_F(ArucoImagesTest, tag_01_d7_14cm) {
     loop_rate.sleep();
   }
 
+  ASSERT_LE(1, fiducials.fiducials.size());
+
+  const fiducial_pose::Fiducial& vertices = fiducials.fiducials[0];
   ASSERT_EQ(1, vertices.fiducial_id);
 
   ASSERT_FLOAT_EQ(569.90051, vertices.x0);

@@ -94,19 +94,11 @@ void undistortPoints(cv::Mat pts, cv::Mat K, cv::Mat dist, bool doUndistort)
 bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
 		       	      fiducial_pose::FiducialTransform* ft)
 {
-  ROS_INFO("date %d id %d direction %d", 
-	   msg->header.stamp.sec, msg->fiducial_id,
-	   msg->direction);
+  ROS_INFO("id %d direction %d", msg->fiducial_id, msg->direction);
 
   if (!haveCamInfo) {
     ROS_ERROR("No camera info");
     return false;
-  }
-
-  if (currentFrame != msg->image_seq) {
-    //frameTime = msg->header.stamp;
-    frameTime = ros::Time::now();
-    currentFrame = msg->image_seq;
   }
 
   /* The verices are ordered anti-clockwise, starting with the top-left
@@ -115,8 +107,8 @@ bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
        1  0
   */
 
-  printf("frame %d fid %d dir %d vertices %lf %lf %lf %lf %lf %lf %lf %lf\n",
-	 msg->image_seq, msg->fiducial_id, msg->direction, 
+  printf("fid %d dir %d vertices %lf %lf %lf %lf %lf %lf %lf %lf\n",
+	 msg->fiducial_id, msg->direction, 
 	 msg->x0, msg->y0, msg->x1, msg->y1,
 	 msg->x2, msg->y2, msg->x3, msg->y3);
   

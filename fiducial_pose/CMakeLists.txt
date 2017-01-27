@@ -15,6 +15,7 @@ find_package(OpenCV REQUIRED)
 add_message_files(
    FILES
    Fiducial.msg
+   FiducialArray.msg
    FiducialTransform.msg
    FiducialTransformArray.msg
 )

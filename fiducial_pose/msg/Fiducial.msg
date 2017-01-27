@@ -1,8 +1,5 @@
  # Details of a detected fiducial.
 
- Header header
-
- int32 image_seq
  int32 fiducial_id
  int32 direction
 
