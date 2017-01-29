@@ -121,6 +121,7 @@ class FiducialSlam:
        self.obsFileName = os.path.expanduser(rospy.get_param("~obs_file", "obs.txt"))
        self.transFileName = os.path.expanduser(rospy.get_param("~trans_file", "trans.txt"))
        self.fiducialsAreLevel = rospy.get_param("~fiducials_are_level", True)
+       self.medianFilterSamples = rospy.get_param("~median_filter_samples", 0)
        mkdirnotex(self.obsFileName)
        mkdirnotex(self.transFileName)
        # How much to future date our tfs
@@ -150,6 +151,7 @@ class FiducialSlam:
        self.lastUpdateYaw = None
        self.map = Map(self.mapFileName, self.initialMapFileName)
        self.position = None
+       self.positionHistory = []
        self.posePub = rospy.Publisher("/fiducial_pose", PoseWithCovarianceStamped, queue_size=1)
        self.mapPub = rospy.Publisher("/fiducial_map", FiducialMapEntryArray, queue_size=100)
        rospy.Service('initialize_fiducial_map', InitializeMap, self.map.initialize)
@@ -407,6 +409,12 @@ class FiducialSlam:
                 orientation, v2 = updateAngular(orientation, variance,
                                                 quat, thisvar)
                 variance = v1
+
+        if self.medianFilterSamples > 0:
+            self.positionHistory.append(position)
+            if len(self.positionHistory) > self.medianFilterSamples:
+                self.positionHistory.pop(0)
+            position = numpy.median(self.positionHistory, axis=0)
 
         if not position is None:
             (r, p, y) = euler_from_quaternion(orientation)
