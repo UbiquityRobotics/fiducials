@@ -227,9 +227,32 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
     int dicno;
 
+    detectorParams = new aruco::DetectorParameters();
+
     nh.param<bool>("publish_images", publish_images, false);
     nh.param<double>("fiducial_len", fiducial_len, 0.14);
     nh.param<int>("dictionary", dicno, 7);
+
+    nh.param<double>("adaptiveThreshConstant", detectorParams->adaptiveThreshConstant, 7);
+    nh.param<int>("adaptiveThreshWinSizeMax", detectorParams->adaptiveThreshWinSizeMax, 53); /* defailt 23 */
+    nh.param<int>("adaptiveThreshWinSizeMin", detectorParams->adaptiveThreshWinSizeMin, 3);
+    nh.param<int>("adaptiveThreshWinSizeStep", detectorParams->adaptiveThreshWinSizeStep, 4); /* default 10 */
+    nh.param<int>("cornerRefinementMaxIterations", detectorParams->cornerRefinementMaxIterations, 30);
+    nh.param<double>("cornerRefinementMinAccuracy", detectorParams->cornerRefinementMinAccuracy, 0.01); /* default 0.1 */
+    nh.param<int>("cornerRefinementWinSize", detectorParams->cornerRefinementWinSize, 5);
+    nh.param<bool>("doCornerRefinement",detectorParams->doCornerRefinement, true); /* default false */
+    nh.param<double>("errorCorrectionRate", detectorParams->errorCorrectionRate , 0.6);
+    nh.param<double>("minCornerDistanceRate", detectorParams->minCornerDistanceRate , 0.05);
+    nh.param<int>("markerBorderBits", detectorParams->markerBorderBits, 1);
+    nh.param<double>("maxErroneousBitsInBorderRate", detectorParams->maxErroneousBitsInBorderRate, 0.04);
+    nh.param<int>("minDistanceToBorder", detectorParams->minDistanceToBorder, 3);
+    nh.param<double>("minMarkerDistanceRate", detectorParams->minMarkerDistanceRate, 0.05);
+    nh.param<double>("minMarkerPerimeterRate", detectorParams->minMarkerPerimeterRate, 0.1); /* default 0.3 */
+    nh.param<double>("maxMarkerPerimeterRate", detectorParams->maxMarkerPerimeterRate, 4.0);
+    nh.param<double>("minOtsuStdDev", detectorParams->minOtsuStdDev, 5.0);
+    nh.param<double>("perspectiveRemoveIgnoredMarginPerCell", detectorParams->perspectiveRemoveIgnoredMarginPerCell, 0.13);
+    nh.param<int>("perspectiveRemovePixelPerCell", detectorParams->perspectiveRemovePixelPerCell, 8);
+    nh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.04); /* default 0.05 */
 
     image_pub = it.advertise("/fiducial_images", 1);
 
@@ -238,9 +261,6 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("/fiducial_transforms", 1)); 
     
     dictionary = aruco::getPredefinedDictionary(dicno);
-
-    detectorParams = new aruco::DetectorParameters();
-    detectorParams->doCornerRefinement = true;
 
     img_sub = it.subscribe("/camera", 1,
                            &FiducialsNode::imageCallback, this);
