@@ -9,6 +9,7 @@
   <arg name="publish_tf" default="true"/>
   <arg name="use_external_pose" default="false"/>
   <arg name="future" default="0.0"/>
+  <arg name="median_filter_samples" default="0"/>
 
 
   <node type="fiducial_slam_node.py" pkg="fiducial_slam" output="screen" name="fiducial_slam">
@@ -22,5 +23,6 @@
     <param name="publish_tf" value="$(arg publish_tf)" />
     <param name="future" value="$(arg future)" />
     <param name="use_external_pose" value="$(arg use_external_pose)" />
+    <param name="median_filter_samples" value="$(arg median_filter_samples)" />
   </node>
 </launch>
