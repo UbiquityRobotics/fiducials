@@ -252,7 +252,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<double>("minOtsuStdDev", detectorParams->minOtsuStdDev, 5.0);
     nh.param<double>("perspectiveRemoveIgnoredMarginPerCell", detectorParams->perspectiveRemoveIgnoredMarginPerCell, 0.13);
     nh.param<int>("perspectiveRemovePixelPerCell", detectorParams->perspectiveRemovePixelPerCell, 8);
-    nh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.04); /* default 0.05 */
+    nh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.01); /* default 0.05 */
 
     image_pub = it.advertise("/fiducial_images", 1);
 
