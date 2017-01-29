@@ -370,7 +370,7 @@ class FiducialSlam:
                                                  imageTime)
             except tf2_ros.TransformException:
                 rospy.logerr("Unable to lookup transfrom from camera to robot (%s to %s) at %s" % \
-                             (obs.cameraFrame, self.poseFrame, obs.imageTime))
+                             (obs.cameraFrame, self.poseFrame, imageTime))
                 return
 
             ct = trans.transform.translation
