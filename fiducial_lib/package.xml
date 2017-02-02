@@ -4,19 +4,13 @@
   <version>0.5.1</version>
   <description>Library to detect fiducials in an image stream</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
   <maintainer email="send2arohan@gmail.com">Rohan Agrawal</maintainer> 
   <maintainer email="wayne@gramlich.net">Wayne Gramlich</maintainer>
 
-
-  <!-- One license tag required, multiple allowed, one license per tag -->
-  <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
   <license>BSD</license>
 
   <author email="wayne@gramlich.net">Wayne Gramlich</author>
-
 
   <buildtool_depend>catkin</buildtool_depend>
 
