@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(fiducial_slam)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
    std_msgs
    nav_msgs
@@ -25,7 +22,6 @@ add_message_files(
    FiducialMapEntry.msg
    FiducialMapEntryArray.msg
 )
-
 
 ##############
 ## Services ##
@@ -51,7 +47,6 @@ catkin_install_python(PROGRAMS scripts/move_origin.py scripts/init_map.py
         nodes/init_amcl.py nodes/fiducial_slam_node.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-
 
 ###########
 ## Tests ##
@@ -89,4 +84,3 @@ if(CATKIN_ENABLE_TESTING)
           test/localization_test.cpp)
         target_link_libraries(localization_test ${catkin_LIBRARIES} ${OpenCV_LIBS})
 endif()
-

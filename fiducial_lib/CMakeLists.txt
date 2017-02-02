@@ -51,5 +51,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
 catkin_install_python(PROGRAMS scripts/create_markers.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-
-

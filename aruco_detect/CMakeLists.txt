@@ -2,9 +2,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(aruco_detect)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf2_geometry_msgs
@@ -30,11 +27,8 @@ catkin_package(INCLUDE_DIRS include
 ## Build ##
 ###########
 
-
 include_directories(${catkin_INCLUDE_DIRS} include)
 include_directories(${OpenCV_INCLUDE_DIRS})
-
-#link_directories(${orocos_kdl_LIBRARY_DIRS})
 
 add_executable(aruco_detect src/aruco_detect.cpp)
 add_executable(test_board src/test_board.cpp)
@@ -64,7 +58,6 @@ install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 ) 
 
-
 ###########
 ## Tests ##
 ###########
@@ -80,4 +73,3 @@ if(CATKIN_ENABLE_TESTING)
           test/aruco_images_test.cpp)
         target_link_libraries(aruco_images_test ${catkin_LIBRARIES} ${OpenCV_LIBS})
 endif()
-
