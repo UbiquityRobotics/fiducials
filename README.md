@@ -16,4 +16,4 @@ Once the map has been constructed, the robot can identify
 its location by locating itself relative to one or more 
 ceiling fiducials.
 
-Documentation is at [http://wiki.ros.org/aruco_detect](http://wiki.ros.org/fiducials).
+Documentation is at [http://wiki.ros.org/fiducials](http://wiki.ros.org/fiducials).
