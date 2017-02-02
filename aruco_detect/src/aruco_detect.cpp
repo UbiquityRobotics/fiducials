@@ -45,14 +45,17 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
+#include <dynamic_reconfigure/server.h>
 
 #include "fiducial_pose/Fiducial.h"
 #include "fiducial_pose/FiducialArray.h"
 #include "fiducial_pose/FiducialTransform.h"
 #include "fiducial_pose/FiducialTransformArray.h"
+#include "aruco_detect/DetectorParamsConfig.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
+
 
 #include <list>
 #include <string>
@@ -86,13 +89,46 @@ class FiducialsNode {
     cv::Ptr<aruco::DetectorParameters> detectorParams;
     cv::Ptr<aruco::Dictionary> dictionary;
 
-    void imageCallback(const sensor_msgs::ImageConstPtr & msg);
-    void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr & msg);
+    void imageCallback(const sensor_msgs::ImageConstPtr &msg);
+    void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
+    void configCallback(aruco_detect::DetectorParamsConfig &config, uint32_t level);
+
+    dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
+    dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
   public:
     FiducialsNode(ros::NodeHandle &nh);
 };
 
+
+void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, uint32_t level)
+{
+    /* Don't load initial config, since it will overwrite the rosparam settings */
+    if (level == 0xFFFFFFFF) {
+        return;
+    }
+
+    detectorParams->adaptiveThreshConstant = config.adaptiveThreshConstant;
+    detectorParams->adaptiveThreshWinSizeMin = config.adaptiveThreshWinSizeMin;
+    detectorParams->adaptiveThreshWinSizeMax = config.adaptiveThreshWinSizeMax;
+    detectorParams->adaptiveThreshWinSizeStep = config.adaptiveThreshWinSizeStep;
+    detectorParams->cornerRefinementMaxIterations = config.cornerRefinementMaxIterations;
+    detectorParams->cornerRefinementMinAccuracy = config.cornerRefinementMinAccuracy;
+    detectorParams->cornerRefinementWinSize = config.cornerRefinementWinSize;
+    detectorParams->doCornerRefinement = config.doCornerRefinement;
+    detectorParams->errorCorrectionRate = config.errorCorrectionRate;
+    detectorParams->minCornerDistanceRate = config.minCornerDistanceRate;
+    detectorParams->markerBorderBits = config.markerBorderBits;
+    detectorParams->maxErroneousBitsInBorderRate = config.maxErroneousBitsInBorderRate;
+    detectorParams->minDistanceToBorder = config.minDistanceToBorder;
+    detectorParams->minMarkerDistanceRate = config.minMarkerDistanceRate;
+    detectorParams->minMarkerPerimeterRate = config.minMarkerPerimeterRate;
+    detectorParams->maxMarkerPerimeterRate = config.maxMarkerPerimeterRate;
+    detectorParams->minOtsuStdDev = config.minOtsuStdDev;
+    detectorParams->perspectiveRemoveIgnoredMarginPerCell = config.perspectiveRemoveIgnoredMarginPerCell;
+    detectorParams->perspectiveRemovePixelPerCell = config.perspectiveRemovePixelPerCell;
+    detectorParams->polygonalApproxAccuracyRate = config.polygonalApproxAccuracyRate;
+}
 
 void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
 {
@@ -199,10 +235,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
         }
 
-        //cv::imshow("image", cv_ptr->image);
-        ////cv::waitKey(2);
-	image_pub.publish(cv_ptr->toImageMsg());
-
+	    image_pub.publish(cv_ptr->toImageMsg());
         pose_pub->publish(fta);
     }
      catch(cv_bridge::Exception & e) {
@@ -227,6 +260,8 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
     int dicno;
 
+    detectorParams = new aruco::DetectorParameters();
+
     nh.param<bool>("publish_images", publish_images, false);
     nh.param<double>("fiducial_len", fiducial_len, 0.14);
     nh.param<int>("dictionary", dicno, 7);
@@ -239,14 +274,35 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     
     dictionary = aruco::getPredefinedDictionary(dicno);
 
-    detectorParams = new aruco::DetectorParameters();
-    detectorParams->doCornerRefinement = true;
-
     img_sub = it.subscribe("/camera", 1,
                            &FiducialsNode::imageCallback, this);
 
     caminfo_sub = nh.subscribe("/camera_info", 1,
 			       &FiducialsNode::camInfoCallback, this);
+
+    callbackType = boost::bind(&FiducialsNode::configCallback, this, _1, _2);
+    configServer.setCallback(callbackType);
+
+    nh.param<double>("adaptiveThreshConstant", detectorParams->adaptiveThreshConstant, 7);
+    nh.param<int>("adaptiveThreshWinSizeMax", detectorParams->adaptiveThreshWinSizeMax, 53); /* defailt 23 */
+    nh.param<int>("adaptiveThreshWinSizeMin", detectorParams->adaptiveThreshWinSizeMin, 3);
+    nh.param<int>("adaptiveThreshWinSizeStep", detectorParams->adaptiveThreshWinSizeStep, 4); /* default 10 */
+    nh.param<int>("cornerRefinementMaxIterations", detectorParams->cornerRefinementMaxIterations, 30);
+    nh.param<double>("cornerRefinementMinAccuracy", detectorParams->cornerRefinementMinAccuracy, 0.01); /* default 0.1 */
+    nh.param<int>("cornerRefinementWinSize", detectorParams->cornerRefinementWinSize, 5);
+    nh.param<bool>("doCornerRefinement",detectorParams->doCornerRefinement, true); /* default false */
+    nh.param<double>("errorCorrectionRate", detectorParams->errorCorrectionRate , 0.6);
+    nh.param<double>("minCornerDistanceRate", detectorParams->minCornerDistanceRate , 0.05);
+    nh.param<int>("markerBorderBits", detectorParams->markerBorderBits, 1);
+    nh.param<double>("maxErroneousBitsInBorderRate", detectorParams->maxErroneousBitsInBorderRate, 0.04);
+    nh.param<int>("minDistanceToBorder", detectorParams->minDistanceToBorder, 3);
+    nh.param<double>("minMarkerDistanceRate", detectorParams->minMarkerDistanceRate, 0.05);
+    nh.param<double>("minMarkerPerimeterRate", detectorParams->minMarkerPerimeterRate, 0.1); /* default 0.3 */
+    nh.param<double>("maxMarkerPerimeterRate", detectorParams->maxMarkerPerimeterRate, 4.0);
+    nh.param<double>("minOtsuStdDev", detectorParams->minOtsuStdDev, 5.0);
+    nh.param<double>("perspectiveRemoveIgnoredMarginPerCell", detectorParams->perspectiveRemoveIgnoredMarginPerCell, 0.13);
+    nh.param<int>("perspectiveRemovePixelPerCell", detectorParams->perspectiveRemovePixelPerCell, 8);
+    nh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.01); /* default 0.05 */
 
     ROS_INFO("Aruco detection ready");
 }
