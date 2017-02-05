@@ -2,6 +2,11 @@
 Changelog for package fiducial_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* moved documentation to ROS wiki
+* Contributors: Jim Vaughan, Rohan Agrawal
+
 0.5.1 (2016-12-28)
 ------------------
 * Remove old configuration params

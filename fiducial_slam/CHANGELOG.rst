@@ -2,6 +2,13 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Split Python into separate files
+* Ddded median filter option
+* Better exception/handling
+* Contributors: Jim Vaughan, Rohan Agrawal
+
 0.5.1 (2016-12-28)
 ------------------
 * Map pub srv (`#36 <https://github.com/UbiquityRobotics/fiducials/issues/36>`_)
