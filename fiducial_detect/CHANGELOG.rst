@@ -2,8 +2,8 @@
 Changelog for package fiducial_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2017-02-04)
+------------------
 * moved documentation to ROS wiki
 * Removed unused code
 * Added transform test

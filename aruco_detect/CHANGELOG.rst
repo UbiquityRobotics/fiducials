@@ -2,8 +2,8 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2017-02-04)
+------------------
 * moved documentation to ROS wiki
 * added utilities to generate PDF files of fiducials
 * Expose aruco detection parameters
