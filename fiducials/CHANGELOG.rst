@@ -2,6 +2,9 @@
 Changelog for package fiducials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.6.0 (2017-02-04)
 ------------------
 * Update package.xml
