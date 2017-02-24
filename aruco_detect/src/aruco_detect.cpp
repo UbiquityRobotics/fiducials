@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Austin Hendrix
+ * Copyright (c) 2017, Austin Hendrix
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
  * those of the authors and should not be interpreted as representing official
  * policies, either expressed or implied, of the FreeBSD Project.
  *
- * Author: Austin Hendrix <namniart@gmail.com>
  */
 
 #include <assert.h>
