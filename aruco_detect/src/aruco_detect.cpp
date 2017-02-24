@@ -95,8 +95,11 @@ class FiducialsNode {
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
+    sensor_msgs::ImageConstPtr image = NULL;
+
   public:
     FiducialsNode(ros::NodeHandle &nh);
+    void processImage();
 };
 
 
@@ -152,21 +155,27 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image");
     frameNum++;
+    image = msg;
+}
 
+void FiducialsNode::processImage() {
+    if (image == NULL) {
+        return;
+    }
     cv_bridge::CvImagePtr cv_ptr;
 
     fiducial_pose::FiducialTransformArray fta;
-    fta.header.stamp = msg->header.stamp;
+    fta.header.stamp = image->header.stamp;
     fta.header.frame_id = frameId;
-    fta.image_seq = msg->header.seq;
+    fta.image_seq = image->header.seq;
 
     fiducial_pose::FiducialArray fva;
-    fva.header.stamp = msg->header.stamp;
+    fva.header.stamp = image->header.stamp;
     fva.header.frame_id =frameId;
-    fva.image_seq = msg->header.seq;
+    fva.image_seq = image->header.seq;
 
     try {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        cv_ptr = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
         
         vector <int>  ids;
         vector <vector <Point2f> > corners, rejected;
@@ -234,7 +243,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
         }
 
-	    image_pub.publish(cv_ptr->toImageMsg());
+        image_pub.publish(cv_ptr->toImageMsg());
         pose_pub->publish(fta);
     }
      catch(cv_bridge::Exception & e) {
@@ -310,9 +319,12 @@ int main(int argc, char ** argv) {
     ros::init(argc, argv, "aruco_detect");
     ros::NodeHandle nh("~");
 
-    FiducialsNode * node = new FiducialsNode(nh);
+    FiducialsNode node(nh);
 
-    ros::spin();
+    while(ros::ok()) {
+        ros::spinOnce();
+        node.processImage();
+    }
 
     return 0;
 }
