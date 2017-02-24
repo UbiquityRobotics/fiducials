@@ -95,7 +95,8 @@ class FiducialsNode {
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
-    sensor_msgs::ImageConstPtr image = NULL;
+    sensor_msgs::ImageConstPtr image;
+    bool got_image;
 
   public:
     FiducialsNode(ros::NodeHandle &nh);
@@ -156,12 +157,14 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image");
     frameNum++;
     image = msg;
+    got_image = true;
 }
 
 void FiducialsNode::processImage() {
-    if (image == NULL) {
+    if (!got_image) {
         return;
     }
+
     cv_bridge::CvImagePtr cv_ptr;
 
     fiducial_pose::FiducialTransformArray fta;
@@ -252,6 +255,7 @@ void FiducialsNode::processImage() {
      catch(cv::Exception & e) {
         ROS_ERROR("cv exception: %s", e.what());
     }
+    got_image = false;
 }
 
 FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
@@ -265,6 +269,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     dist = cv::Mat::zeros(1, 5, CV_64F);
   
     haveCamInfo = false;
+    got_image = false;
 
     int dicno;
 
