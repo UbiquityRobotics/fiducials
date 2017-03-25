@@ -62,6 +62,45 @@
 using namespace std;
 using namespace cv;
 
+// Euclidean distance between two points
+double dist(const cv::Point2f &p1, const cv::Point2f &p2)
+{
+    double x1 = p1.x;
+    double y1 = p1.y;
+    double x2 = p2.x;
+    double y2 = p2.y;
+
+    double dx = x1 - x2;
+    double dy = y1 - y2;
+
+    return sqrt(dx*dx + dy*dy);
+}
+
+// Compute area in image of a fiducial, using Heron's formula
+// to find the area of two triangles
+double calcFiducialArea(std::vector<cv::Point2f> pts)
+{
+    Point2f &p0 = pts.at(0);
+    Point2f &p1 = pts.at(1);
+    Point2f &p2 = pts.at(2);
+    Point2f &p3 = pts.at(3);
+
+    double a1 = dist(p0, p1);
+    double b1 = dist(p0, p3);
+    double c1 = dist(p1, p3);
+
+    double a2 = dist(p1, p2);
+    double b2 = dist(p2, p3);
+    double c2 = c1;
+
+    double s1 = (a1 + b1 + c1) / 2.0;
+    double s2 = (a2 + b2 + c2) / 2.0;
+
+    a1 = sqrt(s1*(s1-a1)*(s1-b1)*(s1-c1));
+    a2 = sqrt(s2*(s2-a2)*(s2-b2)*(s2-c2));
+    return a1+a2;
+}
+
 class FiducialsNode {
   private:
     ros::Publisher * vertices_pub;
@@ -187,6 +226,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             fid.y2 = corners[i][2].y;
             fid.x3 = corners[i][3].x;
             fid.y3 = corners[i][3].y;
+
             fva.fiducials.push_back(fid);
         }
 
@@ -217,6 +257,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
             fiducial_pose::FiducialTransform ft;
             ft.fiducial_id = ids[i];
+            ft.fiducial_area = calcFiducialArea(corners[i]);
 
             ft.transform.translation.x = tvecs[i][0];
             ft.transform.translation.y = tvecs[i][1];
