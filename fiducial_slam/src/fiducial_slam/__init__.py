@@ -32,9 +32,7 @@ def deg2rad(deg):
 """
 Weighted average of linear quantities
 """
-def updateLinear(mean1, sigma1, mean2, sigma2):
-    var1 = sigma1**2.0
-    var2 = sigma2**2.0
+def updateLinear(mean1, var1, mean2, var2):
     newMean = (mean1 * var2 + mean2 * var1) / (var1 + var2)
     #newVar = 1.0 / (1.0/var1 + 1.0/var2)
     # =((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))

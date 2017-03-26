@@ -7,4 +7,7 @@ u2 = 2
 sigma1 = 0.1
 sigma2 = 0.1
 
-print updateLinear(u1, sigma1, u2, sigma2)
+var1 = sigma1**2.0
+var2 = sigma2**2.0
+ 
+print updateLinear(u1, var1, u2, var2)
