@@ -54,6 +54,7 @@
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
+#include <opencv2/calib3d.hpp>
 
 
 #include <list>
@@ -188,6 +189,51 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
     frameId = msg->header.frame_id;
 }
 
+/**
+  * @brief Return object points for the system centered in a single marker, given the marker length
+  */
+static void _getSingleMarkerObjectPoints(float markerLength, OutputArray _objPoints) {
+
+    CV_Assert(markerLength > 0);
+
+    _objPoints.create(4, 1, CV_32FC3);
+    Mat objPoints = _objPoints.getMat();
+    // set coordinate system in the middle of the marker, with Z pointing out
+    objPoints.ptr< Vec3f >(0)[0] = Vec3f(-markerLength / 2.f, markerLength / 2.f, 0);
+    objPoints.ptr< Vec3f >(0)[1] = Vec3f(markerLength / 2.f, markerLength / 2.f, 0);
+    objPoints.ptr< Vec3f >(0)[2] = Vec3f(markerLength / 2.f, -markerLength / 2.f, 0);
+    objPoints.ptr< Vec3f >(0)[3] = Vec3f(-markerLength / 2.f, -markerLength / 2.f, 0);
+}
+
+void myEstimatePoseSingleMarkers(InputArrayOfArrays _corners, float markerLength,
+                               InputArray _cameraMatrix, InputArray _distCoeffs,
+                               OutputArray _rvecs, OutputArray _tvecs) {
+
+    CV_Assert(markerLength > 0);
+
+    Mat markerObjPoints;
+    _getSingleMarkerObjectPoints(markerLength, markerObjPoints);
+    int nMarkers = (int)_corners.total();
+    _rvecs.create(nMarkers, 1, CV_64FC3);
+    _tvecs.create(nMarkers, 1, CV_64FC3);
+
+    Mat rvecs = _rvecs.getMat(), tvecs = _tvecs.getMat();
+
+    //// for each marker, calculate its pose
+    for (int i = 0; i < nMarkers; i++) {
+       cv::solvePnP(markerObjPoints, _corners.getMat(i), _cameraMatrix, _distCoeffs,
+                _rvecs.getMat(i), _tvecs.getMat(i));
+    }
+
+    // this is the parallel call for the previous commented loop (result is equivalent)
+#if 0
+    parallel_for_(Range(0, nMarkers),
+                  SinglePoseEstimationParallel(markerObjPoints, _corners, _cameraMatrix,
+                                               _distCoeffs, rvecs, tvecs));
+#endif
+}
+
+
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image");
     frameNum++;
@@ -239,7 +285,8 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             return;
         }
 
-        aruco::estimatePoseSingleMarkers(corners, fiducial_len, K, dist, rvecs, tvecs);
+        myEstimatePoseSingleMarkers(corners, fiducial_len, K, dist, rvecs, tvecs);
+
         if(ids.size() > 0) {
             aruco::drawDetectedMarkers(cv_ptr->image, corners, ids);
         }
