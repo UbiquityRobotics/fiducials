@@ -118,8 +118,8 @@ class FiducialsNode {
     double fiducial_len;
     
     bool haveCamInfo;
-    cv::Mat K;
-    cv::Mat dist;
+    cv::Mat cameraMatrix;
+    cv::Mat distCoeffs;
     int frameNum;
     std::string frameId;
   
@@ -177,12 +177,12 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-            K.at<double>(i, j) = msg->K[i*3+j];
+            cameraMatrix.at<double>(i, j) = msg->K[i*3+j];
         }
     }
 
     for (int i=0; i<5; i++) {
-        dist.at<double>(0,i) = msg->D[i];
+        distCoeffs.at<double>(0,i) = msg->D[i];
     }
 
     haveCamInfo = true;
@@ -209,12 +209,11 @@ double getReprojectionError(vector<Point3f> objectPoints, vector<Point2f> imageP
     vector<Point2f> projectedPoints;
     cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints);
 
+    // calculate RMS image error
     double totalError = 0.0;
     for (unsigned int i=0; i<objectPoints.size(); i++) {
-        double xerror = projectedPoints[i].x - imagePoints[i].x;
-        double yerror = projectedPoints[i].y - imagePoints[i].y;
-        double error = xerror*xerror + yerror*yerror;
-        totalError += error;
+        double error = dist(imagePoints[i], projectedPoints[i]);
+        totalError += error*error;
     }
     double rerror = sqrt(totalError/objectPoints.size());
     ROS_WARN("Reprojection error %lf\n", rerror);
@@ -300,7 +299,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             return;
         }
 
-        estimatePoseSingleMarkers(corners, fiducial_len, K, dist, rvecs, tvecs,
+        estimatePoseSingleMarkers(corners, fiducial_len, cameraMatrix, distCoeffs, rvecs, tvecs,
                                   reprojectionError);
 
         if(ids.size() > 0) {
@@ -308,7 +307,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         }
 
         for (int i=0; i<ids.size(); i++) {
-            aruco::drawAxis(cv_ptr->image, K, dist, rvecs[i], tvecs[i], fiducial_len);
+            aruco::drawAxis(cv_ptr->image, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], fiducial_len);
 
             ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
                      tvecs[i][0], tvecs[i][1], tvecs[i][2],
@@ -341,6 +340,11 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
             ft.image_error = reprojectionError[i];
 
+            // Convert image_error (in pixels) to object_error (in meters)
+            ft.object_error = 
+                (reprojectionError[i] / dist(corners[i][0], corners[i][2])) * 
+                (norm(tvecs[i]) / fiducial_len);
+
             fta.transforms.push_back(ft);
 
         }
@@ -360,10 +364,10 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     frameNum = 0;
 
     // Camera intrinsics
-    K = cv::Mat::zeros(3, 3, CV_64F);
+    cameraMatrix = cv::Mat::zeros(3, 3, CV_64F);
 
     // distortion coefficients
-    dist = cv::Mat::zeros(1, 5, CV_64F);
+    distCoeffs = cv::Mat::zeros(1, 5, CV_64F);
   
     haveCamInfo = false;
 
