@@ -192,45 +192,59 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 /**
   * @brief Return object points for the system centered in a single marker, given the marker length
   */
-static void _getSingleMarkerObjectPoints(float markerLength, OutputArray _objPoints) {
+static void getSingleMarkerObjectPoints(float markerLength, vector<Point3f>& objPoints) {
 
     CV_Assert(markerLength > 0);
 
-    _objPoints.create(4, 1, CV_32FC3);
-    Mat objPoints = _objPoints.getMat();
     // set coordinate system in the middle of the marker, with Z pointing out
-    objPoints.ptr< Vec3f >(0)[0] = Vec3f(-markerLength / 2.f, markerLength / 2.f, 0);
-    objPoints.ptr< Vec3f >(0)[1] = Vec3f(markerLength / 2.f, markerLength / 2.f, 0);
-    objPoints.ptr< Vec3f >(0)[2] = Vec3f(markerLength / 2.f, -markerLength / 2.f, 0);
-    objPoints.ptr< Vec3f >(0)[3] = Vec3f(-markerLength / 2.f, -markerLength / 2.f, 0);
+    objPoints.push_back(Vec3f(-markerLength / 2.f, markerLength / 2.f, 0));
+    objPoints.push_back(Vec3f( markerLength / 2.f, markerLength / 2.f, 0));
+    objPoints.push_back(Vec3f( markerLength / 2.f,-markerLength / 2.f, 0));
+    objPoints.push_back(Vec3f(-markerLength / 2.f,-markerLength / 2.f, 0));
 }
 
-void myEstimatePoseSingleMarkers(InputArrayOfArrays _corners, float markerLength,
-                               InputArray _cameraMatrix, InputArray _distCoeffs,
-                               OutputArray _rvecs, OutputArray _tvecs) {
+double getReprojectionError(vector<Point3f> objectPoints, vector<Point2f> imagePoints, 
+                               Mat cameraMatrix, Mat  distCoeffs,
+                               Vec3d rvec, Vec3d tvec) {
+    vector<Point2f> projectedPoints;
+    cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints);
+
+    double totalError = 0.0;
+    for (unsigned int i=0; i<objectPoints.size(); i++) {
+        double xerror = projectedPoints[i].x - imagePoints[i].x;
+        double yerror = projectedPoints[i].y - imagePoints[i].y;
+        double error = xerror*xerror + yerror*yerror;
+        totalError += error;
+    }
+    double rerror = sqrt(totalError/objectPoints.size());
+    ROS_WARN("Reprojection error %lf\n", rerror);
+    return rerror;
+}
+
+void estimatePoseSingleMarkers(vector<vector<Point2f > >corners, float markerLength,
+                               Mat cameraMatrix, Mat  distCoeffs,
+                               vector<Vec3d>& rvecs, vector<Vec3d>& tvecs,
+                               vector<double>& reprojectionError) {
 
     CV_Assert(markerLength > 0);
 
-    Mat markerObjPoints;
-    _getSingleMarkerObjectPoints(markerLength, markerObjPoints);
-    int nMarkers = (int)_corners.total();
-    _rvecs.create(nMarkers, 1, CV_64FC3);
-    _tvecs.create(nMarkers, 1, CV_64FC3);
+    vector<Point3f> markerObjPoints;
+    getSingleMarkerObjectPoints(markerLength, markerObjPoints);
+    int nMarkers = (int)corners.size();
+    rvecs.reserve(nMarkers);
+    tvecs.reserve(nMarkers);
+    reprojectionError.reserve(nMarkers);
 
-    Mat rvecs = _rvecs.getMat(), tvecs = _tvecs.getMat();
-
-    //// for each marker, calculate its pose
+    // for each marker, calculate its pose
     for (int i = 0; i < nMarkers; i++) {
-       cv::solvePnP(markerObjPoints, _corners.getMat(i), _cameraMatrix, _distCoeffs,
-                _rvecs.getMat(i), _tvecs.getMat(i));
-    }
 
-    // this is the parallel call for the previous commented loop (result is equivalent)
-#if 0
-    parallel_for_(Range(0, nMarkers),
-                  SinglePoseEstimationParallel(markerObjPoints, _corners, _cameraMatrix,
-                                               _distCoeffs, rvecs, tvecs));
-#endif
+       cv::solvePnP(markerObjPoints, corners[i], cameraMatrix, distCoeffs,
+                    rvecs[i], tvecs[i]);
+
+       reprojectionError[i] =
+          getReprojectionError(markerObjPoints, corners[i], cameraMatrix, distCoeffs,
+                               rvecs[i], tvecs[i]);
+    }
 }
 
 
@@ -256,9 +270,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         vector <int>  ids;
         vector <vector <Point2f> > corners, rejected;
         vector <Vec3d>  rvecs, tvecs;
+        vector <double> reprojectionError;
 
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
-        ROS_INFO("Detectd %d markers", (int)ids.size());
+        ROS_INFO("Detected %d markers", (int)ids.size());
  
         for (int i=0; i<ids.size(); i++) {
             fiducial_pose::Fiducial fid;
@@ -285,7 +300,8 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             return;
         }
 
-        myEstimatePoseSingleMarkers(corners, fiducial_len, K, dist, rvecs, tvecs);
+        estimatePoseSingleMarkers(corners, fiducial_len, K, dist, rvecs, tvecs,
+                                  reprojectionError);
 
         if(ids.size() > 0) {
             aruco::drawDetectedMarkers(cv_ptr->image, corners, ids);
@@ -297,6 +313,11 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
                      tvecs[i][0], tvecs[i][1], tvecs[i][2],
                      rvecs[i][0], rvecs[i][1], rvecs[i][2]);
+
+            if (tvecs[i][2] < 0) { // markers behind camera
+                ROS_WARN("Ignoring id %d because behind camera", ids[i]);
+                continue;
+            }
 
             double angle = norm(rvecs[i]);
             Vec3d axis = rvecs[i] / angle;
@@ -318,11 +339,12 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             ft.transform.rotation.y = q.y();
             ft.transform.rotation.z = q.z();
 
+            ft.image_error = reprojectionError[i];
+
             fta.transforms.push_back(ft);
 
         }
-
-	    image_pub.publish(cv_ptr->toImageMsg());
+	image_pub.publish(cv_ptr->toImageMsg());
         pose_pub->publish(fta);
     }
      catch(cv_bridge::Exception & e) {
