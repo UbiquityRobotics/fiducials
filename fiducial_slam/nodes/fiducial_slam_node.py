@@ -208,27 +208,8 @@ class FiducialSlam:
                 # Auto initialize map from one of the fiducials
                 f = tfs.keys()[0]
                 self.updateMapFromExternal(tfs, f, imageTime, self.odomFrame)
+        self.updateMap(tfs)
         self.updatePose(tfs, imageTime)
-        if not self.pose is None:
-            #robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
-            #robotQuat = numpy.array(quaternion_from_matrix(self.pose))
-            (r, p, robotYaw) = euler_from_quaternion(robotQuat)
-            # Only update the map if the robot has moved significantly, to
-            # avoid the map variances decaying from repeated observations
-            if self.lastUpdateXyz is None or mapUpdated:
-                if not mapUpdated:
-                    self.updateMap(tfs)
-                self.lastUpdateXyz = self.robotXyz
-                self.lastUpdateYaw = robotYaw
-            else:
-                dist = numpy.linalg.norm(self.lastUpdateXyz - robotXyz)
-                angle = self.lastUpdateYaw - self.robotYaw
-                print "Distance moved", dist, angle
-                if self.mappingMode or dist > MIN_UPDATE_TRANSLATION \
-                   or angle > MIN_UPDATE_ROTATION:
-                    self.updateMap(tfs)
-                    self.lastUpdateXyz = self.robotXyz
-                    self.lastUpdateYaw = robotYaw
 
     """
     Update the map with fiducial pairs
@@ -280,6 +261,13 @@ class FiducialSlam:
                                 obs1.objectError, obs1.imageError, obs2.objectError, obs2.imageError))
 
         addedNew = False
+        # and take into account the variance of the reference fiducial
+        # we convolve the gaussians, which is achieved by adding the variances
+        variance = obs1.objectError + obs2.objectError + self.map[f1].variance
+        print "*** %f var %f %f" % (f1, self.map[f1].variance, variance)
+        if variance > 1.0:
+            return
+
         if not self.map.has_key(f2):
             self.map[f2] = Fiducial(f2)
             addedNew = True
@@ -287,16 +275,12 @@ class FiducialSlam:
 
         fid2 = self.map[f2]
 
-        variance  = angularError3D(r, p , yaw)
-        # and take into account the variance of the reference fiducial
-        # we convolve the gaussians, which is achieved by adding the variances
-        print "*** %f var %f %f" % (f1, self.map[f1].variance, variance)
-        variance = variance + self.map[f1].variance
-
+        """
         if self.fiducialsAreLevel:
             (r1, p1, y1) = euler_from_quaternion(fid1.orientation)
             (r, p, yaw) = euler_from_quaternion(quat)
             quat = quaternion_from_euler(r1, p1, yaw)
+        """
 
         self.map[f2].update(xyz, quat, variance)
 
@@ -305,7 +289,7 @@ class FiducialSlam:
 
         p = self.map[f2].position
 
-        if self.mappingMode or addedNew:
+        if addedNew:
             self.map.save()
             self.map.publish(self.mapPub)
 
@@ -402,21 +386,23 @@ class FiducialSlam:
             if self.fiducialsAreLevel:
                 quat = quaternion_from_euler(0, 0, y)
 
-            thisvar  = angularError3D(r, p , 0.0)
+            #thisvar  = angularError3D(r, p , 0.0)
+            thisvar = obs.objectError + self.map[t].variance
             rospy.loginfo("pose %d %f %f %f %f %f %f %f" % \
                              (t, xyz[0], xyz[1], xyz[2],
                               rad2deg(r), rad2deg(p), rad2deg(y),
                               thisvar))
 
+            if thisvar > 0.1:
+                continue
+
             if position is None:
                 position = xyz
                 orientation = quat
                 variance = thisvar
-                print "Position is None", position, variance
             else:
                 position, v1 = updateLinear(position, variance,
                                        xyz, thisvar)
-                print position, v1
                 orientation, v2 = updateAngular(orientation, variance,
                                                 quat, thisvar)
                 variance = v1
@@ -429,7 +415,6 @@ class FiducialSlam:
 
         if not position is None:
             (r, p, y) = euler_from_quaternion(orientation)
-            xyz = position
             rospy.loginfo("pose ALL %f %f %f %f %f %f %f %d" % \
                             (xyz[0], xyz[1], xyz[2],
                              rad2deg(r), rad2deg(p), rad2deg(y),
@@ -444,7 +429,7 @@ class FiducialSlam:
             """
             self.robotXyz = position
             self.robotQuat = orientation
-            self.computeTransform(imageTime)
+            self.computeTransform(imageTime, variance)
 
     def makeMarker(self, fiducialId, visible=False):
         fiducial = self.map[fiducialId]
@@ -546,9 +531,7 @@ class FiducialSlam:
     """
     Publish the transform in self.pose
     """
-    def computeTransform(self, imageTime):
-        if self.pose is None:
-            return
+    def computeTransform(self, imageTime, variance):
         robotXyz = self.robotXyz #numpy.array(translation_from_matrix(self.pose))[:3]
         robotQuat = self.robotQuat #numpy.array(quaternion_from_matrix(self.pose))
         (r, p, yaw) = euler_from_quaternion(robotQuat)
@@ -567,12 +550,12 @@ class FiducialSlam:
         These values are designed to work with robot_localization.
         See http://wiki.ros.org/robot_localization/Tutorials/Migration%20from%20robot_pose_ekf
         """
-        m.pose.covariance = [0.01,  0,     0,      0,     0,     0,
-                             0,     0.01,  0,      0,     0,     0,
-                             0,     0,     0.01,   0,     0,     0,
-                             0,     0,     0,      0.01,  0,     0,
-                             0,     0,     0,      0,     0.01,  0,
-                             0,     0,     0,      0,     0,     0.01]
+        m.pose.covariance = [variance,  0,     0,      0,     0,     0,
+                             0,     variance,  0,      0,     0,     0,
+                             0,     0,     variance,   0,     0,     0,
+                             0,     0,     0,      variance,  0,     0,
+                             0,     0,     0,      0,     variance,  0,
+                             0,     0,     0,      0,     0,     variance]
         self.posePub.publish(m)
         if self.odomFrame != "":
             try:
@@ -592,7 +575,7 @@ class FiducialSlam:
             pose = self.pose
         self.publishLock.acquire()
         #self.robotXyz = numpy.array(translation_from_matrix(pose))[:3]
-        robotQuat = numpy.array(quaternion_from_matrix(pose))
+        #robotQuat = numpy.array(quaternion_from_matrix(pose))
         (r, p, yaw) = euler_from_quaternion(robotQuat)
         #self.robotQuat = quaternion_from_euler(0.0, 0.0, yaw)
         self.robotYaw = yaw

@@ -32,7 +32,7 @@ from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                translation_matrix, quaternion_matrix, \
                                translation_from_matrix, quaternion_from_matrix, \
                                quaternion_from_euler
-from fiducial_slam import updateLinear, updateAngular
+from fiducial_slam import updateLinear, updateAngular, updateLinear2
 
 
 """
@@ -66,7 +66,7 @@ class Fiducial:
             self.variance = newVariance
             self.observations = 1
             return
-        self.position, v1 = updateLinear(self.position, self.variance,
+        self.position, v1 = updateLinear2(self.position, self.variance,
                                          newPosition, newVariance)
         self.orientation, v2 = updateAngular(self.orientation, self.variance,
                                              newOrientation, newVariance)
