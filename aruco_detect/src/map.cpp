@@ -50,33 +50,23 @@ static double rad2deg(double rad)
     return rad * 180.0 / M_PI;
 }
 
-/* 
-updateVarianceDavid
-def updateLinear(mean1, var1, mean2, var2):
-    newMean = (mean1 * var2 + mean2 * var1) / (var1 + var2)
-    # =((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))
-    d1 = dist = numpy.linalg.norm(mean1 - newMean)
-    d2 = dist = numpy.linalg.norm(mean2 - newMean)
-    try:
-        newVar = ((2.0*math.pi)**0.5) * var1 * var2 * math.exp((((d1**2.0) / (2.0*var1)) +
-            ((d2**2.0) / (2.0*var2))))
-        #newVar = 1.0 / (1.0/var1 + 1.0/var2)
-        if newVar > 100000:
-            newVar = 100000
-        if newVar < 10e-6:
-            newVar = 10e-6
-    except:
-        newVar = 99999
-    print "newVar = %f" %newVar
-    return [newMean, newVar]
-*/
+static double updateVarianceDavid(tf2::Vector3 newMean,
+                                  tf2::Vector3 mean1, double var1,
+                                  tf2::Vector3 mean2, double var2) {
+    //=((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))
+    double d1 = (mean1 - newMean).length2();
+    double d2 = (mean2 - newMean).length2();
 
+    double newVar = sqrt(2.0*M_PI) * var1 * var2 * 
+         exp(((d1 / (2.0*var1)) + d2 / (2.0*var2)));
+
+    if (newVar > 100000)
+        newVar = 100000;
+    if (newVar < 10e-6)
+        newVar = 10e-6;
+}
 static double updateVarianceAlexey(double var1, double var2) {
     return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
-}
-
-static double updateVariance(double var1, double var2) {
-    return updateVarianceAlexey(var1, var2);
 }
 
 static void updateTransform(tf2::Transform &t1, double var1, tf2::Transform &t2, double var2) {
@@ -106,15 +96,12 @@ Observation::Observation(int fid, Vec3d &rvec, Vec3d &tvec, double ierr, double 
 
 void Fiducial::update(tf2::Transform &newPose, double newVariance)
 {
-    tf2::Vector3 t = newPose.getOrigin();
-    double delta = (pose.getOrigin() - t).length();
-    // Here we add the delta to the new variance.  This has the effect of 
-    // stabilizing the map
-    printf("update fiducial %lf %lf %lf %lf\n", t.x(), t.y(), t.z(), delta);
-    updateTransform(pose, variance, newPose, newVariance + delta);
-    double v = updateVariance(this->variance, variance);
-    t = pose.getOrigin();
-    printf("New pose %lf %lf %lf\n", t.x(), t.y(), t.z());
+    tf2::Vector3 mean1 = pose.getOrigin();
+    updateTransform(pose, variance, newPose, newVariance);
+    tf2::Vector3 mean2 = newPose.getOrigin();
+    tf2::Vector3 newMean = pose.getOrigin();
+    double v = updateVarianceDavid(newMean, mean1, variance,
+                              mean2, newVariance);
     printf("Fiducial %d variance changed from %lf to %lf\n", id,
            variance, v);
     variance = v;
@@ -229,7 +216,7 @@ void Map::update(vector<Observation>& obs, ros::Time time)
             }
             else {
                 updateTransform(pose, variance, p, v);
-                variance = updateVariance(variance, v); 
+                variance = updateVarianceAlexey(variance, v); 
             }
         }
     }
