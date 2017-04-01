@@ -308,11 +308,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             Observation obs(ids[i], rvecs[i], tvecs[i], 
                             ft.image_error, ft.object_error);
 
-            // Check the fiducial is the right side of the camera
-            tf2::Transform up;
-            up.setOrigin(tf2::Vector3(0, 0, 1));
-            tf2::Vector3 dir = (up * obs.TcamFid).getOrigin();
-            printf("Direction %f %f %f\n", dir.x(), dir.y(), dir.z());
             observations.push_back(obs);
         }
 

@@ -269,7 +269,7 @@ void Map::update(vector<Observation>& obs, ros::Time time)
     ts.header.stamp = time;
     // TODO: params for frames
     ts.header.frame_id = "map";
-    ts.child_frame_id = "base_link";
+    ts.child_frame_id = "base_link2";
     ts.transform.translation.x = trans.x();
     ts.transform.translation.y = trans.y();
     ts.transform.translation.z = trans.z();
@@ -280,6 +280,7 @@ void Map::update(vector<Observation>& obs, ros::Time time)
  
     broadcaster.sendTransform(ts);
 
+    ROS_WARN("Done with this image");
     // TODO: publish PoseWithCovarianceStamped
 
     fflush(stdout);
