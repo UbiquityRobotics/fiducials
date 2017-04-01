@@ -149,8 +149,7 @@ Fiducial::Fiducial(int id, tf2::Quaternion &q, tf2::Vector3 tvec, double varianc
          
 Map::Map(ros::NodeHandle &nh) {
     markerPub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("/fiducials", 100));
-    // TODO: expand ~/.ros
-    nh.param<std::string>("map_file", filename, "slam/map.txt");
+    nh.param<std::string>("map_file", filename, string(getenv("HOME")) + "/.ros/slam/map.txt");
     publishMarkers();
 }
 
@@ -273,9 +272,11 @@ bool Map::save()
         double rx, ry, rz;
         f.pose.getBasis().getRPY(rx, ry, rz);
 
-        printf("%d %lf %lf %lf %lf %lf %lf %lf\n", f.id, 
-               trans.x(), trans.y(), trans.z(), rx, ry, rz, f.variance);
+        fprintf(fp, "%d %lf %lf %lf %lf %lf %lf %lf\n", f.id, 
+                 trans.x(), trans.y(), trans.z(), 
+                 rad2deg(rx), rad2deg(ry), rad2deg(rz), f.variance);
     }
+    fclose(fp);
     printf("map saved\n");
     return true;
 }
