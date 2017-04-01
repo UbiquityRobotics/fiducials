@@ -406,7 +406,7 @@ int main(int argc, char ** argv) {
     node = new FiducialsNode(nh);
     signal(SIGINT, mySigintHandler);
 
-    ros::Rate r(0.1);
+    ros::Rate r(10);
     while (ros::ok()) {
         r.sleep();
         ros::spinOnce(); 
