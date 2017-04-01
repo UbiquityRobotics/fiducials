@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Austin Hendrix
+ * Copyright (c) 2017, Ubiquity Robotics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include <ros/ros.h>
 #include <tf/transform_datatypes.h>
@@ -51,6 +52,7 @@
 #include "fiducial_pose/FiducialTransform.h"
 #include "fiducial_pose/FiducialTransformArray.h"
 #include "aruco_detect/DetectorParamsConfig.h"
+#include "map.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
@@ -63,44 +65,6 @@
 using namespace std;
 using namespace cv;
 
-// Euclidean distance between two points
-double dist(const cv::Point2f &p1, const cv::Point2f &p2)
-{
-    double x1 = p1.x;
-    double y1 = p1.y;
-    double x2 = p2.x;
-    double y2 = p2.y;
-
-    double dx = x1 - x2;
-    double dy = y1 - y2;
-
-    return sqrt(dx*dx + dy*dy);
-}
-
-// Compute area in image of a fiducial, using Heron's formula
-// to find the area of two triangles
-double calcFiducialArea(std::vector<cv::Point2f> pts)
-{
-    Point2f &p0 = pts.at(0);
-    Point2f &p1 = pts.at(1);
-    Point2f &p2 = pts.at(2);
-    Point2f &p3 = pts.at(3);
-
-    double a1 = dist(p0, p1);
-    double b1 = dist(p0, p3);
-    double c1 = dist(p1, p3);
-
-    double a2 = dist(p1, p2);
-    double b2 = dist(p2, p3);
-    double c2 = c1;
-
-    double s1 = (a1 + b1 + c1) / 2.0;
-    double s2 = (a2 + b2 + c2) / 2.0;
-
-    a1 = sqrt(s1*(s1-a1)*(s1-b1)*(s1-c1));
-    a2 = sqrt(s2*(s2-a2)*(s2-b2)*(s2-c2));
-    return a1+a2;
-}
 
 class FiducialsNode {
   private:
@@ -111,10 +75,6 @@ class FiducialsNode {
     image_transport::ImageTransport it;
     image_transport::Subscriber img_sub;
   
-
-    // if set, we publish the images that contain fiducials
-    bool publish_images;
-
     double fiducial_len;
     
     bool haveCamInfo;
@@ -136,6 +96,7 @@ class FiducialsNode {
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
   public:
+    Map *fiducialMap;
     FiducialsNode(ros::NodeHandle &nh);
 };
 
@@ -248,7 +209,7 @@ void estimatePoseSingleMarkers(vector<vector<Point2f > >corners, float markerLen
 
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
-    ROS_INFO("Got image");
+    ROS_INFO("Got image %d", msg->header.seq);
     frameNum++;
 
     cv_bridge::CvImagePtr cv_ptr;
@@ -299,7 +260,9 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             return;
         }
 
-        estimatePoseSingleMarkers(corners, fiducial_len, cameraMatrix, distCoeffs, rvecs, tvecs,
+        vector<Observation> observations;
+        estimatePoseSingleMarkers(corners, fiducial_len, 
+                                  cameraMatrix, distCoeffs, rvecs, tvecs,
                                   reprojectionError);
 
         if(ids.size() > 0) {
@@ -312,11 +275,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
                      tvecs[i][0], tvecs[i][1], tvecs[i][2],
                      rvecs[i][0], rvecs[i][1], rvecs[i][2]);
-
-            if (tvecs[i][2] < 0) { // markers behind camera
-                ROS_WARN("Ignoring id %d because behind camera", ids[i]);
-                continue;
-            }
 
             double angle = norm(rvecs[i]);
             Vec3d axis = rvecs[i] / angle;
@@ -347,7 +305,13 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
             fta.transforms.push_back(ft);
 
+            Observation obs(ids[i], rvecs[i], tvecs[i], 
+                            ft.image_error, ft.object_error);
+            observations.push_back(obs);
         }
+
+        fiducialMap->update(observations, msg->header.stamp);
+
 	image_pub.publish(cv_ptr->toImageMsg());
         pose_pub->publish(fta);
     }
@@ -375,9 +339,9 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
     detectorParams = new aruco::DetectorParameters();
 
-    nh.param<bool>("publish_images", publish_images, false);
     nh.param<double>("fiducial_len", fiducial_len, 0.14);
     nh.param<int>("dictionary", dicno, 7);
+
 
     image_pub = it.advertise("/fiducial_images", 1);
 
@@ -386,6 +350,14 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("/fiducial_transforms", 1)); 
     
     dictionary = aruco::getPredefinedDictionary(dicno);
+
+    fiducialMap = new Map(nh);
+
+    // TODO: take this out
+    Fiducial f103(103, Vec3d(1, 0, 0), M_PI, Vec3d(0, 0, 2.8), 0);
+    fiducialMap->fiducials[103] = f103;
+    fiducialMap->fiducials[47] = f103;
+    fiducialMap->publishMarkers();
 
     img_sub = it.subscribe("/camera", 1,
                            &FiducialsNode::imageCallback, this);
@@ -417,14 +389,26 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<int>("perspectiveRemovePixelPerCell", detectorParams->perspectiveRemovePixelPerCell, 8);
     nh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.01); /* default 0.05 */
 
+ 
     ROS_INFO("Aruco detection ready");
 }
 
+FiducialsNode *node = NULL;
+
+void mySigintHandler(int sig)
+{
+    if (node)
+        node->fiducialMap->save("");
+
+    ros::shutdown();
+}
+
 int main(int argc, char ** argv) {
-    ros::init(argc, argv, "aruco_detect");
+    ros::init(argc, argv, "aruco_detect", ros::init_options::NoSigintHandler);
     ros::NodeHandle nh("~");
 
-    FiducialsNode * node = new FiducialsNode(nh);
+    node = new FiducialsNode(nh);
+    signal(SIGINT, mySigintHandler);
 
     ros::spin();
 

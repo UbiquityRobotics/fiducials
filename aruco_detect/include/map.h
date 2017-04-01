@@ -92,8 +92,6 @@ class Observation {
     int fid;
     double imageError;
     double objectError;
-    //cv::Mat TfidCam;
-    //cv::Mat TcamFid;
     tf2::Transform TfidCam;
     tf2::Transform TcamFid;
   
@@ -103,7 +101,6 @@ class Observation {
 class Fiducial {
   public:
     int id;
-    //cv::Mat mat44;
     tf2::Transform pose;
     double variance;
 
@@ -112,18 +109,22 @@ class Fiducial {
     Fiducial() {}
 
     Fiducial(int id, tf2::Transform &T, double variance);
-
     Fiducial(int id, Vec3d rvec, Vec3d tvec, double variance);
-
     Fiducial(int id, Vec3d axis, double angle, Vec3d tvec, double variance);
 };
 
 class Map {
   public:
+    tf2_ros::TransformBroadcaster broadcaster;
+    ros::Publisher *markerPub;
+
     map<int, Fiducial> fiducials;
 
-    void update(vector<Observation> &obs);
+    Map(ros::NodeHandle &nh);
+    void update(vector<Observation> &obs, ros::Time time);
     bool load(std::string filename);
     bool save(std::string filename);
+    void publishMarker(Fiducial &fid);
+    void publishMarkers();
 };
 
