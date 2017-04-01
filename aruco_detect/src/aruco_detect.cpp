@@ -307,6 +307,12 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
             Observation obs(ids[i], rvecs[i], tvecs[i], 
                             ft.image_error, ft.object_error);
+
+            // Check the fiducial is the right side of the camera
+            tf2::Transform up;
+            up.setOrigin(tf2::Vector3(0, 0, 1));
+            tf2::Vector3 dir = (up * obs.TcamFid).getOrigin();
+            printf("Direction %f %f %f\n", dir.x(), dir.y(), dir.z());
             observations.push_back(obs);
         }
 
@@ -352,12 +358,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     dictionary = aruco::getPredefinedDictionary(dicno);
 
     fiducialMap = new Map(nh);
-
-    // TODO: take this out
-    Fiducial f103(103, Vec3d(1, 0, 0), M_PI, Vec3d(0, 0, 2.8), 0);
-    fiducialMap->fiducials[103] = f103;
-    fiducialMap->fiducials[47] = f103;
-    fiducialMap->publishMarkers();
+    fiducialMap->load();
 
     img_sub = it.subscribe("/camera", 1,
                            &FiducialsNode::imageCallback, this);
@@ -398,7 +399,7 @@ FiducialsNode *node = NULL;
 void mySigintHandler(int sig)
 {
     if (node)
-        node->fiducialMap->save("");
+        node->fiducialMap->save();
 
     ros::shutdown();
 }

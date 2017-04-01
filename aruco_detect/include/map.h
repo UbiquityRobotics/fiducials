@@ -110,20 +110,21 @@ class Fiducial {
 
     Fiducial(int id, tf2::Transform &T, double variance);
     Fiducial(int id, Vec3d rvec, Vec3d tvec, double variance);
-    Fiducial(int id, Vec3d axis, double angle, Vec3d tvec, double variance);
+    Fiducial(int id, tf2::Quaternion &q, tf2::Vector3 tvec, double variance);
 };
 
 class Map {
   public:
     tf2_ros::TransformBroadcaster broadcaster;
     ros::Publisher *markerPub;
+    string filename;
 
     map<int, Fiducial> fiducials;
 
     Map(ros::NodeHandle &nh);
     void update(vector<Observation> &obs, ros::Time time);
-    bool load(std::string filename);
-    bool save(std::string filename);
+    bool load();
+    bool save();
     void publishMarker(Fiducial &fid);
     void publishMarkers();
 };
