@@ -64,6 +64,7 @@ static double updateVarianceDavid(tf2::Vector3 newMean,
         newVar = 100000;
     if (newVar < 10e-6)
         newVar = 10e-6;
+    return newVar;
 }
 static double updateVarianceAlexey(double var1, double var2) {
     return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
