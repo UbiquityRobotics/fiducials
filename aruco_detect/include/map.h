@@ -103,6 +103,7 @@ class Fiducial {
     int id;
     tf2::Transform pose;
     double variance;
+    ros::Time lastPublished;
 
     void update(tf2::Transform &pose, double variance);
 

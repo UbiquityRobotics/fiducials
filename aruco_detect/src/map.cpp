@@ -124,6 +124,7 @@ Fiducial::Fiducial(int id, tf2::Transform &pose, double variance) {
     this->id = id;
     this->pose = pose;
     this->variance = variance;
+    this->lastPublished = ros::Time(0);
 }
 
 Fiducial::Fiducial(int id, Vec3d rvec, Vec3d tvec, double variance) {
@@ -136,6 +137,7 @@ Fiducial::Fiducial(int id, Vec3d rvec, Vec3d tvec, double variance) {
     pose.setOrigin(tf2::Vector3(tvec[0], tvec[1], tvec[2]));
 
     this->variance = variance;
+    this->lastPublished = ros::Time(0);
 };   
 
 Fiducial::Fiducial(int id, tf2::Quaternion &q, tf2::Vector3 tvec, double variance) {
@@ -145,6 +147,7 @@ Fiducial::Fiducial(int id, tf2::Quaternion &q, tf2::Vector3 tvec, double varianc
     pose.setOrigin(tf2::Vector3(tvec[0], tvec[1], tvec[2]));
 
     this->variance = variance;
+    this->lastPublished = ros::Time(0);
 };   
          
 Map::Map(ros::NodeHandle &nh) {
@@ -235,7 +238,8 @@ void Map::update(vector<Observation>& obs, ros::Time time)
     // TODO: take out base_link - camera tf
 
     geometry_msgs::TransformStamped ts;
-    ts.header.stamp = ros::Time::now(); //time;
+    ts.header.stamp = time;
+    // TODO: params for frames
     ts.header.frame_id = "map";
     ts.child_frame_id = "base_link";
     ts.transform.translation.x = trans.x();
@@ -314,17 +318,22 @@ bool Map::load()
 
 void Map::publishMarkers() 
 {
+    ros::Time now = ros::Time::now();
     map<int, Fiducial>::iterator it;
 
     for (it = fiducials.begin(); it != fiducials.end(); it++) {
-        publishMarker(it->second);
+        Fiducial &f = it->second;
+        if ((now - f.lastPublished).toSec() > 1.0) {
+            publishMarker(f);
+        }
     }
 }
  
 void Map::publishMarker(Fiducial &fid) 
 {
     // TODO: publish links and text
-    // TODO: periodically publish all markers
+    fid.lastPublished = ros::Time::now();
+
     visualization_msgs::Marker marker;
     marker.type = visualization_msgs::Marker::CUBE;
     marker.action = visualization_msgs::Marker::ADD;

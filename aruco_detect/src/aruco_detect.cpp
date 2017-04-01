@@ -411,7 +411,12 @@ int main(int argc, char ** argv) {
     node = new FiducialsNode(nh);
     signal(SIGINT, mySigintHandler);
 
-    ros::spin();
+    ros::Rate r(0.1);
+    while (ros::ok()) {
+        r.sleep();
+        ros::spinOnce(); 
+        node->fiducialMap->publishMarkers();
+    }
 
     return 0;
 }
