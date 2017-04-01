@@ -117,6 +117,9 @@ class Fiducial {
 class Map {
   public:
     tf2_ros::TransformBroadcaster broadcaster;
+    tf2_ros::Buffer *tfBuffer;
+    tf2_ros::TransformListener *listener;
+
     ros::Publisher *markerPub;
     string filename;
 

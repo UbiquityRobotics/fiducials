@@ -108,8 +108,8 @@ void Fiducial::update(tf2::Transform &newPose, double newVariance)
 {
     tf2::Vector3 t = newPose.getOrigin();
     double delta = (pose.getOrigin() - t).length();
-    // Here we add the delta to the new variance.  This has the effect of stabalizing
-    // the map
+    // Here we add the delta to the new variance.  This has the effect of 
+    // stabilizing the map
     printf("update fiducial %lf %lf %lf %lf\n", t.x(), t.y(), t.z(), delta);
     updateTransform(pose, variance, newPose, newVariance + delta);
     double v = updateVariance(this->variance, variance);
@@ -151,6 +151,9 @@ Fiducial::Fiducial(int id, tf2::Quaternion &q, tf2::Vector3 tvec, double varianc
 };   
          
 Map::Map(ros::NodeHandle &nh) {
+    tfBuffer = new tf2_ros::Buffer(ros::Duration(30.0));
+    listener = new tf2_ros::TransformListener(*tfBuffer);
+
     markerPub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("/fiducials", 100));
     nh.param<std::string>("map_file", filename, string(getenv("HOME")) + "/.ros/slam/map.txt");
     publishMarkers();
@@ -235,7 +238,32 @@ void Map::update(vector<Observation>& obs, ros::Time time)
     printf("Pose all %lf %lf %lf %f\n",
            trans.x(), trans.y(), trans.z(), variance);
 
-    // TODO: take out base_link - camera tf
+    geometry_msgs::TransformStamped cameraTransform;
+    try{
+        // TODO: params
+        cameraTransform = tfBuffer->lookupTransform("base_link", "raspicam",
+                                                    ros::Time(0));
+     }
+     catch (tf2::TransformException &ex) {
+         ROS_WARN("Could not lookup camera transform %s",ex.what());
+     }
+
+    tf2::Transform ct;
+    ct.setOrigin(tf2::Vector3(
+       cameraTransform.transform.translation.x,
+       cameraTransform.transform.translation.y,
+       cameraTransform.transform.translation.z));
+ 
+    ct.setRotation(tf2::Quaternion(
+       cameraTransform.transform.rotation.x,
+       cameraTransform.transform.rotation.y,
+       cameraTransform.transform.rotation.z,
+       cameraTransform.transform.rotation.z));
+ 
+    pose = pose * ct;
+    trans = pose.getOrigin();
+    printf("Pose b_l %lf %lf %lf %f\n",
+           trans.x(), trans.y(), trans.z(), variance);
 
     geometry_msgs::TransformStamped ts;
     ts.header.stamp = time;
