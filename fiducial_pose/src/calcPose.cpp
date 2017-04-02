@@ -91,8 +91,8 @@ void undistortPoints(cv::Mat pts, cv::Mat K, cv::Mat dist, bool doUndistort)
 }
 
 
-bool RosRpp::fiducialCallback(fiducial_pose::Fiducial* msg,
-		       	      fiducial_pose::FiducialTransform* ft)
+bool RosRpp::fiducialCallback(fiducial_msgs::Fiducial* msg,
+		       	      fiducial_msgs::FiducialTransform* ft)
 {
   ROS_INFO("id %d direction %d", msg->fiducial_id, msg->direction);
 

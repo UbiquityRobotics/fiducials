@@ -26,6 +26,7 @@
   <depend>orocos_kdl</depend>
   <depend>fiducial_lib</depend>
   <depend>fiducial_pose</depend>
+  <depend>fiducial_msgs</depend>
 
   <test_depend>rostest</test_depend>
 </package>

@@ -18,6 +18,7 @@
   <depend>tf2_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>rospy</depend>
+  <depend>fiducial_msgs</depend>
 
   <test_depend>rostest</test_depend>
   <test_depend>roscpp</test_depend>

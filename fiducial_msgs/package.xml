@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>fiducial_msgs</name>
+  <version>0.6.1</version>
+  <description>Package containing message definitions for fiducials</description>
+
+  <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>
+  <maintainer email="send2arohan@gmail.com">Rohan Agrawal</maintainer>
+
+  <license>BSD</license>
+
+  <author email="jimv@mrjim.com">Jim Vaughan</author>
+
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf</depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

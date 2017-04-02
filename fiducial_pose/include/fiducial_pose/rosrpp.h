@@ -1,6 +1,6 @@
 
-#include "fiducial_pose/Fiducial.h"
-#include "fiducial_pose/FiducialTransform.h"
+#include "fiducial_msgs/Fiducial.h"
+#include "fiducial_msgs/FiducialTransform.h"
 #include <sensor_msgs/CameraInfo.h>
 
 class RosRpp {
@@ -25,8 +25,8 @@ class RosRpp {
 public:
   RosRpp(double fiducialLen, bool doUndistort);
 
-  bool fiducialCallback(fiducial_pose::Fiducial* fiducial,
-			fiducial_pose::FiducialTransform* transform);
+  bool fiducialCallback(fiducial_msgs::Fiducial* fiducial,
+			fiducial_msgs::FiducialTransform* transform);
 
   void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
 };

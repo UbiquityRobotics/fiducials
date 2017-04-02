@@ -6,7 +6,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-#include <fiducial_pose/FiducialTransformArray.h>
+#include <fiducial_msgs/FiducialTransformArray.h>
 
 class FiducialsTransformTests : public ::testing::Test {
 protected:
@@ -45,7 +45,7 @@ protected:
     CameraInfoPub.publish(c_info);
   }
 
-  void transforms_callback(const fiducial_pose::FiducialTransformArray& f) {
+  void transforms_callback(const fiducial_msgs::FiducialTransformArray& f) {
     got_transforms = true;
     transforms = f;
   }
@@ -63,7 +63,7 @@ protected:
 
   // Set up subscribing
   bool got_transforms;
-  fiducial_pose::FiducialTransformArray transforms;
+  fiducial_msgs::FiducialTransformArray transforms;
   ros::Subscriber transforms_sub;
 };
 
