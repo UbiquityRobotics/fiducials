@@ -52,7 +52,7 @@
 #include "fiducial_pose/FiducialTransform.h"
 #include "fiducial_pose/FiducialTransformArray.h"
 #include "aruco_detect/DetectorParamsConfig.h"
-#include "map.h"
+#include "aruco_detect/map.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
