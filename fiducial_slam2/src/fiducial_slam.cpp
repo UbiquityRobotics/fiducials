@@ -101,7 +101,6 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
 FiducialSlam::FiducialSlam(ros::NodeHandle & nh)
 {
     fiducialMap = new Map(nh);
-    fiducialMap->load();
 
     ft_sub = nh.subscribe("/fiducial_transforms", 1, 
                           &FiducialSlam::transformCallback, this); 
@@ -114,7 +113,7 @@ FiducialSlam *node = NULL;
 void mySigintHandler(int sig)
 {
     if (node)
-        node->fiducialMap->save();
+        node->fiducialMap->saveMap();
 
     ros::shutdown();
 }
