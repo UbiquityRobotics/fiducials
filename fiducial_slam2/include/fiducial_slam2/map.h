@@ -101,8 +101,10 @@ class Map {
     void autoInit(const vector<Observation> &obs, ros::Time time);
     void updateMap(const vector<Observation> &obs, ros::Time time);
     void updatePose(const vector<Observation> &obs, ros::Time time);
-    bool load();
-    bool save();
+    bool loadMap();
+    bool loadMap(std::string filename);
+    bool saveMap();
+    bool saveMap(std::string filename);
     void publishMap();
     void publishMarker(Fiducial &fid);
     void publishMarkers();

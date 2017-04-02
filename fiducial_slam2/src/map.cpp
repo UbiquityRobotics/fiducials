@@ -188,6 +188,17 @@ Map::Map(ros::NodeHandle &nh) {
     markerPub = new ros::Publisher(nh.advertise<visualization_msgs::Marker>("/fiducials", 100));
     mapPub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialMapEntryArray>("/fiducial_map", 100));
     nh.param<std::string>("map_file", filename, string(getenv("HOME")) + "/.ros/slam/map.txt");
+
+    std::string initialMap;
+    nh.param<std::string>("initial_map_file", initialMap, "");
+
+    if (initialMap != "") {
+        loadMap(initialMap);
+    }
+    else {
+        loadMap();
+    }
+
     publishMarkers();
 }
 
@@ -232,6 +243,7 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time)
             if (fiducials.find(o2.fid) == fiducials.end()) {
                 ROS_INFO("New fiducial %d from %d", o2.fid, o1.fid);
                 fiducials[o2.fid] = Fiducial(o2.fid, T, variance);
+                saveMap();
             }
             else {
                 ROS_INFO("Updated fiducial %d from %d", o2.fid, o1.fid);
@@ -353,7 +365,12 @@ void Map::autoInit(const vector<Observation>& obs, ros::Time time){
 }
 
 // save map to file
-bool Map::save() 
+
+bool Map::saveMap() {
+    return saveMap(this->filename);
+}
+
+bool Map::saveMap(std::string filename) 
 {
     // TODO: handle links
     printf("saving map %d\n", (int)fiducials.size());
@@ -383,7 +400,12 @@ bool Map::save()
 }
 
 // Load map from file
-bool Map::load() 
+
+bool Map::loadMap() {
+    return loadMap(this->filename);
+}
+
+bool Map::loadMap(std::string filename) 
 {
     printf("Load map %s\n", filename.c_str());
     FILE *fp = fopen(filename.c_str(), "r");
