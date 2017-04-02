@@ -60,10 +60,10 @@ static double updateVarianceDavid(tf2::Vector3 newMean,
     double newVar = sqrt(2.0*M_PI) * var1 * var2 * 
          exp(((d1 / (2.0*var1)) + d2 / (2.0*var2)));
 
-    if (newVar > 100000)
-        newVar = 100000;
-    if (newVar < 10e-6)
-        newVar = 10e-6;
+    if (newVar > 100)
+        newVar = 100;
+    if (newVar < 10e-4)
+        newVar = 10e-4;
     return newVar;
 }
 static double updateVarianceAlexey(double var1, double var2) {
@@ -184,12 +184,15 @@ void Map::update(vector<Observation>& obs, ros::Time time)
 
             tf2::Transform T = fiducials[o1.fid].pose * o1.TfidCam * o2.TcamFid;
             double variance = o1.objectError + o2.objectError + 
-              fiducials[o1.fid].variance + 0.2;
+              max(fiducials[o1.fid].variance, 10e-5);
 
+             
             if (fiducials.find(o2.fid) == fiducials.end()) {
+                ROS_INFO("New fiducial %d from %d", o2.fid, o1.fid);
                 fiducials[o2.fid] = Fiducial(o2.fid, T, variance);
             }
             else {
+                ROS_INFO("Updated fiducial %d from %d", o2.fid, o1.fid);
                 fiducials[o2.fid].update(T, variance);
             }
             publishMarker(fiducials[o1.fid]);
@@ -375,22 +378,38 @@ void Map::publishMarker(Fiducial &fid)
     marker.ns = "fiducial_namespace";
     marker.header.frame_id = "/map";
     markerPub->publish(marker);
+
+    visualization_msgs::Marker cyl;
+    cyl.type = visualization_msgs::Marker::CYLINDER;
+    cyl.action = visualization_msgs::Marker::ADD;
+    cyl.header.frame_id = "/map";
+    c.r = c.g = c.g = 0.0f;
+    c.b = 1.0f;
+    c.a = 0.8f;
+    cyl.color = c;
+    cyl.id = fid.id;
+    cyl.scale.x = cyl.scale.y = sqrt(fid.variance);
+    cyl.scale.z = 0.1;
+    cyl.pose.position.x = marker.pose.position.x;
+    cyl.pose.position.y = marker.pose.position.y;
+    cyl.pose.position.z = marker.pose.position.z;
+    cyl.pose.position.z += (marker.scale.z/2.0) + 0.05;
+    markerPub->publish(cyl);
+
+    visualization_msgs::Marker text;
+    text.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+    text.action = visualization_msgs::Marker::ADD;
+    text.header.frame_id = "/map";
+    c.r = c.b = c.g = c.a = 1.0f;
+    text.color = c;
+    text.id = fid.id;
+    text.scale.x = text.scale.y = text.scale.z = 0.1;
+    text.pose.position.x = marker.pose.position.x;
+    text.pose.position.y = marker.pose.position.y;
+    text.pose.position.z = marker.pose.position.z;
+    text.pose.position.z += (marker.scale.z/2.0) + 0.1;  //draw text above marker
+    text.id = fid.id + 10000;
+    text.ns = "fiducial_namespace_text";
+    text.text = std::to_string(fid.id);
+    markerPub->publish(text);
 }
- 
-
-/*
-        text = Marker()
-        text.header.frame_id = "/map"
-        text.color = ColorRGBA(1, 1, 1, 1) # white
-        text.scale.x = text.scale.y = text.scale.z = 0.1
-        text.pose.position.x = marker.pose.position.x
-        text.pose.position.y = marker.pose.position.y
-        text.pose.position.z = marker.pose.position.z
-        text.pose.position.z += (marker.scale.z/2.0) + 0.1  # draw text above marker
-        text.id = fiducialId + 10000
-        text.ns = "fiducial_namespace_text"
-        text.type = Marker.TEXT_VIEW_FACING
-        text.text = str(fiducialId)
-        text.action = Marker.ADD
-
-*/

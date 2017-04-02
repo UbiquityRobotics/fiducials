@@ -176,7 +176,7 @@ double getReprojectionError(vector<Point3f> objectPoints, vector<Point2f> imageP
         double error = dist(imagePoints[i], projectedPoints[i]);
         totalError += error*error;
     }
-    double rerror = sqrt(totalError/objectPoints.size());
+    double rerror = totalError/objectPoints.size();
     ROS_WARN("Reprojection error %lf\n", rerror);
     return rerror;
 }
