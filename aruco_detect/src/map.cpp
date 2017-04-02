@@ -249,9 +249,9 @@ void Map::update(vector<Observation>& obs, ros::Time time)
        cameraTransform.transform.rotation.x,
        cameraTransform.transform.rotation.y,
        cameraTransform.transform.rotation.z,
-       cameraTransform.transform.rotation.z));
+       cameraTransform.transform.rotation.w));
  
-    pose = pose * ct;
+    //pose = pose * ct;
     trans = pose.getOrigin();
     printf("Pose b_l %lf %lf %lf %f\n",
            trans.x(), trans.y(), trans.z(), variance);
