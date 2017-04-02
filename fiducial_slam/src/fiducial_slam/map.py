@@ -32,7 +32,8 @@ from tf.transformations import euler_from_quaternion, quaternion_slerp, \
 
 
 from fiducial_msgs.srv import InitializeMap
-from fiducial_slam.msg import FiducialMapEntry, FiducialMapEntryArray
+from fiducial_msgs.msg import FiducialMapEntry, FiducialMapEntryArray
+
 from fiducial_slam.fiducial import Fiducial
 from fiducial_slam import mkdirnotex, rad2deg, deg2rad
 
