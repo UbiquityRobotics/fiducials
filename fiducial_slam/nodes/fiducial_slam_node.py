@@ -40,7 +40,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
                               TransformStamped
 from visualization_msgs.msg import Marker, MarkerArray
 
-from fiducial_slam.msg import FiducialMapEntry, FiducialMapEntryArray
+from fiducial_msgs.msg import FiducialMapEntry, FiducialMapEntryArray
 from fiducial_msgs.msg import Fiducial, FiducialTransform, FiducialTransformArray
 
 from tf.transformations import euler_from_quaternion, quaternion_slerp, \
