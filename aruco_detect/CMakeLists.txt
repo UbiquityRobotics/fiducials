@@ -27,6 +27,8 @@ catkin_package(INCLUDE_DIRS include
 ## Build ##
 ###########
 
+add_definitions(-std=c++11)
+
 include_directories(${catkin_INCLUDE_DIRS} include)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
