@@ -87,6 +87,7 @@ static double calcFiducialArea(std::vector<cv::Point2f> pts)
     return a1+a2;
 }
 
+// An observation of a single fiducial in a single image
 class Observation {
   public:
     int fid;
@@ -98,22 +99,25 @@ class Observation {
     Observation(int fid, Vec3d &rvec, Vec3d &tvec, double ierr, double oerr);
 };
 
+// A single fiducial that is in the map
 class Fiducial {
   public:
     int id;
     tf2::Transform pose;
     double variance;
     ros::Time lastPublished;
+    bool anchor;
 
     void update(tf2::Transform &pose, double variance);
 
     Fiducial() {}
 
     Fiducial(int id, tf2::Transform &T, double variance);
-    Fiducial(int id, Vec3d rvec, Vec3d tvec, double variance);
-    Fiducial(int id, tf2::Quaternion &q, tf2::Vector3 tvec, double variance);
+    Fiducial(int id, tf2::Quaternion &q, tf2::Vector3 &tvec, double variance,
+             bool anchor);
 };
 
+// Class containing map data
 class Map {
   public:
     tf2_ros::TransformBroadcaster broadcaster;
@@ -127,6 +131,9 @@ class Map {
 
     Map(ros::NodeHandle &nh);
     void update(vector<Observation> &obs, ros::Time time);
+    void autoInit(vector<Observation> &obs, ros::Time time);
+    void updateMap(vector<Observation> &obs, ros::Time time);
+    void updatePose(vector<Observation> &obs, ros::Time time);
     bool load();
     bool save();
     void publishMarker(Fiducial &fid);
