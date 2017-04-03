@@ -37,7 +37,9 @@
 
 #include <std_msgs/String.h>
 #include <std_msgs/ColorRGBA.h>
+
 #include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Point.h>
 #include <visualization_msgs/Marker.h>
 
 // Degrees to radians
@@ -53,10 +55,23 @@ static double rad2deg(double rad)
 }
 
 // Update the variance of a gaussian that has been combined with another
+// Does not Take into account the degree of overlap
+// XXX This is not correct
+static double updateVarianceAlexey(double var1, double var2) {
+
+    return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
+}
+
+// Update the variance of a gaussian that has been combined with another
 // Taking into account the degree of overlap
+// XXX This does not converge well
 static double updateVarianceDavid(const tf2::Vector3 &newMean,
                                   const tf2::Vector3 &mean1, double var1,
                                   const tf2::Vector3 &mean2, double var2) {
+    if (1) {
+       return updateVarianceAlexey(var1, var2);
+    }
+
     //=((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))
     double d1 = (mean1 - newMean).length2();
     double d2 = (mean2 - newMean).length2();
@@ -69,12 +84,6 @@ static double updateVarianceDavid(const tf2::Vector3 &newMean,
     if (newVar < 10e-4)
         newVar = 10e-4;
     return newVar;
-}
-
-// Update the variance of a gaussian that has been combined with another
-// Does not Take into account the degree of overlap
-static double updateVarianceAlexey(double var1, double var2) {
-    return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
 }
 
 // Update transform t1 with t2 using variances as weights.
@@ -134,6 +143,9 @@ void Fiducial::update(const tf2::Transform &newPose, double newVariance)
 
     updateTransform(pose, variance, newPose, newVariance);
 
+    numObs++;
+
+/*
     if (anchor) {
        // Preserve tx, ty, rz 
        tf2::Vector3 trans = pose.getOrigin();
@@ -144,16 +156,12 @@ void Fiducial::update(const tf2::Transform &newPose, double newVariance)
        q.setRPY(rx, ry, yaw);
        pose.setRotation(q);
     }
+*/
     tf2::Vector3 mean2 = newPose.getOrigin();
     tf2::Vector3 newMean = pose.getOrigin();
-    printf("Original %f %f %f", mean1.x(), mean1.y(), mean1.z());
-    printf("mean2 %f %f %f", mean2.x(), mean2.y(), mean2.z());
-    printf("newMean %f %f %f", newMean.x(), newMean.y(), newMean.z());
  
     double v = updateVarianceDavid(newMean, mean1, variance,
                               mean2, newVariance);
-    printf("Fiducial %d variance changed from %lf to %lf\n", id,
-           variance, v);
     variance = v;
 }
 
@@ -163,13 +171,12 @@ Fiducial::Fiducial(int id, const tf2::Transform &pose, double variance) {
     this->pose = pose;
     this->variance = variance;
     this->lastPublished = ros::Time(0);
-    this->anchor = false;
 }
 
 // Create a fiducial from the pose components
 Fiducial::Fiducial(int id, const tf2::Quaternion &q, 
                    const tf2::Vector3 &tvec, 
-                   double variance, bool anchor) {
+                   double variance) {
     this->id = id;
 
     pose.setRotation(q); 
@@ -177,11 +184,13 @@ Fiducial::Fiducial(int id, const tf2::Quaternion &q,
 
     this->variance = variance;
     this->lastPublished = ros::Time(0);
-    this->anchor = anchor;
 };   
          
 // Constructor for map
 Map::Map(ros::NodeHandle &nh) {
+    frameNum = 0;
+    isInitializingMap = false;
+
     tfBuffer = new tf2_ros::Buffer(ros::Duration(30.0));
     listener = new tf2_ros::TransformListener(*tfBuffer);
 
@@ -205,14 +214,23 @@ Map::Map(ros::NodeHandle &nh) {
 // Update map with a set of observations
 void Map::update(const vector<Observation>& obs, ros::Time time)
 {
-    printf("Updating map with %d observations\n", (int)obs.size());
+    ROS_INFO("\nUpdating map with %d observations. Map has %d fiducials", 
+        (int)obs.size(), (int)fiducials.size());
+
+    frameNum++;
 
     if (obs.size() > 0 && fiducials.size() == 0) {
+        isInitializingMap = true;
+    }
+
+    if (isInitializingMap) {
         autoInit(obs, time);
     }
-   
-    updateMap(obs, time);
-    updatePose(obs, time);
+    else { 
+        updateMap(obs, time);
+        updatePose(obs, time);
+    }
+
     publishMap();
 }
 
@@ -234,6 +252,13 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time)
                 ROS_WARN("No path to %d", o1.fid);
                 continue;
             }
+ 
+            // dest in map with variance of 0
+            if (fiducials.find(o2.fid) != fiducials.end() &&
+                fiducials[o2.fid].variance == 0.0) {
+                continue;
+            }
+ 
 
             tf2::Transform T = fiducials[o1.fid].pose * o1.TfidCam * o2.TcamFid;
             double variance = o1.objectError + o2.objectError + 
@@ -247,7 +272,12 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time)
             }
             else {
                 ROS_INFO("Updated fiducial %d from %d", o2.fid, o1.fid);
-                fiducials[o2.fid].update(T, variance);
+                Fiducial &f = fiducials[o2.fid]; 
+                f.update(T, variance);
+                f.links[o1.fid] = 1;
+                f.numObs++;
+                fiducials[o1.fid].links[o2.fid] = 1;
+ 
             }
             publishMarker(fiducials[o1.fid]);
             publishMarker(fiducials[o2.fid]);
@@ -268,7 +298,7 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
             double v = fiducials[o.fid].variance + o.objectError;
 
             tf2::Vector3 trans = p.getOrigin();
-            printf("Pose %d %lf %lf %lf %lf\n", o.fid, 
+            ROS_INFO("Pose %d %lf %lf %lf %lf", o.fid, 
               trans.x(), trans.y(), trans.z(), v);
 
             if (variance == 0.0) {
@@ -283,10 +313,11 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
     }
     tf2::Vector3 trans = pose.getOrigin();
     tf2::Quaternion q = pose.getRotation();
-    printf("Pose all %lf %lf %lf %f\n",
+    ROS_INFO("Pose all %lf %lf %lf %f",
            trans.x(), trans.y(), trans.z(), variance);
 
     // Determine transform from camera to robot
+/*
     geometry_msgs::TransformStamped cameraTransform;
     try{
         // TODO: params
@@ -313,6 +344,7 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
     trans = pose.getOrigin();
     printf("Pose b_l %lf %lf %lf %f\n",
            trans.x(), trans.y(), trans.z(), variance);
+*/
 
     // TODO: nicer way to init TransformStamped
     geometry_msgs::TransformStamped ts;
@@ -330,14 +362,11 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
  
     broadcaster.sendTransform(ts);
 
-    ROS_WARN("Done with this image");
     // TODO: publish PoseWithCovarianceStamped
-
-    fflush(stdout);
 }
 
-// Initialize a map from the closest observed fiducial
-void Map::autoInit(const vector<Observation>& obs, ros::Time time){
+static int findClosestObs(const vector<Observation>& obs) 
+{
     double smallestDist = -1;
     int closestIdx = -1;
 
@@ -349,19 +378,39 @@ void Map::autoInit(const vector<Observation>& obs, ros::Time time){
             closestIdx = i;
         }
     }
-    if (closestIdx == -1) {
-        ROS_WARN("Could not find a fiducial to initialize map from");
-        return;
+
+    return closestIdx;
+}
+
+// Initialize a map from the closest observed fiducial
+void Map::autoInit(const vector<Observation>& obs, ros::Time time){
+
+    ROS_INFO("Auto init map %d", frameNum);
+
+    static int originFid = -1;
+
+    if (fiducials.size() == 0) {
+        originFid = findClosestObs(obs);
+
+        if (originFid == -1) {
+            ROS_WARN("Could not find a fiducial to initialize map from");
+        }
+        const Observation &o = obs[originFid];
+        ROS_INFO("Initializing map from fiducial %d", o.fid);
+        fiducials[o.fid] = Fiducial(o.fid, o.TfidCam, 0);
+    } 
+    else {
+        for (int i=0; i<obs.size(); i++) {
+            const Observation &o = obs[0];
+            if (o.fid == originFid) {
+                fiducials[originFid].update(o.TfidCam, 0.0);
+            } 
+            break;
+        }
     }
-
-    const Observation &o = obs[closestIdx];
-    ROS_INFO("Initializing map from fiducial %d", o.fid);
-
-    // set fiducial with only z specified and zero rotation
-    tf2::Quaternion q(0, 0, 0, 1);
-    tf2::Vector3 tvec(0, 0, o.TcamFid.getOrigin().z());
-    fiducials[o.fid] = Fiducial(o.fid, q, tvec,
-        o.objectError, true);
+    if (frameNum > 20) {
+        isInitializingMap = false;
+    }
 }
 
 // save map to file
@@ -372,8 +421,8 @@ bool Map::saveMap() {
 
 bool Map::saveMap(std::string filename) 
 {
-    // TODO: handle links
-    printf("saving map %d\n", (int)fiducials.size());
+    ROS_INFO("saving map %d fiducials file %s\n", 
+         (int)fiducials.size(), filename.c_str());
 
     FILE *fp = fopen(filename.c_str(), "w");
     if (fp == NULL) {
@@ -382,6 +431,7 @@ bool Map::saveMap(std::string filename)
     }
 
     map<int, Fiducial>::iterator it;
+    map<int, int>::iterator lit;
 
     for (it = fiducials.begin(); it != fiducials.end(); it++) {
         Fiducial &f = it->second;
@@ -389,10 +439,14 @@ bool Map::saveMap(std::string filename)
         double rx, ry, rz;
         f.pose.getBasis().getRPY(rx, ry, rz);
 
-        fprintf(fp, "%d %lf %lf %lf %lf %lf %lf %lf %d\n", f.id, 
+        fprintf(fp, "%d %lf %lf %lf %lf %lf %lf %lf %d ", f.id, 
                  trans.x(), trans.y(), trans.z(), 
-                 rad2deg(rx), rad2deg(ry), rad2deg(rz), f.variance,
-                 f.anchor ? 1 : 0);
+                 rad2deg(rx), rad2deg(ry), rad2deg(rz), f.variance, f.numObs);
+
+        for (lit = f.links.begin(); lit != f.links.end(); lit++) {
+            fprintf(fp, "%d ", lit->first);
+        }
+        fprintf(fp, "\n");
     }
     fclose(fp);
     printf("map saved\n");
@@ -407,7 +461,7 @@ bool Map::loadMap() {
 
 bool Map::loadMap(std::string filename) 
 {
-    printf("Load map %s\n", filename.c_str());
+    ROS_INFO("Load map %s\n", filename.c_str());
     FILE *fp = fopen(filename.c_str(), "r");
     if (fp == NULL) {
         ROS_WARN("Could not open %s for read\n", filename.c_str());
@@ -416,41 +470,37 @@ bool Map::loadMap(std::string filename)
 
     const int BUFSIZE = 2048;
     char linebuf[BUFSIZE];
+    char linkbuf[BUFSIZE];
     int id;
     double tx, ty, tz, rx, ry, rz, var;
-    int anchor = 0;
+    int numObs = 0;
 
-    // TODO: read links
     while (!feof(fp)) {
         if (fgets(linebuf, BUFSIZE - 1, fp) == NULL)
             break;
-         if (sscanf(linebuf, "%d %lf %lf %lf %lf %lf %lf %lf %d",
-                    &id, &tx, &ty, &tz, &rx, &ry, &rz, &var, &anchor) == 9) {
+
+         linkbuf[0] = '\0';
+         if (sscanf(linebuf, "%d %lf %lf %lf %lf %lf %lf %lf %d %[^\t\n]s",
+                    &id, &tx, &ty, &tz, &rx, &ry, &rz, &var, &numObs, linkbuf) == 10) {
              tf2::Vector3 tvec(tx, ty, tz);
              tf2::Quaternion q;
              q.setRPY(deg2rad(rx), deg2rad(ry), deg2rad(rz));
-             fiducials[id] = Fiducial(id, q, tvec, var, (anchor>0));
-         }
+             Fiducial f = Fiducial(id, q, tvec, var);
+             f.numObs = numObs;
+
+             istringstream ss(linkbuf);
+             string s;    
+             while (getline(ss, s, ' ')) {
+                 f.links[stoi(s)] = 1;
+             }
+             fiducials[id] = f;
+        }
     }
+
     fclose(fp);
     return true;
 }
            
-// Publish the next marker visualization messages that hasn't been
-// published recently
-void Map::publishMarkers() 
-{
-    ros::Time now = ros::Time::now();
-    map<int, Fiducial>::iterator it;
-
-    for (it = fiducials.begin(); it != fiducials.end(); it++) {
-        Fiducial &f = it->second;
-        if ((now - f.lastPublished).toSec() > 1.0) {
-            publishMarker(f);
-        }
-    }
-}
- 
 void Map::publishMap()
 {
     fiducial_msgs::FiducialMapEntryArray fmea;
@@ -479,10 +529,24 @@ void Map::publishMap()
     mapPub->publish(fmea);
 }
 
+// Publish the next marker visualization messages that hasn't been
+// published recently
+void Map::publishMarkers() 
+{
+    ros::Time now = ros::Time::now();
+    map<int, Fiducial>::iterator it;
+
+    for (it = fiducials.begin(); it != fiducials.end(); it++) {
+        Fiducial &f = it->second;
+        if ((now - f.lastPublished).toSec() > 1.0) {
+            publishMarker(f);
+        }
+    }
+}
+ 
 // Publish a single marker visualization message
 void Map::publishMarker(Fiducial &fid) 
 {
-    // TODO: publish links
     fid.lastPublished = ros::Time::now();
 
     // Flattened cube
@@ -507,7 +571,7 @@ void Map::publishMarker(Fiducial &fid)
     c.g = c.a = 1.0f;
     marker.color = c;
     marker.id = fid.id;
-    marker.ns = "fiducial_namespace";
+    marker.ns = "fiducial";
     marker.header.frame_id = "/map";
     markerPub->publish(marker);
 
@@ -516,13 +580,14 @@ void Map::publishMarker(Fiducial &fid)
     cyl.type = visualization_msgs::Marker::CYLINDER;
     cyl.action = visualization_msgs::Marker::ADD;
     cyl.header.frame_id = "/map";
-    c.r = c.g = c.g = 0.0f;
+    c.r = c.g = 0.0f;
     c.b = 1.0f;
     c.a = 0.8f;
     cyl.color = c;
-    cyl.id = fid.id;
+    cyl.id = fid.id; + 10000;
+    cyl.ns = "sigma";
     cyl.scale.x = cyl.scale.y = sqrt(fid.variance);
-    cyl.scale.z = 0.1;
+    cyl.scale.z = 0.01;
     cyl.pose.position.x = marker.pose.position.x;
     cyl.pose.position.y = marker.pose.position.y;
     cyl.pose.position.z = marker.pose.position.z;
@@ -542,8 +607,46 @@ void Map::publishMarker(Fiducial &fid)
     text.pose.position.y = marker.pose.position.y;
     text.pose.position.z = marker.pose.position.z;
     text.pose.position.z += (marker.scale.z/2.0) + 0.1;
-    text.id = fid.id + 10000;
-    text.ns = "fiducial_namespace_text";
+    text.id = fid.id + 30000;
+    text.ns = "text";
     text.text = std::to_string(fid.id);
     markerPub->publish(text);
+
+    visualization_msgs::Marker links;
+    links.type = visualization_msgs::Marker::LINE_LIST;
+    links.action = visualization_msgs::Marker::ADD;
+    links.header.frame_id = "/map";
+    c.b = c.a = 1.0f;
+    c.r = c.g = 0.0f;
+    links.color = c;
+    links.id = fid.id + 40000;
+    links.ns = "links";
+    links.scale.x = links.scale.y = links.scale.z = 0.02;
+    links.pose.position.x = 0;
+    links.pose.position.y = 0;
+    links.pose.position.z = 0;
+
+    geometry_msgs::Point gp0, gp1;
+    tf2::Vector3 p0 = fid.pose.getOrigin();
+    gp0.x = p0.x();
+    gp0.y = p0.y();
+    gp0.z = p0.z();
+  
+    map<int, int>::iterator lit;
+    for (lit = fid.links.begin(); lit != fid.links.end(); lit++) {
+        int ofid = lit->first;
+        // only draw links in one direction
+        if (fid.id < ofid) {
+            if (fiducials.find(ofid) != fiducials.end()) {
+                tf2::Vector3 p1 = fiducials[ofid].pose.getOrigin(); 
+                gp1.x = p1.x();
+                gp1.y = p1.y();
+                gp1.z = p1.z();
+                links.points.push_back(gp0);
+                links.points.push_back(gp1);
+            }
+        }
+    }
+
+    markerPub->publish(links);
 }

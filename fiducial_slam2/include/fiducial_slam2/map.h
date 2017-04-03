@@ -69,10 +69,12 @@ class Observation {
 class Fiducial {
   public:
     int id;
+    int numObs;
+    map<int,int> links;
+
     tf2::Transform pose;
     double variance;
     ros::Time lastPublished;
-    bool anchor;
 
     void update(const tf2::Transform &pose, double variance);
 
@@ -80,7 +82,7 @@ class Fiducial {
 
     Fiducial(int id, const tf2::Transform &T, double variance);
     Fiducial(int id, const tf2::Quaternion &q, const tf2::Vector3 &tvec,
-             double variance, bool anchor);
+             double variance);
 };
 
 // Class containing map data
@@ -93,6 +95,9 @@ class Map {
     ros::Publisher *markerPub;
     ros::Publisher *mapPub;
     string filename;
+
+    bool isInitializingMap;
+    int frameNum;
 
     map<int, Fiducial> fiducials;
 
