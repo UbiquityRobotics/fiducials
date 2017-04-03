@@ -29,6 +29,7 @@ include_directories(${catkin_INCLUDE_DIRS} include)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(fiducial_slam src/fiducial_slam.cpp src/map.cpp)
+add_dependencies(fiducial_slam fiducial_msgs_gencpp)
 
 target_link_libraries(fiducial_slam ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
@@ -52,6 +53,11 @@ install(TARGETS fiducial_slam
 ###########
 
 if(CATKIN_ENABLE_TESTING)
+        find_package(rostest REQUIRED COMPONENTS 
+          roscpp tf2_ros)
+
+        add_rostest(test/create_map.xml)
+
         find_package(rostest REQUIRED)
 
         # Tests need c++11
