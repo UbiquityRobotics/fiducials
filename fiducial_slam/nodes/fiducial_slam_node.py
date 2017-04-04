@@ -40,15 +40,15 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
                               TransformStamped
 from visualization_msgs.msg import Marker, MarkerArray
 
-from fiducial_slam.msg import FiducialMapEntry, FiducialMapEntryArray
-from fiducial_pose.msg import Fiducial, FiducialTransform, FiducialTransformArray
+from fiducial_msgs.msg import FiducialMapEntry, FiducialMapEntryArray
+from fiducial_msgs.msg import Fiducial, FiducialTransform, FiducialTransformArray
 
 from tf.transformations import euler_from_quaternion, quaternion_slerp, \
                                translation_matrix, quaternion_matrix, \
                                translation_from_matrix, quaternion_from_matrix, \
                                quaternion_from_euler
 
-from fiducial_slam.srv import InitializeMap
+from fiducial_msgs.srv import InitializeMap
 from fiducial_slam.fiducial import Fiducial
 from fiducial_slam.map import Map
 from fiducial_slam import mkdirnotex, rad2deg, deg2rad, updateLinear, updateAngular

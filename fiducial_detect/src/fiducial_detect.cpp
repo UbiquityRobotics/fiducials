@@ -54,17 +54,17 @@
 
 #include "fiducial_pose/rosrpp.h"
 
-#include "fiducial_pose/Fiducial.h"
-#include "fiducial_pose/FiducialArray.h"
-#include "fiducial_pose/FiducialTransform.h"
-#include "fiducial_pose/FiducialTransformArray.h"
+#include "fiducial_msgs/Fiducial.h"
+#include "fiducial_msgs/FiducialArray.h"
+#include "fiducial_msgs/FiducialTransform.h"
+#include "fiducial_msgs/FiducialTransformArray.h"
 
 class FiducialsNode {
 private:
     ros::Publisher vertices_pub;
     ros::Publisher pose_pub;
-    fiducial_pose::FiducialTransformArray fiducialTransformArray;
-    fiducial_pose::FiducialArray fiducialVertexArray;
+    fiducial_msgs::FiducialTransformArray fiducialTransformArray;
+    fiducial_msgs::FiducialArray fiducialVertexArray;
 
     ros::Subscriber caminfo_sub;
     image_transport::Subscriber img_sub;
@@ -139,7 +139,7 @@ void FiducialsNode::fiducial_announce(void *t, int id, int direction,
 void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
                                 double x0, double y0, double x1, double y1,
                                 double x2, double y2, double x3, double y3) {
-    fiducial_pose::Fiducial fid;
+    fiducial_msgs::Fiducial fid;
 
     ROS_INFO(
         "fiducial: id=%d dir=%d diag=%f (%.2f,%.2f), (%.2f,%.2f), (%.2f,%.2f), "
@@ -163,7 +163,7 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
         if (!haveCamInfo && frameNum < 5) {
             return;
         }
-        fiducial_pose::FiducialTransform ft;
+        fiducial_msgs::FiducialTransform ft;
         geometry_msgs::Transform trans;
         ft.transform = trans;
         if (pose_est->fiducialCallback(&fid, &ft)) {
@@ -243,7 +243,7 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr &msg) {
         ROS_INFO("Processed image");
         if (publish_images) {
             for (unsigned i = 0; i < fiducialVertexArray.fiducials.size(); i++) {
-                fiducial_pose::Fiducial &fid = fiducialVertexArray.fiducials[i];
+                fiducial_msgs::Fiducial &fid = fiducialVertexArray.fiducials[i];
                 cvLine(image, cvPoint(fid.x0, fid.y0), cvPoint(fid.x1, fid.y1),
                        CV_RGB(255, 0, 0), 3);
                 cvLine(image, cvPoint(fid.x1, fid.y1), cvPoint(fid.x2, fid.y2),
@@ -288,10 +288,10 @@ FiducialsNode::FiducialsNode(ros::NodeHandle &nh) : scale(0.75) {
         image_pub = img_transport.advertise("fiducial_images", 1);
     }
 
-    vertices_pub = nh.advertise<fiducial_pose::FiducialArray>("/fiducial_vertices", 1);
+    vertices_pub = nh.advertise<fiducial_msgs::FiducialArray>("/fiducial_vertices", 1);
 
     if (estimate_pose) {
-        pose_pub =  nh.advertise<fiducial_pose::FiducialTransformArray>(
+        pose_pub =  nh.advertise<fiducial_msgs::FiducialTransformArray>(
                     "/fiducial_transforms", 1);
         pose_est = new RosRpp(fiducial_len, undistort_points);
     } else {

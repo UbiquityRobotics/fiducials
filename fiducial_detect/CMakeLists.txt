@@ -4,6 +4,7 @@ project(fiducial_detect)
 find_package(catkin REQUIRED COMPONENTS
   fiducial_lib
   fiducial_pose
+  fiducial_msgs
   roscpp
   tf2_geometry_msgs
   tf2_ros

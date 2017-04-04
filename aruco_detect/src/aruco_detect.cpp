@@ -46,10 +46,10 @@
 #include <sensor_msgs/image_encodings.h>
 #include <dynamic_reconfigure/server.h>
 
-#include "fiducial_pose/Fiducial.h"
-#include "fiducial_pose/FiducialArray.h"
-#include "fiducial_pose/FiducialTransform.h"
-#include "fiducial_pose/FiducialTransformArray.h"
+#include "fiducial_msgs/Fiducial.h"
+#include "fiducial_msgs/FiducialArray.h"
+#include "fiducial_msgs/FiducialTransform.h"
+#include "fiducial_msgs/FiducialTransformArray.h"
 #include "aruco_detect/DetectorParamsConfig.h"
 
 #include <opencv2/highgui.hpp>
@@ -155,12 +155,12 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
     cv_bridge::CvImagePtr cv_ptr;
 
-    fiducial_pose::FiducialTransformArray fta;
+    fiducial_msgs::FiducialTransformArray fta;
     fta.header.stamp = msg->header.stamp;
     fta.header.frame_id = frameId;
     fta.image_seq = msg->header.seq;
 
-    fiducial_pose::FiducialArray fva;
+    fiducial_msgs::FiducialArray fva;
     fva.header.stamp = msg->header.stamp;
     fva.header.frame_id =frameId;
     fva.image_seq = msg->header.seq;
@@ -176,7 +176,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         ROS_INFO("Detectd %d markers", (int)ids.size());
  
         for (int i=0; i<ids.size(); i++) {
-            fiducial_pose::Fiducial fid;
+            fiducial_msgs::Fiducial fid;
             fid.fiducial_id = ids[i];
             
             fid.x0 = corners[i][0].x;
@@ -215,7 +215,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             Vec3d axis = rvecs[i] / angle;
             ROS_INFO("angle %f axis %f %f %f", angle, axis[0], axis[1], axis[2]);
 
-            fiducial_pose::FiducialTransform ft;
+            fiducial_msgs::FiducialTransform ft;
             ft.fiducial_id = ids[i];
 
             ft.transform.translation.x = tvecs[i][0];
@@ -267,9 +267,9 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
     image_pub = it.advertise("/fiducial_images", 1);
 
-    vertices_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialArray>("/fiducial_vertices", 1));
+    vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("/fiducial_vertices", 1));
 
-    pose_pub = new ros::Publisher(nh.advertise<fiducial_pose::FiducialTransformArray>("/fiducial_transforms", 1)); 
+    pose_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialTransformArray>("/fiducial_transforms", 1)); 
     
     dictionary = aruco::getPredefinedDictionary(dicno);
 
