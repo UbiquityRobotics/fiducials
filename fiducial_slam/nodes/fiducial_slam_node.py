@@ -92,10 +92,11 @@ def angularError3D(r, p, y):
     a = angularError(rad2deg(r))
     b = angularError(rad2deg(p))
     c = angularError(rad2deg(y))
-    tilt = deg2rad(math.sqrt(a*a + b*b + c*c))
+    rospy.loginfo("a = %f b = %f c = %f" % (a, b, c))
+    tilt = deg2rad(math.sqrt(a*a + b*b))# + c*c))
     error = CEILING_HEIGHT * math.tan(tilt)
     variance = error * error
-    print "Variance", variance
+    rospy.loginfo("Variance = %f" % variance)
     return variance
 
 
@@ -207,27 +208,8 @@ class FiducialSlam:
                 # Auto initialize map from one of the fiducials
                 f = tfs.keys()[0]
                 self.updateMapFromExternal(tfs, f, imageTime, self.odomFrame)
+        self.updateMap(tfs)
         self.updatePose(tfs, imageTime)
-        if not self.pose is None:
-            robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
-            robotQuat = numpy.array(quaternion_from_matrix(self.pose))
-            (r, p, robotYaw) = euler_from_quaternion(robotQuat)
-            # Only update the map if the robot has moved significantly, to
-            # avoid the map variances decaying from repeated observations
-            if self.lastUpdateXyz is None or mapUpdated:
-                if not mapUpdated:
-                    self.updateMap(tfs)
-                self.lastUpdateXyz = robotXyz
-                self.lastUpdateYaw = robotYaw
-            else:
-                dist = numpy.linalg.norm(self.lastUpdateXyz - robotXyz)
-                angle = self.lastUpdateYaw - self.robotYaw
-                print "Distance moved", dist, angle
-                if self.mappingMode or dist > MIN_UPDATE_TRANSLATION \
-                   or angle > MIN_UPDATE_ROTATION:
-                    self.updateMap(tfs)
-                    self.lastUpdateXyz = robotXyz
-                    self.lastUpdateYaw = robotYaw
 
     """
     Update the map with fiducial pairs
@@ -279,6 +261,13 @@ class FiducialSlam:
                                 obs1.objectError, obs1.imageError, obs2.objectError, obs2.imageError))
 
         addedNew = False
+        # and take into account the variance of the reference fiducial
+        # we convolve the gaussians, which is achieved by adding the variances
+        variance = obs1.objectError + obs2.objectError + self.map[f1].variance
+        print "*** %f var %f %f" % (f1, self.map[f1].variance, variance)
+        if variance > 1.0:
+            return
+
         if not self.map.has_key(f2):
             self.map[f2] = Fiducial(f2)
             addedNew = True
@@ -286,25 +275,21 @@ class FiducialSlam:
 
         fid2 = self.map[f2]
 
-        variance  = angularError3D(r, p , yaw)
-        # and take into account the variance of the reference fiducial
-        # we convolve the gaussians, which is achieved by adding the variances
-        print "*** %f var %f %f" % (f1, self.map[f1].variance, variance)
-        variance = variance + self.map[f1].variance
-
+        """
         if self.fiducialsAreLevel:
             (r1, p1, y1) = euler_from_quaternion(fid1.orientation)
             (r, p, yaw) = euler_from_quaternion(quat)
             quat = quaternion_from_euler(r1, p1, yaw)
+        """
 
         self.map[f2].update(xyz, quat, variance)
 
-        print "%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f2, xyz[0], xyz[1], xyz[2],
-            rad2deg(r), rad2deg(p), rad2deg(yaw), variance)
+        rospy.loginfo("%d updated to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f2, xyz[0], xyz[1], xyz[2],
+            rad2deg(r), rad2deg(p), rad2deg(yaw), variance))
 
         p = self.map[f2].position
 
-        if self.mappingMode or addedNew:
+        if addedNew:
             self.map.save()
             self.map.publish(self.mapPub)
 
@@ -339,7 +324,7 @@ class FiducialSlam:
         quat = numpy.array(quaternion_from_matrix(P_fid))
         (r, p, yaw) = euler_from_quaternion(quat)
 
-        variance = 0.3 # TODO:find something better
+        variance = 0.0 # TODO:find something better
         self.map[f].update(xyz, quat, variance)
 
         print "%d updated from external to %.3f %.3f %.3f %.3f %.3f %.3f %.3f" % (f, xyz[0], xyz[1], xyz[2],
@@ -360,12 +345,17 @@ class FiducialSlam:
         camera = None
 
         for t in tfs.keys():
+            """
+            if not t == 100:
+                continue
+            """
             if not self.map.has_key(t):
                 rospy.logwarn("No path to %d" % t)
                 continue
 
             obs = tfs[t]
 
+            """
             try:
                 trans = self.tfBuffer.lookup_transform(obs.cameraFrame,
                                                  self.poseFrame,
@@ -380,11 +370,14 @@ class FiducialSlam:
             T_camBase = numpy.dot(translation_matrix((ct.x, ct.y, ct.z)),
                                   quaternion_matrix((cr.x, cr.y, cr.z, cr.w)))
 
+            """
             self.map[t].lastSeenTime = imageTime
 
             T_worldFid = self.map[t].pose44()
             T_worldCam = numpy.dot(T_worldFid, obs.T_fidCam)
-            T_worldBase = numpy.dot(T_worldCam, T_camBase)
+            #T_worldCam = obs.T_camFid
+            #T_worldBase = numpy.dot(T_worldCam, T_camBase)
+            T_worldBase = T_worldCam ### For debugging
 
             xyz = numpy.array(translation_from_matrix(T_worldBase))[:3]
             quat = numpy.array(quaternion_from_matrix(T_worldBase))
@@ -393,11 +386,15 @@ class FiducialSlam:
             if self.fiducialsAreLevel:
                 quat = quaternion_from_euler(0, 0, y)
 
-            thisvar  = angularError3D(r, p , 0.0)
+            #thisvar  = angularError3D(r, p , 0.0)
+            thisvar = obs.objectError + self.map[t].variance
             rospy.loginfo("pose %d %f %f %f %f %f %f %f" % \
                              (t, xyz[0], xyz[1], xyz[2],
                               rad2deg(r), rad2deg(p), rad2deg(y),
                               thisvar))
+
+            if thisvar > 0.1:
+                continue
 
             if position is None:
                 position = xyz
@@ -418,19 +415,21 @@ class FiducialSlam:
 
         if not position is None:
             (r, p, y) = euler_from_quaternion(orientation)
-            xyz = position
             rospy.loginfo("pose ALL %f %f %f %f %f %f %f %d" % \
                             (xyz[0], xyz[1], xyz[2],
                              rad2deg(r), rad2deg(p), rad2deg(y),
                              variance, self.currentSeq))
-            self.pose = numpy.dot(translation_matrix((position[0],
-                                                      position[1],
-                                                      0)),
-                                  quaternion_matrix((orientation[0],
+            """
+            self.pose = numpy.dot(quaternion_matrix((orientation[0],
                                                      orientation[1],
-                                                     orientation[2],
-                                                     orientation[3])))
-            self.computeTransform(imageTime)
+                                                     orientation[2])),
+                                  translation_matrix((position[0],
+                                                      position[1],
+                                                      0)))
+            """
+            self.robotXyz = position
+            self.robotQuat = orientation
+            self.computeTransform(imageTime, variance)
 
     def makeMarker(self, fiducialId, visible=False):
         fiducial = self.map[fiducialId]
@@ -532,11 +531,9 @@ class FiducialSlam:
     """
     Publish the transform in self.pose
     """
-    def computeTransform(self, imageTime):
-        if self.pose is None:
-            return
-        robotXyz = numpy.array(translation_from_matrix(self.pose))[:3]
-        robotQuat = numpy.array(quaternion_from_matrix(self.pose))
+    def computeTransform(self, imageTime, variance):
+        robotXyz = self.robotXyz #numpy.array(translation_from_matrix(self.pose))[:3]
+        robotQuat = self.robotQuat #numpy.array(quaternion_from_matrix(self.pose))
         (r, p, yaw) = euler_from_quaternion(robotQuat)
         robotQuat = quaternion_from_euler(0.0, 0.0, yaw)
         m = PoseWithCovarianceStamped()
@@ -553,12 +550,12 @@ class FiducialSlam:
         These values are designed to work with robot_localization.
         See http://wiki.ros.org/robot_localization/Tutorials/Migration%20from%20robot_pose_ekf
         """
-        m.pose.covariance = [0.01,  0,     0,      0,     0,     0,
-                             0,     0.01,  0,      0,     0,     0,
-                             0,     0,     0.01,   0,     0,     0,
-                             0,     0,     0,      0.01,  0,     0,
-                             0,     0,     0,      0,     0.01,  0,
-                             0,     0,     0,      0,     0,     0.01]
+        m.pose.covariance = [variance,  0,     0,      0,     0,     0,
+                             0,     variance,  0,      0,     0,     0,
+                             0,     0,     variance,   0,     0,     0,
+                             0,     0,     0,      variance,  0,     0,
+                             0,     0,     0,      0,     variance,  0,
+                             0,     0,     0,      0,     0,     variance]
         self.posePub.publish(m)
         if self.odomFrame != "":
             try:
@@ -577,10 +574,10 @@ class FiducialSlam:
         else:
             pose = self.pose
         self.publishLock.acquire()
-        self.robotXyz = numpy.array(translation_from_matrix(pose))[:3]
-        robotQuat = numpy.array(quaternion_from_matrix(pose))
+        #self.robotXyz = numpy.array(translation_from_matrix(pose))[:3]
+        #robotQuat = numpy.array(quaternion_from_matrix(pose))
         (r, p, yaw) = euler_from_quaternion(robotQuat)
-        self.robotQuat = quaternion_from_euler(0.0, 0.0, yaw)
+        #self.robotQuat = quaternion_from_euler(0.0, 0.0, yaw)
         self.robotYaw = yaw
         self.publishLock.release()
         self.publishTransform()
@@ -598,7 +595,7 @@ class FiducialSlam:
             t.header.stamp = rospy.Time.now() + rospy.Duration(self.future)
             t.transform.translation.x = self.robotXyz[0]
             t.transform.translation.y = self.robotXyz[1]
-            t.transform.translation.z = self.robotXyz[2]
+            t.transform.translation.z = 0 #####self.robotXyz[2]
             t.transform.rotation.x = self.robotQuat[0]
             t.transform.rotation.y = self.robotQuat[1]
             t.transform.rotation.z = self.robotQuat[2]

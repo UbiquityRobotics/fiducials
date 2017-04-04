@@ -47,21 +47,23 @@ if(CATKIN_ENABLE_TESTING)
 
         # We are not using the big bag test right now
 
+# These tests need to be moved to aruco_detect
+
         # catkin_download_test_data(${PROJECT_NAME}_ceilingline.bag
         #                           http://www.fxpal.com/robots/ceilingline.bag
         #                           DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
         #                           MD5 05b69d64ab02d79ec4fa4be3a7de05af) 
 
-        add_rostest(test/create_map.xml)
-        add_rostest(test/init_map.xml)
+        #add_rostest(test/create_map.xml)
+        #add_rostest(test/init_map.xml)
         # add_rostest(test/ceiling_test_2.xml)
 
-        include_directories(${catkin_INCLUDE_DIRS})
+        #include_directories(${catkin_INCLUDE_DIRS})
 
         # Tests need c++11
-        add_definitions(-std=c++11)
-        add_rostest_gtest(localization_test 
-          test/localization.test 
-          test/localization_test.cpp)
-        target_link_libraries(localization_test ${catkin_LIBRARIES} ${OpenCV_LIBS})
+        #add_definitions(-std=c++11)
+        #add_rostest_gtest(localization_test 
+        #  test/localization.test 
+        #  test/localization_test.cpp)
+        #target_link_libraries(localization_test ${catkin_LIBRARIES} ${OpenCV_LIBS})
 endif()

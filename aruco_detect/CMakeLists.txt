@@ -27,17 +27,18 @@ catkin_package(INCLUDE_DIRS include
 ## Build ##
 ###########
 
+add_definitions(-std=c++11)
+
 include_directories(${catkin_INCLUDE_DIRS} include)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(aruco_detect src/aruco_detect.cpp)
-add_executable(test_board src/test_board.cpp)
+add_executable(aruco_detect src/aruco_detect.cpp src/map.cpp)
 add_executable(create_marker src/create_marker.cpp)
 
 add_dependencies(aruco_detect ${PROJECT_NAME}_gencfg)
 
 target_link_libraries(aruco_detect ${catkin_LIBRARIES} ${OpenCV_LIBS})
-target_link_libraries(test_board ${catkin_LIBRARIES} ${OpenCV_LIBS})
+#target_link_libraries(test_board ${catkin_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries(create_marker ${OpenCV_LIBS})
 
 #############

@@ -12,6 +12,7 @@
   <arg name="median_filter_samples" default="0"/>
 
 
+<!--
   <node type="fiducial_slam_node.py" pkg="fiducial_slam" output="screen" name="fiducial_slam">
     <param name="map_file" value="$(env HOME)/.ros/slam/map.txt" />
     <param name="obs_file" value="$(env HOME)/.ros/slam/obs.txt" />
@@ -25,4 +26,5 @@
     <param name="use_external_pose" value="$(arg use_external_pose)" />
     <param name="median_filter_samples" value="$(arg median_filter_samples)" />
   </node>
+-->
 </launch>
