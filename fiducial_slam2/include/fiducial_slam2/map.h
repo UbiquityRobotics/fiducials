@@ -68,6 +68,7 @@ class Fiducial {
   public:
     int id;
     int numObs;
+    bool visible;
     map<int,int> links;
 
     tf2::Transform pose;
@@ -92,7 +93,13 @@ class Map {
 
     ros::Publisher *markerPub;
     ros::Publisher *mapPub;
-    string filename;
+    ros::Publisher *posePub;
+
+    string mapFilename;
+    string mapFrame;
+    string odomFrame;
+    string cameraFrame;
+    string baseFrame;
 
     bool isInitializingMap;
     int frameNum;
