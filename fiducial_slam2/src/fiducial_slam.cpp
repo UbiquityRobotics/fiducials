@@ -125,10 +125,10 @@ int main(int argc, char ** argv) {
     node = new FiducialSlam(nh);
     signal(SIGINT, mySigintHandler);
 
-    ros::Rate r(10);
+    ros::Rate r(20);
     while (ros::ok()) {
-        r.sleep();
         ros::spinOnce(); 
+        r.sleep();
         node->fiducialMap->publishMarkers();
     }
 
