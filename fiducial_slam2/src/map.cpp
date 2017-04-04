@@ -198,7 +198,7 @@ Map::Map(ros::NodeHandle &nh) {
     std::string initialMap;
     nh.param<std::string>("initial_map_file", initialMap, "");
 
-    if (initialMap != "") {
+    if (!initialMap.empty()) {
         loadMap(initialMap);
     }
     else {
