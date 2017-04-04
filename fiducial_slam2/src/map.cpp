@@ -110,6 +110,8 @@ static void updateTransform(tf2::Transform &t1, double var1,
 
 // Constructor for observation
 
+static bool doRotation;
+
 Observation::Observation(int fid, const tf2::Quaternion &q, 
                          const tf2::Vector3 &tvec,
                          double ierr, double oerr) {
@@ -134,7 +136,13 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
     T.setRotation(q);
     T.setOrigin(tvec);
 
-    T_fidCam = T * T_arucoRos;
+    if (doRotation) {
+        T_fidCam = T * T_arucoRos;
+    }
+    else {
+        T_fidCam = T;
+    }
+
     T_camFid = T_fidCam.inverse();
 }
 
@@ -210,6 +218,8 @@ Map::Map(ros::NodeHandle &nh) {
     nh.param<std::string>("odom_frame", odomFrame, "odom");
     nh.param<std::string>("camera_frame", cameraFrame, "camera_frame");
     nh.param<std::string>("base_frame", baseFrame, "base_link");
+
+    nh.param<bool>("do_rotation", doRotation, true);
 
     nh.param<std::string>("map_file", mapFilename, 
         string(getenv("HOME")) + "/.ros/slam/map.txt");
@@ -376,7 +386,7 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
     geometry_msgs::TransformStamped cameraTransform;
     tf2::Transform ct;
     try {
-        cameraTransform = tfBuffer->lookupTransform(baseFrame, cameraFrame,
+        cameraTransform = tfBuffer->lookupTransform(cameraFrame, baseFrame,
                                                     time);
 
         ct.setOrigin(tf2::Vector3(
@@ -394,13 +404,13 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
 
          trans = pose.getOrigin();
          q = pose.getRotation();
+
+         ROS_INFO("Pose b_l %lf %lf %lf %f\n",
+           trans.x(), trans.y(), trans.z(), variance);
      }
      catch (tf2::TransformException &ex) {
          ROS_WARN("Could not lookup camera transform %s",ex.what());
      }
-
-     printf("Pose b_l %lf %lf %lf %f\n",
-           trans.x(), trans.y(), trans.z(), variance);
 
      geometry_msgs::PoseWithCovarianceStamped pwcs;
      pwcs.header.frame_id = "/map";
@@ -598,8 +608,10 @@ bool Map::loadMap(std::string filename)
         int numObs = 0;
 
         linkbuf[0] = '\0';
-        if (sscanf(linebuf, "%d %lf %lf %lf %lf %lf %lf %lf %d%[^\t\n]s",
-                    &id, &tx, &ty, &tz, &rx, &ry, &rz, &var, &numObs, linkbuf) == 10) {
+        int nElems = sscanf(linebuf, "%d %lf %lf %lf %lf %lf %lf %lf %d%[^\t\n]*s",
+                            &id, &tx, &ty, &tz, &rx, &ry, &rz, &var, &numObs, linkbuf);
+        printf("num elems %d\n", nElems);
+        if (nElems == 9 || nElems == 10) {
              tf2::Vector3 tvec(tx, ty, tz);
              tf2::Quaternion q;
              q.setRPY(deg2rad(rx), deg2rad(ry), deg2rad(rz));

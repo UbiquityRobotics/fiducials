@@ -11,6 +11,8 @@ import os
 import rospy
 import rostest
 
+from fiducial_msgs.msg import FiducialMapEntryArray
+
 NAME='map'
 EPSILON=0.2
 
@@ -23,39 +25,21 @@ of the specfied fiducial.
 class MapTest(unittest.TestCase):
     def __init__(self, *args):
         super(MapTest, self).__init__(*args)
+        self.mapEntries = -1
 
-    def countlines(self, filename):
-        try:
-            file = open(filename, "r")
-            self.lines = file.readlines()
-            file.close()
-            count = len(self.lines)
-            print("Map has %d lines" % count)
-            return count
-        except:
-            return 0
-
-    def checkposition(self, fid, x, y, z):
-        for line in self.lines:
-            elems = line.split()
-            if int(elems[0]) != int(fid):
-                continue
-            if abs(float(elems[1]) - float(x)) < EPSILON and \
-               abs(float(elems[2]) - float(y)) < EPSILON and \
-               abs(float(elems[3]) - float(z)) < EPSILON:
-                print("Fiducial %s found in correct position" % fid)
-                return True
-            else:
-                self.fail("Fiducial %s position incorrect: %s %s %s" % (fid, elems[1], elems[2], elems[3]))
-                return False
-        print("Fiducial %s not found" % fid)
-        return False
+    def mapCallback(self, msg):
+        print (msg)
+        self.mapEntries = len(msg.fiducials)
+        
 
     def test_map(self):
         rospy.init_node('test_map')
         filename = rospy.get_param("~map_file", "")
         minLines = rospy.get_param("~min_lines", 1)
         expect = rospy.get_param("~expect", "")
+
+        rospy.Subscriber("/fiducial_map", FiducialMapEntryArray, self.mapCallback)
+
         print("test_map");
         try:
             os.remove(filename)
@@ -63,13 +47,8 @@ class MapTest(unittest.TestCase):
             pass
         t = 0
         while True:
-            lines = self.countlines(filename)
-            if lines >= minLines:
-                if expect == "":
-                    return 
-                (fid, x, y, z) = expect.split()
-                if self.checkposition(fid, x, y, z):
-                    return
+            if self.mapEntries >= minLines:
+                return
 	    time.sleep(0.5)
         
 if __name__ == '__main__':
@@ -77,4 +56,4 @@ if __name__ == '__main__':
         rostest.run('rostest', NAME, MapTest, sys.argv)
     except KeyboardInterrupt:
         pass
-print("exiting")
+    print("exiting")
