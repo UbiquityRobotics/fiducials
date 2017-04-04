@@ -299,6 +299,10 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
     tf2::Transform pose;
     double variance = 0.0;
 
+    if (obs.size() == 0) {
+        return;
+    }
+
     for (int i=0; i<obs.size(); i++) {
         const Observation &o = obs[i];
         if (fiducials.find(o.fid) != fiducials.end()) {
