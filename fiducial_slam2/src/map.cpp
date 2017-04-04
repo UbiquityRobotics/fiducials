@@ -55,8 +55,7 @@ static double rad2deg(double rad)
 }
 
 // Update the variance of a gaussian that has been combined with another
-// Does not Take into account the degree of overlap
-// XXX This is not correct
+// Does not Take into account the degree of overlap of observations
 static double updateVarianceAlexey(double var1, double var2) {
 
     return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
@@ -101,23 +100,6 @@ static void updateTransform(tf2::Transform &t1, double var1,
 }
 
 // Constructor for observation
-Observation::Observation(int fid, const cv::Vec3d &rvec, 
-                         const cv::Vec3d &tvec,
-                         double ierr, double oerr) {
-    this->fid = fid;
-    this->imageError = ierr;
-    this->objectError = oerr;
-
-    double angle = norm(rvec);
-    cv::Vec3d axis = rvec / angle;
-
-    TfidCam.setRotation(tf2::Quaternion(tf2::Vector3(axis[0], axis[1], axis[2]), angle)); 
-    TfidCam.setOrigin(tf2::Vector3(tvec[0], tvec[1], tvec[2]));
-
-    TcamFid = TfidCam.inverse();
-}
-
-
 Observation::Observation(int fid, const tf2::Quaternion &q, 
                          const tf2::Vector3 &tvec,
                          double ierr, double oerr) {
@@ -125,10 +107,23 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
     this->imageError = ierr;
     this->objectError = oerr;
 
-    TfidCam.setRotation(q); 
-    TfidCam.setOrigin(tvec);
+    /*
+     In ROS, x points forward and y points left
+     http://www.ros.org/reps/rep-0103.html
+     In Aruco y points forward and x points right
+     http://docs.opencv.org/3.1.0/d5/dae/tutorial_aruco_detection.html
+     So we rotate 90 degrees around the Z axis
+     This conversion should be in aruco_detect
+    */
+    tf2::Transform T_arucoRos;
+    T_arucoRos.setRotation(tf2::Quaternion(tf2::Vector3(0, 0, 1), M_PI/2));
 
-    TcamFid = TfidCam.inverse();
+    tf2::Transform T;
+    T.setRotation(q);
+    T.setOrigin(tvec);
+
+    T_fidCam = T * T_arucoRos;
+    T_camFid = T_fidCam.inverse();
 }
 
 // Update a fiducial with a new pose estimate
@@ -171,6 +166,7 @@ Fiducial::Fiducial(int id, const tf2::Transform &pose, double variance) {
     this->pose = pose;
     this->variance = variance;
     this->lastPublished = ros::Time(0);
+    this->numObs = 0;
 }
 
 // Create a fiducial from the pose components
@@ -184,7 +180,8 @@ Fiducial::Fiducial(int id, const tf2::Quaternion &q,
 
     this->variance = variance;
     this->lastPublished = ros::Time(0);
-};   
+    this->numObs = 0;
+}
          
 // Constructor for map
 Map::Map(ros::NodeHandle &nh) {
@@ -214,7 +211,7 @@ Map::Map(ros::NodeHandle &nh) {
 // Update map with a set of observations
 void Map::update(const vector<Observation>& obs, ros::Time time)
 {
-    ROS_INFO("\nUpdating map with %d observations. Map has %d fiducials", 
+    ROS_INFO("Updating map with %d observations. Map has %d fiducials", 
         (int)obs.size(), (int)fiducials.size());
 
     frameNum++;
@@ -238,6 +235,7 @@ void Map::update(const vector<Observation>& obs, ros::Time time)
 void Map::updateMap(const vector<Observation>& obs, ros::Time time)
 {
     for (int i=0; i<obs.size(); i++) {
+
         for (int j=0; j<obs.size(); j++) {
             const Observation &o1 = obs[i];
             const Observation &o2 = obs[j];
@@ -246,10 +244,10 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time)
             if (o1.fid == o2.fid) {
                 continue;
             }
-            
+
             // source not in map
             if (fiducials.find(o1.fid) == fiducials.end()) {
-                ROS_WARN("No path to %d", o1.fid);
+                ROS_WARN("No map entry to %d", o1.fid);
                 continue;
             }
  
@@ -258,22 +256,32 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time)
                 fiducials[o2.fid].variance == 0.0) {
                 continue;
             }
- 
 
-            tf2::Transform T = fiducials[o1.fid].pose * o1.TfidCam * o2.TcamFid;
+            tf2::Transform T_fid1Fid2 = o1.T_fidCam * o2.T_camFid;
+
+            tf2::Transform T_mapFid2 = fiducials[o1.fid].pose * T_fid1Fid2;
+
+            tf2::Vector3 trans = T_fid1Fid2.getOrigin();
+            ROS_INFO("Tf from %d to %d  %lf %lf %lf",
+                     o1.fid, o2.fid,
+                     trans.x(), trans.y(), trans.z());
+
+            trans = T_mapFid2.getOrigin();
+            ROS_INFO("Estimate of %d %lf %lf %lf", o2.fid,
+                     trans.x(), trans.y(), trans.z());
+
             double variance = o1.objectError + o2.objectError + 
-              max(fiducials[o1.fid].variance, 10e-5);
+                max(fiducials[o1.fid].variance, 10e-5);
 
              
             if (fiducials.find(o2.fid) == fiducials.end()) {
                 ROS_INFO("New fiducial %d from %d", o2.fid, o1.fid);
-                fiducials[o2.fid] = Fiducial(o2.fid, T, variance);
+                fiducials[o2.fid] = Fiducial(o2.fid, T_mapFid2, variance);
                 saveMap();
             }
             else {
-                ROS_INFO("Updated fiducial %d from %d", o2.fid, o1.fid);
                 Fiducial &f = fiducials[o2.fid]; 
-                f.update(T, variance);
+                f.update(T_mapFid2, variance);
                 f.links[o1.fid] = 1;
                 f.numObs++;
                 fiducials[o1.fid].links[o2.fid] = 1;
@@ -294,12 +302,16 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
     for (int i=0; i<obs.size(); i++) {
         const Observation &o = obs[i];
         if (fiducials.find(o.fid) != fiducials.end()) {
-            tf2::Transform p = fiducials[o.fid].pose * o.TfidCam;
+
+            tf2::Transform p = fiducials[o.fid].pose * o.T_fidCam;
+
             double v = fiducials[o.fid].variance + o.objectError;
 
             tf2::Vector3 trans = p.getOrigin();
             ROS_INFO("Pose %d %lf %lf %lf %lf", o.fid, 
               trans.x(), trans.y(), trans.z(), v);
+
+            drawLine(fiducials[o.fid].pose.getOrigin(), trans);
 
             if (variance == 0.0) {
                 pose = p;
@@ -362,7 +374,10 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
  
     broadcaster.sendTransform(ts);
 
+    ros::spinOnce();
+
     // TODO: publish PoseWithCovarianceStamped
+    ROS_INFO("Finished frame\n");
 }
 
 static int findClosestObs(const vector<Observation>& obs) 
@@ -372,7 +387,7 @@ static int findClosestObs(const vector<Observation>& obs)
 
     for (int i=0; i<obs.size(); i++) {
         const Observation &o = obs[0];
-        double d = o.TcamFid.getOrigin().length2();
+        double d = o.T_camFid.getOrigin().length2();
         if (smallestDist < 0 || d < smallestDist) {
             smallestDist = d;
             closestIdx = i;
@@ -397,19 +412,32 @@ void Map::autoInit(const vector<Observation>& obs, ros::Time time){
         }
         const Observation &o = obs[originFid];
         ROS_INFO("Initializing map from fiducial %d", o.fid);
-        fiducials[o.fid] = Fiducial(o.fid, o.TfidCam, 0);
+        fiducials[o.fid] = Fiducial(o.fid, o.T_fidCam, o.objectError);
     } 
     else {
         for (int i=0; i<obs.size(); i++) {
             const Observation &o = obs[0];
+
+            tf2::Vector3 trans = o.T_fidCam.getOrigin();
+
+            ROS_INFO("Estimate of %d %lf %lf %lf", o.fid,
+                     trans.x(), trans.y(), trans.z());
             if (o.fid == originFid) {
-                fiducials[originFid].update(o.TfidCam, 0.0);
+                fiducials[originFid].update(o.T_fidCam, o.objectError);
             } 
             break;
         }
     }
-    if (frameNum > 20) {
+    if (frameNum > 10) {
         isInitializingMap = false;
+
+        for (int i=0; i<obs.size(); i++) {
+            const Observation &o = obs[0];
+
+            if (o.fid == originFid) {
+                fiducials[originFid].variance = 0.0;
+            }
+        }
     }
 }
 
@@ -649,4 +677,33 @@ void Map::publishMarker(Fiducial &fid)
     }
 
     markerPub->publish(links);
+}
+
+void Map::drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1) 
+{
+    static int lid = 60000;
+    visualization_msgs::Marker line;
+    line.type = visualization_msgs::Marker::LINE_LIST;
+    line.action = visualization_msgs::Marker::ADD;
+    line.header.frame_id = "/map";
+    std_msgs::ColorRGBA c;
+    c.r = c.a = 1.0f;
+    c.g = c.b = 0.0f;
+    line.color = c;
+    line.id = lid++;
+    line.ns = "lines";
+    line.scale.x = line.scale.y = line.scale.z = 0.01;
+    line.pose.position.x = 0;
+    line.pose.position.y = 0;
+    geometry_msgs::Point gp0, gp1;
+    gp0.x = p0.x();
+    gp0.y = p0.y();
+    gp0.z = p0.z();
+    gp1.x = p1.x();
+    gp1.y = p1.y();
+    gp1.z = p1.z();
+    line.points.push_back(gp0);
+    line.points.push_back(gp1);
+
+    markerPub->publish(line);
 }

@@ -56,11 +56,9 @@ class Observation {
     int fid;
     double imageError;
     double objectError;
-    tf2::Transform TfidCam;
-    tf2::Transform TcamFid;
+    tf2::Transform T_fidCam;
+    tf2::Transform T_camFid;
   
-    Observation(int fid, const cv::Vec3d &rvec, const cv::Vec3d &tvec,
-                double ierr, double oerr);
     Observation(int fid, const tf2::Quaternion &q, const tf2::Vector3 &tvec,
                 double ierr, double oerr);
 };
@@ -113,5 +111,7 @@ class Map {
     void publishMap();
     void publishMarker(Fiducial &fid);
     void publishMarkers();
+    void drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1);
+
 };
 
