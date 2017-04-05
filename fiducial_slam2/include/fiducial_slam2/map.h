@@ -111,14 +111,17 @@ class Map {
     void autoInit(const vector<Observation> &obs, ros::Time time);
     void updateMap(const vector<Observation> &obs, ros::Time time);
     void updatePose(const vector<Observation> &obs, ros::Time time);
+
     bool loadMap();
     bool loadMap(std::string filename);
     bool saveMap();
     bool saveMap(std::string filename);
+
     void publishMap();
     void publishMarker(Fiducial &fid);
     void publishMarkers();
     void drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1);
 
+    bool lookupTransform(const std::string &from, const std::string &to,
+                         ros::Time &time, tf2::Transform &T);
 };
-
