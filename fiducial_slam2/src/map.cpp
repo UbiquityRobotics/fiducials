@@ -314,11 +314,12 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time)
                      trans.x(), trans.y(), trans.z());
 
             trans = T_mapFid2.getOrigin();
-            ROS_INFO("Estimate of %d %lf %lf %lf", o2.fid,
-                     trans.x(), trans.y(), trans.z());
-
             double variance = o1.objectError + o2.objectError + 
                 max(fid1.variance, 10e-9);
+
+            ROS_INFO("Estimate of %d from %d %lf %lf %lf err %lf %lf var %lf",
+                     o2.fid, o1.fid, trans.x(), trans.y(), trans.z(),
+                     o1.objectError, o2.objectError, variance);
 
             if (fiducials.find(o2.fid) == fiducials.end()) {
                 ROS_INFO("New fiducial %d from %d", o2.fid, o1.fid);
@@ -383,7 +384,7 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
 
             tf2::Transform p = fid.pose * o.T_fidCam;
 
-            double v = fiducials[o.fid].variance + o.objectError;
+            double v = fid.variance + o.objectError;
 
             tf2::Vector3 trans = p.getOrigin();
             ROS_INFO("Pose %d %lf %lf %lf %lf", o.fid, 
@@ -535,8 +536,8 @@ void Map::autoInit(const vector<Observation>& obs, ros::Time time){
                 }
 
                 tf2::Vector3 trans = T.getOrigin();
-                ROS_INFO("Estimate of %d %lf %lf %lf", o.fid,
-                     trans.x(), trans.y(), trans.z());
+                ROS_INFO("Estimate of %d from base %lf %lf %lf err %lf",
+                     o.fid, trans.x(), trans.y(), trans.z(), o.objectError);
 
                 fiducials[originFid].update(T, o.objectError);
                 break;
