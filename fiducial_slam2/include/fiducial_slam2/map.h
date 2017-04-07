@@ -59,6 +59,10 @@ class Observation {
     tf2::Transform T_fidCam;
     tf2::Transform T_camFid;
   
+    // how well this fitted the consensus of cameraPose
+    tf2::Vector3 position;
+    double poseError;
+
     Observation(int fid, const tf2::Quaternion &q, const tf2::Vector3 &tvec,
                 double ierr, double oerr);
 };
@@ -107,10 +111,12 @@ class Map {
     map<int, Fiducial> fiducials;
 
     Map(ros::NodeHandle &nh);
-    void update(const vector<Observation> &obs, ros::Time time);
+    void update(vector<Observation> &obs, ros::Time time);
     void autoInit(const vector<Observation> &obs, ros::Time time);
-    void updateMap(const vector<Observation> &obs, ros::Time time);
-    void updatePose(const vector<Observation> &obs, ros::Time time);
+    int  updatePose(vector<Observation> &obs, ros::Time time,
+                    tf2::Transform &cameraPose);
+    void updateMap(const vector<Observation> &obs, ros::Time time,
+                   const tf2::Transform &cameraPose);
 
     bool loadMap();
     bool loadMap(std::string filename);

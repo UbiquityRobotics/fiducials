@@ -119,6 +119,8 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
     this->fid = fid;
     this->imageError = ierr;
     this->objectError = oerr;
+   
+    this->poseError = 0.0;
 
     /*
      In ROS, x points forward and y points left
@@ -138,9 +140,11 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
     T.setOrigin(tvec);
 
     if (doRotation) {
+printf("rotating\n");
         T_fidCam = T * T_arucoRos;
     }
     else {
+printf("not rotating\n");
         T_fidCam = T;
     }
 
@@ -219,7 +223,7 @@ Map::Map(ros::NodeHandle &nh) {
 
     nh.param<std::string>("map_frame", mapFrame, "map");
     nh.param<std::string>("odom_frame", odomFrame, "odom");
-    nh.param<std::string>("camera_frame", cameraFrame, "camera_frame");
+    nh.param<std::string>("camera_frame", cameraFrame, "camera");
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
     nh.param<bool>("do_rotation", doRotation, true);
@@ -244,7 +248,7 @@ Map::Map(ros::NodeHandle &nh) {
 
 // Update map with a set of observations
 
-void Map::update(const vector<Observation>& obs, ros::Time time)
+void Map::update(vector<Observation>& obs, ros::Time time)
 {
     ROS_INFO("Updating map with %d observations. Map has %d fiducials", 
         (int)obs.size(), (int)fiducials.size());
@@ -259,17 +263,21 @@ void Map::update(const vector<Observation>& obs, ros::Time time)
         autoInit(obs, time);
     }
     else { 
-        updateMap(obs, time);
-        updatePose(obs, time);
+        tf2::Transform cameraPose;
+        if (updatePose(obs, time, cameraPose) > 0 && obs.size() > 1) {
+            updateMap(obs, time, cameraPose);
+        }
     }
 
     publishMap();
 }
 
 
-// update pose estimates of oberved fiducials
+// update estimates of oberved fiducials from previously estimated
+// camera pose
 
-void Map::updateMap(const vector<Observation>& obs, ros::Time time)
+void Map::updateMap(const vector<Observation>& obs, ros::Time time,
+     const tf2::Transform &cameraPose)
 {
     map<int, Fiducial>::iterator fit;
 
@@ -279,64 +287,35 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time)
     }
 
     for (int i=0; i<obs.size(); i++) {
+        const Observation &o = obs[i];
+
+        tf2::Transform T_mapFid = cameraPose * o.T_camFid;
+
+        tf2::Vector3 trans = T_mapFid.getOrigin();
+            
+        double variance = o.objectError + o.poseError;
+
+        ROS_INFO("Estimate of %d %lf %lf %lf err %lf %lf var %lf",
+          o.fid, trans.x(), trans.y(), trans.z(),
+          o.objectError, o.poseError, variance);
+
+        if (fiducials.find(o.fid) == fiducials.end()) {
+            ROS_INFO("New fiducial %d", o.fid);
+            fiducials[o.fid] = Fiducial(o.fid, T_mapFid, variance);
+        }
+        Fiducial &f = fiducials[o.fid]; 
+        if (f.variance != 0) {
+           f.update(T_mapFid, variance);
+           f.numObs++;
+        }
 
         for (int j=0; j<obs.size(); j++) {
-            const Observation &o1 = obs[i];
-            const Observation &o2 = obs[j];
-
-            // source and dest are the same
-            if (o1.fid == o2.fid) {
-                continue;
+            int fid = obs[j].fid;
+            if (f.id != fid) {
+                f.links[fid] = 1;
             }
-
-            // source not in map
-            if (fiducials.find(o1.fid) == fiducials.end()) {
-                ROS_WARN("No map entry for %d", o1.fid);
-                continue;
-            }
- 
-            // dest in map with variance of 0
-            if ((fit = fiducials.find(o2.fid)) != fiducials.end() &&
-                fit->second.variance == 0.0) {
-                continue;
-            }
-
-            Fiducial &fid1 = fiducials[o1.fid];
-            fid1.visible = true;
-
-            tf2::Transform T_fid1Fid2 = o1.T_fidCam * o2.T_camFid;
-
-            tf2::Transform T_mapFid2 = fid1.pose * T_fid1Fid2;
-
-            tf2::Vector3 trans = T_fid1Fid2.getOrigin();
-            ROS_INFO("Tf from %d to %d  %lf %lf %lf",
-                     o1.fid, o2.fid,
-                     trans.x(), trans.y(), trans.z());
-
-            trans = T_mapFid2.getOrigin();
-            double variance = o1.objectError + o2.objectError + 
-                max(fid1.variance, 10e-9);
-
-            ROS_INFO("Estimate of %d from %d %lf %lf %lf err %lf %lf var %lf",
-                     o2.fid, o1.fid, trans.x(), trans.y(), trans.z(),
-                     o1.objectError, o2.objectError, variance);
-
-            if (fiducials.find(o2.fid) == fiducials.end()) {
-                ROS_INFO("New fiducial %d from %d", o2.fid, o1.fid);
-                fiducials[o2.fid] = Fiducial(o2.fid, T_mapFid2, variance);
-                saveMap();
-            }
-            else {
-                Fiducial &f = fiducials[o2.fid]; 
-                f.update(T_mapFid2, variance);
-                f.links[o1.fid] = 1;
-                f.numObs++;
-                fiducials[o1.fid].links[o2.fid] = 1;
- 
-            }
-            publishMarker(fiducials[o1.fid]);
-            publishMarker(fiducials[o2.fid]);
         }
+        publishMarker(fiducials[o.fid]);
     }
 }
 
@@ -346,39 +325,41 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time)
 bool Map::lookupTransform(const std::string &from, const std::string &to, 
                           ros::Time &time, tf2::Transform &T)
 {
-    geometry_msgs::TransformStamped cameraTransform;
+    geometry_msgs::TransformStamped transform;
 
     try {
-        cameraTransform = tfBuffer->lookupTransform(to, from, time);
+        transform = tfBuffer->lookupTransform(from, to, time);
 
         T.setOrigin(tf2::Vector3(
-           cameraTransform.transform.translation.x,
-           cameraTransform.transform.translation.y,
-           cameraTransform.transform.translation.z));
+           transform.transform.translation.x,
+           transform.transform.translation.y,
+           transform.transform.translation.z));
  
         T.setRotation(tf2::Quaternion(
-           cameraTransform.transform.rotation.x,
-           cameraTransform.transform.rotation.y,
-           cameraTransform.transform.rotation.z,
-           cameraTransform.transform.rotation.w));
+           transform.transform.rotation.x,
+           transform.transform.rotation.y,
+           transform.transform.rotation.z,
+           transform.transform.rotation.w));
  
         return true;
      }
      catch (tf2::TransformException &ex) {
          ROS_WARN("%s",ex.what());
+         return false;
      }
 }
 
 // update pose estimate of robot
 
-void Map::updatePose(const vector<Observation>& obs, ros::Time time)
+int Map::updatePose(vector<Observation>& obs, ros::Time time,
+                    tf2::Transform &cameraPose)
 {
     tf2::Transform pose;
     double variance = 0.0;
     int numEsts = 0;
 
     for (int i=0; i<obs.size(); i++) {
-        const Observation &o = obs[i];
+        Observation &o = obs[i];
         if (fiducials.find(o.fid) != fiducials.end()) {
             const Fiducial &fid = fiducials[o.fid]; 
 
@@ -386,11 +367,11 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
 
             double v = fid.variance + o.objectError;
 
-            tf2::Vector3 trans = p.getOrigin();
+            o.position = p.getOrigin();
             ROS_INFO("Pose %d %lf %lf %lf %lf", o.fid, 
-              trans.x(), trans.y(), trans.z(), v);
+              o.position.x(), o.position.y(), o.position.z(), v);
 
-            drawLine(fid.pose.getOrigin(), trans);
+            drawLine(fid.pose.getOrigin(), o.position);
 
             if (numEsts == 0) {
                 pose = p;
@@ -406,28 +387,43 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
 
     if (numEsts == 0) {
         ROS_INFO("Finished frame - no estimates\n");
-        return;
+        return numEsts;
     }
+
+    cameraPose = pose;
 
     tf2::Vector3 trans = pose.getOrigin();
     tf2::Quaternion q = pose.getRotation();
     ROS_INFO("Pose all %lf %lf %lf %f",
            trans.x(), trans.y(), trans.z(), variance);
 
+    // Update error in observations
+
+    for (int i=0; i<obs.size(); i++) {
+        Observation &o = obs[i];
+        o.poseError = (o.position - trans).length2();
+    }
+
     // Determine transform from camera to robot
     tf2::Transform cameraTransform;
 
+/*
     if (lookupTransform(cameraFrame, baseFrame, time, cameraTransform)) {
         pose = pose * cameraTransform;
+     
+        tf2::Vector3 c = cameraTransform.getOrigin();
+        ROS_INFO("camera   %lf %lf %lf %f",
+           c.x(), c.y(), c.z(), variance);
 
         trans = pose.getOrigin();
-        q = pose.getRotation();
         ROS_INFO("Pose b_l %lf %lf %lf %f",
            trans.x(), trans.y(), trans.z(), variance);
+
      }
+*/
 
      geometry_msgs::PoseWithCovarianceStamped pwcs;
-     pwcs.header.frame_id = "/map";
+     pwcs.header.frame_id = baseFrame;
      pwcs.header.stamp = time;
      pwcs.pose.pose.orientation.x = q.x();
      pwcs.pose.pose.orientation.y = q.y();
@@ -448,20 +444,25 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
 
      posePub->publish(pwcs);
 
+     string outFrame=baseFrame;
+/*
      if (!odomFrame.empty()) {
-
          tf2::Transform odomTransform;
-
-         if (lookupTransform(baseFrame, odomFrame, time, odomTransform)) {
+         if (lookupTransform(odomFrame, baseFrame, time, odomTransform)) {
              pose = pose * odomTransform;
+             outFrame = odomFrame;
+             tf2::Vector3 c = odomTransform.getOrigin();
+             ROS_INFO("odom   %lf %lf %lf %f",
+                c.x(), c.y(), c.z(), variance);
          }
     }
+*/
 
     // TODO: nicer way to init TransformStamped
     geometry_msgs::TransformStamped ts;
-    ts.header.stamp = time;
+    ts.header.stamp = ros::Time::now();
     ts.header.frame_id = mapFrame;
-    ts.child_frame_id = baseFrame;
+    ts.child_frame_id = outFrame;
     ts.transform.translation.x = trans.x();
     ts.transform.translation.y = trans.y();
     ts.transform.translation.z = trans.z();
@@ -473,6 +474,7 @@ void Map::updatePose(const vector<Observation>& obs, ros::Time time)
     broadcaster.sendTransform(ts);
 
     ROS_INFO("Finished frame\n");
+    return numEsts;
 }
 
 
@@ -518,9 +520,11 @@ void Map::autoInit(const vector<Observation>& obs, ros::Time time){
 
         tf2::Transform T = o.T_camFid;
 
+/*
         if (lookupTransform(baseFrame, cameraFrame, time, cameraTransform)) {
             T = cameraTransform * T;
         }
+*/
 
         fiducials[o.fid] = Fiducial(o.fid, T, o.objectError);
     } 
@@ -531,7 +535,8 @@ void Map::autoInit(const vector<Observation>& obs, ros::Time time){
             if (o.fid == originFid) {
                 tf2::Transform T = o.T_camFid;
 
-                if (lookupTransform(baseFrame, cameraFrame, time, cameraTransform)) {
+                if (lookupTransform(baseFrame, cameraFrame, time, 
+                    cameraTransform)) {
                     T = cameraTransform * T;
                 }
 
