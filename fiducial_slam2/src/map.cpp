@@ -44,23 +44,6 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <visualization_msgs/Marker.h>
 
-
-// Degrees to radians
-
-static double deg2rad(double deg)
-{
-    return deg * M_PI / 180.0;
-}
-
-
-// Radians to degrees
-
-static double rad2deg(double rad)
-{
-    return rad * 180.0 / M_PI;
-}
-
-
 // Update the variance of a gaussian that has been combined with another
 // Does not Take into account the degree of overlap of observations
 static double updateVarianceAlexey(double var1, double var2) {
