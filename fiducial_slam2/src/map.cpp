@@ -108,7 +108,7 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
 
     geometry_msgs::TransformStamped ts;
     ts.header.stamp = ros::Time::now();
-    ts.header.frame_id = "base_link"; // XXX should be camera
+    ts.header.frame_id = "base_link2";
     ts.child_frame_id = "fid" + to_string(fid);
     ts.transform.translation.x = tvec.x();
     ts.transform.translation.y = tvec.y();
@@ -193,7 +193,6 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
     nh.param<std::string>("map_frame", mapFrame, "map");
     nh.param<std::string>("odom_frame", odomFrame, "odom");
-    nh.param<std::string>("camera_frame", cameraFrame, "camera");
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
     nh.param<bool>("use_alexey", useAlexey, true);
@@ -388,9 +387,10 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     // Determine transform from camera to robot
     tf2::Transform cameraTransform;
 
-/*
-    if (lookupTransform(cameraFrame, baseFrame, time, cameraTransform)) {
-        pose = pose * cameraTransform;
+
+    // XXX remove raspicam and get from message
+    if (lookupTransform("raspicam2", "base_link2", time, cameraTransform)) {
+        //pose = cameraTransform * pose;
      
         tf2::Vector3 c = cameraTransform.getOrigin();
         ROS_INFO("camera   %lf %lf %lf %f",
@@ -399,10 +399,9 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
         trans = pose.getOrigin();
         ROS_INFO("Pose b_l %lf %lf %lf %f",
            trans.x(), trans.y(), trans.z(), variance);
-
      }
-*/
 
+  
      geometry_msgs::PoseWithCovarianceStamped pwcs;
      pwcs.header.frame_id = baseFrame;
      pwcs.header.stamp = time;
@@ -426,11 +425,12 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
      posePub.publish(pwcs);
 
      string outFrame=baseFrame;
+
 /*
      if (!odomFrame.empty()) {
          tf2::Transform odomTransform;
-         if (lookupTransform(odomFrame, baseFrame, time, odomTransform)) {
-             pose = pose * odomTransform;
+         if (lookupTransform(baseFrame, odomFrame, time, odomTransform)) {
+             pose = odomTransform * pose;
              outFrame = odomFrame;
              tf2::Vector3 c = odomTransform.getOrigin();
              ROS_INFO("odom   %lf %lf %lf %f",
@@ -438,7 +438,6 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
          }
     }
 */
-
     // TODO: nicer way to init TransformStamped
     geometry_msgs::TransformStamped ts;
     ts.header.stamp = ros::Time::now();
@@ -501,12 +500,10 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
 
         tf2::Transform T = o.T_camFid;
 
-
-/*
-        if (lookupTransform(baseFrame, cameraFrame, time, cameraTransform)) {
-            T = cameraTransform * T;
+        if (lookupTransform("base_link2", "raspicam2", time, cameraTransform)) {
+            //T = cameraTransform * T;
+            //T = T * cameraTransform;
         }
-*/
 
         fiducials[o.fid] = Fiducial(o.fid, T, o.objectError);
     } 
@@ -517,12 +514,11 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
             if (o.fid == originFid) {
                 tf2::Transform T = o.T_camFid;
 
-/*
-                if (lookupTransform(baseFrame, cameraFrame, time, 
+                if (lookupTransform("base_link2", "raspicam2", time, 
                     cameraTransform)) {
-                    T = cameraTransform * T;
+                    //T = cameraTransform * T;
+                    //T = T * cameraTransform; 
                 }
-*/
 
                 tf2::Vector3 trans = T.getOrigin();
                 ROS_INFO("Estimate of %d from base %lf %lf %lf err %lf",

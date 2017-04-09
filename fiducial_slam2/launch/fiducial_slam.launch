@@ -4,7 +4,7 @@
 <launch>
   <arg name="map_frame" default="map"/>
   <arg name="odom_frame" default="odom"/>
-  <arg name="pose_frame" default="base_link"/>
+  <arg name="base_frame" default="base_link"/>
   <arg name="publish_tf" default="true"/>
   <arg name="future" default="0.0"/>
 
@@ -14,8 +14,6 @@
     <param name="map_file" value="$(env HOME)/.ros/slam/map.txt" />
     <param name="map_frame" value="$(arg map_frame)" />
     <param name="odom_frame" value="$(arg odom_frame)" />
-    <param name="pose_frame" value="$(arg pose_frame)" />
-    <param name="publish_tf" value="$(arg publish_tf)" />
-    <param name="future" value="$(arg future)" />
+    <param name="base_frame" value="$(arg base_frame)" />
   </node>
 </launch>
