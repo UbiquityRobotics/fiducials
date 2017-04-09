@@ -111,8 +111,6 @@ static void updateTransform(tf2::Transform &t1, double var1,
 
 // Constructor for observation
 
-static bool doRotation;
-
 Observation::Observation(int fid, const tf2::Quaternion &q, 
                          const tf2::Vector3 &tvec,
                          double ierr, double oerr) {
@@ -126,7 +124,7 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
 
     geometry_msgs::TransformStamped ts;
     ts.header.stamp = ros::Time::now();
-    ts.header.frame_id = "base_link";
+    ts.header.frame_id = "base_link"; // XXX should be camera
     ts.child_frame_id = "fid" + to_string(fid);
     ts.transform.translation.x = tvec.x();
     ts.transform.translation.y = tvec.y();
@@ -151,10 +149,6 @@ void Fiducial::update(const tf2::Transform &newPose, double newVariance)
 {
     tf2::Vector3 mean1 = pose.getOrigin();
     tf2::Quaternion q = pose.getRotation();
-
-    double rx, ry, rz, yaw;
-    pose.getBasis().getRPY(rx, ry, rz);
-    yaw = rz;
 
     updateTransform(pose, variance, newPose, newVariance);
 
@@ -219,7 +213,6 @@ Map::Map(ros::NodeHandle &nh) {
     nh.param<std::string>("camera_frame", cameraFrame, "camera");
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
-    nh.param<bool>("do_rotation", doRotation, true);
     nh.param<bool>("use_alexey", useAlexey, true);
 
     nh.param<std::string>("map_file", mapFilename, 
@@ -257,7 +250,7 @@ void Map::update(vector<Observation>& obs, ros::Time time)
     }
     else { 
         tf2::Transform cameraPose;
-        if (updatePose(obs, time, cameraPose) > 0 && obs.size() > 0) {
+        if (updatePose(obs, time, cameraPose) > 0 && obs.size() > 1) {
             updateMap(obs, time, cameraPose);
         }
     }
@@ -407,7 +400,6 @@ int Map::updatePose(vector<Observation>& obs, ros::Time time,
     for (int i=0; i<obs.size(); i++) {
         Observation &o = obs[i];
         o.poseError = (o.position - trans).length2();
-        printf("Obs %d poseError %f", o.fid, o.poseError);
     }
 
     // Determine transform from camera to robot
@@ -767,7 +759,7 @@ void Map::publishMarker(Fiducial &fid)
     cylinder.color.a = 0.5f;
     cylinder.id = fid.id; + 10000;
     cylinder.ns = "sigma";
-    cylinder.scale.x = cylinder.scale.y = sqrt(fid.variance);
+    cylinder.scale.x = cylinder.scale.y = min(sqrt(fid.variance), 0.1);
     cylinder.scale.z = 0.01;
     cylinder.pose.position.x = marker.pose.position.x;
     cylinder.pose.position.y = marker.pose.position.y;
