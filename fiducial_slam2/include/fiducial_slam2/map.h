@@ -111,11 +111,11 @@ class Map {
     map<int, Fiducial> fiducials;
 
     Map(ros::NodeHandle &nh);
-    void update(vector<Observation> &obs, ros::Time time);
-    void autoInit(const vector<Observation> &obs, ros::Time time);
-    int  updatePose(vector<Observation> &obs, ros::Time time,
+    void update(vector<Observation> &obs, const ros::Time &time);
+    void autoInit(const vector<Observation> &obs, const ros::Time &time);
+    int  updatePose(vector<Observation> &obs, const ros::Time &time,
                     tf2::Transform &cameraPose);
-    void updateMap(const vector<Observation> &obs, ros::Time time,
+    void updateMap(const vector<Observation> &obs, const ros::Time &time,
                    const tf2::Transform &cameraPose);
 
     bool loadMap();
@@ -129,5 +129,5 @@ class Map {
     void drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1);
 
     bool lookupTransform(const std::string &from, const std::string &to,
-                         ros::Time &time, tf2::Transform &T);
+                         const ros::Time &time, tf2::Transform &T) const;
 };

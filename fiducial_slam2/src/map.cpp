@@ -234,7 +234,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
 // Update map with a set of observations
 
-void Map::update(vector<Observation>& obs, ros::Time time)
+void Map::update(vector<Observation>& obs, const ros::Time &time)
 {
     ROS_INFO("Updating map with %d observations. Map has %d fiducials", 
         (int)obs.size(), (int)fiducials.size());
@@ -262,7 +262,7 @@ void Map::update(vector<Observation>& obs, ros::Time time)
 // update estimates of oberved fiducials from previously estimated
 // camera pose
 
-void Map::updateMap(const vector<Observation>& obs, ros::Time time,
+void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
      const tf2::Transform &cameraPose)
 {
     map<int, Fiducial>::iterator fit;
@@ -315,7 +315,7 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time,
 // lookup specified transform
 
 bool Map::lookupTransform(const std::string &from, const std::string &to, 
-                          ros::Time &time, tf2::Transform &T)
+                          const ros::Time &time, tf2::Transform &T) const
 {
     geometry_msgs::TransformStamped transform;
 
@@ -343,7 +343,7 @@ bool Map::lookupTransform(const std::string &from, const std::string &to,
 
 // update pose estimate of robot
 
-int Map::updatePose(vector<Observation>& obs, ros::Time time,
+int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                     tf2::Transform &cameraPose)
 {
     tf2::Transform pose;
@@ -498,7 +498,7 @@ static int findClosestObs(const vector<Observation>& obs)
 
 // Initialize a map from the closest observed fiducial
 
-void Map::autoInit(const vector<Observation>& obs, ros::Time time){
+void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
 
     ROS_INFO("Auto init map %d", frameNum);
 
