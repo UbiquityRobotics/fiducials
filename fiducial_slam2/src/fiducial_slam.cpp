@@ -29,6 +29,8 @@
  *
  */
 
+#include <fiducial_slam2/helpers.h>
+
 #include <assert.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -68,7 +70,7 @@ class FiducialSlam {
     void transformCallback(const fiducial_msgs::FiducialTransformArray::ConstPtr &msg);
 
   public:
-    Map *fiducialMap;
+    Map fiducialMap;
     FiducialSlam(ros::NodeHandle &nh);
 };
 
@@ -95,25 +97,23 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
         observations.push_back(obs);
     }
 
-    fiducialMap->update(observations, msg->header.stamp);
+    fiducialMap.update(observations, msg->header.stamp);
 }
 
-FiducialSlam::FiducialSlam(ros::NodeHandle & nh)
+FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh)
 {
-    fiducialMap = new Map(nh);
-
     ft_sub = nh.subscribe("/fiducial_transforms", 1, 
                           &FiducialSlam::transformCallback, this); 
     
     ROS_INFO("Fiducial Slam ready");
 }
 
-FiducialSlam *node = NULL;
+auto node = unique_ptr<FiducialSlam>(nullptr);
 
 void mySigintHandler(int sig)
 {
-    if (node)
-        node->fiducialMap->saveMap();
+    if (node != nullptr)
+        node->fiducialMap.saveMap();
 
     ros::shutdown();
 }
@@ -122,14 +122,14 @@ int main(int argc, char ** argv) {
     ros::init(argc, argv, "fiducial_slam", ros::init_options::NoSigintHandler);
     ros::NodeHandle nh("~");
 
-    node = new FiducialSlam(nh);
+    node = make_unique<FiducialSlam>(nh);
     signal(SIGINT, mySigintHandler);
 
     ros::Rate r(20);
     while (ros::ok()) {
         ros::spinOnce(); 
         r.sleep();
-        node->fiducialMap->publishMarkers();
+        node->fiducialMap.publishMarkers();
     }
 
     return 0;

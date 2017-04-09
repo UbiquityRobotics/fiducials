@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   tf
+  message_generation
 )
 
 find_package(OpenCV REQUIRED)
@@ -33,6 +34,7 @@ generate_messages(
 )
 
 catkin_package(
+  CATKIN_DEPENDS message_runtime
 )
 
 install(TARGETS
