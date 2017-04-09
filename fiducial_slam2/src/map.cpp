@@ -286,11 +286,16 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time,
 
         tf2::Vector3 trans = T_mapFid.getOrigin();
             
-        double variance = o.objectError + o.poseError;
+        double variance = o.objectError;
 
         ROS_INFO("Estimate of %d %lf %lf %lf err %lf %lf var %lf",
           o.fid, trans.x(), trans.y(), trans.z(),
           o.objectError, o.poseError, variance);
+
+        if (isnan(trans.x()) || isnan(trans.y()) || isnan(trans.z())) {
+            ROS_WARN("Skipping NAN estimate\n");
+            continue;
+        };
 
         if (fiducials.find(o.fid) == fiducials.end()) {
             ROS_INFO("New fiducial %d", o.fid);
@@ -365,7 +370,13 @@ int Map::updatePose(vector<Observation>& obs, ros::Time time,
             ROS_INFO("Pose %d %lf %lf %lf %lf", o.fid, 
               o.position.x(), o.position.y(), o.position.z(), v);
 
-            drawLine(fid.pose.getOrigin(), o.position);
+            //drawLine(fid.pose.getOrigin(), o.position);
+
+            if (isnan(o.position.x()) || isnan(o.position.y())
+                || isnan(o.position.z())) {
+                ROS_WARN("Skipping NAN estimate\n");
+                continue;
+            };
 
             if (numEsts == 0) {
                 pose = p;
@@ -396,6 +407,7 @@ int Map::updatePose(vector<Observation>& obs, ros::Time time,
     for (int i=0; i<obs.size(); i++) {
         Observation &o = obs[i];
         o.poseError = (o.position - trans).length2();
+        printf("Obs %d poseError %f", o.fid, o.poseError);
     }
 
     // Determine transform from camera to robot
