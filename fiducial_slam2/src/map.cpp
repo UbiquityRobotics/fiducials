@@ -297,6 +297,7 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time,
             fiducials[o.fid] = Fiducial(o.fid, T_mapFid, variance);
         }
         Fiducial &f = fiducials[o.fid]; 
+        f.visible = true;
         if (f.variance != 0) {
            f.update(T_mapFid, variance);
            f.numObs++;
