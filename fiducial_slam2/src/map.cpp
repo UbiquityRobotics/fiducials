@@ -105,7 +105,7 @@ static void updateTransform(tf2::Transform &t1, double var1,
     
     tf2::Quaternion q1 = t1.getRotation();
     tf2::Quaternion q2 = t2.getRotation();
-    t1.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalize());
+    t1.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
 }
 
 
@@ -122,6 +122,28 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
    
     this->poseError = 0.0;
 
+    tf2_ros::TransformBroadcaster broadcaster;
+
+    geometry_msgs::TransformStamped ts;
+    ts.header.stamp = ros::Time::now();
+    ts.header.frame_id = "base_link";
+    ts.child_frame_id = "fid" + to_string(fid);
+    ts.transform.translation.x = tvec.x();
+    ts.transform.translation.y = tvec.y();
+    ts.transform.translation.z = tvec.z();
+    ts.transform.rotation.x = q.x();
+    ts.transform.rotation.y = q.y();
+    ts.transform.rotation.z = q.z();
+    ts.transform.rotation.w = q.w();
+
+    broadcaster.sendTransform(ts);
+
+    T_camFid.setRotation(q);
+    T_camFid.setOrigin(tvec);
+
+    T_camFid = T_camFid.inverse();
+
+    return;
     /*
      In ROS, x points forward and y points left
      http://www.ros.org/reps/rep-0103.html
@@ -133,20 +155,82 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
     */
 
     tf2::Transform T_arucoRos;
-    T_arucoRos.setRotation(tf2::Quaternion(tf2::Vector3(0, 0, 1), M_PI/2));
+    tf2::Quaternion r;
+    r.setRPY(deg2rad(0), deg2rad(0), deg2rad(0));
+/*
+    r.setRPY(deg2rad(90), deg2rad(0), deg2rad(90));
+    r.setRPY(deg2rad(0), deg2rad(90), deg2rad(0));
+    r.setRPY(deg2rad(90), deg2rad(90), deg2rad(90));
+    r.setRPY(deg2rad(90), deg2rad(90), deg2rad(0));
+    r.setRPY(deg2rad(0), deg2rad(90), deg2rad(0));
+    r.setRPY(deg2rad(0), deg2rad(90), deg2rad(90));
+    r.setRPY(deg2rad(90), deg2rad(0), deg2rad(0));
+    r.setRPY(deg2rad(90), deg2rad(0), deg2rad(0));
+*/
+    r.setRPY(deg2rad(-90), deg2rad(0), deg2rad(0));
+    T_arucoRos.setRotation(r);
+
+    tf2::Transform Tr;
+    tf2::Transform Tt;
 
     tf2::Transform T;
-    T.setRotation(q);
     T.setOrigin(tvec);
+    T.setRotation(q);
+    Tt.setOrigin(tvec);
+    Tr.setRotation(q);
+   //T_fidCam = Tr;
 
-    if (doRotation) {
-printf("rotating\n");
-        T_fidCam = T * T_arucoRos;
+    T_fidCam.setRotation(q);
+    T_fidCam.setOrigin(tvec);
+    T_fidCam = T_arucoRos * T_fidCam;
+
+    T_camFid = T_fidCam.inverse();
+return;
+
+/*
+    T_camFid.setRotation(q);
+    //T_fidCam = T_fidCam.inverse();
+    T_camFid.setOrigin(tvec);
+    T_fidCam = T_camFid.inverse();
+return;
+
+    T_fidCam.setRotation(q);
+    //T_fidCam = T_fidCam.inverse();
+    T_fidCam.setOrigin(tvec);
+
+ 
+ tf2::Quaternion(tf2::Vector3(1,0,0),M_PI/2.0)
+                  //*
+                  //tf2::Quaternion(tf2::Vector3(1,0,0),M_PI/2.0)
+		//*
+                  //tf2::Quaternion(tf2::Vector3(0,1,0),M_PI/2.0)
+
+                  * q
+                  );
+*/
+     //XXX
+    if (true && doRotation) {
+//       T_fidCam = T_arucoRos * T;
+// 
+        //T_fidCam.setOrigin(tvec);
+    //    T_fidCam = Tt * Tr;
+        //T_fidCam = T;
+        //T.setOrigin(tvec);
+//        T_fidCam.setOrigin(tf2::Vector3(tvec.y(), tvec.x(), tvec.z()));
+          //T_fidCam = T.inverse();
     }
     else {
 printf("not rotating\n");
-        T_fidCam = T;
+    //    T_fidCam = T;
+    T_fidCam.setOrigin(tvec);
+    T_fidCam.setRotation(q);
     }
+
+    tf2::Vector3 t = T_fidCam.getOrigin();
+    double rx, ry, rz;
+    T_fidCam.getBasis().getRPY(rx, ry, rz);
+    printf("XXX %d  %f %f %f  %f %f %f\n", fid, t.x(), t.y(), t.z(), rx, ry, rz);
+    
 
     T_camFid = T_fidCam.inverse();
 }
@@ -289,7 +373,7 @@ void Map::updateMap(const vector<Observation>& obs, ros::Time time,
     for (int i=0; i<obs.size(); i++) {
         const Observation &o = obs[i];
 
-        tf2::Transform T_mapFid = cameraPose * o.T_camFid;
+        tf2::Transform T_mapFid = o.T_camFid * cameraPose;
 
         tf2::Vector3 trans = T_mapFid.getOrigin();
             
@@ -363,7 +447,7 @@ int Map::updatePose(vector<Observation>& obs, ros::Time time,
         if (fiducials.find(o.fid) != fiducials.end()) {
             const Fiducial &fid = fiducials[o.fid]; 
 
-            tf2::Transform p = fid.pose * o.T_fidCam;
+            tf2::Transform p = o.T_fidCam * fid.pose;
 
             double v = fid.variance + o.objectError;
 
@@ -520,6 +604,7 @@ void Map::autoInit(const vector<Observation>& obs, ros::Time time){
 
         tf2::Transform T = o.T_camFid;
 
+
 /*
         if (lookupTransform(baseFrame, cameraFrame, time, cameraTransform)) {
             T = cameraTransform * T;
@@ -535,10 +620,12 @@ void Map::autoInit(const vector<Observation>& obs, ros::Time time){
             if (o.fid == originFid) {
                 tf2::Transform T = o.T_camFid;
 
+/*
                 if (lookupTransform(baseFrame, cameraFrame, time, 
                     cameraTransform)) {
                     T = cameraTransform * T;
                 }
+*/
 
                 tf2::Vector3 trans = T.getOrigin();
                 ROS_INFO("Estimate of %d from base %lf %lf %lf err %lf",
