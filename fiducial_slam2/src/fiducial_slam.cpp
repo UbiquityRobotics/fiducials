@@ -29,6 +29,8 @@
  *
  */
 
+#include <fiducial_slam2/helpers.h>
+
 #include <assert.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -120,7 +122,7 @@ int main(int argc, char ** argv) {
     ros::init(argc, argv, "fiducial_slam", ros::init_options::NoSigintHandler);
     ros::NodeHandle nh("~");
 
-    node = unique_ptr<FiducialSlam>(new FiducialSlam(nh));
+    node = make_unique<FiducialSlam>(nh);
     signal(SIGINT, mySigintHandler);
 
     ros::Rate r(20);

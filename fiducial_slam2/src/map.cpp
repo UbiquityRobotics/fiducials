@@ -30,6 +30,7 @@
  */
 
 #include <fiducial_slam2/map.h>
+#include <fiducial_slam2/helpers.h>
 
 #include <string>
 #include <tf2/LinearMath/Vector3.h>
@@ -193,18 +194,17 @@ Fiducial::Fiducial(int id, const tf2::Quaternion &q,
 
 // Constructor for map
 
-Map::Map(ros::NodeHandle &nh) {
+Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     frameNum = 0;
     isInitializingMap = false;
 
-    tfBuffer = new tf2_ros::Buffer(ros::Duration(30.0));
-    listener = new tf2_ros::TransformListener(*tfBuffer);
+    listener = make_unique<tf2_ros::TransformListener>(tfBuffer);
 
-    posePub = new ros::Publisher(
+    posePub = ros::Publisher(
           nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/fiducial_pose", 1));
-    markerPub = new ros::Publisher(
+    markerPub = ros::Publisher(
           nh.advertise<visualization_msgs::Marker>("/fiducials", 100));
-    mapPub = new ros::Publisher(
+    mapPub = ros::Publisher(
           nh.advertise<fiducial_msgs::FiducialMapEntryArray>("/fiducial_map", 
           1));
 
@@ -320,7 +320,7 @@ bool Map::lookupTransform(const std::string &from, const std::string &to,
     geometry_msgs::TransformStamped transform;
 
     try {
-        transform = tfBuffer->lookupTransform(from, to, time);
+        transform = tfBuffer.lookupTransform(from, to, time);
 
         T.setOrigin(tf2::Vector3(
            transform.transform.translation.x,
@@ -440,7 +440,7 @@ int Map::updatePose(vector<Observation>& obs, ros::Time time,
          pwcs.pose.covariance[i*5+i] = variance;
      } 
 
-     posePub->publish(pwcs);
+     posePub.publish(pwcs);
 
      string outFrame=baseFrame;
 /*
@@ -687,7 +687,7 @@ void Map::publishMap()
         fmea.fiducials.push_back(fme);
     }
 
-    mapPub->publish(fmea);
+    mapPub.publish(fmea);
 }
 
 
@@ -746,7 +746,7 @@ void Map::publishMarker(Fiducial &fid)
     marker.id = fid.id;
     marker.ns = "fiducial";
     marker.header.frame_id = "/map";
-    markerPub->publish(marker);
+    markerPub.publish(marker);
 
     // cylinder scaled by stddev
     visualization_msgs::Marker cylinder;
@@ -765,7 +765,7 @@ void Map::publishMarker(Fiducial &fid)
     cylinder.pose.position.y = marker.pose.position.y;
     cylinder.pose.position.z = marker.pose.position.z;
     cylinder.pose.position.z += (marker.scale.z/2.0) + 0.05;
-    markerPub->publish(cylinder);
+    markerPub.publish(cylinder);
 
     // Text
     visualization_msgs::Marker text;
@@ -782,7 +782,7 @@ void Map::publishMarker(Fiducial &fid)
     text.id = fid.id + 30000;
     text.ns = "text";
     text.text = std::to_string(fid.id);
-    markerPub->publish(text);
+    markerPub.publish(text);
 
     // Links
     visualization_msgs::Marker links;
@@ -822,7 +822,7 @@ void Map::publishMarker(Fiducial &fid)
         }
     }
 
-    markerPub->publish(links);
+    markerPub.publish(links);
 }
 
 
@@ -854,5 +854,5 @@ void Map::drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1)
     line.points.push_back(gp0);
     line.points.push_back(gp1);
 
-    markerPub->publish(line);
+    markerPub.publish(line);
 }
