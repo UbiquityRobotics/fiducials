@@ -664,15 +664,7 @@ void Map::publishMarker(Fiducial &fid)
     visualization_msgs::Marker marker;
     marker.type = visualization_msgs::Marker::CUBE;
     marker.action = visualization_msgs::Marker::ADD;
-    tf2::Vector3 t = fid.pose.transform.getOrigin();
-    marker.pose.position.x = t.x();
-    marker.pose.position.y = t.y();
-    marker.pose.position.z = t.z();
-    tf2::Quaternion q = fid.pose.transform.getRotation();
-    marker.pose.orientation.x = q.x();
-    marker.pose.orientation.y = q.y();
-    marker.pose.orientation.z = q.z();
-    marker.pose.orientation.w = q.w();
+    toMsg(fid.pose.transform, marker.pose);
 
     marker.scale.x = 0.15;
     marker.scale.y = 0.15;
