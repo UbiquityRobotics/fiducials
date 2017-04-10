@@ -331,6 +331,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
             tf2::Stamped<TransformWithVariance> p = fid.pose * o.T_fidCam;
             p.frame_id_ = mapFrame;
+            p.stamp_ = o.T_fidCam.stamp_;
 
             o.position = p.transform.getOrigin();
             ROS_INFO("Pose %d %lf %lf %lf %lf", o.fid,
@@ -349,6 +350,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             }
             else {
                 cameraPose.setData(averageTransforms(cameraPose, p));
+                cameraPose.stamp_ = p.stamp_;
             }
             numEsts++;
         }
@@ -395,7 +397,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
         }
      }
 
-     posePub.publish(toPose(basePose));
+    posePub.publish(toPose(basePose));
 
     tf2::Stamped<TransformWithVariance> outPose = basePose;
     string outFrame=baseFrame;
