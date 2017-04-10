@@ -108,7 +108,7 @@ Observation::Observation(int fid, const tf2::Quaternion &q,
 
     geometry_msgs::TransformStamped ts;
     ts.header.stamp = ros::Time::now();
-    ts.header.frame_id = "base_link2";
+    ts.header.frame_id = "raspicam2";
     ts.child_frame_id = "fid" + to_string(fid);
     ts.transform.translation.x = tvec.x();
     ts.transform.translation.y = tvec.y();
@@ -390,13 +390,14 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
     // XXX remove raspicam and get from message
     if (lookupTransform("raspicam2", "base_link2", time, cameraTransform)) {
-        //pose = cameraTransform * pose;
+        pose = pose * cameraTransform;
      
-        tf2::Vector3 c = cameraTransform.getOrigin();
+        tf2::Vector3 c = cameraPose.getOrigin();
         ROS_INFO("camera   %lf %lf %lf %f",
            c.x(), c.y(), c.z(), variance);
 
         trans = pose.getOrigin();
+        q = pose.getRotation();
         ROS_INFO("Pose b_l %lf %lf %lf %f",
            trans.x(), trans.y(), trans.z(), variance);
      }
