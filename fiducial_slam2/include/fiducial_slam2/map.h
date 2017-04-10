@@ -104,13 +104,11 @@ class TransformWithVariance {
 
     // Update this transform with a new one, with variances as weights
     // combine variances using David method
-    void update(const TransformWithVariance& variance) {};
+    void update(const TransformWithVariance& newT);
 };
 
 // Weighted average of 2 transforms, variances computed using Alexey Method
-static TransformWithVariance averageTransforms(const TransformWithVariance& t1, const TransformWithVariance& t2) {
-
-}
+TransformWithVariance averageTransforms(const TransformWithVariance& t1, const TransformWithVariance& t2);
 
 inline geometry_msgs::PoseWithCovarianceStamped toPose(const tf2::Stamped<TransformWithVariance>& in)
 {

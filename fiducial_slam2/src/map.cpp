@@ -46,7 +46,7 @@
 
 // Update the variance of a gaussian that has been combined with another
 // Does not Take into account the degree of overlap of observations
-/*static double updateVarianceAlexey(double var1, double var2) {
+static double updateVarianceAlexey(double var1, double var2) {
 
     return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
 }
@@ -89,7 +89,42 @@ static void updateTransform(tf2::Transform &t1, double var1,
     tf2::Quaternion q1 = t1.getRotation();
     tf2::Quaternion q2 = t2.getRotation();
     t1.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
-}*/
+}
+
+// Update this transform with a new one, with variances as weights
+// combine variances using David method
+void TransformWithVariance::update(const TransformWithVariance& newT) {
+    tf2::Vector3 o1 = transform.getOrigin();
+    tf2::Quaternion q1 = transform.getRotation();
+    double var1 = variance;
+
+    tf2::Vector3 o2 = newT.transform.getOrigin();
+    tf2::Quaternion q2 = newT.transform.getRotation();
+    double var2 = newT.variance;
+
+    transform.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
+    transform.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
+
+    variance = updateVarianceDavid(transform.getOrigin(), o1, var1, o2, var2);
+}
+
+// Weighted average of 2 transforms, variances computed using Alexey Method
+TransformWithVariance averageTransforms(const TransformWithVariance& t1, const TransformWithVariance& t2) {
+    TransformWithVariance out;
+    tf2::Vector3 o1 = t1.transform.getOrigin();
+    tf2::Quaternion q1 = t1.transform.getRotation();
+    double var1 = t1.variance;
+
+    tf2::Vector3 o2 = t2.transform.getOrigin();
+    tf2::Quaternion q2 = t2.transform.getRotation();
+    double var2 = t2.variance;
+
+    out.transform.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
+    out.transform.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
+    out.variance = updateVarianceAlexey(var1, var2);
+
+    return out;
+}
 
 
 // Constructor for observation
