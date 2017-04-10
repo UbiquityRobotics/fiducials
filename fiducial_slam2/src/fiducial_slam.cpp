@@ -91,8 +91,11 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
                           ft.transform.rotation.y,
                           ft.transform.rotation.z,
                           ft.transform.rotation.w);
-         
-        Observation obs(ft.fiducial_id, q, tvec, ft.image_error,
+
+        Observation obs(ft.fiducial_id,
+                        tf2::Stamped<TransformWithVariance>(TransformWithVariance(
+                                ft.transform, ft.object_error), msg->header.stamp, msg->header.frame_id),
+                        ft.image_error,
                         ft.object_error); 
         observations.push_back(obs);
     }
