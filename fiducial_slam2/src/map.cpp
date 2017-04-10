@@ -382,7 +382,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
 
     // XXX remove raspicam and get from message
-    if (lookupTransform("raspicam2", "base_link2", time, cameraTransform)) {
+    if (lookupTransform("raspicam", "base_link", time, cameraTransform)) {
         basePose.setData(cameraPose * cameraTransform);
 
         // New scope for logging vars
@@ -400,21 +400,24 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     posePub.publish(toPose(basePose));
 
     tf2::Stamped<TransformWithVariance> outPose = basePose;
+    outPose.frame_id_ = "map";
     string outFrame=baseFrame;
-/*
-     if (!odomFrame.empty()) {
+    if (!odomFrame.empty()) {
+         outFrame=odomFrame;
          tf2::Transform odomTransform;
-         if (lookupTransform(baseFrame, odomFrame, time, odomTransform)) {
-             pose = odomTransform * pose;
+         if (lookupTransform("odom", "base_link", outPose.stamp_, odomTransform)) {
+
+             outPose.setData(basePose * odomTransform.inverse());
              outFrame = odomFrame;
+
              tf2::Vector3 c = odomTransform.getOrigin();
              ROS_INFO("odom   %lf %lf %lf %f",
                 c.x(), c.y(), c.z(), variance);
          }
     }
-*/
     geometry_msgs::TransformStamped ts = toMsg(outPose);
     ts.child_frame_id = outFrame;
+//    ts.header.stamp = ros::Time::now(); // Future dating
     broadcaster.sendTransform(ts);
 
     ROS_INFO("Finished frame\n");
