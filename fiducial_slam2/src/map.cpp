@@ -297,17 +297,7 @@ bool Map::lookupTransform(const std::string &from, const std::string &to,
     try {
         transform = tfBuffer.lookupTransform(from, to, time);
 
-        T.setOrigin(tf2::Vector3(
-           transform.transform.translation.x,
-           transform.transform.translation.y,
-           transform.transform.translation.z));
-
-        T.setRotation(tf2::Quaternion(
-           transform.transform.rotation.x,
-           transform.transform.rotation.y,
-           transform.transform.rotation.z,
-           transform.transform.rotation.w));
-
+        tf2::fromMsg(transform.transform, T);
         return true;
      }
      catch (tf2::TransformException &ex) {
@@ -382,7 +372,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
 
     // XXX remove raspicam and get from message
-    if (lookupTransform("raspicam", "base_link", time, cameraTransform)) {
+    if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, cameraTransform)) {
         basePose.setData(cameraPose * cameraTransform);
 
         // New scope for logging vars
@@ -400,12 +390,12 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     posePub.publish(toPose(basePose));
 
     tf2::Stamped<TransformWithVariance> outPose = basePose;
-    outPose.frame_id_ = "map";
+    outPose.frame_id_ = mapFrame;
     string outFrame=baseFrame;
     if (!odomFrame.empty()) {
          outFrame=odomFrame;
          tf2::Transform odomTransform;
-         if (lookupTransform("odom", "base_link", outPose.stamp_, odomTransform)) {
+         if (lookupTransform(odomFrame, baseFrame, outPose.stamp_, odomTransform)) {
 
              outPose.setData(basePose * odomTransform.inverse());
              outFrame = odomFrame;
@@ -467,11 +457,6 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
 
         tf2::Stamped<TransformWithVariance>T = o.T_camFid;
 
-        if (lookupTransform("base_link2", "raspicam2", time, cameraTransform)) {
-            //T = cameraTransform * T;
-            //T = T * cameraTransform;
-        }
-
         fiducials[o.fid] = Fiducial(o.fid, T);
     }
     else {
@@ -480,12 +465,6 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
 
             if (o.fid == originFid) {
                 tf2::Stamped<TransformWithVariance> T = o.T_camFid;
-
-                if (lookupTransform("base_link2", "raspicam2", time, 
-                    cameraTransform)) {
-                    //T = cameraTransform * T;
-                    //T = T * cameraTransform; 
-                }
 
                 tf2::Vector3 trans = T.transform.getOrigin();
                 ROS_INFO("Estimate of %d from base %lf %lf %lf err %lf",
