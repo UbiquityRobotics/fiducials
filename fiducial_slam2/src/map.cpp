@@ -55,7 +55,6 @@ static bool useAlexey = false;
 
 // Update the variance of a gaussian that has been combined with another
 // Taking into account the degree of overlap
-// XXX This does not converge well
 static double updateVarianceDavid(const tf2::Vector3 &newMean,
                                   const tf2::Vector3 &mean1, double var1,
                                   const tf2::Vector3 &mean2, double var2) {
@@ -183,7 +182,8 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<std::string>("odom_frame", odomFrame, "odom");
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
-//    nh.param<bool>("use_alexey", useAlexey, true);
+    nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
+
 
     nh.param<std::string>("map_file", mapFilename,
         string(getenv("HOME")) + "/.ros/slam/map.txt");
@@ -359,19 +359,11 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                  trans.x(), trans.y(), trans.z(), variance);
     }
 
-//    // Update error in observations
-//    for (int i=0; i<obs.size(); i++) {
-//        Observation &o = obs[i];
-//        o.poseError = (o.position - trans).length2();
-//    }
-
     // Determine transform from camera to robot
     tf2::Transform cameraTransform;
     // Use robotPose instead of camera pose to hold map to robot
     tf2::Stamped<TransformWithVariance> basePose = cameraPose;
 
-
-    // XXX remove raspicam and get from message
     if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, cameraTransform)) {
         basePose.setData(cameraPose * cameraTransform);
 
@@ -407,7 +399,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     }
     geometry_msgs::TransformStamped ts = toMsg(outPose);
     ts.child_frame_id = outFrame;
-//    ts.header.stamp = ros::Time::now(); // Future dating
+    ts.header.stamp += ros::Duration(future_date_transforms);
     broadcaster.sendTransform(ts);
 
     ROS_INFO("Finished frame\n");

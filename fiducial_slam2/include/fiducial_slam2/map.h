@@ -192,6 +192,7 @@ class Map {
     string odomFrame;
     string cameraFrame;
     string baseFrame;
+    double future_date_transforms;
 
     bool isInitializingMap;
     int frameNum;
