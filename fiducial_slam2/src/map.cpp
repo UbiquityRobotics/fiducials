@@ -457,6 +457,10 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
 
         tf2::Stamped<TransformWithVariance>T = o.T_camFid;
 
+        if(lookupTransform(baseFrame, o.T_camFid.frame_id_, o.T_camFid.stamp_, cameraTransform)) {
+            T.setData(T * cameraTransform);
+        }
+
         fiducials[o.fid] = Fiducial(o.fid, T);
     }
     else {
@@ -469,6 +473,10 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
                 tf2::Vector3 trans = T.transform.getOrigin();
                 ROS_INFO("Estimate of %d from base %lf %lf %lf err %lf",
                      o.fid, trans.x(), trans.y(), trans.z(), o.T_camFid.variance);
+
+                if(lookupTransform(baseFrame, o.T_camFid.frame_id_, o.T_camFid.stamp_, cameraTransform)) {
+                    T.setData(T * cameraTransform);
+                }
 
                 fiducials[originFid].update(T);
                 break;
