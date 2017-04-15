@@ -29,8 +29,8 @@
  *
  */
 
-#include <fiducial_slam2/map.h>
-#include <fiducial_slam2/helpers.h>
+#include <fiducial_slam/map.h>
+#include <fiducial_slam/helpers.h>
 
 #include <string>
 #include <tf2/LinearMath/Vector3.h>

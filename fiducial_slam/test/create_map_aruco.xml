@@ -3,10 +3,10 @@
   fiducial_slam when an initial fiducial is specified
 -->
 <launch>
-  <node type="fiducial_slam" pkg="fiducial_slam2" name="fiducial_slam">
+  <node type="fiducial_slam" pkg="fiducial_slam" name="fiducial_slam">
     <param name="initial_map_file" 
-           value="$(find fiducial_slam2)/test/111_initial_map.txt" />
-    <param name="map_file" value="$(find fiducial_slam2)/test/map.txt" />
+           value="$(find fiducial_slam)/test/111_initial_map.txt" />
+    <param name="map_file" value="$(find fiducial_slam)/test/map.txt" />
     <param name="camera_frame" value="base_link" />
     <param name="odom_frame" value="" />
     <param name="pose_frame" value="base_link" />
@@ -14,12 +14,12 @@
   </node>
 
   <node name="rosbag" pkg="rosbag" type="play"
-        args="-l $(find fiducial_slam2)/test/aruco_transforms.bag">
+        args="-l $(find fiducial_slam)/test/aruco_transforms.bag">
   </node>
 
-  <test test-name="map_test2" pkg="fiducial_slam2" type="map_test.py" 
+  <test test-name="map_test2" pkg="fiducial_slam" type="map_test.py" 
     name="map_test">
-    <param name="map_file" value="$(find fiducial_slam2)/test/map.txt" />
+    <param name="map_file" value="$(find fiducial_slam)/test/map.txt" />
     <param name="min_lines" value="3" />
     <param name="expected_pose" value="0.73 0.11 1.0 0.98 -0.01 -0.18 0.07"/>
     <param name="expect" value="100 -0.27 0.82 -1.77 -38.17 -0.15 -149.53,

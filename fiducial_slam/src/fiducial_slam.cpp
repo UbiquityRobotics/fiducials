@@ -29,7 +29,7 @@
  *
  */
 
-#include <fiducial_slam2/helpers.h>
+#include <fiducial_slam/helpers.h>
 
 #include <assert.h>
 #include <sys/time.h>
@@ -50,7 +50,7 @@
 #include "fiducial_msgs/FiducialTransform.h"
 #include "fiducial_msgs/FiducialTransformArray.h"
 
-#include "fiducial_slam2/map.h"
+#include "fiducial_slam/map.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/calib3d.hpp>

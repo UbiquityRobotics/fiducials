@@ -1,67 +1,67 @@
+
 cmake_minimum_required(VERSION 2.8.3)
 project(fiducial_slam)
 
 find_package(catkin REQUIRED COMPONENTS
-   std_msgs
-   nav_msgs
-   tf2_msgs
-   geometry_msgs
-   sensor_msgs
-   visualization_msgs
-   message_generation
-   fiducial_msgs
+  roscpp
+  tf2_geometry_msgs
+  tf2_ros
+  tf2
+  visualization_msgs
+  cv_bridge
+  sensor_msgs
+  std_msgs
+  fiducial_msgs
+  genmsg
 )
 
-catkin_python_setup()
+find_package(OpenCV REQUIRED)
 
-catkin_package()
+catkin_package(INCLUDE_DIRS include
+  DEPENDS OpenCV)
+
+###########
+## Build ##
+###########
+
+add_definitions(-std=c++11)
+
+include_directories(${catkin_INCLUDE_DIRS} include)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+add_executable(fiducial_slam src/fiducial_slam.cpp src/map.cpp)
+add_dependencies(fiducial_slam ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(fiducial_slam ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 #############
 ## Install ##
 #############
 
-install(DIRECTORY launch/
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+## Mark executables and/or libraries for installation
+install(TARGETS fiducial_slam
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-catkin_install_python(PROGRAMS scripts/move_origin.py scripts/init_map.py
-        nodes/init_amcl.py nodes/fiducial_slam_node.py
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(DIRECTORY launch/
+#        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+#) 
 
 ###########
 ## Tests ##
 ###########
 
-
 if(CATKIN_ENABLE_TESTING)
         find_package(rostest REQUIRED COMPONENTS 
-        tf2_ros)
+          roscpp tf2_ros)
 
-        find_package(catkin REQUIRED COMPONENTS
-          roscpp
-          cv_bridge
-          image_transport)
+        add_rostest(test/create_map_aruco.xml)
+        add_rostest(test/init_map_aruco.xml)
 
-        find_package(OpenCV REQUIRED)
-
-        # We are not using the big bag test right now
-
-        # catkin_download_test_data(${PROJECT_NAME}_ceilingline.bag
-        #                           http://www.fxpal.com/robots/ceilingline.bag
-        #                           DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
-        #                           MD5 05b69d64ab02d79ec4fa4be3a7de05af) 
-
-        add_rostest(test/create_map.xml)
-        add_rostest(test/init_map.xml)
-        # add_rostest(test/ceiling_test_2.xml)
-
-        include_directories(${catkin_INCLUDE_DIRS})
+        find_package(rostest REQUIRED)
 
         # Tests need c++11
         add_definitions(-std=c++11)
-        add_rostest_gtest(localization_test 
-          test/localization.test 
-          test/localization_test.cpp)
-        target_link_libraries(localization_test ${catkin_LIBRARIES} ${OpenCV_LIBS})
 endif()
