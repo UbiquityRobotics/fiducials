@@ -3,28 +3,29 @@
   fiducial_slam
 -->
 <launch>
-  <param name="/use_sim_time" value="true"/>
-
   <node name="camera_pose" pkg="tf2_ros" type="static_transform_publisher" 
         args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 base_link raspicam" />
 
-  <node type="fiducial_slam_node.py" pkg="fiducial_slam" name="fiducial_slam">
+  <node type="fiducial_slam" pkg="fiducial_slam" name="fiducial_slam">
     <param name="initial_map_file" value="$(find fiducial_slam)/test/610_initial_map.txt" />
     <param name="map_file" value="$(find fiducial_slam)/test/map.txt" />
-    <param name="obs_file" value="$(find fiducial_slam)/test/obs.txt" />
-    <param name="trans_file" value="$(find fiducial_slam)/test/trans.txt" />
-    <param name="mapping_mode" value="false" />
-    <param name="camera_frame" value="base_link" />
     <param name="odom_frame" value="" />
     <param name="pose_frame" value="base_link" />
-    <remap to="/fiducial_detect/fiducial_transforms" from="/fiducial_transforms"/>
   </node>
 
-  <node name="rosbag" pkg="rosbag" type="play" args="--clock -l $(find fiducial_slam)/test/transforms.bag"/>
+  <node name="rosbag" pkg="rosbag" type="play" 
+     args="-l $(find fiducial_slam)/test/board_test_transforms.bag">
+  </node>
 
   <test test-name="map_test" pkg="fiducial_slam" type="map_test.py" name="map_test1">
     <param name="map_file" value="$(find fiducial_slam)/test/map.txt" />
     <param name="min_lines" value="6" />
+    <param name="expect" value="610 0.0 0.0 0.0 180.0 0.0 180.0, 
+                                611 0.0 -0.19 0.0 -178.4 -1.3 179.7,
+                                612 0.0 -0.37 0.0 -178.7 -0.3 179.9, 
+                                613 -0.17 0.0 -0.0 -179.0 1.5 -179.9,
+                                614 -0.18 -0.2 0.0 -178.3 1.0 179.5,
+                                615 -0.18 -0.4 0.0 -177.0 1.1 179.4"/>
   </test>
 </launch>
 

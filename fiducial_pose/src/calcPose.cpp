@@ -255,7 +255,7 @@ bool RosRpp::fiducialCallback(fiducial_msgs::Fiducial* msg,
 
   tf::Transform trans1(m1, t1);
 
-  frameTransforms[msg->fiducial_id] = trans1;
+  frameTransforms[msg->fiducial_id] = trans1.inverse();
   t1 = trans1.getOrigin();
   m1 = trans1.getBasis();
 

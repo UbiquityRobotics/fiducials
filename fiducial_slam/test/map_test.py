@@ -7,74 +7,86 @@ import threading
 import time
 import unittest
 import os
+import math
 
 import rospy
 import rostest
 
+from fiducial_msgs.msg import FiducialMapEntryArray
+from geometry_msgs.msg import PoseWithCovarianceStamped
+
 NAME='map'
-EPSILON=0.2
+EPSILON=0.1
 
 """
-A node to verify the map created by fiducial_slam. It will verify that the specified map file contains
-at least min_lines lines, and if the expect parameter is also given, it will check that the position 
-of the specfied fiducial.
+A node to verify the map created by fiducial_slam. It will verify
+that the specified map file contains at least min_lines lines,
+and if the expect parameter is also given, it will check that
+the position of the specfied fiducial. In addition, the pose
+specified in expected_pose is verified
 """
+
+def rad2deg(rad):
+    return rad * 180.0 / math.pi
 
 class MapTest(unittest.TestCase):
     def __init__(self, *args):
         super(MapTest, self).__init__(*args)
+        self.mapEntries = -1
+        self.map = {}
+        self.pose = None
 
-    def countlines(self, filename):
-        try:
-            file = open(filename, "r")
-            self.lines = file.readlines()
-            file.close()
-            count = len(self.lines)
-            print("Map has %d lines" % count)
-            return count
-        except:
-            return 0
+    def mapCallback(self, msg):
+        self.mapEntries = len(msg.fiducials)
+        for fid in msg.fiducials:
+            self.map[fid.fiducial_id] = (fid.x, fid.y, fid.z,
+               rad2deg(fid.rx), rad2deg(fid.ry), rad2deg(fid.rz))
 
-    def checkposition(self, fid, x, y, z):
-        for line in self.lines:
-            elems = line.split()
-            if int(elems[0]) != int(fid):
-                continue
-            if abs(float(elems[1]) - float(x)) < EPSILON and \
-               abs(float(elems[2]) - float(y)) < EPSILON and \
-               abs(float(elems[3]) - float(z)) < EPSILON:
-                print("Fiducial %s found in correct position" % fid)
-                return True
-            else:
-                self.fail("Fiducial %s position incorrect: %s %s %s" % (fid, elems[1], elems[2], elems[3]))
-                return False
-        print("Fiducial %s not found" % fid)
-        return False
+    def poseCallback(self, msg):
+        position = msg.pose.pose.position
+        orientation = msg.pose.pose.orientation
+        self.pose = (position.x, position.y, position.z,
+                     orientation.x, orientation.y, orientation.z, orientation.w)
 
     def test_map(self):
         rospy.init_node('test_map')
-        filename = rospy.get_param("~map_file", "")
         minLines = rospy.get_param("~min_lines", 1)
         expect = rospy.get_param("~expect", "")
+        expectedPose = rospy.get_param("~expected_pose", "")
+
+        rospy.Subscriber("/fiducial_map", FiducialMapEntryArray,
+                         self.mapCallback)
+        rospy.Subscriber("/fiducial_pose", PoseWithCovarianceStamped,
+                         self.poseCallback)
+
         print("test_map");
-        try:
-            os.remove(filename)
-        except:
-            pass
         t = 0
         while True:
-            lines = self.countlines(filename)
-            if lines >= minLines:
-                if expect == "":
-                    return 
-                (fid, x, y, z) = expect.split()
-                if self.checkposition(fid, x, y, z):
-                    return
+            if self.mapEntries >= minLines and self.pose != None:
+                if expectedPose != "":
+                    ep = expectedPose.split()
+                    for i in range(len(ep)):
+                        if abs(float(ep[i]) - float(self.pose[i])) > EPSILON:
+                            self.fail("pose %s" % (self.pose,))
+                if expect != "":
+                    lines = expect.split(',')
+                    for line in lines:
+                        ex = line.split()
+                        fid = int(ex[0])
+                        ex = ex[1:]
+                        if not self.map.has_key(fid):
+                            self.fail("Fiducial %d not in map" % fid)
+                        fiducial = self.map[fid]
+                        for i in range(len(ex)):
+                            if abs(float(ex[i]) - float(fiducial[i])) > EPSILON:
+                                self.fail("fiducial %d %s expected %s" % \
+                                  (fid, fiducial, ex,))
+                return
 	    time.sleep(0.5)
-        
+
 if __name__ == '__main__':
     try:
         rostest.run('rostest', NAME, MapTest, sys.argv)
     except KeyboardInterrupt:
         pass
-print("exiting")
+    print("exiting")

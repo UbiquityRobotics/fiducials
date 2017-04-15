@@ -11,20 +11,18 @@
 
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
-  <depend>visualization_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>nav_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>tf2_msgs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>rospy</depend>
-  <depend>fiducial_msgs</depend>
-
-  <test_depend>rostest</test_depend>
-  <test_depend>roscpp</test_depend>
-  <test_depend>cv_bridge</test_depend>
-  <test_depend>image_transport</test_depend>
- 
   <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2</depend>
+  <depend>visualization_msgs</depend>
+  <depend>image_transport</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>opencv3</depend>
+  <depend>fiducial_msgs</depend>
+  <depend>dynamic_reconfigure</depend>
 
 </package>
