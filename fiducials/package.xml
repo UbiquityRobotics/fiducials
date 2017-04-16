@@ -20,7 +20,6 @@
   <exec_depend>fiducial_lib</exec_depend>
   <exec_depend>fiducial_pose</exec_depend>
   <exec_depend>fiducial_slam</exec_depend>
-  <exec_depend>fiducial_slam2</exec_depend>
   <exec_depend>fiducial_msgs</exec_depend>
 
   <export>
