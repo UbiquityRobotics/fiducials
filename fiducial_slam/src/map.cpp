@@ -397,6 +397,15 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                 c.x(), c.y(), c.z(), variance);
          }
     }
+ 
+    // Mkae outgoing transform make sense - ie only consist of x, y, yaw
+    tf2::Vector3 translation = outPose.transform.getOrigin();
+    translation.setZ(0);
+    outPose.transform.setOrigin(translation);
+    double roll, pitch, yaw;
+    outPose.transform.getBasis().getRPY(roll, pitch, yaw);
+    outPose.transform.getBasis().setRPY(0, 0, yaw);
+
     geometry_msgs::TransformStamped ts = toMsg(outPose);
     ts.child_frame_id = outFrame;
     ts.header.stamp += ros::Duration(future_date_transforms);
