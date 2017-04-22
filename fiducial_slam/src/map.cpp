@@ -398,7 +398,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
          }
     }
  
-    // Mkae outgoing transform make sense - ie only consist of x, y, yaw
+    // Make outgoing transform make sense - ie only consist of x, y, yaw
     tf2::Vector3 translation = outPose.transform.getOrigin();
     translation.setZ(0);
     outPose.transform.setOrigin(translation);
