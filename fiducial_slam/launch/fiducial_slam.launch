@@ -6,7 +6,7 @@
   <arg name="odom_frame" default="odom"/>
   <arg name="base_frame" default="base_link"/>
   <arg name="publish_tf" default="true"/>
-  <arg name="future" default="0.0"/>
+  <arg name="future_date_transforms" default="0.0"/>
 
 
   <node type="fiducial_slam" pkg="fiducial_slam" output="screen" 
@@ -15,5 +15,6 @@
     <param name="map_frame" value="$(arg map_frame)" />
     <param name="odom_frame" value="$(arg odom_frame)" />
     <param name="base_frame" value="$(arg base_frame)" />
+    <param name="future_date_transforms" value="$(arg future_date_transforms)" />
   </node>
 </launch>
