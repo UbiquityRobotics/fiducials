@@ -21,7 +21,7 @@
     name="map_test">
     <param name="map_file" value="$(find fiducial_slam)/test/map.txt" />
     <param name="min_lines" value="3" />
-    <param name="expected_pose" value="0.73, 0.10, 0.0, 0.0, 0.0, -0.20, 0.98"/>
+    <param name="expected_pose" value="0.73 0.10 0.0 0.0 0.0 -0.20 0.98"/>
     <param name="expect" value="100 -0.27 0.82 -1.77 -38.17 -0.15 -149.53,
                                 103 -1.86 -0.59 -1.04 1.70 -23.72 -165.87,
                                 106 0.22 -0.0 -0.0 -0.9 0.24 0.15,
