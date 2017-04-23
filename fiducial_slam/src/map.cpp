@@ -364,8 +364,12 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     // Use robotPose instead of camera pose to hold map to robot
     tf2::Stamped<TransformWithVariance> basePose = cameraPose;
 
+    bool haveCamera = false;
     if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, cameraTransform)) {
+
         basePose.setData(cameraPose * cameraTransform);
+
+        haveCamera = true;
 
         // New scope for logging vars
         {
@@ -378,6 +382,22 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                      trans.x(), trans.y(), trans.z(), variance);
         }
      }
+
+    // Make outgoing transform make sense - ie only consist of x, y, yaw
+    tf2::Vector3 translation = basePose.transform.getOrigin();
+    translation.setZ(0);
+    basePose.transform.setOrigin(translation);
+    double roll, pitch, yaw;
+    basePose.transform.getBasis().getRPY(roll, pitch, yaw);
+    basePose.transform.getBasis().setRPY(0, 0, yaw);
+
+    // autolevel - convert squashed base pose to camera pose
+    if (haveCamera) {
+        cameraPose.setData(basePose * cameraTransform.inverse());
+    }
+    else {
+        cameraPose.setData(basePose);
+    }
 
     posePub.publish(toPose(basePose));
 
@@ -398,14 +418,6 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
          }
     }
  
-    // Make outgoing transform make sense - ie only consist of x, y, yaw
-    tf2::Vector3 translation = outPose.transform.getOrigin();
-    translation.setZ(0);
-    outPose.transform.setOrigin(translation);
-    double roll, pitch, yaw;
-    outPose.transform.getBasis().getRPY(roll, pitch, yaw);
-    outPose.transform.getBasis().setRPY(0, 0, yaw);
-
     geometry_msgs::TransformStamped ts = toMsg(outPose);
     ts.child_frame_id = outFrame;
     ts.header.stamp += ros::Duration(future_date_transforms);
