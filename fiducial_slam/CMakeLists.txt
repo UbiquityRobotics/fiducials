@@ -57,7 +57,7 @@ if(CATKIN_ENABLE_TESTING)
         find_package(rostest REQUIRED COMPONENTS 
           roscpp tf2_ros)
 
-        add_rostest(test/create_map_aruco.xml)
+        #add_rostest(test/create_map_aruco.xml)
         add_rostest(test/init_map_aruco.xml)
 
         find_package(rostest REQUIRED)
