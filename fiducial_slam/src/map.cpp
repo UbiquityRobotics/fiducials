@@ -193,7 +193,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
     boost::filesystem::path mapPath(mapFilename);
     boost::filesystem::path dir = mapPath.parent_path();
-    boost::filesystem::create_directory(dir);
+    boost::filesystem::create_directories(dir);
 
     std::string initialMap;
     nh.param<std::string>("initial_map_file", initialMap, "");
