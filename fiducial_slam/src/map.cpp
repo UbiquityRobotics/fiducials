@@ -44,6 +44,9 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <visualization_msgs/Marker.h>
 
+#include <boost/filesystem.hpp>
+
+
 // Update the variance of a gaussian that has been combined with another
 // Does not Take into account the degree of overlap of observations
 static double updateVarianceAlexey(double var1, double var2) {
@@ -187,6 +190,10 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
     nh.param<std::string>("map_file", mapFilename,
         string(getenv("HOME")) + "/.ros/slam/map.txt");
+
+    boost::filesystem::path mapPath(mapFilename);
+    boost::filesystem::path dir = mapPath.parent_path();
+    boost::filesystem::create_directory(dir);
 
     std::string initialMap;
     nh.param<std::string>("initial_map_file", initialMap, "");
