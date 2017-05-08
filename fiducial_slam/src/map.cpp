@@ -695,7 +695,7 @@ void Map::publishMarker(Fiducial &fid)
     cylinder.color.a = 0.5f;
     cylinder.id = fid.id; + 10000;
     cylinder.ns = "sigma";
-    cylinder.scale.x = cylinder.scale.y = min(sqrt(fid.pose.variance), 0.1);
+    cylinder.scale.x = cylinder.scale.y = std::min(sqrt(fid.pose.variance), 0.1);
     cylinder.scale.z = 0.01;
     cylinder.pose.position.x = marker.pose.position.x;
     cylinder.pose.position.y = marker.pose.position.y;
