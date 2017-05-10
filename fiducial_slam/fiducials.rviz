@@ -51,21 +51,21 @@ Visualization Manager:
         base_link:
           Value: true
         fid802:
-          Value: true
+          Value: false
         fid803:
-          Value: true
+          Value: false
         fid804:
-          Value: true
+          Value: false
         fid805:
-          Value: true
+          Value: false
         fid806:
-          Value: true
+          Value: false
         fid808:
-          Value: true
+          Value: false
         fid809:
           Value: false
         fid810:
-          Value: true
+          Value: false
         left_wheel:
           Value: false
         map:
