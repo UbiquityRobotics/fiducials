@@ -23,11 +23,9 @@ include_directories(include ${OpenCV_INCLUDE_DIRS})
 include_directories(${catkin_INCLUDE_DIRS})
 
 
-
 add_library(rpp_pose src/Rpoly.cpp src/RPP.cpp src/calcPose.cpp)
-target_link_libraries(rpp_pose m ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
-#add_dependencies(rpp_pose fiducial_pose_gencpp fiducial_pose_gencpp)
+add_dependencies(rpp_pose ${${PROJECT_NAME}_EXPORTED_TARGETS}
+                 ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS rpp_pose
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

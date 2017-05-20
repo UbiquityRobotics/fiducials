@@ -34,7 +34,8 @@ add_executable(aruco_detect src/aruco_detect.cpp)
 add_executable(test_board src/test_board.cpp)
 add_executable(create_marker src/create_marker.cpp)
 
-add_dependencies(aruco_detect ${PROJECT_NAME}_gencfg)
+add_dependencies(aruco_detect ${${PROJECT_NAME}_EXPORTED_TARGETS}
+                 ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(aruco_detect ${catkin_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries(test_board ${catkin_LIBRARIES} ${OpenCV_LIBS})
