@@ -2,6 +2,15 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix dependencies
+* Make sure that the variance sent to rviz doesn't truncate to 0
+* Rewrite the code in C++, kill the python
+* Fiducial transforms are always camera->fiducial
+* Moved all service and message definitions to fiducial_msgs
+* Contributors: Jim Vaughan, Rohan Agrawal
+
 0.6.1 (2017-02-06)
 ------------------
 

@@ -2,6 +2,14 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix dependencies
+* Added image and object error calculation. Renamed K and dist
+* Moved all service and message definitions to fiducial_msgs
+* Update copyright on aruco detect C++
+* Contributors: Jim Vaughan, Rohan Agrawal
+
 0.6.1 (2017-02-06)
 ------------------
 * Fix dynamic_reconfigure build deps

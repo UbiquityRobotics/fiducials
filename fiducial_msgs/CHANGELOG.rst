@@ -1,13 +1,11 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package fiducial_pose
+Changelog for package fiducial_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Forthcoming
 -----------
-* Fix dependencies
-* Fiducial transforms are always camera->fiducial
 * Moved all service and message definitions to fiducial_msgs
-* Contributors: Jim Vaughan
+* Contributors: Jim Vaughan, Rohan Agrawal
 
 0.6.1 (2017-02-06)
 ------------------
@@ -18,3 +16,11 @@ Forthcoming
 0.5.1 (2016-12-28)
 ------------------
 
+0.5.0 (2016-12-17)
+------------------
+
+0.1.2 (2016-11-20)
+------------------
+
+0.1.1 (2016-11-19)
+------------------

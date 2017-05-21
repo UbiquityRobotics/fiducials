@@ -2,6 +2,12 @@
 Changelog for package fiducial_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix dependencies
+* Moved all service and message definitions to fiducial_msgs
+* Contributors: Jim Vaughan
+
 0.6.1 (2017-02-06)
 ------------------
 
