@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>fiducial_slam</name>
-  <version>0.6.1</version>
+  <version>0.7.0</version>
   <description>ROS node to build a 3D map of fiducials and estimate robot pose from fiducial transforms</description>
 
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>

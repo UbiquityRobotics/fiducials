@@ -2,8 +2,8 @@
 Changelog for package fiducials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2017-05-21)
+------------------
 * Update package.xml
   Remove fiducial_slam2
 * Added fiducial_slam2 - c++ slam node

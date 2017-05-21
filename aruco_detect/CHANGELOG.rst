@@ -2,8 +2,8 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2017-05-21)
+------------------
 * Fix dependencies
 * Added image and object error calculation. Renamed K and dist
 * Moved all service and message definitions to fiducial_msgs

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>fiducial_pose</name>
-  <version>0.6.1</version>
+  <version>0.7.0</version>
   <description>Library to estimate 3D pose with RosbustPlanarPose</description>
 
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>

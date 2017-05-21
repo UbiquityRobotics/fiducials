@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2017-05-21)
+------------------
 * Fix dependencies
 * Make sure that the variance sent to rviz doesn't truncate to 0
 * Rewrite the code in C++, kill the python

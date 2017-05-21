@@ -2,8 +2,8 @@
 Changelog for package fiducial_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2017-05-21)
+------------------
 * Moved all service and message definitions to fiducial_msgs
 * Contributors: Jim Vaughan, Rohan Agrawal
 
