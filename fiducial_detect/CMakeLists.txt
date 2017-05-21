@@ -16,21 +16,24 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
 )
-find_package(orocos_kdl REQUIRED)
+
+find_package(OpenCV REQUIRED)
 
 catkin_package()
+
 
 ###########
 ## Build ##
 ###########
 
-include_directories(${catkin_INCLUDE_DIRS})
-
-link_directories(${orocos_kdl_LIBRARY_DIRS})
+include_directories(${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
 add_executable(fiducial_detect src/fiducial_detect.cpp)
 target_link_libraries(fiducial_detect ${catkin_LIBRARIES}
-${orocos_kdl_LIBRARIES})
+                      ${OpenCV_INCLUDE_LIBS})
+add_dependencies(fiducial_detect ${${PROJECT_NAME}_EXPORTED_TARGETS}
+                 ${catkin_EXPORTED_TARGETS})
+
 
 #############
 ## Install ##
