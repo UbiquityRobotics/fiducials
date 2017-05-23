@@ -2,8 +2,8 @@
 Changelog for package fiducial_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.1 (2017-05-22)
+------------------
 * Remove opencv dep from fiducial_msgs; add fiducial_msgs dep to fiducial_pose
 * Contributors: Jim Vaughan
 
