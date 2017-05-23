@@ -266,7 +266,9 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
                      o.fid, trans.x(), trans.y(), trans.z(),
                      o.T_camFid.variance, o.poseError, T_mapFid.variance);
 
-            if (isnan(trans.x()) || isnan(trans.y()) || isnan(trans.z())) {
+            if (std::isnan(trans.x()) || 
+                std::isnan(trans.y()) || 
+                std::isnan(trans.z())) {
                 ROS_WARN("Skipping NAN estimate\n");
                 continue;
             };
@@ -336,8 +338,9 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
             //drawLine(fid.pose.getOrigin(), o.position);
 
-            if (isnan(o.position.x()) || isnan(o.position.y())
-                || isnan(o.position.z())) {
+            if (std::isnan(o.position.x()) || 
+                std::isnan(o.position.y()) ||
+                std::isnan(o.position.z())) {
                 ROS_WARN("Skipping NAN estimate\n");
                 continue;
             };
