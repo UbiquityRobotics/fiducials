@@ -10,8 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-find_package(OpenCV REQUIRED)
-
 add_message_files(
    FILES
    Fiducial.msg

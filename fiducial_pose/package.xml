@@ -15,6 +15,7 @@
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>fiducial_msgs</depend>
   <depend>tf</depend>
   <depend>opencv3</depend>
 
