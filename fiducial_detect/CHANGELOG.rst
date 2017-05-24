@@ -2,6 +2,9 @@
 Changelog for package fiducial_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.1 (2017-05-22)
 ------------------
 
