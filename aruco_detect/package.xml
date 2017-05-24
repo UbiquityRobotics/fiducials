@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>aruco_detect</name>
-  <version>0.7.1</version>
+  <version>0.7.2</version>
   <description>Fiducial detection based on the aruco library</description>
 
   <maintainer email="jimv@mrjim.com">Jim Vaughan</maintainer>

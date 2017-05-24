@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.2 (2017-05-24)
+------------------
 * Using std::isnan() to stop Debian Jessie build errors
 * Contributors: Jim Vaughan
 
