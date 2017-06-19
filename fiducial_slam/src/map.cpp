@@ -186,6 +186,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
+    nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
 
 
     nh.param<std::string>("map_file", mapFilename,
@@ -409,12 +410,15 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     }
  
     // Make outgoing transform make sense - ie only consist of x, y, yaw
-    tf2::Vector3 translation = outPose.transform.getOrigin();
-    translation.setZ(0);
-    outPose.transform.setOrigin(translation);
-    double roll, pitch, yaw;
-    outPose.transform.getBasis().getRPY(roll, pitch, yaw);
-    outPose.transform.getBasis().setRPY(0, 0, yaw);
+    // This can be disabled via the publish_6dof_pose param, mainly for debugging
+    if (!publish_6dof_pose) {
+        tf2::Vector3 translation = outPose.transform.getOrigin();
+        translation.setZ(0);
+        outPose.transform.setOrigin(translation);
+        double roll, pitch, yaw;
+        outPose.transform.getBasis().getRPY(roll, pitch, yaw);
+        outPose.transform.getBasis().setRPY(0, 0, yaw);
+    }
 
     geometry_msgs::TransformStamped ts = toMsg(outPose);
     ts.child_frame_id = outFrame;
