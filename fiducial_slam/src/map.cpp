@@ -453,8 +453,11 @@ static int findClosestObs(const vector<Observation>& obs)
 
 
 // Initialize a map from the closest observed fiducial
+// Figure out the closest marker, and then figure out the
+// pose of that marker such that base_link is at the origin of the 
+// map frame
 
-void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
+void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
 
     ROS_INFO("Auto init map %d", frameNum);
 
@@ -474,9 +477,9 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
 
         tf2::Stamped<TransformWithVariance> T = o.T_camFid;
 
-        if(lookupTransform(baseFrame, o.T_camFid.frame_id_,
-                           o.T_camFid.stamp_, T_baseCam)) {
-            T.setData(T * T_baseCam);
+        if (lookupTransform(baseFrame, o.T_camFid.frame_id_,
+                            o.T_camFid.stamp_, T_baseCam)) {
+            T.setData(T_baseCam * T);
         }
 
         fiducials[o.fid] = Fiducial(o.fid, T);
@@ -492,9 +495,9 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
                 ROS_INFO("Estimate of %d from base %lf %lf %lf err %lf",
                      o.fid, trans.x(), trans.y(), trans.z(), o.T_camFid.variance);
 
-                if(lookupTransform(baseFrame, o.T_camFid.frame_id_,
-                                   o.T_camFid.stamp_, T_baseCam)) {
-                    T.setData(T * T_baseCam);
+                if (lookupTransform(baseFrame, o.T_camFid.frame_id_,
+                                    o.T_camFid.stamp_, T_baseCam)) {
+                    T.setData(T_baseCam * T);
                 }
 
                 fiducials[originFid].update(T);
@@ -539,7 +542,8 @@ bool Map::saveMap(std::string filename)
 
         fprintf(fp, "%d %lf %lf %lf %lf %lf %lf %lf %d", f.id,
                  trans.x(), trans.y(), trans.z(),
-                 rad2deg(rx), rad2deg(ry), rad2deg(rz), f.pose.variance, f.numObs);
+                 rad2deg(rx), rad2deg(ry), rad2deg(rz), 
+                 f.pose.variance, f.numObs);
 
         for (lit = f.links.begin(); lit != f.links.end(); lit++) {
             fprintf(fp, " %d", lit->first);
