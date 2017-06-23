@@ -334,8 +334,21 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             p.stamp_ = o.T_fidCam.stamp_;
 
             o.position = p.transform.getOrigin();
-            ROS_INFO("Pose %d %lf %lf %lf %lf", o.fid,
-              o.position.x(), o.position.y(), o.position.z(), p.variance);
+            double roll, pitch, yaw;
+            p.transform.getBasis().getRPY(roll, pitch, yaw);
+
+            /*
+               we print out all 6DOF of the camera pose in the world
+               frame as estimated from a single fiducial here.  
+               This is also the transform from base_link to camera
+               that would cause base_link to be at the origin of the
+               map frame.  This can be used to determine the pose of
+               the camera on the robot if a fiducial is correctly setup
+               in the map file
+            */
+            ROS_INFO("Pose %d %lf %lf %lf %lf %lf %lf %lf", o.fid,
+              o.position.x(), o.position.y(), o.position.z(),
+              roll, pitch, yaw, p.variance);
 
             //drawLine(fid.pose.getOrigin(), o.position);
 
@@ -365,7 +378,6 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     // New scope for logging vars
     {
         tf2::Vector3 trans = T_mapCam.transform.getOrigin();
-        tf2::Quaternion q = T_mapCam.transform.getRotation();
         ROS_INFO("Pose all %lf %lf %lf %f",
                  trans.x(), trans.y(), trans.z(), variance);
     }
