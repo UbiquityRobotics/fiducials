@@ -55,14 +55,20 @@ install(TARGETS fiducial_slam
 ###########
 
 if(CATKIN_ENABLE_TESTING)
-        find_package(rostest REQUIRED COMPONENTS 
-          roscpp tf2_ros)
+        find_package(catkin REQUIRED COMPONENTS
+          rostest roscpp sensor_msgs tf2_ros image_transport cv_bridge)
+
+        # Tests need c++11
+        add_definitions(-std=c++11)
 
         add_rostest(test/create_map_aruco.xml)
         add_rostest(test/init_map_aruco.xml)
 
-        find_package(rostest REQUIRED)
+        add_rostest_gtest(auto_init_403_test
+           test/auto_init_403.test
+           test/auto_init_403_test.cpp)
+        target_link_libraries(auto_init_403_test
+            ${catkin_LIBRARIES}
+            ${OpenCV_LIBS})
 
-        # Tests need c++11
-        add_definitions(-std=c++11)
 endif()
