@@ -194,6 +194,7 @@ class Map {
     string baseFrame;
     double future_date_transforms;
     bool publish_6dof_pose;
+    double manhattanThreshold;
 
     bool isInitializingMap;
     int frameNum;
@@ -208,6 +209,7 @@ class Map {
     void updateMap(const vector<Observation> &obs, const ros::Time &time,
                    const tf2::Stamped<TransformWithVariance>& cameraPose);
 
+    void squashPose(tf2::Transform &transform);
     bool loadMap();
     bool loadMap(std::string filename);
     bool saveMap();

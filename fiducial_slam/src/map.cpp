@@ -164,7 +164,6 @@ Fiducial::Fiducial(int id, const tf2::Stamped<TransformWithVariance>& pose) {
     this->visible = false;
 }
 
-
 // Constructor for map
 
 Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
@@ -188,6 +187,9 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
 
+    // if non-zero, fiducial poses will be 'squashed' to align with an axis
+    // when they are within this angle (in radians) of that axis
+    nh.param<double>("manhattan_threshold", manhattanThreshold, 0);
 
     nh.param<std::string>("map_file", mapFilename,
         string(getenv("HOME")) + "/.ros/slam/map.txt");
@@ -239,6 +241,19 @@ void Map::update(vector<Observation>& obs, const ros::Time &time)
 }
 
 
+static double axisOffset(double r) 
+{
+    double offset = M_PI/2.0;
+    double axis = - M_PI;
+    for (int i=0; i<5; i++, axis += M_PI/2.0) {
+        double off = r - axis;
+        if (std::abs(off) < std::abs(offset)) {
+            offset = off;
+        }
+    }
+    return offset;
+}
+
 // update estimates of observed fiducials from previously estimated
 // camera pose
 
@@ -275,6 +290,12 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
             };
         }
 
+        //XXX
+        double r, p, y;
+        T_mapFid.transform.getBasis().getRPY(r, p, y);
+        T_mapFid.variance = axisOffset(r) + axisOffset(p);
+        squashPose(T_mapFid.transform);
+
         if (fiducials.find(o.fid) == fiducials.end()) {
             ROS_INFO("New fiducial %d", o.fid);
             fiducials[o.fid] = Fiducial(o.fid, T_mapFid);
@@ -294,6 +315,29 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
         }
         publishMarker(fiducials[o.fid]);
     }
+}
+
+
+void Map::squashPose(tf2::Transform &transform)
+{
+    if (manhattanThreshold == 0) {
+        return;
+    }
+
+    double roll, pitch, yaw;
+    transform.getBasis().getRPY(roll, pitch, yaw);
+    
+    double rOffset = axisOffset(roll);
+    if (std::abs(rOffset) < manhattanThreshold) {
+        roll -= rOffset;
+    }
+    double pOffset = axisOffset(pitch);
+    if (std::abs(pOffset) < manhattanThreshold) {
+        pitch -= pOffset;
+    }
+printf("%f %f %f\n", rad2deg(roll), rad2deg(pitch), rad2deg(yaw));
+
+    transform.getBasis().setRPY(roll, pitch, yaw);
 }
 
 
@@ -482,6 +526,7 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
             T.setData(T_baseCam * T);
         }
 
+        squashPose(T.transform);
         fiducials[o.fid] = Fiducial(o.fid, T);
     }
     else {
@@ -500,6 +545,7 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
                     T.setData(T_baseCam * T);
                 }
 
+                squashPose(T.transform);
                 fiducials[originFid].update(T);
                 break;
             }
