@@ -186,6 +186,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
+    nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
 
 
     nh.param<std::string>("map_file", mapFilename,
@@ -226,11 +227,11 @@ void Map::update(vector<Observation>& obs, const ros::Time &time)
         autoInit(obs, time);
     }
     else {
-        tf2::Stamped<TransformWithVariance> cameraPose;
-        cameraPose.frame_id_ = mapFrame;
+        tf2::Stamped<TransformWithVariance> T_mapCam;
+        T_mapCam.frame_id_ = mapFrame;
 
-        if (updatePose(obs, time, cameraPose) > 0 && obs.size() > 1) {
-            updateMap(obs, time, cameraPose);
+        if (updatePose(obs, time, T_mapCam) > 0 && obs.size() > 1) {
+            updateMap(obs, time, T_mapCam);
         }
     }
 
@@ -242,7 +243,7 @@ void Map::update(vector<Observation>& obs, const ros::Time &time)
 // camera pose
 
 void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
-                    const tf2::Stamped<TransformWithVariance>& cameraPose)
+                    const tf2::Stamped<TransformWithVariance>& T_mapCam)
 {
     map<int, Fiducial>::iterator fit;
 
@@ -255,7 +256,7 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
         const Observation &o = obs[i];
 
         // This should take into account the variances from both
-        tf2::Stamped<TransformWithVariance> T_mapFid = cameraPose * o.T_camFid;
+        tf2::Stamped<TransformWithVariance> T_mapFid = T_mapCam * o.T_camFid;
         T_mapFid.frame_id_ = mapFrame;
 
         // New scope for logging vars
@@ -318,7 +319,7 @@ bool Map::lookupTransform(const std::string &from, const std::string &to,
 // update pose estimate of robot
 
 int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
-                    tf2::Stamped<TransformWithVariance>& cameraPose)
+                    tf2::Stamped<TransformWithVariance>& T_mapCam)
 {
     double variance = 0.0;
     int numEsts = 0;
@@ -346,11 +347,11 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             };
 
             if (numEsts == 0) {
-                cameraPose = p;
+                T_mapCam = p;
             }
             else {
-                cameraPose.setData(averageTransforms(cameraPose, p));
-                cameraPose.stamp_ = p.stamp_;
+                T_mapCam.setData(averageTransforms(T_mapCam, p));
+                T_mapCam.stamp_ = p.stamp_;
             }
             numEsts++;
         }
@@ -363,23 +364,24 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
     // New scope for logging vars
     {
-        tf2::Vector3 trans = cameraPose.transform.getOrigin();
-        tf2::Quaternion q = cameraPose.transform.getRotation();
+        tf2::Vector3 trans = T_mapCam.transform.getOrigin();
+        tf2::Quaternion q = T_mapCam.transform.getRotation();
         ROS_INFO("Pose all %lf %lf %lf %f",
                  trans.x(), trans.y(), trans.z(), variance);
     }
 
     // Determine transform from camera to robot
-    tf2::Transform cameraTransform;
+    tf2::Transform T_camBase;
     // Use robotPose instead of camera pose to hold map to robot
-    tf2::Stamped<TransformWithVariance> basePose = cameraPose;
+    tf2::Stamped<TransformWithVariance> basePose = T_mapCam;
 
-    if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, cameraTransform)) {
-        basePose.setData(cameraPose * cameraTransform);
+    if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, T_camBase)) {
+        basePose.setData(T_mapCam * T_camBase);
+        //basePose.setData(cameraTransform * cameraPose);
 
         // New scope for logging vars
         {
-            tf2::Vector3 c = cameraPose.transform.getOrigin();
+            tf2::Vector3 c = T_mapCam.transform.getOrigin();
             ROS_INFO("camera   %lf %lf %lf %f",
                      c.x(), c.y(), c.z(), variance);
 
@@ -394,6 +396,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     tf2::Stamped<TransformWithVariance> outPose = basePose;
     outPose.frame_id_ = mapFrame;
     string outFrame=baseFrame;
+
     if (!odomFrame.empty()) {
          outFrame=odomFrame;
          tf2::Transform odomTransform;
@@ -409,12 +412,15 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     }
  
     // Make outgoing transform make sense - ie only consist of x, y, yaw
-    tf2::Vector3 translation = outPose.transform.getOrigin();
-    translation.setZ(0);
-    outPose.transform.setOrigin(translation);
-    double roll, pitch, yaw;
-    outPose.transform.getBasis().getRPY(roll, pitch, yaw);
-    outPose.transform.getBasis().setRPY(0, 0, yaw);
+    // This can be disabled via the publish_6dof_pose param, mainly for debugging
+    if (!publish_6dof_pose) {
+        tf2::Vector3 translation = outPose.transform.getOrigin();
+        translation.setZ(0);
+        outPose.transform.setOrigin(translation);
+        double roll, pitch, yaw;
+        outPose.transform.getBasis().getRPY(roll, pitch, yaw);
+        outPose.transform.getBasis().setRPY(0, 0, yaw);
+    }
 
     geometry_msgs::TransformStamped ts = toMsg(outPose);
     ts.child_frame_id = outFrame;
@@ -447,13 +453,16 @@ static int findClosestObs(const vector<Observation>& obs)
 
 
 // Initialize a map from the closest observed fiducial
+// Figure out the closest marker, and then figure out the
+// pose of that marker such that base_link is at the origin of the 
+// map frame
 
-void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
+void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
 
     ROS_INFO("Auto init map %d", frameNum);
 
     static int originFid = -1;
-    tf2::Transform cameraTransform;
+    tf2::Transform T_baseCam;
 
     if (fiducials.size() == 0) {
         int idx = findClosestObs(obs);
@@ -466,10 +475,11 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
 
         ROS_INFO("Initializing map from fiducial %d", o.fid);
 
-        tf2::Stamped<TransformWithVariance>T = o.T_camFid;
+        tf2::Stamped<TransformWithVariance> T = o.T_camFid;
 
-        if(lookupTransform(baseFrame, o.T_camFid.frame_id_, o.T_camFid.stamp_, cameraTransform)) {
-            T.setData(T * cameraTransform);
+        if (lookupTransform(baseFrame, o.T_camFid.frame_id_,
+                            o.T_camFid.stamp_, T_baseCam)) {
+            T.setData(T_baseCam * T);
         }
 
         fiducials[o.fid] = Fiducial(o.fid, T);
@@ -485,8 +495,9 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time){
                 ROS_INFO("Estimate of %d from base %lf %lf %lf err %lf",
                      o.fid, trans.x(), trans.y(), trans.z(), o.T_camFid.variance);
 
-                if(lookupTransform(baseFrame, o.T_camFid.frame_id_, o.T_camFid.stamp_, cameraTransform)) {
-                    T.setData(T * cameraTransform);
+                if (lookupTransform(baseFrame, o.T_camFid.frame_id_,
+                                    o.T_camFid.stamp_, T_baseCam)) {
+                    T.setData(T_baseCam * T);
                 }
 
                 fiducials[originFid].update(T);
@@ -531,7 +542,8 @@ bool Map::saveMap(std::string filename)
 
         fprintf(fp, "%d %lf %lf %lf %lf %lf %lf %lf %d", f.id,
                  trans.x(), trans.y(), trans.z(),
-                 rad2deg(rx), rad2deg(ry), rad2deg(rz), f.pose.variance, f.numObs);
+                 rad2deg(rx), rad2deg(ry), rad2deg(rz), 
+                 f.pose.variance, f.numObs);
 
         for (lit = f.links.begin(); lit != f.links.end(); lit++) {
             fprintf(fp, " %d", lit->first);

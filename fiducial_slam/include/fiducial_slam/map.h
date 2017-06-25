@@ -193,6 +193,7 @@ class Map {
     string cameraFrame;
     string baseFrame;
     double future_date_transforms;
+    bool publish_6dof_pose;
 
     bool isInitializingMap;
     int frameNum;

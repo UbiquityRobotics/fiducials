@@ -1,0 +1,27 @@
+<launch>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_base"
+    args="0.035 0.145 0.14 -1.479119 -0.041544 -1.204205 base_link camera"/>
+
+  <node pkg="aruco_detect" name="aruco_detect" type="aruco_detect">
+    <param name="image_transport" value="raw" />
+    <param name="fiducial_len" value="0.145"/>
+    <remap from="/camera/" to="/camera/image/"/>
+    <remap from="/camera_info" to="/camera_info"/>
+  </node>
+
+  <node pkg="fiducial_slam" type="fiducial_slam" name="fiducial_slam">
+    <param name="map_frame" value="map"/>
+    <param name="odom_frame" value=""/>
+    <param name="base_frame" value="base_link"/>
+    <param name="future_date_transforms" value="0.0"/>
+    <param name="publish_6dof_pose" value="true"/>
+    <param name="map_file" value="/dev/null"/>
+  </node>
+
+  <test test-name="auto_init_403_test" pkg="fiducial_slam" type="auto_init_403_test">
+    <param name="image_directory" value="$(find fiducial_slam)/test/test_images/"/>
+  </test>
+
+</launch>
+
