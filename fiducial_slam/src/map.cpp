@@ -368,12 +368,24 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     double variance = 0.0;
     int numEsts = 0;
 
+    if (obs.size() == 0) {
+        return 0;
+    }
+
+    tf2::Stamped<TransformWithVariance> T_mapBase;
+    tf2::Transform T_camBase;
+
+    if (!lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, T_camBase)) {
+        return 0;
+    }
+
     for (int i=0; i<obs.size(); i++) {
         Observation &o = obs[i];
         if (fiducials.find(o.fid) != fiducials.end()) {
             const Fiducial &fid = fiducials[o.fid];
 
             tf2::Stamped<TransformWithVariance> p = fid.pose * o.T_fidCam;
+            p.setData(p * T_camBase);
             p.frame_id_ = mapFrame;
             p.stamp_ = o.T_fidCam.stamp_;
 
@@ -394,8 +406,8 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                 T_mapCam = p;
             }
             else {
-                T_mapCam.setData(averageTransforms(T_mapCam, p));
-                T_mapCam.stamp_ = p.stamp_;
+                T_mapBase.setData(averageTransforms(T_mapBase, p));
+                T_mapBase.stamp_ = p.stamp_;
             }
             numEsts++;
         }
@@ -414,26 +426,9 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                  trans.x(), trans.y(), trans.z(), variance);
     }
 
-    // Determine transform from camera to robot
-    tf2::Transform T_camBase;
-    // Use robotPose instead of camera pose to hold map to robot
-    tf2::Stamped<TransformWithVariance> basePose = T_mapCam;
-
-    if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, T_camBase)) {
-        basePose.setData(T_mapCam * T_camBase);
-        //basePose.setData(cameraTransform * cameraPose);
-
-        // New scope for logging vars
-        {
-            tf2::Vector3 c = T_mapCam.transform.getOrigin();
-            ROS_INFO("camera   %lf %lf %lf %f",
-                     c.x(), c.y(), c.z(), variance);
-
-            tf2::Vector3 trans = basePose.transform.getOrigin();
-            ROS_INFO("Pose b_l %lf %lf %lf %f",
-                     trans.x(), trans.y(), trans.z(), variance);
-        }
-     }
+   
+    tf2::Stamped<TransformWithVariance> basePose = T_mapBase;
+    T_mapCam.setData(T_mapCam * T_camBase.inverse());
 
     posePub.publish(toPose(basePose));
 
