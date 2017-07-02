@@ -154,6 +154,8 @@ class Observation {
     tf2::Vector3 position;
     double poseError;
 
+    Observation() {};
+
     Observation(int fid, const tf2::Stamped<TransformWithVariance>& camFid,
                 double ierr, double oerr);
 };
@@ -194,6 +196,7 @@ class Map {
     string baseFrame;
     double future_date_transforms;
     bool publish_6dof_pose;
+    double multiErrorThreshold;
 
     bool isInitializingMap;
     int frameNum;
