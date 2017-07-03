@@ -249,7 +249,7 @@ void Estimation::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg
         Observation obs;
         fiducial_msgs::FiducialTransform ft;
         estimatePose(fid.fiducial_id, markerObjPoints, corners, obs, ft,
-           msg->header.stamp, frameId));
+           msg->header.stamp, frameId);
 
         observations.push_back(obs);
         outMsg.transforms.push_back(ft);
@@ -260,7 +260,8 @@ void Estimation::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg
         fiducial_msgs::FiducialTransform ft;
 
         estimatePose(0, allWorldPoints, allImagePoints, obs, ft,
-           msg->header.stamp, frameId)) {
+           msg->header.stamp, frameId);
+
         observations.push_back(obs);
         outMsg.transforms.push_back(ft);
     }
