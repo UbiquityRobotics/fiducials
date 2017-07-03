@@ -43,6 +43,7 @@
 #include <fiducial_msgs/FiducialTransform.h>
 #include <fiducial_msgs/FiducialTransformArray.h>
 
+#include <map>
 #include <list>
 #include <string>
 
@@ -64,6 +65,9 @@ class Estimation {
 
     int frameNum;
     string frameId;
+
+    std::map<int, cv::Vec3d> rvecHistory;
+    std::map<int, cv::Vec3d> tvecHistory;
 
     void estimatePose(int fid, const vector<Point3f> &worldPoints,
                       const vector<Point2f> &imagePoints,

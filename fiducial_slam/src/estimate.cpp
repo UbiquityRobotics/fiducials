@@ -111,11 +111,17 @@ void Estimation::estimatePose(int fid, const vector<Point3f> &worldPoints,
                               const vector<Point2f> &imagePoints,
                               Observation &obs, fiducial_msgs::FiducialTransform &ft,
                               const ros::Time& stamp, const string& frame)
-
 {
     Vec3d rvec, tvec;
+    bool haveHistory = false;
 
-    cv::solvePnP(worldPoints, imagePoints, cameraMatrix, distortionCoeffs, rvec, tvec);
+    if (rvecHistory.find(fid) != rvecHistory.end()) {
+        rvec = rvecHistory[fid];
+        tvec = tvecHistory[fid];
+        haveHistory = true;
+    }
+
+    cv::solvePnP(worldPoints, imagePoints, cameraMatrix, distortionCoeffs, rvec, tvec, haveHistory);
 
     double reprojectionError =
           getReprojectionError(worldPoints, imagePoints, rvec, tvec);
@@ -143,6 +149,8 @@ void Estimation::estimatePose(int fid, const vector<Point3f> &worldPoints,
                       reprojectionError,
                       objectError);
 
+    rvecHistory[fid] = rvec;
+    tvecHistory[fid] = tvec;
     ft.fiducial_id = fid;
 
     ft.transform.translation.x = tvec[0];
@@ -241,15 +249,10 @@ void Estimation::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg
         Observation obs;
         fiducial_msgs::FiducialTransform ft;
         estimatePose(fid.fiducial_id, markerObjPoints, corners, obs, ft,
-           msg->header.stamp, frameId);
+           msg->header.stamp, frameId));
 
         observations.push_back(obs);
         outMsg.transforms.push_back(ft);
-
-/*
-        aruco::drawAxis(cv_ptr->image, cameraMatrix, distortionCoeffs,
-                        rvecs, tvecs, fiducialLen);
-*/
     }
 
     if (allWorldPoints.size() > 0) {
@@ -257,8 +260,7 @@ void Estimation::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg
         fiducial_msgs::FiducialTransform ft;
 
         estimatePose(0, allWorldPoints, allImagePoints, obs, ft,
-           msg->header.stamp, frameId);
-
+           msg->header.stamp, frameId)) {
         observations.push_back(obs);
         outMsg.transforms.push_back(ft);
     }
