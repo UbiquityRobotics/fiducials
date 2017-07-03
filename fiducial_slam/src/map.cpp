@@ -190,7 +190,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
     // threshold of object error for using multi-fidicial pose
     // set -ve to never use
-    nh.param<double>("multi_error_theshold", multiErrorThreshold, 0.01);
+    nh.param<double>("multi_error_theshold", multiErrorThreshold, 0.1);
 
     nh.param<std::string>("map_file", mapFilename,
         string(getenv("HOME")) + "/.ros/slam/map.txt");
@@ -339,8 +339,11 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             T_fid0Cam = o.T_fidCam;
 
             tf2::Vector3 t = T_fid0Cam.transform.getOrigin();
-            ROS_INFO("Pose MUL %lf %lf %lf %lf",
-              t.x(), t.y(), t.z(), T_fid0Cam.variance);
+            double r, p, y;
+            T_fid0Cam.transform.getBasis().getRPY(r, p, y);
+
+            ROS_INFO("Pose MUL %lf %lf %lf %lf %lf %lf %lf",
+              t.x(), t.y(), t.z(), r, p, y, T_fid0Cam.variance);
 
             if (T_fid0Cam.variance < multiErrorThreshold) {
                 useMulti = true;
@@ -399,12 +402,17 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     // New scope for logging vars
     {
         tf2::Vector3 trans = T_mapCam.transform.getOrigin();
-        ROS_INFO("Pose ALL %lf %lf %lf %f",
-                 trans.x(), trans.y(), trans.z(), T_mapCam.variance);
+        double r, p, y;
+        T_mapCam.transform.getBasis().getRPY(r, p, y);
+        ROS_INFO("Pose ALL %lf %lf %lf %lf %lf %lf %f",
+                 trans.x(), trans.y(), trans.z(), r, p, y, T_mapCam.variance);
     }
     if (useMulti) {
         T_mapCam = T_fid0Cam; 
-    };
+    }
+    else if (multiErrorThreshold > 0) {
+        return 0;
+     }
 
     // Determine transform from camera to robot
     tf2::Transform T_camBase;
