@@ -410,9 +410,6 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     if (useMulti) {
         T_mapCam = T_fid0Cam; 
     }
-    else if (multiErrorThreshold > 0) {
-        return 0;
-     }
 
     // Determine transform from camera to robot
     tf2::Transform T_camBase;
