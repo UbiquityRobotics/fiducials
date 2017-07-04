@@ -62,6 +62,7 @@ class Estimation {
     bool haveCaminfo;
 
     double fiducialLen;
+    double errorThreshold;
 
     int frameNum;
     string frameId;
@@ -88,6 +89,7 @@ class Estimation {
                        fiducial_msgs::FiducialTransformArray &outMsg);
 
     void setFiducialLen(double fiducialLen) { this->fiducialLen = fiducialLen; };
+    void setErrorThreshold(double errorThreshold) { this->errorThreshold = errorThreshold; };
 };
 
 #endif

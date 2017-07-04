@@ -149,8 +149,11 @@ void Estimation::estimatePose(int fid, const vector<Point3f> &worldPoints,
                       reprojectionError,
                       objectError);
 
-    rvecHistory[fid] = rvec;
-    tvecHistory[fid] = tvec;
+    if (reprojectionError < errorThreshold) {
+        rvecHistory[fid] = rvec;
+        tvecHistory[fid] = tvec;
+    }
+
     ft.fiducial_id = fid;
 
     ft.transform.translation.x = tvec[0];

@@ -140,9 +140,12 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh),
     nh.param("do_pose_estimation", doPoseEstimation, false);
 
     if (doPoseEstimation) {
-        double fiducialLen;
+        double fiducialLen, errorThreshold;
         nh.param<double>("fiducial_len", fiducialLen, 0.14);
+        nh.param<double>("pose_error_theshold", errorThreshold, 1.0);
+
         estimator.setFiducialLen(fiducialLen);
+        estimator.setErrorThreshold(errorThreshold);
 
         verticesSub = nh.subscribe("/fiducial_vertices", 1,
                              &FiducialSlam::verticesCallback, this); 
