@@ -2,6 +2,16 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Install launch files and fiducials.rviz
+* add test of auto init
+* Print out 6DOF camera pose
+* Fix multiplication order bug in autoInit()
+* Renamed some variables to be more clear
+* Add publish_6dof_pose param to disable squashing of estimated robot pose
+* Contributors: Jim Vaughan
+
 0.7.2 (2017-05-24)
 ------------------
 * Using std::isnan() to stop Debian Jessie build errors
