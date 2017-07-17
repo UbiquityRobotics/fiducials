@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.3 (2017-07-16)
+------------------
 * Install launch files and fiducials.rviz
 * add test of auto init
 * Print out 6DOF camera pose
