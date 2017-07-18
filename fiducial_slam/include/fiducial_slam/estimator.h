@@ -53,7 +53,7 @@
 
 using namespace std;
 
-class Estimation {
+class Estimator {
     cv::Mat cameraMatrix;
     cv::Mat distortionCoeffs;
 
@@ -80,7 +80,7 @@ class Estimation {
                                 const Vec3d &rvec, const Vec3d &tvec);
 
   public:
-    Estimation(Map &fiducialMap);
+    Estimator(Map &fiducialMap);
 
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
 

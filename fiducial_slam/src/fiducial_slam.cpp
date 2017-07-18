@@ -51,7 +51,7 @@
 #include "fiducial_msgs/FiducialTransformArray.h"
 
 #include "fiducial_slam/map.h"
-#include "fiducial_slam/estimate.h"
+#include "fiducial_slam/estimator.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/calib3d.hpp>
@@ -77,7 +77,7 @@ class FiducialSlam {
     void verticesCallback(const fiducial_msgs::FiducialArray::ConstPtr &msg);
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
 
-    Estimation estimator;
+    Estimator estimator;
 
   public:
     Map fiducialMap;

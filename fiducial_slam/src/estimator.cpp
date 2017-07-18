@@ -31,7 +31,7 @@
  */
 
 #include "fiducial_slam/map.h"
-#include "fiducial_slam/estimate.h"
+#include "fiducial_slam/estimator.h"
 
 /**
   * @brief Return object points for the system centered in a single marker, given the marker length
@@ -87,7 +87,7 @@ static double calcFiducialArea(const std::vector<cv::Point2f> &pts)
 }
 
 // estimate reprojection error
-double Estimation::getReprojectionError(const vector<Point3f> &objectPoints,
+double Estimator::getReprojectionError(const vector<Point3f> &objectPoints,
                             const vector<Point2f> &imagePoints,
                             const Vec3d &rvec, const Vec3d &tvec) {
 
@@ -107,7 +107,7 @@ double Estimation::getReprojectionError(const vector<Point3f> &objectPoints,
 }
 
 
-void Estimation::estimatePose(int fid, const vector<Point3f> &worldPoints,
+void Estimator::estimatePose(int fid, const vector<Point3f> &worldPoints,
                               const vector<Point2f> &imagePoints,
                               Observation &obs, fiducial_msgs::FiducialTransform &ft,
                               const ros::Time& stamp, const string& frame)
@@ -171,7 +171,7 @@ void Estimation::estimatePose(int fid, const vector<Point3f> &worldPoints,
 }
 
 
-Estimation::Estimation(Map &fiducialMap): map(fiducialMap)
+Estimator::Estimator(Map &fiducialMap): map(fiducialMap)
 {
     haveCaminfo = false;
 
@@ -183,7 +183,7 @@ Estimation::Estimation(Map &fiducialMap): map(fiducialMap)
 }
 
 
-void Estimation::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
+void Estimator::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
 {
     if (haveCaminfo) {
         return;
@@ -204,7 +204,7 @@ void Estimation::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
 }
 
 
-void Estimation::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
+void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
                               vector<Observation> &observations,
                               fiducial_msgs::FiducialTransformArray &outMsg)
 {
