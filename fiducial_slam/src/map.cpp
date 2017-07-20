@@ -188,6 +188,9 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
 
+    // threshold of object error for using multi-fidicial pose
+    // set -ve to never use
+    nh.param<double>("multi_error_theshold", multiErrorThreshold, 0.1);
 
     nh.param<std::string>("map_file", mapFilename,
         string(getenv("HOME")) + "/.ros/slam/map.txt");
@@ -254,6 +257,9 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
 
     for (int i=0; i<obs.size(); i++) {
         const Observation &o = obs[i];
+        if (o.fid == 0) {
+            continue;
+        }
 
         // This should take into account the variances from both
         tf2::Stamped<TransformWithVariance> T_mapFid = T_mapCam * o.T_camFid;
@@ -321,12 +327,29 @@ bool Map::lookupTransform(const std::string &from, const std::string &to,
 int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                     tf2::Stamped<TransformWithVariance>& T_mapCam)
 {
-    double variance = 0.0;
     int numEsts = 0;
+    tf2::Stamped<TransformWithVariance> T_fid0Cam;
+    bool useMulti = false;
 
     for (int i=0; i<obs.size(); i++) {
         Observation &o = obs[i];
-        if (fiducials.find(o.fid) != fiducials.end()) {
+
+        if (o.fid == 0) {
+            // virtual fiducial 0 is at the origin
+            T_fid0Cam = o.T_fidCam;
+
+            tf2::Vector3 t = T_fid0Cam.transform.getOrigin();
+            double r, p, y;
+            T_fid0Cam.transform.getBasis().getRPY(r, p, y);
+
+            ROS_INFO("Pose MUL %lf %lf %lf %lf %lf %lf %lf",
+              t.x(), t.y(), t.z(), r, p, y, T_fid0Cam.variance);
+
+            if (T_fid0Cam.variance < multiErrorThreshold) {
+                useMulti = true;
+            }
+        }
+        else if (fiducials.find(o.fid) != fiducials.end()) {
             const Fiducial &fid = fiducials[o.fid];
 
             tf2::Stamped<TransformWithVariance> p = fid.pose * o.T_fidCam;
@@ -375,11 +398,17 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
         return numEsts;
     }
 
+
     // New scope for logging vars
     {
         tf2::Vector3 trans = T_mapCam.transform.getOrigin();
-        ROS_INFO("Pose all %lf %lf %lf %f",
-                 trans.x(), trans.y(), trans.z(), variance);
+        double r, p, y;
+        T_mapCam.transform.getBasis().getRPY(r, p, y);
+        ROS_INFO("Pose ALL %lf %lf %lf %lf %lf %lf %f",
+                 trans.x(), trans.y(), trans.z(), r, p, y, T_mapCam.variance);
+    }
+    if (useMulti) {
+        T_mapCam = T_fid0Cam; 
     }
 
     // Determine transform from camera to robot
@@ -395,11 +424,11 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
         {
             tf2::Vector3 c = T_mapCam.transform.getOrigin();
             ROS_INFO("camera   %lf %lf %lf %f",
-                     c.x(), c.y(), c.z(), variance);
+                     c.x(), c.y(), c.z(), T_mapCam.variance);
 
             tf2::Vector3 trans = basePose.transform.getOrigin();
             ROS_INFO("Pose b_l %lf %lf %lf %f",
-                     trans.x(), trans.y(), trans.z(), variance);
+                     trans.x(), trans.y(), trans.z(), basePose.variance);
         }
      }
 
@@ -418,8 +447,8 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
              outFrame = odomFrame;
 
              tf2::Vector3 c = odomTransform.getOrigin();
-             ROS_INFO("odom   %lf %lf %lf %f",
-                c.x(), c.y(), c.z(), variance);
+             ROS_INFO("odom   %lf %lf %lf",
+                c.x(), c.y(), c.z());
          }
     }
  
@@ -640,6 +669,9 @@ void Map::publishMap()
 
     for (it = fiducials.begin(); it != fiducials.end(); it++) {
         const Fiducial &f = it->second;
+        if (f.id == 0) {
+            continue;
+        }
 
         fiducial_msgs::FiducialMapEntry fme;
         fme.fiducial_id = f.id;

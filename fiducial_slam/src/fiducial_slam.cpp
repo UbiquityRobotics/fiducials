@@ -51,6 +51,7 @@
 #include "fiducial_msgs/FiducialTransformArray.h"
 
 #include "fiducial_slam/map.h"
+#include "fiducial_slam/estimator.h"
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/calib3d.hpp>
@@ -67,7 +68,16 @@ class FiducialSlam {
   private:
     ros::Subscriber ft_sub;
 
+    ros::Subscriber verticesSub;
+    ros::Subscriber cameraInfoSub;
+    ros::Publisher ftPub;
+
     void transformCallback(const fiducial_msgs::FiducialTransformArray::ConstPtr &msg);
+
+    void verticesCallback(const fiducial_msgs::FiducialArray::ConstPtr &msg);
+    void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
+
+    Estimator estimator;
 
   public:
     Map fiducialMap;
@@ -77,7 +87,7 @@ class FiducialSlam {
 
 void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray::ConstPtr& msg)
 {
- 
+
     vector<Observation> observations;
 
     for (int i=0; i<msg->transforms.size(); i++) {
@@ -86,7 +96,7 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
         tf2::Vector3 tvec(ft.transform.translation.x,
                           ft.transform.translation.y,
                           ft.transform.translation.z);
- 
+
         tf2::Quaternion q(ft.transform.rotation.x,
                           ft.transform.rotation.y,
                           ft.transform.rotation.z,
@@ -96,18 +106,61 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
                         tf2::Stamped<TransformWithVariance>(TransformWithVariance(
                                 ft.transform, ft.object_error), msg->header.stamp, msg->header.frame_id),
                         ft.image_error,
-                        ft.object_error); 
+                        ft.object_error);
         observations.push_back(obs);
     }
 
     fiducialMap.update(observations, msg->header.stamp);
 }
 
-FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh)
+
+void FiducialSlam::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg)
 {
-    ft_sub = nh.subscribe("/fiducial_transforms", 1, 
-                          &FiducialSlam::transformCallback, this); 
-    
+    estimator.camInfoCallback(msg);
+}
+
+
+void FiducialSlam::verticesCallback(const fiducial_msgs::FiducialArray::ConstPtr& msg)
+{
+    vector<Observation> observations;
+    fiducial_msgs::FiducialTransformArray fta;
+
+    estimator.estimatePoses(msg, observations, fta);
+
+    fiducialMap.update(observations, msg->header.stamp);
+    ftPub.publish(fta);
+}
+
+
+FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh),
+    estimator(fiducialMap)
+{
+    bool doPoseEstimation;
+
+    nh.param("do_pose_estimation", doPoseEstimation, false);
+
+    if (doPoseEstimation) {
+        double fiducialLen, errorThreshold;
+        nh.param<double>("fiducial_len", fiducialLen, 0.14);
+        nh.param<double>("pose_error_theshold", errorThreshold, 1.0);
+
+        estimator.setFiducialLen(fiducialLen);
+        estimator.setErrorThreshold(errorThreshold);
+
+        verticesSub = nh.subscribe("/fiducial_vertices", 1,
+                             &FiducialSlam::verticesCallback, this); 
+
+        cameraInfoSub = nh.subscribe("/camera_info", 1,
+                              &FiducialSlam::camInfoCallback, this);
+
+        ftPub = ros::Publisher(nh.advertise
+           <fiducial_msgs::FiducialTransformArray>("/fiducial_transforms", 1));
+    }
+    else {
+        ft_sub = nh.subscribe("/fiducial_transforms", 1,
+                              &FiducialSlam::transformCallback, this);
+    }
+
     ROS_INFO("Fiducial Slam ready");
 }
 

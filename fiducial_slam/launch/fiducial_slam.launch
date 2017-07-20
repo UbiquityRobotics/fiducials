@@ -2,13 +2,15 @@
    Run the fiducial_slam node
 -->
 <launch>
+  <arg name="camera" default="/camera"/>
   <arg name="map_frame" default="map"/>
   <arg name="odom_frame" default="odom"/>
   <arg name="base_frame" default="base_link"/>
   <arg name="publish_tf" default="true"/>
   <arg name="future_date_transforms" default="0.0"/>
   <arg name="publish_6dof_pose" default="false"/>
-
+  <arg name="fiducial_len" default="0.14"/>
+  <arg name="do_pose_estimation" default="false"/>
 
   <node type="fiducial_slam" pkg="fiducial_slam" output="screen" 
     name="fiducial_slam">
@@ -18,5 +20,9 @@
     <param name="base_frame" value="$(arg base_frame)" />
     <param name="future_date_transforms" value="$(arg future_date_transforms)" />
     <param name="publish_6dof_pose" value="$(arg publish_6dof_pose)" />
+    <param name="do_pose_estimation" value="$(arg do_pose_estimation)"/>
+    <param name="fiducial_len" value="$(arg fiducial_len)"/>
+    <remap from="/camera_info" to="$(arg camera)/camera_info"/>
+
   </node>
 </launch>

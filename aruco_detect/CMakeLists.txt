@@ -20,25 +20,22 @@ find_package(OpenCV REQUIRED)
 
 generate_dynamic_reconfigure_options(cfg/DetectorParams.cfg)
 
-catkin_package(INCLUDE_DIRS include
-  DEPENDS OpenCV)
+catkin_package(INCLUDE_DIRS DEPENDS OpenCV)
 
 ###########
 ## Build ##
 ###########
 
-include_directories(${catkin_INCLUDE_DIRS} include)
+include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(aruco_detect src/aruco_detect.cpp)
-add_executable(test_board src/test_board.cpp)
 add_executable(create_marker src/create_marker.cpp)
 
 add_dependencies(aruco_detect ${${PROJECT_NAME}_EXPORTED_TARGETS}
                  ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(aruco_detect ${catkin_LIBRARIES} ${OpenCV_LIBS})
-target_link_libraries(test_board ${catkin_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries(create_marker ${OpenCV_LIBS})
 
 #############
