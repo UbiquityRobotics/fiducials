@@ -92,6 +92,10 @@ class FiducialsNode {
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
     void configCallback(aruco_detect::DetectorParamsConfig &config, uint32_t level);
 
+    void processImage(const sensor_msgs::ImageConstPtr &msg);
+
+    boost::thread* arucoThread;
+    volatile bool processingImage;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
@@ -254,6 +258,23 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image %d", msg->header.seq);
+    if (!processingImage) {
+        processingImage = true;
+        if (arucoThread) {
+	    arucoThread->join();
+	    delete arucoThread;
+            arucoThread = NULL;
+      }
+      processingImage = true;
+      arucoThread = new boost::thread(boost::bind(&FiducialsNode::processImage, this, msg));
+    }
+    else {
+        ROS_INFO("Dropping image");
+    }
+}
+
+void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
+{
     frameNum++;
 
     cv_bridge::CvImagePtr cv_ptr;
@@ -366,6 +387,8 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 {
     frameNum = 0;
+    arucoThread = NULL;
+    processingImage = false;
 
     // Camera intrinsics
     cameraMatrix = cv::Mat::zeros(3, 3, CV_64F);
