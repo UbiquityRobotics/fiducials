@@ -46,6 +46,8 @@
 #include <sensor_msgs/image_encodings.h>
 #include <dynamic_reconfigure/server.h>
 
+#include "aruco_detect/feature_tracker.h"
+
 #include "fiducial_msgs/Fiducial.h"
 #include "fiducial_msgs/FiducialArray.h"
 #include "fiducial_msgs/FiducialTransform.h"
@@ -84,6 +86,7 @@ class FiducialsNode {
     std::string frameId;
 
     image_transport::Publisher image_pub;
+    image_transport::Publisher tracking_pub;
 
     cv::Ptr<aruco::DetectorParameters> detectorParams;
     cv::Ptr<aruco::Dictionary> dictionary;
@@ -92,12 +95,15 @@ class FiducialsNode {
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
     void configCallback(aruco_detect::DetectorParamsConfig &config, uint32_t level);
 
-    void processImage(const sensor_msgs::ImageConstPtr &msg);
+    void findMarkers(const sensor_msgs::ImageConstPtr &msg);
+    void trackMarkers(const sensor_msgs::ImageConstPtr &msg);
 
     boost::thread* arucoThread;
-    volatile bool processingImage;
+    volatile bool findingMarkers;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
+
+    FeatureTracker tracker;
 
   public:
     FiducialsNode(ros::NodeHandle &nh);
@@ -258,22 +264,39 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image %d", msg->header.seq);
-    if (!processingImage) {
-        processingImage = true;
+    if (!findingMarkers) {
+        findingMarkers = true;
         if (arucoThread) {
 	    arucoThread->join();
 	    delete arucoThread;
             arucoThread = NULL;
-      }
-      processingImage = true;
-      arucoThread = new boost::thread(boost::bind(&FiducialsNode::processImage, this, msg));
+        }
+        findingMarkers = true;
+        arucoThread = new boost::thread(boost::bind(&FiducialsNode::findMarkers, this, msg));
     }
     else {
-        ROS_INFO("Dropping image");
+        trackMarkers(msg);
     }
 }
 
-void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
+void FiducialsNode::trackMarkers(const sensor_msgs::ImageConstPtr & msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+
+    try {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        tracker.trackObjects(cv_ptr->image);
+	tracking_pub.publish(cv_ptr->toImageMsg());
+    }
+    catch(cv_bridge::Exception & e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+    }
+    catch(cv::Exception & e) {
+        ROS_ERROR("cv exception: %s", e.what());
+    }
+}
+
+void FiducialsNode::findMarkers(const sensor_msgs::ImageConstPtr & msg)
 {
     frameNum++;
 
@@ -295,6 +318,7 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
         vector <int>  ids;
         vector <vector <Point2f> > corners, rejected;
         vector <Vec3d>  rvecs, tvecs;
+        map <int, Rect> masks;
 
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
         ROS_INFO("Detected %d markers", (int)ids.size());
@@ -312,6 +336,35 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
             fid.x3 = corners[i][3].x;
             fid.y3 = corners[i][3].y;
             fva.fiducials.push_back(fid);
+
+            // create masks for tracking
+            int xmin = cv_ptr->image.cols-1;
+            int xmax = 0;
+            int ymin = cv_ptr->image.rows-1;
+            int ymax = 0;
+
+            for (int j=0; j<4; j++) {
+                if (corners[i][j].x < xmin) {
+                    xmin = corners[i][j].x;
+                }
+                if (corners[i][j].x > xmax) {
+                    xmax = corners[i][j].x;
+                }
+                if (corners[i][j].y < ymin) {
+                    ymin = corners[i][j].y;
+                }
+                if (corners[i][j].y > ymax) {
+                    ymax = corners[i][j].y;
+                }
+             }
+
+            int border = 20;
+            xmin = std::max(0, xmin - border);
+            ymin = std::max(0, ymin - border);
+            xmax = std::min(cv_ptr->image.cols-1, xmax + border);
+            ymax = std::min(cv_ptr->image.rows-1, ymax + border);
+            masks[ids[i]] = cv::Rect(xmin, ymin, xmax-xmin, ymax-ymin);
+            printf("%d rect %d %d %d %d\n", ids[i], xmin, ymin, xmax, ymax);
         }
 
         vertices_pub->publish(fva);
@@ -374,6 +427,7 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
             }
             pose_pub->publish(fta);
         }
+        tracker.findObjects(cv_ptr->image, masks);
 	image_pub.publish(cv_ptr->toImageMsg());
     }
     catch(cv_bridge::Exception & e) {
@@ -382,13 +436,14 @@ void FiducialsNode::processImage(const sensor_msgs::ImageConstPtr & msg)
     catch(cv::Exception & e) {
         ROS_ERROR("cv exception: %s", e.what());
     }
+    findingMarkers = false;
 }
 
 FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 {
     frameNum = 0;
     arucoThread = NULL;
-    processingImage = false;
+    findingMarkers = false;
 
     // Camera intrinsics
     cameraMatrix = cv::Mat::zeros(3, 3, CV_64F);
@@ -407,6 +462,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<int>("dictionary", dicno, 7);
     nh.param<bool>("do_pose_estimation", doPoseEstimation, true);
     image_pub = it.advertise("/fiducial_images", 1);
+    tracking_pub = it.advertise("/fiducial_tracking", 1);
 
     vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("/fiducial_vertices", 1));
 

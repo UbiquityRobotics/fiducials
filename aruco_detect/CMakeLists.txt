@@ -26,10 +26,10 @@ catkin_package(INCLUDE_DIRS DEPENDS OpenCV)
 ## Build ##
 ###########
 
-include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS} include)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(aruco_detect src/aruco_detect.cpp)
+add_executable(aruco_detect src/aruco_detect.cpp src/feature_tracker.cpp)
 add_executable(create_marker src/create_marker.cpp)
 
 add_dependencies(aruco_detect ${${PROJECT_NAME}_EXPORTED_TARGETS}
