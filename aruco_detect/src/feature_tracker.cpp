@@ -102,7 +102,7 @@ void FeatureTracker::trackObjects(const cv::Mat& image)
 
     printf("prev features %d age %d\n", (int)it->second.size(), age);
 
-    if (age > maxAge) {
+    if (age > maxAge || it->second.size() < 3) {
         continue;
     }
 
@@ -124,13 +124,28 @@ void FeatureTracker::trackObjects(const cv::Mat& image)
              (int)goodFeatures.size(), it->first);
 
     if (goodFeatures.size() > minFeatures) {
-      cv::Mat_<float> T = cv::estimateRigidTransform(prevGoodFeatures, goodFeatures, false);
+      cv::Mat T = cv::estimateRigidTransform(prevGoodFeatures, goodFeatures, false);
    
+      if (T.empty()) {
+        continue;
+      }
+      it->second.clear();
       std::cout<<T<<std::endl;
-      //float xt = T(2,0);
-      //float yt = T(2,1);
+     
+      float xt = T.at<double>(0,2);
+      float yt = T.at<double>(1,2);
 
-      //ROS_INFO("Object %d translation %f %f\n", it->first, xt, yt);
+      ROS_INFO("Object %d translation %f %f\n", it->first, xt, yt);
+
+      float a = T.at<double>(0,0);
+      float b = T.at<double>(0,1);
+      float c = T.at<double>(1,0);
+      float d = T.at<double>(1,1);
+
+      float scaleX = std::sqrt((a * a) + (c * c));
+      float scaleY = std::sqrt((b * b) + (d * d));
+
+      ROS_INFO("Object %d scale %f %f\n", it->first, scaleX, scaleY);
 
       it->second = goodFeatures;
     }
