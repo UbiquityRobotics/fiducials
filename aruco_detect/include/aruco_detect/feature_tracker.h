@@ -46,7 +46,7 @@ public:
   void trackObjects(const cv::Mat& image);   
 
   cv::Mat prevImage, currentImage;
-  std::map<int, std::vector<cv::Point2f>> prevFeatures, currentFeatures;
+  std::map<int, std::vector<cv::Point2f> > prevFeatures, currentFeatures;
   int frameNum;
   std::map<int, int>initialFrames;
 };

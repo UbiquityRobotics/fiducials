@@ -95,7 +95,7 @@ void FeatureTracker::trackObjects(const cv::Mat& image)
   std::vector<uchar> status;
   std::vector<float> err;
 
-  map<int, std::vector<cv::Point2f>>::iterator it;
+  map<int, std::vector<cv::Point2f> >::iterator it;
   for (it = prevFeatures.begin(); it != prevFeatures.end(); it++) {
     int age = frameNum - initialFrames[it->first];
     std::vector<cv::Point2f> features = it->second;
