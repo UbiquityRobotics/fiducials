@@ -98,6 +98,7 @@ class FiducialsNode {
     void findMarkers(const sensor_msgs::ImageConstPtr &msg);
     void trackMarkers(const sensor_msgs::ImageConstPtr &msg);
 
+    std::map<int, fiducial_msgs::FiducialTransform> trackedFiducials;
     boost::thread* arucoThread;
     volatile bool findingMarkers;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
@@ -285,8 +286,50 @@ void FiducialsNode::trackMarkers(const sensor_msgs::ImageConstPtr & msg)
 
     try {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        tracker.trackObjects(cv_ptr->image);
+        map<int, cv::Mat>shifts;
+        fiducial_msgs::FiducialTransformArray fta;
+        fta.header.stamp = msg->header.stamp;
+        fta.header.frame_id = frameId;
+        fta.image_seq = msg->header.seq;
+
+        double hfov = 2.0 * atan2(cv_ptr->image.cols, 2.0 * cameraMatrix.at<double>(0, 1));
+        double vfov = 2.0 * atan2(cv_ptr->image.rows, 2.0 * cameraMatrix.at<double>(0, 1));
+
+        tracker.trackObjects(cv_ptr->image, shifts);
 	tracking_pub.publish(cv_ptr->toImageMsg());
+
+        map<int, cv::Mat>::iterator its;
+        for (its = shifts.begin(); its != shifts.end(); its++) {
+          cv::Mat& T = its->second;
+
+          float xt = T.at<double>(0,2);
+          float yt = T.at<double>(1,2);
+
+          ROS_INFO("Object %d translation %f %f\n", its->first, xt, yt);
+
+          float a = T.at<double>(0,0);
+          float b = T.at<double>(0,1);
+          float c = T.at<double>(1,0);
+          float d = T.at<double>(1,1);
+
+          float scaleX = std::sqrt((a * a) + (c * c));
+          float scaleY = std::sqrt((b * b) + (d * d));
+
+          ROS_INFO("Object %d scale %f %f\n", its->first, scaleX, scaleY);
+
+          fiducial_msgs::FiducialTransform& ft = trackedFiducials[its->first];
+          ft.detected = false;
+
+          float xangle = atan2(ft.transform.translation.x, ft.transform.translation.z) + hfov * xt / cv_ptr->image.cols;
+          float yangle = atan2(ft.transform.translation.y, ft.transform.translation.z) + vfov * xt / cv_ptr->image.rows;
+
+          ft.transform.translation.x = tan(xangle) * ft.transform.translation.z;
+          ft.transform.translation.y = tan(yangle) * ft.transform.translation.z;
+          fta.transforms.push_back(ft);
+ 
+          //TODO: scale
+      }
+      pose_pub->publish(fta);
     }
     catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -423,6 +466,8 @@ void FiducialsNode::findMarkers(const sensor_msgs::ImageConstPtr & msg)
                     (reprojectionError[i] / dist(corners[i][0], corners[i][2])) *
                     (norm(tvecs[i]) / fiducial_len);
 
+                ft.detected = true;
+                trackedFiducials[ids[i]] = ft;
                 fta.transforms.push_back(ft);
             }
             pose_pub->publish(fta);
@@ -475,6 +520,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
     caminfo_sub = nh.subscribe("/camera_info", 1,
 			       &FiducialsNode::camInfoCallback, this);
+
 
     callbackType = boost::bind(&FiducialsNode::configCallback, this, _1, _2);
     configServer.setCallback(callbackType);

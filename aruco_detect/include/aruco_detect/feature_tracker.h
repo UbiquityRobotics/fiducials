@@ -43,7 +43,7 @@ public:
   FeatureTracker();
 
   void findObjects(const cv::Mat& image, std::map<int, cv::Rect>& objects);   
-  void trackObjects(const cv::Mat& image);   
+  void trackObjects(const cv::Mat& image, std::map<int, cv::Mat>& shifts);   
 
   cv::Mat prevImage, currentImage;
   std::map<int, std::vector<cv::Point2f> > prevFeatures, currentFeatures;

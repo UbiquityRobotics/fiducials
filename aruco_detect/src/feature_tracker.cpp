@@ -83,7 +83,7 @@ void FeatureTracker::findObjects(const cv::Mat& image,
   prevImage = currentImage.clone();
 }
 
-void FeatureTracker::trackObjects(const cv::Mat& image)
+void FeatureTracker::trackObjects(const cv::Mat& image, map<int, cv::Mat>& shifts)
 {
   // TODO: params
   int maxAge = 20;
@@ -99,8 +99,6 @@ void FeatureTracker::trackObjects(const cv::Mat& image)
   for (it = prevFeatures.begin(); it != prevFeatures.end(); it++) {
     int age = frameNum - initialFrames[it->first];
     std::vector<cv::Point2f> features = it->second;
-
-    printf("prev features %d age %d\n", (int)it->second.size(), age);
 
     if (age > maxAge || it->second.size() < 3) {
         continue;
@@ -127,25 +125,12 @@ void FeatureTracker::trackObjects(const cv::Mat& image)
       cv::Mat T = cv::estimateRigidTransform(prevGoodFeatures, goodFeatures, false);
    
       if (T.empty()) {
+        ROS_INFO("Giving up on object %d\n", it->first);
+        it->second.clear();
         continue;
       }
-      it->second.clear();
-      std::cout<<T<<std::endl;
-     
-      float xt = T.at<double>(0,2);
-      float yt = T.at<double>(1,2);
 
-      ROS_INFO("Object %d translation %f %f\n", it->first, xt, yt);
-
-      float a = T.at<double>(0,0);
-      float b = T.at<double>(0,1);
-      float c = T.at<double>(1,0);
-      float d = T.at<double>(1,1);
-
-      float scaleX = std::sqrt((a * a) + (c * c));
-      float scaleY = std::sqrt((b * b) + (d * d));
-
-      ROS_INFO("Object %d scale %f %f\n", it->first, scaleX, scaleY);
+      shifts[it->first] = T;
 
       it->second = goodFeatures;
     }
