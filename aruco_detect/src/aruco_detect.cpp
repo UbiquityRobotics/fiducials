@@ -99,8 +99,12 @@ class FiducialsNode {
     void trackMarkers(const sensor_msgs::ImageConstPtr &msg);
 
     std::map<int, fiducial_msgs::FiducialTransform> trackedFiducials;
+
     boost::thread* arucoThread;
+    boost::thread* trackingThread;
     volatile bool findingMarkers;
+    volatile bool trackingMarkers;
+
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
@@ -266,17 +270,29 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     ROS_INFO("Got image %d", msg->header.seq);
     if (!findingMarkers) {
-        findingMarkers = true;
-        if (arucoThread) {
-	    arucoThread->join();
-	    delete arucoThread;
-            arucoThread = NULL;
-        }
-        findingMarkers = true;
-        arucoThread = new boost::thread(boost::bind(&FiducialsNode::findMarkers, this, msg));
+      if (arucoThread) {
+        arucoThread->join();
+        delete arucoThread;
+        arucoThread = NULL;
+      }
+      findingMarkers = true;
+      arucoThread = 
+          new boost::thread(boost::bind(&FiducialsNode::findMarkers,
+                                        this, msg));
+    }
+    else if (!trackingMarkers) {
+      if (trackingThread) {
+        trackingThread->join();
+        delete trackingThread;
+        trackingThread = NULL;  
+      }
+      trackingMarkers = true;
+      trackingThread = 
+         new boost::thread(boost::bind(&FiducialsNode::trackMarkers,
+                                        this, msg));
     }
     else {
-        trackMarkers(msg);
+      ROS_INFO("Skipping frame\n");
     }
 }
 
@@ -342,6 +358,7 @@ void FiducialsNode::trackMarkers(const sensor_msgs::ImageConstPtr & msg)
     catch(cv::Exception & e) {
         ROS_ERROR("cv exception: %s", e.what());
     }
+    trackingMarkers = false;
 }
 
 void FiducialsNode::findMarkers(const sensor_msgs::ImageConstPtr & msg)
@@ -498,7 +515,9 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 {
     frameNum = 0;
     arucoThread = NULL;
+    trackingThread = NULL;
     findingMarkers = false;
+    trackingMarkers = false;
 
     // Camera intrinsics
     cameraMatrix = cv::Mat::zeros(3, 3, CV_64F);

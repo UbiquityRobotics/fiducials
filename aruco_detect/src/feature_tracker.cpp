@@ -47,16 +47,23 @@ void FeatureTracker::findObjects(const cv::Mat& image,
                                  std::map<int, cv::Rect>& objects)
 {
   // TODO: make these params
-  int maxCount = 300;
-  double quality = 0.01;
+  int maxCount = 10;
+  double quality = 0.1;
   double minDist = 5.;
   int blockSize = 3;
   bool useHarrisDetector = false;
   double k = 0.04;
 
   frameNum++;
+  ros::Time startTime;
+  startTime = ros::Time::now();
 
+  if (objects.size() == 0) {
+    return;
+  }
   cvtColor(image, currentImage, cv::COLOR_RGB2GRAY);
+
+  ROS_INFO("cvtColor in %f seconds\n", (ros::Time::now() - startTime).toSec());
 
   map<int, cv::Rect>::iterator it;
   for (it = objects.begin(); it != objects.end(); it++) {
@@ -65,10 +72,14 @@ void FeatureTracker::findObjects(const cv::Mat& image,
     roi = Scalar(255, 255, 255);
     
     std::vector<cv::Point2f> features;
+
+    startTime = ros::Time::now();
      
     cv::goodFeaturesToTrack(currentImage, features, maxCount, 
                             quality, minDist, mask, blockSize, 
                             useHarrisDetector, k);
+
+    ROS_INFO("goodFeatures in %f seconds\n", (ros::Time::now() - startTime).toSec());
 
     ROS_INFO("Found %d features for object %d\n", 
              (int)features.size(), it->first);
@@ -88,14 +99,35 @@ void FeatureTracker::trackObjects(const cv::Mat& image, map<int, cv::Mat>& shift
   // TODO: params
   int maxAge = 20;
   int minFeatures = 10;
+  cv::Size winSize(15, 15);
+  int maxLevel = 1;
+  cv::TermCriteria criteria = 
+    TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 10, 0.1);
+  int flags = 0;
+  double minEig = 1e4;
+  
 
   frameNum++;
+
+  ros::Time startTime;
+  startTime = ros::Time::now();
+
+  int count = 0; 
+  map<int, std::vector<cv::Point2f> >::iterator it;
+  for (it = prevFeatures.begin(); it != prevFeatures.end(); it++) {
+    count += it->second.size();
+  }
+  if (count == 0) {
+    return;
+  }
+
   cvtColor(image, currentImage, cv::COLOR_RGB2GRAY);
+
+  ROS_INFO("cvtColor in %f seconds\n", (ros::Time::now() - startTime).toSec());
 
   std::vector<uchar> status;
   std::vector<float> err;
 
-  map<int, std::vector<cv::Point2f> >::iterator it;
   for (it = prevFeatures.begin(); it != prevFeatures.end(); it++) {
     int age = frameNum - initialFrames[it->first];
     std::vector<cv::Point2f> features = it->second;
@@ -104,10 +136,15 @@ void FeatureTracker::trackObjects(const cv::Mat& image, map<int, cv::Mat>& shift
         continue;
     }
 
-    cv::calcOpticalFlowPyrLK(prevImage, currentImage,
-                             it->second, features,
-                             status, err);
+    startTime = ros::Time::now();
+
+    features = it->second;
+    cv::calcOpticalFlowPyrLK(prevImage, currentImage, it->second, features,
+                             status, err, winSize, maxLevel, criteria, flags,
+                             minEig);
  
+    ROS_INFO("LKFlow in %f seconds\n", (ros::Time::now() - startTime).toSec());
+
     std::vector<cv::Point2f> goodFeatures;
     std::vector<cv::Point2f> prevGoodFeatures;
     for (int i = 0; i<features.size(); i++) {
@@ -125,8 +162,12 @@ void FeatureTracker::trackObjects(const cv::Mat& image, map<int, cv::Mat>& shift
              (int)goodFeatures.size(), it->first);
 
     if (goodFeatures.size() > minFeatures) {
+      startTime = ros::Time::now();
+
       cv::Mat T = cv::estimateRigidTransform(prevGoodFeatures, goodFeatures, false);
    
+      ROS_INFO("RigidTransform in %f seconds\n", (ros::Time::now() - startTime).toSec());
+
       if (T.empty()) {
         ROS_INFO("Giving up on object %d\n", it->first);
         it->second.clear();
