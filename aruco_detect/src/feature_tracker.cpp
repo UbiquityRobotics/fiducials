@@ -47,7 +47,7 @@ void FeatureTracker::findObjects(const cv::Mat& image,
                                  std::map<int, cv::Rect>& objects)
 {
   // TODO: make these params
-  int maxCount = 30;
+  int maxCount = 300;
   double quality = 0.01;
   double minDist = 5.;
   int blockSize = 3;
@@ -115,6 +115,9 @@ void FeatureTracker::trackObjects(const cv::Mat& image, map<int, cv::Mat>& shift
         goodFeatures.push_back(features[i]);
         prevGoodFeatures.push_back(it->second[i]);
         cv::circle(image, features[i], 10, cv::Scalar(0,0,255), -1);
+      }
+      else {
+        cv::circle(image, features[i], 10, cv::Scalar(255,0,0), -1);
       }
     }
 

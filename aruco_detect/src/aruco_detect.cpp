@@ -285,6 +285,8 @@ void FiducialsNode::trackMarkers(const sensor_msgs::ImageConstPtr & msg)
     cv_bridge::CvImagePtr cv_ptr;
 
     try {
+        ros::Time startTime = ros::Time::now();
+
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         map<int, cv::Mat>shifts;
         fiducial_msgs::FiducialTransformArray fta;
@@ -330,6 +332,9 @@ void FiducialsNode::trackMarkers(const sensor_msgs::ImageConstPtr & msg)
           //TODO: scale
       }
       pose_pub->publish(fta);
+
+      ros::Time endTime = ros::Time::now();
+      ROS_INFO("Tracking in %f seconds\n", (endTime - startTime).toSec());
     }
     catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -341,6 +346,7 @@ void FiducialsNode::trackMarkers(const sensor_msgs::ImageConstPtr & msg)
 
 void FiducialsNode::findMarkers(const sensor_msgs::ImageConstPtr & msg)
 {
+    ros::Time startTime = ros::Time::now();
     frameNum++;
 
     cv_bridge::CvImagePtr cv_ptr;
@@ -481,6 +487,10 @@ void FiducialsNode::findMarkers(const sensor_msgs::ImageConstPtr & msg)
     catch(cv::Exception & e) {
         ROS_ERROR("cv exception: %s", e.what());
     }
+
+    ros::Time endTime = ros::Time::now();
+    ROS_INFO("Detection in %f seconds\n", (endTime - startTime).toSec());
+
     findingMarkers = false;
 }
 
