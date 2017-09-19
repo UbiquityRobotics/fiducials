@@ -100,6 +100,8 @@ class FiducialsNode {
 
     std::map<int, fiducial_msgs::FiducialTransform> trackedFiducials;
 
+    bool doTracking;
+
     boost::thread* arucoThread;
     boost::thread* trackingThread;
     volatile bool findingMarkers;
@@ -280,7 +282,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
           new boost::thread(boost::bind(&FiducialsNode::findMarkers,
                                         this, msg));
     }
-    else if (!trackingMarkers) {
+    else if (doTracking && !trackingMarkers) {
       if (trackingThread) {
         trackingThread->join();
         delete trackingThread;
@@ -310,8 +312,8 @@ void FiducialsNode::trackMarkers(const sensor_msgs::ImageConstPtr & msg)
         fta.header.frame_id = frameId;
         fta.image_seq = msg->header.seq;
 
-        double hfov = 2.0 * atan2(cv_ptr->image.cols, 2.0 * cameraMatrix.at<double>(0, 1));
-        double vfov = 2.0 * atan2(cv_ptr->image.rows, 2.0 * cameraMatrix.at<double>(0, 1));
+        static double hfov = 2.0 * atan2(cv_ptr->image.cols, 2.0 * cameraMatrix.at<double>(0, 1));
+        static double vfov = 2.0 * atan2(cv_ptr->image.rows, 2.0 * cameraMatrix.at<double>(0, 1));
 
         tracker.trackObjects(cv_ptr->image, shifts);
 	tracking_pub.publish(cv_ptr->toImageMsg());
@@ -511,7 +513,7 @@ void FiducialsNode::findMarkers(const sensor_msgs::ImageConstPtr & msg)
     findingMarkers = false;
 }
 
-FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
+FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh), tracker(nh)
 {
     frameNum = 0;
     arucoThread = NULL;
@@ -536,7 +538,16 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<int>("dictionary", dicno, 7);
     nh.param<bool>("do_pose_estimation", doPoseEstimation, true);
     image_pub = it.advertise("/fiducial_images", 1);
-    tracking_pub = it.advertise("/fiducial_tracking", 1);
+
+    nh.param<bool>("do_tracking", doTracking, false);
+    if (doTracking) {
+        tracking_pub = it.advertise("/fiducial_tracking", 1);
+    }
+
+    int numThreads = 0;
+    // -1 use default, 0 or 1 do everything sequentially
+    nh.param<int>("num_threads", numThreads, -1);
+    cv::setNumThreads(numThreads);
 
     vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("/fiducial_vertices", 1));
 

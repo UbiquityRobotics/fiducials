@@ -32,6 +32,7 @@
 #ifndef FEATURE_TRACKER_H
 #define FEATURE_TRACKER_H
 
+#include <ros/ros.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
 #include <opencv2/calib3d.hpp>
@@ -40,7 +41,7 @@
 
 class FeatureTracker {
 public:
-  FeatureTracker();
+  FeatureTracker(ros::NodeHandle& nh);
 
   void findObjects(const cv::Mat& image, std::map<int, cv::Rect>& objects);   
   void trackObjects(const cv::Mat& image, std::map<int, cv::Mat>& shifts);   
@@ -49,6 +50,21 @@ public:
   std::map<int, std::vector<cv::Point2f> > prevFeatures, currentFeatures;
   int frameNum;
   std::map<int, int>initialFrames;
+
+  int maxCount;
+  double quality;
+  double minDist;
+  int blockSize;
+  bool useHarrisDetector;
+  double k;
+
+  int maxAge;
+  int minFeatures;
+  int maxLevel;
+  cv::Size winSize;
+  cv::TermCriteria criteria;
+  int flags;
+  double minEig;
 };
 
 #endif

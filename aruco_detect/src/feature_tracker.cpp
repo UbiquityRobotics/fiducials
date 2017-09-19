@@ -38,22 +38,42 @@
 using namespace cv;
 using namespace std;
 
-FeatureTracker::FeatureTracker()
+FeatureTracker::FeatureTracker(ros::NodeHandle& nh)
 {
   frameNum = 0;
+
+  nh.param<int>("max_initial_features", maxCount, 10);
+  nh.param<double>("initial_feature_quality", quality, 0.1);
+  nh.param<double>("min_feature_dist", minDist, 5.0);
+  nh.param<int>("block_size", blockSize, 3);
+  nh.param<bool>("use_harris_detector", useHarrisDetector, false);
+  nh.param<double>("harris_param", k, 0.04);
+
+  nh.param<int>("max_feature_age", maxAge, 20);
+  nh.param<int>("min_features", minFeatures, 10);
+  int winSizeScalar;
+  nh.param<int>("win_size", winSizeScalar, 15);
+  winSize = cv::Size(winSizeScalar, winSizeScalar);
+  nh.param<int>("pyramid_level", maxLevel, 1);
+  int count;
+  double eps;
+  nh.param<int>("term_criteria_count", count, 10);
+  nh.param<double>("term_criteria_eps", eps, 0.1);
+  criteria = 
+    cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS,
+                      count, eps);
+  nh.param<double>("min_eigen", minEig, 0);
+  if (minEig != 0) {
+    flags = cv::OPTFLOW_LK_GET_MIN_EIGENVALS;
+  }
+  else {
+    flags = 0;
+  }
 }
 
 void FeatureTracker::findObjects(const cv::Mat& image, 
                                  std::map<int, cv::Rect>& objects)
 {
-  // TODO: make these params
-  int maxCount = 10;
-  double quality = 0.1;
-  double minDist = 5.;
-  int blockSize = 3;
-  bool useHarrisDetector = false;
-  double k = 0.04;
-
   frameNum++;
   ros::Time startTime;
   startTime = ros::Time::now();
@@ -96,17 +116,6 @@ void FeatureTracker::findObjects(const cv::Mat& image,
 
 void FeatureTracker::trackObjects(const cv::Mat& image, map<int, cv::Mat>& shifts)
 {
-  // TODO: params
-  int maxAge = 20;
-  int minFeatures = 10;
-  cv::Size winSize(15, 15);
-  int maxLevel = 1;
-  cv::TermCriteria criteria = 
-    TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 10, 0.1);
-  int flags = 0;
-  double minEig = 1e4;
-  
-
   frameNum++;
 
   ros::Time startTime;
