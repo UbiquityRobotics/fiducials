@@ -238,7 +238,7 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
         return;
     }
 
-    if (msg->distortion_model != "") {
+    if (msg->K != boost::array<double, 9>({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0})) {
         for (int i=0; i<3; i++) {
             for (int j=0; j<3; j++) {
                 cameraMatrix.at<double>(i, j) = msg->K[i*3+j];
@@ -253,7 +253,7 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
         frameId = msg->header.frame_id;
     }
     else {
-        ROS_WARN("%s", "CameraInfo message has invalid intrinsics, no distortion model set");
+        ROS_WARN("%s", "CameraInfo message has invalid intrinsics, K matrix all zeros");
     }
 }
 
