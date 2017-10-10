@@ -174,12 +174,17 @@ void FiducialsNode::fiducial_cb(int id, int direction, double world_diagonal,
 
 void FiducialsNode::camInfoCallback(
     const sensor_msgs::CameraInfo::ConstPtr &msg) {
-    if (pose_est) {
-        pose_est->camInfoCallback(msg);
-    }
-    haveCamInfo = true;
+    if (msg->K != boost::array<double, 9>({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0})) {
+        if (pose_est) {
+            pose_est->camInfoCallback(msg);
+        }
 
-    last_camera_frame = msg->header.frame_id;
+        haveCamInfo = true;
+        last_camera_frame = msg->header.frame_id;
+    }
+    else {
+        ROS_WARN("%s", "CameraInfo message has invalid intrinsics, K matrix is all zeros");
+    }
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr &msg) {

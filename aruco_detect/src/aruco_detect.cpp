@@ -238,18 +238,23 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
         return;
     }
 
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
-            cameraMatrix.at<double>(i, j) = msg->K[i*3+j];
+    if (msg->K != boost::array<double, 9>({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0})) {
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<3; j++) {
+                cameraMatrix.at<double>(i, j) = msg->K[i*3+j];
+            }
         }
-    }
 
-    for (int i=0; i<5; i++) {
-        distortionCoeffs.at<double>(0,i) = msg->D[i];
-    }
+        for (int i=0; i<5; i++) {
+            distortionCoeffs.at<double>(0,i) = msg->D[i];
+        }
 
-    haveCamInfo = true;
-    frameId = msg->header.frame_id;
+        haveCamInfo = true;
+        frameId = msg->header.frame_id;
+    }
+    else {
+        ROS_WARN("%s", "CameraInfo message has invalid intrinsics, K matrix all zeros");
+    }
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
