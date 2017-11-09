@@ -429,8 +429,8 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 #if OPENCV_MINOR_VERSION==2
     nh.param<bool>("doCornerRefinement",detectorParams->doCornerRefinement, true); /* default false */
 #else
-    bool doCornerRefinement = false;
-    nh.param<bool>("doCornerRefinement", doCornerRefinement, false);
+    bool doCornerRefinement = true;
+    nh.param<bool>("doCornerRefinement", doCornerRefinement, true);
     if (doCornerRefinement) {
        bool cornerRefinementSubPix = true;
        nh.param<bool>("cornerRefinementSubPix", cornerRefinementSubPix, true);
