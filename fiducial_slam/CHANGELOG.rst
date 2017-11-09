@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.4 (2017-11-09)
+------------------
 * Fix typos
 * Log full 6DOF pose for ALL and MUL
 * Pass previous rvec and tvec to solvePnP()
