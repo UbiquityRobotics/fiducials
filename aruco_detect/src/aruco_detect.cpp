@@ -217,7 +217,21 @@ void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, 
     detectorParams->cornerRefinementMaxIterations = config.cornerRefinementMaxIterations;
     detectorParams->cornerRefinementMinAccuracy = config.cornerRefinementMinAccuracy;
     detectorParams->cornerRefinementWinSize = config.cornerRefinementWinSize;
+#if OPENCV_MINOR_VERSION==2
     detectorParams->doCornerRefinement = config.doCornerRefinement;
+#else
+    if (config.doCornerRefinement) {
+       if (config.cornerRefinementSubpix) {
+         detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
+       }
+       else {
+         detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_CONTOUR;
+       }
+    }
+    else {
+       detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_NONE;
+    }
+#endif
     detectorParams->errorCorrectionRate = config.errorCorrectionRate;
     detectorParams->minCornerDistanceRate = config.minCornerDistanceRate;
     detectorParams->markerBorderBits = config.markerBorderBits;
@@ -412,7 +426,25 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<int>("cornerRefinementMaxIterations", detectorParams->cornerRefinementMaxIterations, 30);
     nh.param<double>("cornerRefinementMinAccuracy", detectorParams->cornerRefinementMinAccuracy, 0.01); /* default 0.1 */
     nh.param<int>("cornerRefinementWinSize", detectorParams->cornerRefinementWinSize, 5);
+#if OPENCV_MINOR_VERSION==2
     nh.param<bool>("doCornerRefinement",detectorParams->doCornerRefinement, true); /* default false */
+#else
+    bool doCornerRefinement = false;
+    nh.param<bool>("doCornerRefinement", doCornerRefinement, false);
+    if (doCornerRefinement) {
+       bool cornerRefinementSubPix = true;
+       nh.param<bool>("cornerRefinementSubPix", cornerRefinementSubPix, true);
+       if (cornerRefinementSubPix) {
+         detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
+       }
+       else {
+         detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_CONTOUR;
+       }
+    }
+    else {
+       detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_NONE;
+    }
+#endif
     nh.param<double>("errorCorrectionRate", detectorParams->errorCorrectionRate , 0.6);
     nh.param<double>("minCornerDistanceRate", detectorParams->minCornerDistanceRate , 0.05);
     nh.param<int>("markerBorderBits", detectorParams->markerBorderBits, 1);
