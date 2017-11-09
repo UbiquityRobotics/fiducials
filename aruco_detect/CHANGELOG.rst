@@ -2,6 +2,14 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add std=-c++-11 to build.
+* Fixes for OpenCV 3.3.1
+* handle invalid cameraInfo message in aruco_detect
+* Added (multi) pose estimation to fiducial_slam (disabled by default)
+* Contributors: Jim Vaughan, Rohan Agrawal
+
 0.7.3 (2017-07-16)
 ------------------
 

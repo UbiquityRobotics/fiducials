@@ -2,6 +2,14 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix typos
+* Log full 6DOF pose for ALL and MUL
+* Pass previous rvec and tvec to solvePnP()
+* Added (multi) pose estimation to fiducial_slam (disabled by default)
+* Contributors: Jim Vaughan
+
 0.7.3 (2017-07-16)
 ------------------
 * Install launch files and fiducials.rviz
