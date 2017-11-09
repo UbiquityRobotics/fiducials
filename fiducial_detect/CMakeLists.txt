@@ -26,6 +26,8 @@ catkin_package()
 ## Build ##
 ###########
 
+add_definitions(-std=c++11)
+
 include_directories(${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 
 add_executable(fiducial_detect src/fiducial_detect.cpp)
