@@ -52,7 +52,7 @@ install(TARGETS aruco_detect create_marker
 )
 
 catkin_install_python(PROGRAMS scripts/create_markers.py
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
