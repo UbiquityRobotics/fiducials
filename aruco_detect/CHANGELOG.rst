@@ -2,6 +2,12 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Move create_markers.py to share directory
+* Make corner detection on by default.
+* Contributors: Jim Vaughan
+
 0.7.4 (2017-11-09)
 ------------------
 * Add std=-c++-11 to build.
