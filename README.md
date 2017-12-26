@@ -17,3 +17,14 @@ its location by locating itself relative to one or more
 ceiling fiducials.
 
 Documentation is at [http://wiki.ros.org/fiducials](http://wiki.ros.org/fiducials).
+
+## Recording A Bag File
+
+Sometimes for trobleshooting purposes it is useful to record a bag 
+file to capture the exact data on the topics going into and out of 
+fiducials.
+
+To do this, while the system is running, run `rosbag record -a`.
+You can upload this bag file to a file sharing service like Google
+Drive and link to it in your issue, this will help us diagnose 
+the problem. 
