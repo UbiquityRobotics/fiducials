@@ -16,9 +16,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>aruco_detect</exec_depend>
-  <exec_depend>fiducial_detect</exec_depend>
-  <exec_depend>fiducial_lib</exec_depend>
-  <exec_depend>fiducial_pose</exec_depend>
   <exec_depend>fiducial_slam</exec_depend>
   <exec_depend>fiducial_msgs</exec_depend>
 
