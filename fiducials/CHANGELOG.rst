@@ -2,6 +2,11 @@
 Changelog for package fiducials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove old style fiducial code
+* Contributors: Jim Vaughan
+
 0.7.5 (2017-12-06)
 ------------------
 
