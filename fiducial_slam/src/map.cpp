@@ -431,7 +431,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                      trans.x(), trans.y(), trans.z(), basePose.variance);
         }
      }
-
+    basePose.frame_id_ = mapFrame;
     posePub.publish(toPose(basePose));
 
     tf2::Stamped<TransformWithVariance> outPose = basePose;
