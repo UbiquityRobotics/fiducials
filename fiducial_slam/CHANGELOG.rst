@@ -2,6 +2,11 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+  Fixed fiducial_pose topic's frame_id from camera to map.
+* Contributors: Rohan Agrawal, nav-go
+
 0.8.0 (2018-01-14)
 ------------------
 
