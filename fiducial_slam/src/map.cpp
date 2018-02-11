@@ -169,6 +169,8 @@ Fiducial::Fiducial(int id, const tf2::Stamped<TransformWithVariance>& pose) {
 
 Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     frameNum = 0;
+    initialFrameNum = 0;
+    originFid = -1;
     isInitializingMap = false;
 
     listener = make_unique<tf2_ros::TransformListener>(tfBuffer);
@@ -180,6 +182,8 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     mapPub = ros::Publisher(
           nh.advertise<fiducial_msgs::FiducialMapEntryArray>("/fiducial_map",
           1));
+
+    clearSrv = nh.advertiseService("clear_map", &Map::clearCallback, this);
 
     nh.param<std::string>("map_frame", mapFrame, "map");
     nh.param<std::string>("odom_frame", odomFrame, "odom");
@@ -502,7 +506,6 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
 
     ROS_INFO("Auto init map %d", frameNum);
 
-    static int originFid = -1;
     tf2::Transform T_baseCam;
 
     if (fiducials.size() == 0) {
@@ -547,7 +550,7 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
         }
     }
 
-    if (frameNum > 10 && originFid != -1) {
+    if (frameNum - initialFrameNum > 10 && originFid != -1) {
         isInitializingMap = false;
 
         fiducials[originFid].pose.variance = 0.0;
@@ -850,4 +853,19 @@ void Map::drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1)
     line.points.push_back(gp1);
 
     markerPub.publish(line);
+}
+
+// Service to clear the map and enable auto initialization
+
+bool Map::clearCallback(std_srvs::Empty::Request &req,
+                         std_srvs::Empty::Response &res)
+{
+    ROS_INFO("Clearing fiducial map from service call");
+
+    fiducials.clear();
+    initialFrameNum = frameNum;
+    originFid = -1;
+    isInitializingMap = true;
+
+    return true;
 }
