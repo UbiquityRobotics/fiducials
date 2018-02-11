@@ -865,7 +865,6 @@ bool Map::clearCallback(std_srvs::Empty::Request &req,
     fiducials.clear();
     initialFrameNum = frameNum;
     originFid = -1;
-    isInitializingMap = true;
 
     return true;
 }
