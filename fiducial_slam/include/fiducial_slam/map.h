@@ -53,6 +53,9 @@
 #include <tf2/convert.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+#include <std_srvs/Empty.h>
+
+
 using namespace std;
 using namespace cv;
 
@@ -189,6 +192,9 @@ class Map {
     ros::Publisher mapPub;
     ros::Publisher posePub;
 
+    ros::ServiceServer clearSrv;
+    bool clearCallback(std_srvs::Empty::Request &req,
+                       std_srvs::Empty::Response &res);
     string mapFilename;
     string mapFrame;
     string odomFrame;
@@ -200,6 +206,8 @@ class Map {
 
     bool isInitializingMap;
     int frameNum;
+    int initialFrameNum;
+    int originFid;
 
     map<int, Fiducial> fiducials;
 
