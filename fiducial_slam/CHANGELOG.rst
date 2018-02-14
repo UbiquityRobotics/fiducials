@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.2 (2018-02-14)
+------------------
 * Add service call to clear the map
 * Contributors: Jim Vaughan
 
