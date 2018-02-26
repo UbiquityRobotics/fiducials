@@ -472,6 +472,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     poseTf = toMsg(outPose);
     poseTf.child_frame_id = outFrame;
     havePose = true;
+    publishTf();
 
     ROS_INFO("Finished frame\n");
     return numEsts;
