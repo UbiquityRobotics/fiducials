@@ -491,7 +491,8 @@ void Map::publishTf()
 void Map::update()
 {
     ros::Time now = ros::Time::now();
-    if (havePose && (now - tfPublishTime).toSec() > tfPublishInterval) {
+    if (havePose && tfPublishInterval != 0.0 &&
+        (now - tfPublishTime).toSec() > tfPublishInterval) {
         publishTf();
         tfPublishTime = now;
     }
