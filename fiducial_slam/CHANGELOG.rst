@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.3 (2018-02-26)
+------------------
 * Keep publishing map -> odom tf even if not fiducials are visible (`#103 <https://github.com/UbiquityRobotics/fiducials/issues/103>`_)
 * Contributors: Jim Vaughan
 

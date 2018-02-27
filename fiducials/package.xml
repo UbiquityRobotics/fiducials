@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>fiducials</name>
-  <version>0.8.2</version>
+  <version>0.8.3</version>
   <description>Localization using fiducial markers</description>
 
   <author email="jimv@mrjim.com">Jim Vaughan</author>
