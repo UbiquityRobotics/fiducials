@@ -2,6 +2,11 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Keep publishing map -> odom tf even if not fiducials are visible (`#103 <https://github.com/UbiquityRobotics/fiducials/issues/103>`_)
+* Contributors: Jim Vaughan
+
 0.8.2 (2018-02-14)
 ------------------
 * Add service call to clear the map
