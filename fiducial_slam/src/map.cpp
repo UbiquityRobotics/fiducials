@@ -172,6 +172,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     initialFrameNum = 0;
     originFid = -1;
     isInitializingMap = false;
+    havePose = false;
 
     listener = make_unique<tf2_ros::TransformListener>(tfBuffer);
 
@@ -189,6 +190,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<std::string>("odom_frame", odomFrame, "odom");
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
+    nh.param<float>("tf_publish_interval", tfPublishInterval, 1.0);
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
 
@@ -467,15 +469,36 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
         outPose.transform.getBasis().setRPY(0, 0, yaw);
     }
 
-    geometry_msgs::TransformStamped ts = toMsg(outPose);
-    ts.child_frame_id = outFrame;
-    ts.header.stamp += ros::Duration(future_date_transforms);
-    broadcaster.sendTransform(ts);
+    poseTf = toMsg(outPose);
+    poseTf.child_frame_id = outFrame;
+    havePose = true;
+    publishTf();
 
     ROS_INFO("Finished frame\n");
     return numEsts;
 }
 
+// Publish map -> odom tf
+
+void Map::publishTf()
+{
+    tfPublishTime = ros::Time::now();
+    poseTf.header.stamp = tfPublishTime + ros::Duration(future_date_transforms);
+    broadcaster.sendTransform(poseTf);
+}
+
+// publish latest tf if enough time has elapsed
+
+void Map::update()
+{
+    ros::Time now = ros::Time::now();
+    if (havePose && tfPublishInterval != 0.0 &&
+        (now - tfPublishTime).toSec() > tfPublishInterval) {
+        publishTf();
+        tfPublishTime = now;
+    }
+    publishMarkers();
+}
 
 // Find closest fiducial to camera
 

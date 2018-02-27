@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Ubiquity Robotics
+ * Copyright (c) 2017-8, Ubiquity Robotics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -209,9 +209,15 @@ class Map {
     int initialFrameNum;
     int originFid;
 
+    bool havePose;
+    float tfPublishInterval;
+    ros::Time tfPublishTime;
+    geometry_msgs::TransformStamped poseTf;
+
     map<int, Fiducial> fiducials;
 
     Map(ros::NodeHandle &nh);
+    void update();
     void update(vector<Observation> &obs, const ros::Time &time);
     void autoInit(const vector<Observation> &obs, const ros::Time &time);
     int  updatePose(vector<Observation> &obs, const ros::Time &time,
@@ -224,6 +230,7 @@ class Map {
     bool saveMap();
     bool saveMap(std::string filename);
 
+    void publishTf();
     void publishMap();
     void publishMarker(Fiducial &fid);
     void publishMarkers();

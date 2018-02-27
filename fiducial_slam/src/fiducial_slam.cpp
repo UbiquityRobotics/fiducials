@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Ubiquity Robotics
+ * Copyright (c) 2017-8, Ubiquity Robotics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -185,7 +185,7 @@ int main(int argc, char ** argv) {
     while (ros::ok()) {
         ros::spinOnce(); 
         r.sleep();
-        node->fiducialMap.publishMarkers();
+        node->fiducialMap.update();
     }
 
     return 0;
