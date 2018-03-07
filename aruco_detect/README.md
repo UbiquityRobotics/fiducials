@@ -5,4 +5,4 @@ This node finds aruco markers in images stream and publishes their vertices
 It is based on the [Aruco](http://docs.opencv.org/trunk/d5/dae/tutorial_aruco_detection.html)
 contributed module to OpenCV. It is an alternative to fiducial_detect
 
-Documentation is at [http://wiki.ros.org/aruco_detect](http://wiki.ros.org/aruco_detect).
+Documentation is in [the ROS wiki page](http://wiki.ros.org/aruco_detect).
