@@ -372,7 +372,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             }
             pose_pub->publish(fta);
         }
-	image_pub.publish(cv_ptr->toImageMsg());
+
+        if (publish_images) {
+	    image_pub.publish(cv_ptr->toImageMsg());
+        }
     }
     catch(cv_bridge::Exception & e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
