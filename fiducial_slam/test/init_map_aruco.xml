@@ -15,6 +15,9 @@
     args="-l $(find fiducial_slam)/test/aruco_transforms.bag">
   </node>
 
+  <node name="camera_pose" pkg="tf2_ros" type="static_transform_publisher" 
+        args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 base_link raspicam" />
+
   <test test-name="map_test3" pkg="fiducial_slam" type="map_test.py"
      name="map_test">
     <param name="map_file" value="$(find fiducial_slam)/test/map3.txt" />
