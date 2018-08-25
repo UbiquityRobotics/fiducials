@@ -2,6 +2,12 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use publish_images param as intended (`#106 <https://github.com/UbiquityRobotics/fiducials/issues/106>`_)
+* Update README.md
+* Contributors: Jim Vaughan
+
 0.8.3 (2018-02-26)
 ------------------
 * Merge pull request `#100 <https://github.com/UbiquityRobotics/fiducials/issues/100>`_ from alex-gee/kinetic-devel

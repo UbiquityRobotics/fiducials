@@ -2,6 +2,12 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Don't publish pose if camera position is not known
+* Update README.md
+* Contributors: Jim Vaughan, Rohan Agrawal
+
 0.8.3 (2018-02-26)
 ------------------
 * Keep publishing map -> odom tf even if not fiducials are visible (`#103 <https://github.com/UbiquityRobotics/fiducials/issues/103>`_)
