@@ -436,7 +436,12 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             ROS_INFO("Pose b_l %lf %lf %lf %f",
                      trans.x(), trans.y(), trans.z(), basePose.variance);
         }
-     }
+    }
+    else {
+        ROS_ERROR("Cannot determine tf from camera to robot\n");
+        return numEsts;
+    }
+
     basePose.frame_id_ = mapFrame;
     posePub.publish(toPose(basePose));
 

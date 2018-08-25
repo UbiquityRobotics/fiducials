@@ -13,6 +13,9 @@
     <param name="do_rotation" value="true" />
   </node>
 
+  <node name="camera_pose" pkg="tf2_ros" type="static_transform_publisher" 
+        args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 base_link raspicam" />
+
   <node name="rosbag" pkg="rosbag" type="play"
         args="-l $(find fiducial_slam)/test/aruco_transforms.bag">
   </node>
