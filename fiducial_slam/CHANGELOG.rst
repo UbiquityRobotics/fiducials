@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.4 (2018-08-26)
+------------------
 * Don't publish pose if camera position is not known
 * Update README.md
 * Contributors: Jim Vaughan, Rohan Agrawal
