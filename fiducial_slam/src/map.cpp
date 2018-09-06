@@ -55,6 +55,7 @@ static double updateVarianceAlexey(double var1, double var2) {
 }
 
 static bool useAlexey = false;
+static float systematic_error = 0.001;
 
 // Update the variance of a gaussian that has been combined with another
 // Taking into account the degree of overlap
@@ -69,13 +70,13 @@ static double updateVarianceDavid(const tf2::Vector3 &newMean,
     double d1 = (mean1 - newMean).length2();
     double d2 = (mean2 - newMean).length2();
 
-    double newVar = sqrt(2.0*M_PI) * var1 * var2 *
+    double newVar = systematic_error + sqrt(2.0*M_PI) * var1 * var2 *
          exp(((d1 / (2.0*var1)) + d2 / (2.0*var2)));
 
     if (newVar > 100)
         newVar = 100;
-    if (newVar < 10e-4)
-        newVar = 10e-4;
+//    if (newVar < 10e-4)  //This line should be redundant if systematic_error does anything meaningful
+//        newVar = 10e-4;  //This line should be redundant if systematic_error does anything meaningful
     return newVar;
 }
 
@@ -191,6 +192,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
     nh.param<float>("tf_publish_interval", tfPublishInterval, 1.0);
+    nh.param<float>("systematic_error", systematic_error, 0.01);
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
 
