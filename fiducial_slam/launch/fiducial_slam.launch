@@ -10,6 +10,7 @@
   <arg name="future_date_transforms" default="0.0"/>
   <arg name="publish_6dof_pose" default="false"/>
   <arg name="fiducial_len" default="0.14"/>
+  <arg name="systematic_error" default="0.01"/>
   <arg name="do_pose_estimation" default="false"/>
 
   <node type="fiducial_slam" pkg="fiducial_slam" output="screen" 
