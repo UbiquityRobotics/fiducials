@@ -124,7 +124,7 @@ TransformWithVariance averageTransforms(const TransformWithVariance& t1, const T
 
     out.transform.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
     out.transform.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
-    out.variance = updateVarianceAlexey(var1, var2);
+    out.variance = suminquadrature(var1, var2);
 
     return out;
 }
