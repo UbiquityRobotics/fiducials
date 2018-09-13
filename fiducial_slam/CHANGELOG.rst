@@ -2,6 +2,17 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#112 <https://github.com/UbiquityRobotics/fiducials/issues/112>`_ from UbiquityRobotics/davecrawley-patch-1
+  Added in a systematic error parameter
+* fix missed rename alexy to sum in quadrature
+* Suggested changes
+* Updating the launch file to match the changes to map.cpp
+* Added in a systematic error parameter
+  Added in a systematic error parameter. This parameter is intended to take in to account systematic (non-random) errors in the measurement of fiducial position. Non-random errors can be very pernicious, and can generate highly unexpected and difficult to resolve issues. For example if **all** the fiducials are slightly the wrong size this will not show up as a random variance. Similar systematic errors include, camera mis-calibration, sampling defects, digitization errors, lens flaring and so forth. Measurement accuracy in-homogeneity can also be considered a systematic error and this will also help with that issue although it probably should be treated explicitly rather than through this "hack". Ultimately the correct approach is to rigorously compute all these systematic errors and add them in to the model - we are simply saying that we think the systematic errors are less than the specified value.
+* Contributors: David Crawley, Rohan Agrawal
+
 0.8.4 (2018-08-26)
 ------------------
 * Don't publish pose if camera position is not known
