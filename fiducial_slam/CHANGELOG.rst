@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.9.0 (2018-09-12)
+------------------
 * Merge pull request `#112 <https://github.com/UbiquityRobotics/fiducials/issues/112>`_ from UbiquityRobotics/davecrawley-patch-1
   Added in a systematic error parameter
 * fix missed rename alexy to sum in quadrature
