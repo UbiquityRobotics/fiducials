@@ -49,33 +49,34 @@
 
 // Update the variance of a gaussian that has been combined with another
 // Does not Take into account the degree of overlap of observations
-static double updateVarianceAlexey(double var1, double var2) {
+static double suminquadrature(double var1, double var2) {
 
     return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
 }
 
-static bool useAlexey = false;
+static bool sum_error_in_quadrature = false;
+static float systematic_error = 0.01;
 
 // Update the variance of a gaussian that has been combined with another
 // Taking into account the degree of overlap
 static double updateVarianceDavid(const tf2::Vector3 &newMean,
                                   const tf2::Vector3 &mean1, double var1,
                                   const tf2::Vector3 &mean2, double var2) {
-    if (useAlexey) {
-       return updateVarianceAlexey(var1, var2);
+    if (sum_error_in_quadrature) {
+       return suminquadrature(var1, var2);
     }
 
     //=((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))
     double d1 = (mean1 - newMean).length2();
     double d2 = (mean2 - newMean).length2();
 
-    double newVar = sqrt(2.0*M_PI) * var1 * var2 *
+    double newVar = systematic_error + sqrt(2.0*M_PI) * var1 * var2 *
          exp(((d1 / (2.0*var1)) + d2 / (2.0*var2)));
 
     if (newVar > 100)
         newVar = 100;
-    if (newVar < 10e-4)
-        newVar = 10e-4;
+    if (newVar < 10e-4)  //This line should be redundant if systematic_error does anything meaningful
+        newVar = 10e-4;  //This line should be redundant if systematic_error does anything meaningful
     return newVar;
 }
 
@@ -123,7 +124,7 @@ TransformWithVariance averageTransforms(const TransformWithVariance& t1, const T
 
     out.transform.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
     out.transform.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
-    out.variance = updateVarianceAlexey(var1, var2);
+    out.variance = suminquadrature(var1, var2);
 
     return out;
 }
@@ -191,8 +192,11 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
     nh.param<float>("tf_publish_interval", tfPublishInterval, 1.0);
+    nh.param<float>("systematic_error", systematic_error, 0.01);
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
+    nh.param<bool>("sum_error_in_quadrature", sum_error_in_quadrature, false);
+
 
     // threshold of object error for using multi-fidicial pose
     // set -ve to never use
