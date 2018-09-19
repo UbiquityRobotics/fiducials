@@ -83,15 +83,16 @@ class FiducialsNode {
     cv::Mat distortionCoeffs;
     int frameNum;
     std::string frameId;
-    std::map<int, int> ignoreIds;
-    std::map<int, float> fiducialLens;
+    std::map<int, bool> ignoreIds;
+    std::map<int, double> fiducialLens;
+
 
     image_transport::Publisher image_pub;
 
     cv::Ptr<aruco::DetectorParameters> detectorParams;
     cv::Ptr<aruco::Dictionary> dictionary;
 
-    void estimatePoseSingleMarkers(const vector<int> ids,
+    void estimatePoseSingleMarkers(const vector<int> &ids,
                                    const vector<vector<Point2f > >&corners,
                                    float markerLength,
                                    const cv::Mat &cameraMatrix,
@@ -186,7 +187,7 @@ static double getReprojectionError(const vector<Point3f> &objectPoints,
     return rerror;
 }
 
-void FiducialsNode::estimatePoseSingleMarkers(const vector<int> ids,
+void FiducialsNode::estimatePoseSingleMarkers(const vector<int> &ids,
                                 const vector<vector<Point2f > >&corners,
                                 float markerLength,
                                 const cv::Mat &cameraMatrix,
@@ -206,8 +207,9 @@ void FiducialsNode::estimatePoseSingleMarkers(const vector<int> ids,
     for (int i = 0; i < nMarkers; i++) {
        double fiducialSize = markerLength;
 
-       if (fiducialLens.find(ids[i]) != fiducialLens.end()) {
-          fiducialSize = fiducialLens[ids[i]];
+       std::map<int, double>::iterator it = fiducialLens.find(ids[i]);
+       if (it != fiducialLens.end()) {
+          fiducialSize = it->second;
        }
 
        getSingleMarkerObjectPoints(fiducialSize, markerObjPoints);
@@ -438,24 +440,24 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     */
     nh.param<string>("ignore_fiducials", str, "");
     boost::split(strs, str, boost::is_any_of(","));
-    for (int i = 0; i < strs.size(); i++) {
+    for (const string& element : strs) {
         std::vector<std::string> range;
-        boost::split(range, strs[i], boost::is_any_of("-"));
+        boost::split(range, element, boost::is_any_of("-"));
         if (range.size() == 2) {
-           int start = atoi(range[0].c_str());
-           int end = atoi(range[1].c_str());
+           int start = std::stoi(range[0]);
+           int end = std::stoi(range[1]);
            ROS_INFO("Ignoring fiducial id range %d to %d", start, end);
            for (int j=start; j<=end; j++) {
-               ignoreIds[j] = 1;
+               ignoreIds[j]= true;
            }
         }
         else if (range.size() == 1){
-           int fid = atoi(strs[i].c_str());
+           int fid = std::stoi(element);
            ROS_INFO("Ignoring fiducial id %d", fid);
-           ignoreIds[fid] = 1;
+           ignoreIds[fid] =  true;
         }
         else {
-           ROS_ERROR("Malformed ignore_fiducials: %s", strs[i].c_str());
+           ROS_ERROR("Malformed ignore_fiducials: %s", element.c_str());
         }
     }
 
@@ -465,33 +467,33 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     */
     nh.param<string>("fiducial_len_override", str, "");
     boost::split(strs, str, boost::is_any_of(","));
-    for (int i = 0; i < strs.size(); i++) {
+    for (const string& element : strs) {
         std::vector<std::string> parts;
-        boost::split(parts, strs[i], boost::is_any_of(":"));
+        boost::split(parts, element, boost::is_any_of(":"));
         if (parts.size() == 2) {
-            double len = atof(parts[0].c_str());
+            double len = std::stof(parts[0]);
             std::vector<std::string> range;
-            boost::split(range, strs[i], boost::is_any_of("-"));
+            boost::split(range, element, boost::is_any_of("-"));
             if (range.size() == 2) {
-               int start = atoi(range[0].c_str());
-               int end = atoi(range[1].c_str());
+               int start = std::stoi(range[0]);
+               int end = std::stoi(range[1]);
                ROS_INFO("Setting fiducial id range %d - %d length to %f",
                         start, end, len);
                for (int j=start; j<=end; j++) {
-                   ignoreIds[j] = 1;
+                   fiducialLens[j] = len;
                }
             }
             else if (range.size() == 1){
-               int fid = atoi(strs[i].c_str());
+               int fid = std::stoi(range[0]);
                ROS_INFO("Setting fiducial id %d length to %f", fid, len);
                fiducialLens[fid] = len;
             }
             else {
-               ROS_ERROR("Malformed fiducial_len_override: %s", strs[i].c_str());
+               ROS_ERROR("Malformed fiducial_len_override: %s", element.c_str());
             }
         }
         else {
-           ROS_ERROR("Malformed fiducial_len_override: %s", strs[i].c_str());
+           ROS_ERROR("Malformed fiducial_len_override: %s", element.c_str());
         }
     }
 
