@@ -441,6 +441,9 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<string>("ignore_fiducials", str, "");
     boost::split(strs, str, boost::is_any_of(","));
     for (const string& element : strs) {
+        if (element == "") {
+           continue;
+        }
         std::vector<std::string> range;
         boost::split(range, element, boost::is_any_of("-"));
         if (range.size() == 2) {
@@ -451,8 +454,8 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
                ignoreIds[j]= true;
            }
         }
-        else if (range.size() == 1){
-           int fid = std::stoi(element);
+        else if (range.size() == 1) {
+           int fid = std::stoi(range[0]);
            ROS_INFO("Ignoring fiducial id %d", fid);
            ignoreIds[fid] =  true;
         }
@@ -468,10 +471,13 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<string>("fiducial_len_override", str, "");
     boost::split(strs, str, boost::is_any_of(","));
     for (const string& element : strs) {
+        if (element == "") {
+           continue;
+        }
         std::vector<std::string> parts;
         boost::split(parts, element, boost::is_any_of(":"));
         if (parts.size() == 2) {
-            double len = std::stof(parts[0]);
+            double len = std::stod(parts[0]);
             std::vector<std::string> range;
             boost::split(range, element, boost::is_any_of("-"));
             if (range.size() == 2) {
