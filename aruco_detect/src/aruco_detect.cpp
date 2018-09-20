@@ -83,7 +83,7 @@ class FiducialsNode {
     cv::Mat distortionCoeffs;
     int frameNum;
     std::string frameId;
-    std::map<int, bool> ignoreIds;
+    std::vector<int> ignoreIds;
     std::map<int, double> fiducialLens;
 
 
@@ -360,7 +360,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                          tvecs[i][0], tvecs[i][1], tvecs[i][2],
                          rvecs[i][0], rvecs[i][1], rvecs[i][2]);
 
-                if (ignoreIds.find(ids[i]) != ignoreIds.end()) {
+                if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
                     ROS_INFO("Ignoring id %d", ids[i]);
                     continue;
                 }
@@ -451,13 +451,13 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
            int end = std::stoi(range[1]);
            ROS_INFO("Ignoring fiducial id range %d to %d", start, end);
            for (int j=start; j<=end; j++) {
-               ignoreIds[j]= true;
+               ignoreIds.push_back(j);
            }
         }
         else if (range.size() == 1) {
            int fid = std::stoi(range[0]);
            ROS_INFO("Ignoring fiducial id %d", fid);
-           ignoreIds[fid] =  true;
+           ignoreIds.push_back(fid);
         }
         else {
            ROS_ERROR("Malformed ignore_fiducials: %s", element.c_str());
