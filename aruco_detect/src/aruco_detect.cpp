@@ -58,6 +58,7 @@
 
 #include <list>
 #include <string>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace cv;
@@ -82,11 +83,23 @@ class FiducialsNode {
     cv::Mat distortionCoeffs;
     int frameNum;
     std::string frameId;
+    std::vector<int> ignoreIds;
+    std::map<int, double> fiducialLens;
+
 
     image_transport::Publisher image_pub;
 
     cv::Ptr<aruco::DetectorParameters> detectorParams;
     cv::Ptr<aruco::Dictionary> dictionary;
+
+    void estimatePoseSingleMarkers(const vector<int> &ids,
+                                   const vector<vector<Point2f > >&corners,
+                                   float markerLength,
+                                   const cv::Mat &cameraMatrix,
+                                   const cv::Mat &distCoeffs,
+                                   vector<Vec3d>& rvecs, vector<Vec3d>& tvecs,
+                                   vector<double>& reprojectionError);
+
 
     void imageCallback(const sensor_msgs::ImageConstPtr &msg);
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
@@ -174,17 +187,17 @@ static double getReprojectionError(const vector<Point3f> &objectPoints,
     return rerror;
 }
 
-void estimatePoseSingleMarkers(const vector<vector<Point2f > >&corners,
-                               float markerLength,
-                               const cv::Mat &cameraMatrix,
-                               const cv::Mat &distCoeffs,
-                               vector<Vec3d>& rvecs, vector<Vec3d>& tvecs,
-                               vector<double>& reprojectionError) {
+void FiducialsNode::estimatePoseSingleMarkers(const vector<int> &ids,
+                                const vector<vector<Point2f > >&corners,
+                                float markerLength,
+                                const cv::Mat &cameraMatrix,
+                                const cv::Mat &distCoeffs,
+                                vector<Vec3d>& rvecs, vector<Vec3d>& tvecs,
+                                vector<double>& reprojectionError) {
 
     CV_Assert(markerLength > 0);
 
     vector<Point3f> markerObjPoints;
-    getSingleMarkerObjectPoints(markerLength, markerObjPoints);
     int nMarkers = (int)corners.size();
     rvecs.reserve(nMarkers);
     tvecs.reserve(nMarkers);
@@ -192,7 +205,14 @@ void estimatePoseSingleMarkers(const vector<vector<Point2f > >&corners,
 
     // for each marker, calculate its pose
     for (int i = 0; i < nMarkers; i++) {
+       double fiducialSize = markerLength;
 
+       std::map<int, double>::iterator it = fiducialLens.find(ids[i]);
+       if (it != fiducialLens.end()) {
+          fiducialSize = it->second;
+       }
+
+       getSingleMarkerObjectPoints(fiducialSize, markerObjPoints);
        cv::solvePnP(markerObjPoints, corners[i], cameraMatrix, distCoeffs,
                     rvecs[i], tvecs[i]);
 
@@ -327,7 +347,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             }
 
             vector <double>reprojectionError;
-            estimatePoseSingleMarkers(corners, fiducial_len,
+            estimatePoseSingleMarkers(ids, corners, fiducial_len,
                                       cameraMatrix, distortionCoeffs,
                                       rvecs, tvecs,
                                       reprojectionError);
@@ -339,6 +359,11 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                 ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
                          tvecs[i][0], tvecs[i][1], tvecs[i][2],
                          rvecs[i][0], rvecs[i][1], rvecs[i][2]);
+
+                if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
+                    ROS_INFO("Ignoring id %d", ids[i]);
+                    continue;
+                }
 
                 double angle = norm(rvecs[i]);
                 Vec3d axis = rvecs[i] / angle;
@@ -405,7 +430,81 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<double>("fiducial_len", fiducial_len, 0.14);
     nh.param<int>("dictionary", dicno, 7);
     nh.param<bool>("do_pose_estimation", doPoseEstimation, true);
+
+    std::string str;
+    std::vector<std::string> strs;
+
+    /*
+    ignogre fiducials can take comma separated list of individual
+    fiducial ids or ranges, eg "1,4,8,9-12,30-40"
+    */
+    nh.param<string>("ignore_fiducials", str, "");
+    boost::split(strs, str, boost::is_any_of(","));
+    for (const string& element : strs) {
+        if (element == "") {
+           continue;
+        }
+        std::vector<std::string> range;
+        boost::split(range, element, boost::is_any_of("-"));
+        if (range.size() == 2) {
+           int start = std::stoi(range[0]);
+           int end = std::stoi(range[1]);
+           ROS_INFO("Ignoring fiducial id range %d to %d", start, end);
+           for (int j=start; j<=end; j++) {
+               ignoreIds.push_back(j);
+           }
+        }
+        else if (range.size() == 1) {
+           int fid = std::stoi(range[0]);
+           ROS_INFO("Ignoring fiducial id %d", fid);
+           ignoreIds.push_back(fid);
+        }
+        else {
+           ROS_ERROR("Malformed ignore_fiducials: %s", element.c_str());
+        }
+    }
+
+    /*
+    fiducial size can take comma separated list of size: id or size: range,
+    e.g. "200.0: 12, 300.0: 200-300"
+    */
+    nh.param<string>("fiducial_len_override", str, "");
+    boost::split(strs, str, boost::is_any_of(","));
+    for (const string& element : strs) {
+        if (element == "") {
+           continue;
+        }
+        std::vector<std::string> parts;
+        boost::split(parts, element, boost::is_any_of(":"));
+        if (parts.size() == 2) {
+            double len = std::stod(parts[0]);
+            std::vector<std::string> range;
+            boost::split(range, element, boost::is_any_of("-"));
+            if (range.size() == 2) {
+               int start = std::stoi(range[0]);
+               int end = std::stoi(range[1]);
+               ROS_INFO("Setting fiducial id range %d - %d length to %f",
+                        start, end, len);
+               for (int j=start; j<=end; j++) {
+                   fiducialLens[j] = len;
+               }
+            }
+            else if (range.size() == 1){
+               int fid = std::stoi(range[0]);
+               ROS_INFO("Setting fiducial id %d length to %f", fid, len);
+               fiducialLens[fid] = len;
+            }
+            else {
+               ROS_ERROR("Malformed fiducial_len_override: %s", element.c_str());
+            }
+        }
+        else {
+           ROS_ERROR("Malformed fiducial_len_override: %s", element.c_str());
+        }
+    }
+
     image_pub = it.advertise("/fiducial_images", 1);
+
 
     vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("/fiducial_vertices", 1));
 
