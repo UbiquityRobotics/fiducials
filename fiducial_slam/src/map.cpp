@@ -180,7 +180,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     robotPosePub = ros::Publisher(
           nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/fiducial_pose", 1));
     cameraPosePub = ros::Publisher(
-          nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/camera_pose", 1));
+          nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/fiducial_slam/camera_pose", 1));
 
     markerPub = ros::Publisher(
           nh.advertise<visualization_msgs::Marker>("/fiducials", 100));
