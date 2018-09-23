@@ -177,8 +177,11 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
     listener = make_unique<tf2_ros::TransformListener>(tfBuffer);
 
-    posePub = ros::Publisher(
+    robotPosePub = ros::Publisher(
           nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/fiducial_pose", 1));
+    cameraPosePub = ros::Publisher(
+          nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/camera_pose", 1));
+
     markerPub = ros::Publisher(
           nh.advertise<visualization_msgs::Marker>("/fiducials", 100));
     mapPub = ros::Publisher(
@@ -196,6 +199,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
     nh.param<bool>("sum_error_in_quadrature", sum_error_in_quadrature, false);
+    nh.param<bool>("read_only_map", readOnly, false);
 
 
     // threshold of object error for using multi-fidicial pose
@@ -243,7 +247,7 @@ void Map::update(vector<Observation>& obs, const ros::Time &time)
         tf2::Stamped<TransformWithVariance> T_mapCam;
         T_mapCam.frame_id_ = mapFrame;
 
-        if (updatePose(obs, time, T_mapCam) > 0 && obs.size() > 1) {
+        if (updatePose(obs, time, T_mapCam) > 0 && obs.size() > 1 && !readOnly) {
             updateMap(obs, time, T_mapCam);
         }
     }
@@ -421,6 +425,12 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
         T_mapCam = T_fid0Cam; 
     }
 
+    // Publish camera pose
+    tf2::Stamped<TransformWithVariance> cameraPose = T_mapCam;
+    geometry_msgs::PoseWithCovarianceStamped cameraPoseStamped = toPose(cameraPose);
+    cameraPoseStamped.header.stamp = time;
+    cameraPosePub.publish(cameraPoseStamped);
+
     // Determine transform from camera to robot
     tf2::Transform T_camBase;
     // Use robotPose instead of camera pose to hold map to robot
@@ -447,7 +457,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     }
 
     basePose.frame_id_ = mapFrame;
-    posePub.publish(toPose(basePose));
+    robotPosePub.publish(toPose(basePose));
 
     tf2::Stamped<TransformWithVariance> outPose = basePose;
     outPose.frame_id_ = mapFrame;

@@ -190,7 +190,8 @@ class Map {
 
     ros::Publisher markerPub;
     ros::Publisher mapPub;
-    ros::Publisher posePub;
+    ros::Publisher robotPosePub;
+    ros::Publisher cameraPosePub;
 
     ros::ServiceServer clearSrv;
     bool clearCallback(std_srvs::Empty::Request &req,
@@ -205,6 +206,7 @@ class Map {
     double multiErrorThreshold;
 
     bool isInitializingMap;
+    bool readOnly;
     int frameNum;
     int initialFrameNum;
     int originFid;
