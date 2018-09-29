@@ -121,6 +121,7 @@ static void getSingleMarkerObjectPoints(float markerLength, vector<Point3f>& obj
     CV_Assert(markerLength > 0);
 
     // set coordinate system in the middle of the marker, with Z pointing out
+    objPoints.clear();
     objPoints.push_back(Vec3f(-markerLength / 2.f, markerLength / 2.f, 0));
     objPoints.push_back(Vec3f( markerLength / 2.f, markerLength / 2.f, 0));
     objPoints.push_back(Vec3f( markerLength / 2.f,-markerLength / 2.f, 0));
