@@ -91,6 +91,43 @@ TEST_F(ArucoImagesTest, tag_01_d7_14cm) {
   ASSERT_FLOAT_EQ(409.24496, vertices.y3);
 }
 
+TEST_F(ArucoImagesTest, tag_245_246_d7_14cm) {
+  ros::Rate loop_rate(5);
+  while (nh.ok() && !got_vertices) {
+    publish_image("tag_245-246_d7_14cm.png");
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
+
+  ASSERT_LE(2, fiducials.fiducials.size());
+
+  for (auto& vertices: fiducials.fiducials) {
+    if (vertices.fiducial_id == 245) {
+      ASSERT_FLOAT_EQ(307.68246, vertices.x0);
+      ASSERT_FLOAT_EQ(157.38346, vertices.y0);
+      ASSERT_FLOAT_EQ(545.10131, vertices.x1);
+      ASSERT_FLOAT_EQ(167.04420, vertices.y1);
+      ASSERT_FLOAT_EQ(540.11614, vertices.x2);
+      ASSERT_FLOAT_EQ(403.27578, vertices.y2);
+      ASSERT_FLOAT_EQ(305.64746, vertices.x3);
+      ASSERT_FLOAT_EQ(395.01422, vertices.y3);
+    }
+    else  if (vertices.fiducial_id == 246) {
+      ASSERT_FLOAT_EQ(671.51892, vertices.x0);
+      ASSERT_FLOAT_EQ(173.46070, vertices.y0);
+      ASSERT_FLOAT_EQ(900.29650, vertices.x1);
+      ASSERT_FLOAT_EQ(178.44973, vertices.y1);
+      ASSERT_FLOAT_EQ(895.06933, vertices.x2);
+      ASSERT_FLOAT_EQ(407.39855, vertices.y2);
+      ASSERT_FLOAT_EQ(666.39910, vertices.x3);
+      ASSERT_FLOAT_EQ(403.12911, vertices.y3);
+    }
+    else {
+      FAIL();
+    }
+  }
+}
+
 int main(int argc, char** argv)
 {
 
