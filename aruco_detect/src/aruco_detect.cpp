@@ -119,6 +119,7 @@ class FiducialsNode {
 static void getSingleMarkerObjectPoints(float markerLength, vector<Point3f>& objPoints) {
 
     CV_Assert(markerLength > 0);
+    objPoints.clear();
 
     // set coordinate system in the middle of the marker, with Z pointing out
     objPoints.push_back(Vec3f(-markerLength / 2.f, markerLength / 2.f, 0));
@@ -215,7 +216,6 @@ void FiducialsNode::estimatePoseSingleMarkers(const vector<int> &ids,
        getSingleMarkerObjectPoints(fiducialSize, markerObjPoints);
        cv::solvePnP(markerObjPoints, corners[i], cameraMatrix, distCoeffs,
                     rvecs[i], tvecs[i]);
-
        reprojectionError[i] =
           getReprojectionError(markerObjPoints, corners[i],
                                cameraMatrix, distCoeffs,
