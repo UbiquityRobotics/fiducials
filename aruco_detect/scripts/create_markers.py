@@ -54,7 +54,7 @@ def genSvg(file, id, dicno):
   <line x1="@(corner_x)mm" y1="@(corner_y)mm" x2="@(corner_x - 2)mm" y2="@(corner_y)mm" style="stroke:black"/>
   <line x1="@(corner_x)mm" y1="@(corner_y)mm" x2="@(corner_x)mm" y2="@(corner_y - 2)mm" style="stroke:black"/>
 
-  <text x="@(paper_width/2)mm" y="220.0mm" text-anchor="middle" style="font-family:ariel; font-size:24;">@(id) D@(dicno)</text>
+  <text x="@(paper_width/2)mm" y="@((paper_height + fid_len)/2 + 30)mm" text-anchor="middle" style="font-family:ariel; font-size:24;">@(id) D@(dicno)</text>
 
 </svg>
 """, {"id": id, "dicno": dicno, "paper_width": 215.9, "paper_height": 279.4, "fid_len": 140.0}))
