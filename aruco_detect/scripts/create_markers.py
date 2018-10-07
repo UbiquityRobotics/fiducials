@@ -29,25 +29,31 @@ def genSvg(file, id, dicno):
   <image x="@((paper_width - fid_len)/2)mm" y="@((paper_height - fid_len)/2)mm" width="@(fid_len)mm" height="@(fid_len)mm" xlink:href="marker@(id).png" />
 
 
-  @{cut = 15}
+  @{cut = max(fid_len/10 * 1.4, 10)}
 
   @{corner_x = (paper_width - fid_len)/2 - cut}
   @{corner_y = (paper_height - fid_len)/2 - cut}
   <line x1="@(corner_x)mm" y1="@(corner_y)mm" x2="@(corner_x + 2)mm" y2="@(corner_y)mm" style="stroke:black"/>
   <line x1="@(corner_x)mm" y1="@(corner_y)mm" x2="@(corner_x)mm" y2="@(corner_y + 2)mm" style="stroke:black"/>
   
-  <text x="@(paper_width/2)mm" y="@(corner_y - 2)mm" text-anchor="middle" style="font-family:ariel; font-size:12;">1 cm</text>
-  <line x1="@(paper_width/2 - 5)mm" y1="@(corner_y)mm" x2="@(paper_width/2 + 5)mm" y2="@(corner_y)mm" style="stroke:black"/>
-
   @{corner_x = (paper_width + fid_len)/2 + cut}
   @{corner_y = (paper_height - fid_len)/2 - cut}
   <line x1="@(corner_x)mm" y1="@(corner_y)mm" x2="@(corner_x - 2)mm" y2="@(corner_y)mm" style="stroke:black"/>
   <line x1="@(corner_x)mm" y1="@(corner_y)mm" x2="@(corner_x)mm" y2="@(corner_y + 2)mm" style="stroke:black"/>
 
+  <text x="@(paper_width/2)mm" y="@(corner_y - 1)mm" text-anchor="middle" style="font-family:ariel; font-size:8;">
+      This line should be exactly @(fid_len/10)cm long. 
+  </text>
+  <line x1="@(paper_width/2 - fid_len/2)mm" y1="@(corner_y)mm" x2="@(paper_width/2 + fid_len/2)mm" y2="@(corner_y)mm" style="stroke:black"/>
+  <line x1="@(corner_x)mm" y1="@(paper_height/2 - fid_len/2)mm" x2="@(corner_x)mm" y2="@(paper_height/2 + fid_len/2)mm" style="stroke:black"/>
+
   @{corner_x = (paper_width - fid_len)/2 - cut}
   @{corner_y = (paper_height + fid_len)/2 + cut}
   <line x1="@(corner_x)mm" y1="@(corner_y)mm" x2="@(corner_x + 2)mm" y2="@(corner_y)mm" style="stroke:black"/>
   <line x1="@(corner_x)mm" y1="@(corner_y)mm" x2="@(corner_x)mm" y2="@(corner_y - 2)mm" style="stroke:black"/>
+
+  <line x1="@(corner_x)mm" y1="@(paper_height/2 - fid_len/2)mm" x2="@(corner_x)mm" y2="@(paper_height/2 + fid_len/2)mm" style="stroke:black"/>
+  <line x1="@(paper_width/2 - fid_len/2)mm" y1="@(corner_y)mm" x2="@(paper_width/2 + fid_len/2)mm" y2="@(corner_y)mm" style="stroke:black"/>
 
   @{corner_x = (paper_width + fid_len)/2 + cut}
   @{corner_y = (paper_height + fid_len)/2 + cut}
@@ -87,3 +93,8 @@ if __name__ == "__main__":
     os.system("pdfunite %s %s" % (" ".join(pdfs), outfile))
     for f in pdfs:
         os.remove(f)
+
+    print '\033[91m' + "After printing, please make sure that the long lines \
+around the marker are EXACTLY 14.0 cm long"
+    print "This is required for accurate position estimation." + '\033[0m'
+  
