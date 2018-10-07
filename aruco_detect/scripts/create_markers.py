@@ -94,7 +94,6 @@ if __name__ == "__main__":
     for f in pdfs:
         os.remove(f)
 
-    print '\033[91m' + "After printing, please make sure that the long lines \
-around the marker are EXACTLY 14.0 cm long"
-    print "This is required for accurate position estimation." + '\033[0m'
-  
+    print '\033[91m' + """After printing, please make sure thatthe long lines around the marker are
+EXACTLY 14.0 cm long. This is required for accurate position estimation.""" + '\033[0m'
+
