@@ -81,8 +81,8 @@ if __name__ == "__main__":
         os.system("rosrun aruco_detect create_marker --id=%d --ms=2000 --d=%d marker%d.png" % (i, dicno, i))
         genSvg("marker%d.svg" % i, i, 7)
         os.system("inkscape --without-gui --export-area-page --export-pdf=marker%d.pdf marker%d.svg" % (i, i))
-#        os.remove("marker%d.svg" % i)
-#        os.remove("marker%d.png" % i)
+        os.remove("marker%d.svg" % i)
+        os.remove("marker%d.png" % i)
     print "Combining into %s" % outfile
     os.system("pdfunite %s %s" % (" ".join(pdfs), outfile))
     for f in pdfs:
