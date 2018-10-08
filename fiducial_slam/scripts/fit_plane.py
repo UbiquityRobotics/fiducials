@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import os
 import math
+import sys
 
 # read data from map
 ids = []
@@ -17,7 +18,11 @@ xs = []
 ys = []
 zs = []
 
-with open(os.environ["HOME"] + "/.ros/slam/map.txt") as file:
+map_file = os.environ["HOME"] + "/.ros/slam/map.txt"
+if len(sys.argv) == 2:
+    map_file = sys.argv[1]
+
+with open(map_file) as file:
    lines = file.readlines()
    for line in lines:
        parts = line.split()
