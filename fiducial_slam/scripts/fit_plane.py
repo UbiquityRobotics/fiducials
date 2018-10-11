@@ -11,63 +11,88 @@ import numpy as np
 import os
 import math
 import sys
+import argparse
+from standard_fit import standard_fit, distance, projection
+
+def closest_angle(old, new):
+    angle = new
+    dif = angle - old
+    if dif > 180:
+       dif -= 360
+    elif dif < -180:
+       dif += 360
+    if abs(dif) > 90:
+        angle += 180
+    if angle > 180:
+        angle -= 360
+    elif angle < -180:
+        angle += 360
+    return angle
+
+# parse args
+map_file = os.environ["HOME"] + "/.ros/slam/map.txt"
+parser = argparse.ArgumentParser()
+parser.add_argument("--map_file", help="Name of map file ", default=map_file, type=str)
+parser.add_argument("--adjust", help="Adjust points to fit plane", action="store_true")
+args = parser.parse_args()
 
 # read data from map
 ids = []
-xs = []
-ys = []
-zs = []
+points = []
+roll = []
+pitch = []
+other = []
 
-map_file = os.environ["HOME"] + "/.ros/slam/map.txt"
-if len(sys.argv) == 2:
-    map_file = sys.argv[1]
+adjust = args.adjust
 
-with open(map_file) as file:
+with open(args.map_file) as file:
    lines = file.readlines()
    for line in lines:
        parts = line.split()
        ids.append(int(parts[0]))
-       xs.append(float(parts[1]))
-       ys.append(float(parts[2]))
-       zs.append(float(parts[3]))
+       points.append([float(parts[1]), float(parts[2]), float(parts[3])])
+       roll.append(float(parts[4]))
+       pitch.append(float(parts[5]))
+       other.append(" ".join(parts[6:]))
 
 # plot raw data
 plt.figure()
+
+points = np.array(points)
 ax = plt.subplot(111, projection='3d')
+xs = points[:,0]
+ys = points[:,1]
+zs = points[:,2]
+
 ax.scatter(xs, ys, zs, color='b')
 
-# do fit
-tmp_A = []
-tmp_b = []
-for i in range(len(xs)):
-    tmp_A.append([xs[i], ys[i], 1])
-    tmp_b.append(zs[i])
-b = np.matrix(tmp_b).T
-A = np.matrix(tmp_A)
-fit = (A.T * A).I * A.T * b
-errors = b - A * fit
+C, N = standard_fit(points)
+print("Plane normal: %s" % N)
+
+# plot points projected onto plane
+fixed_points = projection(points, C, N)
+xs = fixed_points[:,0]
+ys = fixed_points[:,1]
+zs = fixed_points[:,2]
+ax.scatter(xs, ys, zs, color='r')
+
+errors = distance(points, C, N)
 residual = np.linalg.norm(errors)
 
-print("Plane: %f x + %f y + %f = z" % (fit[0], fit[1], fit[2]))
-slopex = math.atan(fit[0]) * 180.0 / math.pi
-slopey = math.atan(fit[1]) * 180.0 / math.pi
+slopex = math.atan2(N[0], N[2]) * 180.0 / math.pi
+slopey = math.atan2(N[1], N[2]) * 180.0 / math.pi
 print("slope: %f deg in X %f deg in Y" % (slopex, slopey))
-
-print("errors:")
-for i in range(len(errors)):
-   print("%4d  %f" % (ids[i], errors[i]))
 
 print("residual: %f" % residual)
 
 # plot plane
 xlim = ax.get_xlim()
 ylim = ax.get_ylim()
+zlim = ax.get_zlim()
 X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
                   np.arange(ylim[0], ylim[1]))
-Z = np.zeros(X.shape)
-for r in range(X.shape[0]):
-    for c in range(X.shape[1]):
-        Z[r,c] = fit[0] * X[r,c] + fit[1] * Y[r,c] + fit[2]
+D = -C.dot(N)
+Z = (-N[0] * X - N[1] * Y - D) / N[2]
 ax.plot_wireframe(X,Y,Z, color='k')
 
 ax.set_xlabel('x')
@@ -75,3 +100,13 @@ ax.set_ylabel('y')
 ax.set_zlabel('z')
 plt.show()
 
+
+if adjust:
+    print("Saving adjusted map")
+    os.rename(map_file, map_file + ".bak")
+    with open(map_file, 'w') as file:
+        for i in range(len(errors)):
+            file.write("%d %f %f %f %f %f %s\n" % (ids[i], xs[i], ys[i], zs[i],
+                                                   closest_angle(roll[i], slopex),
+                                                   closest_angle(pitch[i], slopey),
+                                                   other[i])) 
