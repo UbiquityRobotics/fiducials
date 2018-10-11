@@ -204,7 +204,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
     // threshold of object error for using multi-fidicial pose
     // set -ve to never use
-    nh.param<double>("multi_error_theshold", multiErrorThreshold, 0.1);
+    nh.param<double>("multi_error_theshold", multiErrorThreshold, -1);
 
     nh.param<std::string>("map_file", mapFilename,
         string(getenv("HOME")) + "/.ros/slam/map.txt");
