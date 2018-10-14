@@ -2,6 +2,14 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* use sum in quadrature by default
+* Disable multifiducial estimate by default
+* Added a tool for fitting a plane
+* Add map_read_only param, publish camera_pose
+* Contributors: Jim Vaughan, Rohan Agrawal
+
 0.9.0 (2018-09-12)
 ------------------
 * Merge pull request `#112 <https://github.com/UbiquityRobotics/fiducials/issues/112>`_ from UbiquityRobotics/davecrawley-patch-1
