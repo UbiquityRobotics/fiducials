@@ -2,8 +2,8 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.0 (2018-10-13)
+-------------------
 * Dramatically speed up create_markers using cairosvg and joblib
 * Overhaul aruco marker generation (calculate svg values)
 * Ddd new 2 tag test image

@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.0 (2018-10-13)
+-------------------
 * use sum in quadrature by default
 * Disable multifiducial estimate by default
 * Added a tool for fitting a plane
