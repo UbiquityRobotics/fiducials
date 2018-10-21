@@ -92,9 +92,10 @@ class TransformWithVariance {
     }
 
     // Used to combine this transform with another one keeping variance the same
-    void operator*=(const tf2::Transform& rhs) {
+    TransformWithVariance& operator*=(const tf2::Transform& rhs) {
         transform *= rhs;
         // No need to change the variance, we are assuming that rhs has variance of 0
+        return *this;
     }
     friend TransformWithVariance operator*(TransformWithVariance lhs, const tf2::Transform& rhs) {
         lhs *= rhs;
