@@ -184,7 +184,7 @@ static double getReprojectionError(const vector<Point3f> &objectPoints,
         double error = dist(imagePoints[i], projectedPoints[i]);
         totalError += error*error;
     }
-    double rerror = totalError/objectPoints.size();
+    double rerror = totalError/(double)objectPoints.size();
     return rerror;
 }
 
@@ -318,7 +318,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
         ROS_INFO("Detected %d markers", (int)ids.size());
 
-        for (int i=0; i<ids.size(); i++) {
+        for (size_t i=0; i<ids.size(); i++) {
             fiducial_msgs::Fiducial fid;
             fid.fiducial_id = ids[i];
 
@@ -348,14 +348,14 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             }
 
             vector <double>reprojectionError;
-            estimatePoseSingleMarkers(ids, corners, fiducial_len,
+            estimatePoseSingleMarkers(ids, corners, (float)fiducial_len,
                                       cameraMatrix, distortionCoeffs,
                                       rvecs, tvecs,
                                       reprojectionError);
 
-            for (int i=0; i<ids.size(); i++) {
+            for (size_t i=0; i<ids.size(); i++) {
                 aruco::drawAxis(cv_ptr->image, cameraMatrix, distortionCoeffs,
-                                rvecs[i], tvecs[i], fiducial_len);
+                                rvecs[i], tvecs[i], (float)fiducial_len);
 
                 ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
                          tvecs[i][0], tvecs[i][1], tvecs[i][2],

@@ -95,6 +95,7 @@ class TransformWithVariance {
     TransformWithVariance& operator*=(const tf2::Transform& rhs) {
         transform *= rhs;
         // No need to change the variance, we are assuming that rhs has variance of 0
+        return *this;
     }
     friend TransformWithVariance operator*(TransformWithVariance lhs, const tf2::Transform& rhs) {
         lhs *= rhs;
@@ -149,18 +150,15 @@ inline geometry_msgs::TransformStamped toMsg(const tf2::Stamped<TransformWithVar
 class Observation {
   public:
     int fid;
-    double imageError;
     tf2::Stamped<TransformWithVariance> T_fidCam;
     tf2::Stamped<TransformWithVariance> T_camFid;
 
     // how well this fitted the consensus of cameraPose
     tf2::Vector3 position;
-    double poseError;
 
     Observation() {};
 
-    Observation(int fid, const tf2::Stamped<TransformWithVariance>& camFid,
-                double ierr, double oerr);
+    Observation(int fid, const tf2::Stamped<TransformWithVariance>& camFid);
 };
 
 // A single fiducial that is in the map
