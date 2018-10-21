@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os, sys
+import os, sys, argparse
 import em
 
 import cv2
@@ -18,7 +18,7 @@ def checkCmd(cmd, package):
     sudo apt install %s""" % (cmd, package)
         sys.exit(1)
      
-def genSvg(id, dicno):
+def genSvg(id, dicno, paper_size):
     return em.expand("""<svg width="@(paper_width)mm" height="@(paper_height)mm"
  version="1.1"
  xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -66,15 +66,15 @@ def genSvg(id, dicno):
   <text x="@(paper_width/2)mm" y="@((paper_height + fid_len)/2 + 30)mm" text-anchor="middle" style="font-family:ariel; font-size:24;">@(id) D@(dicno)</text>
 
 </svg>
-""", {"id": id, "dicno": dicno, "paper_width": 215.9, "paper_height": 279.4, "fid_len": 140.0})
+""", {"id": id, "dicno": dicno, "paper_width": paper_size[0], "paper_height": paper_size[1], "fid_len": 140.0})
 
-def genMarker(i, dicno):
+def genMarker(i, dicno, paper_size):
     print " Marker %d\r" % i,
     sys.stdout.flush()
     aruco_dict = aruco.Dictionary_get(dicno)
     img = aruco.drawMarker(aruco_dict, i, 2000)
     cv2.imwrite("/tmp/marker%d.png" % i, img)
-    svg = genSvg(i, dicno)
+    svg = genSvg(i, dicno, paper_size)
     cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i)
     os.remove("/tmp/marker%d.png" % i)
 
@@ -82,21 +82,36 @@ if __name__ == "__main__":
     checkCmd("pdfunite", "poppler-utils")
     checkCmd("cairosvg-py2", "python-cairosvg")
 
-    dicno = 7
-    argc = len(sys.argv)
-    if argc != 4 and argc != 5:
-        print "Usage: %s startId endId pdfFile [dictionary]" % sys.argv[0]
-        sys.exit(1)
-    outfile = sys.argv[3]
-    if argc == 5:
-        dicno = int(sys.argv[4])
-    markers = range(int(sys.argv[1]), int(sys.argv[2])+1)
+
+    parser = argparse.ArgumentParser(description='Generate Aruco Markers.')
+    parser.add_argument('startId', type=int,
+                        help='start of marker range to generate')
+    parser.add_argument('endId', type=int,
+                        help='end of marker range to generate')
+    parser.add_argument('pdfFile', type=str,
+                        help='file to store markers in')
+    parser.add_argument('dictionary', type=int, default='7', nargs='?',
+                        help='dictionary to generate from')
+    parser.add_argument('--paper-size', dest='paper_size', action='store',
+                        default='letter', help='paper size to use (letter or a4)')
+
+    args = parser.parse_args()
+
+    outfile = args.pdfFile
+    dicno = args.dictionary
+
+    markers = range(args.startId, args.endId + 1)
     pdfs = map(lambda i: "/tmp/marker%d.pdf" % i, markers)
+
+    if args.paper_size == 'letter':
+        paper_size  = (215.9, 279.4)
+    elif args.paper_size == 'a4':
+        paper_size  = (210, 297)
 
     try:
         # For a parallel version
         from joblib import Parallel, delayed
-        Parallel(n_jobs=-1)(delayed(genMarker)(i, dicno) for i in markers)
+        Parallel(n_jobs=-1)(delayed(genMarker)(i, dicno, paper_size) for i in markers)
     except ImportError:
         # Fallback to serial version
         for i in markers:
