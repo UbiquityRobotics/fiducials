@@ -94,7 +94,7 @@ class FiducialsNode {
 
     void estimatePoseSingleMarkers(const vector<int> &ids,
                                    const vector<vector<Point2f > >&corners,
-                                   double markerLength,
+                                   float markerLength,
                                    const cv::Mat &cameraMatrix,
                                    const cv::Mat &distCoeffs,
                                    vector<Vec3d>& rvecs, vector<Vec3d>& tvecs,
@@ -116,16 +116,16 @@ class FiducialsNode {
 /**
   * @brief Return object points for the system centered in a single marker, given the marker length
   */
-static void getSingleMarkerObjectPoints(double markerLength, vector<Point3d>& objPoints) {
+static void getSingleMarkerObjectPoints(float markerLength, vector<Point3f>& objPoints) {
 
     CV_Assert(markerLength > 0);
 
     // set coordinate system in the middle of the marker, with Z pointing out
     objPoints.clear();
-    objPoints.push_back(Vec3d(-markerLength / 2., markerLength / 2.f, 0.));
-    objPoints.push_back(Vec3d( markerLength / 2., markerLength / 2.f, 0.));
-    objPoints.push_back(Vec3d( markerLength / 2.,-markerLength / 2.f, 0.));
-    objPoints.push_back(Vec3d(-markerLength / 2.,-markerLength / 2.f, 0.));
+    objPoints.push_back(Vec3f(-markerLength / 2.f, markerLength / 2.f, 0));
+    objPoints.push_back(Vec3f( markerLength / 2.f, markerLength / 2.f, 0));
+    objPoints.push_back(Vec3f( markerLength / 2.f,-markerLength / 2.f, 0));
+    objPoints.push_back(Vec3f(-markerLength / 2.f,-markerLength / 2.f, 0));
 }
 
 // Euclidean distance between two points
@@ -168,7 +168,7 @@ static double calcFiducialArea(const std::vector<cv::Point2f> &pts)
 }
 
 // estimate reprojection error
-static double getReprojectionError(const vector<Point3d> &objectPoints,
+static double getReprojectionError(const vector<Point3f> &objectPoints,
                             const vector<Point2f> &imagePoints,
                             const Mat &cameraMatrix, const Mat  &distCoeffs,
                             const Vec3d &rvec, const Vec3d &tvec) {
@@ -190,7 +190,7 @@ static double getReprojectionError(const vector<Point3d> &objectPoints,
 
 void FiducialsNode::estimatePoseSingleMarkers(const vector<int> &ids,
                                 const vector<vector<Point2f > >&corners,
-                                double markerLength,
+                                float markerLength,
                                 const cv::Mat &cameraMatrix,
                                 const cv::Mat &distCoeffs,
                                 vector<Vec3d>& rvecs, vector<Vec3d>& tvecs,
@@ -198,7 +198,7 @@ void FiducialsNode::estimatePoseSingleMarkers(const vector<int> &ids,
 
     CV_Assert(markerLength > 0);
 
-    vector<Point3d> markerObjPoints;
+    vector<Point3f> markerObjPoints;
     int nMarkers = (int)corners.size();
     rvecs.reserve(nMarkers);
     tvecs.reserve(nMarkers);
@@ -318,7 +318,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
         ROS_INFO("Detected %d markers", (int)ids.size());
 
-        for (unsigned int i=0; i<ids.size(); i++) {
+        for (size_t i=0; i<ids.size(); i++) {
             fiducial_msgs::Fiducial fid;
             fid.fiducial_id = ids[i];
 
@@ -348,14 +348,14 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             }
 
             vector <double>reprojectionError;
-            estimatePoseSingleMarkers(ids, corners, fiducial_len,
+            estimatePoseSingleMarkers(ids, corners, (float)fiducial_len,
                                       cameraMatrix, distortionCoeffs,
                                       rvecs, tvecs,
                                       reprojectionError);
 
-            for (unsigned int i=0; i<ids.size(); i++) {
+            for (size_t i=0; i<ids.size(); i++) {
                 aruco::drawAxis(cv_ptr->image, cameraMatrix, distortionCoeffs,
-                                rvecs[i], tvecs[i], fiducial_len);
+                                rvecs[i], tvecs[i], (float)fiducial_len);
 
                 ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
                          tvecs[i][0], tvecs[i][1], tvecs[i][2],
@@ -401,10 +401,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
         if (publish_images) {
 	    image_pub.publish(cv_ptr->toImageMsg());
-            static int frame = 0;
-            char file[100];
-            sprintf(file, "frame%04d.png", frame++);
-            cv::imwrite(file, cv_ptr->image);
         }
     }
     catch(cv_bridge::Exception & e) {

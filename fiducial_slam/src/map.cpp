@@ -269,7 +269,7 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
         f.visible = false;
     }
 
-    for (unsigned int i=0; i<obs.size(); i++) {
+    for (size_t i=0; i<obs.size(); i++) {
         const Observation &o = obs[i];
         if (o.fid == 0) {
             continue;
@@ -306,7 +306,7 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
            f.numObs++;
         }
 
-        for (unsigned int j=0; j<obs.size(); j++) {
+        for (size_t j=0; j<obs.size(); j++) {
             int fid = obs[j].fid;
             if (f.id != fid) {
                 f.links[fid] = 1;
@@ -345,7 +345,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     tf2::Stamped<TransformWithVariance> T_fid0Cam;
     bool useMulti = false;
 
-    for (unsigned int i=0; i<obs.size(); i++) {
+    for (size_t i=0; i<obs.size(); i++) {
         Observation &o = obs[i];
 
         if (o.fid == 0) {
@@ -526,7 +526,7 @@ static int findClosestObs(const vector<Observation>& obs)
     double smallestDist = -1;
     int closestIdx = -1;
 
-    for (unsigned int i=0; i<obs.size(); i++) {
+    for (size_t i=0; i<obs.size(); i++) {
         const Observation &o = obs[0];
         double d = o.T_camFid.transform.getOrigin().length2();
         if (smallestDist < 0 || d < smallestDist) {
@@ -571,7 +571,7 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
         fiducials[o.fid] = Fiducial(o.fid, T);
     }
     else {
-        for (unsigned int i=0; i<obs.size(); i++) {
+        for (size_t i=0; i<obs.size(); i++) {
             const Observation &o = obs[0];
 
             if (o.fid == originFid) {

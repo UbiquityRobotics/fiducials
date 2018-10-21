@@ -93,7 +93,7 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
 
     vector<Observation> observations;
 
-    for (unsigned int i=0; i<msg->transforms.size(); i++) {
+    for (size_t i=0; i<msg->transforms.size(); i++) {
         const fiducial_msgs::FiducialTransform &ft = msg->transforms[i];
 
         tf2::Vector3 tvec(ft.transform.translation.x,
