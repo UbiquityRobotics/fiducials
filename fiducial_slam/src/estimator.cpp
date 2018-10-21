@@ -98,7 +98,7 @@ double Estimator::getReprojectionError(const vector<Point3d> &objectPoints,
 
     // calculate RMS image error
     double totalError = 0.0;
-    for (unsigned int i=0; i<objectPoints.size(); i++) {
+    for (size_t i=0; i<objectPoints.size(); i++) {
         double error = dist(imagePoints[i], projectedPoints[i]);
         totalError += error*error;
     }
@@ -193,7 +193,7 @@ void Estimator::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
         }
     }
 
-    for (unsigned int i=0; i<msg->D.size(); i++) {
+    for (size_t i=0; i<msg->D.size(); i++) {
         distortionCoeffs.at<double>(0,i) = msg->D[i];
     }
 
@@ -219,7 +219,7 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
     vector<Point3d> allWorldPoints;
     vector<Point2d> allImagePoints;
 
-    for (unsigned int i=0; i<msg->fiducials.size(); i++) {
+    for (size_t i=0; i<msg->fiducials.size(); i++) {
 
         const fiducial_msgs::Fiducial& fid = msg->fiducials[i];
 
