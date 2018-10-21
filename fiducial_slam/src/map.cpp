@@ -55,7 +55,7 @@ static double suminquadrature(double var1, double var2) {
 }
 
 static bool sum_error_in_quadrature = false;
-static float systematic_error = 0.01;
+static float systematic_error = 0.01f;
 
 // Update the variance of a gaussian that has been combined with another
 // Taking into account the degree of overlap
@@ -80,6 +80,7 @@ static double updateVarianceDavid(const tf2::Vector3 &newMean,
     return newVar;
 }
 
+#if 0
 // Update transform t1 with t2 using variances as weights.
 // The result is in t1
 static void updateTransform(tf2::Transform &t1, double var1,
@@ -93,6 +94,7 @@ static void updateTransform(tf2::Transform &t1, double var1,
     tf2::Quaternion q2 = t2.getRotation();
     t1.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
 }
+#endif
 
 // Update this transform with a new one, with variances as weights
 // combine variances using David method
@@ -131,12 +133,10 @@ TransformWithVariance averageTransforms(const TransformWithVariance& t1, const T
 
 
 // Constructor for observation
-Observation::Observation(int fid, const tf2::Stamped<TransformWithVariance>& camFid,
-                         double ierr, double oerr) {
+Observation::Observation(int fid,
+                         const tf2::Stamped<TransformWithVariance>& camFid)
+{
     this->fid = fid;
-    this->imageError = ierr;
-
-    this->poseError = 0.0;
 
     tf2_ros::TransformBroadcaster broadcaster;
     geometry_msgs::TransformStamped ts = toMsg(camFid);
@@ -195,7 +195,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
     nh.param<float>("tf_publish_interval", tfPublishInterval, 1.0);
-    nh.param<float>("systematic_error", systematic_error, 0.01);
+    nh.param<float>("systematic_error", systematic_error, 0.01f);
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
     nh.param<bool>("sum_error_in_quadrature", sum_error_in_quadrature, false);
@@ -269,7 +269,7 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
         f.visible = false;
     }
 
-    for (int i=0; i<obs.size(); i++) {
+    for (unsigned int i=0; i<obs.size(); i++) {
         const Observation &o = obs[i];
         if (o.fid == 0) {
             continue;
@@ -283,9 +283,9 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
         {
             tf2::Vector3 trans = T_mapFid.transform.getOrigin();
 
-            ROS_INFO("Estimate of %d %lf %lf %lf err %lf %lf var %lf",
+            ROS_INFO("Estimate of %d %lf %lf %lf var %lf %lf",
                      o.fid, trans.x(), trans.y(), trans.z(),
-                     o.T_camFid.variance, o.poseError, T_mapFid.variance);
+                     o.T_camFid.variance, T_mapFid.variance);
 
             if (std::isnan(trans.x()) || 
                 std::isnan(trans.y()) || 
@@ -306,7 +306,7 @@ void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
            f.numObs++;
         }
 
-        for (int j=0; j<obs.size(); j++) {
+        for (unsigned int j=0; j<obs.size(); j++) {
             int fid = obs[j].fid;
             if (f.id != fid) {
                 f.links[fid] = 1;
@@ -345,7 +345,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     tf2::Stamped<TransformWithVariance> T_fid0Cam;
     bool useMulti = false;
 
-    for (int i=0; i<obs.size(); i++) {
+    for (unsigned int i=0; i<obs.size(); i++) {
         Observation &o = obs[i];
 
         if (o.fid == 0) {
@@ -526,7 +526,7 @@ static int findClosestObs(const vector<Observation>& obs)
     double smallestDist = -1;
     int closestIdx = -1;
 
-    for (int i=0; i<obs.size(); i++) {
+    for (unsigned int i=0; i<obs.size(); i++) {
         const Observation &o = obs[0];
         double d = o.T_camFid.transform.getOrigin().length2();
         if (smallestDist < 0 || d < smallestDist) {
@@ -571,7 +571,7 @@ void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
         fiducials[o.fid] = Fiducial(o.fid, T);
     }
     else {
-        for (int i=0; i<obs.size(); i++) {
+        for (unsigned int i=0; i<obs.size(); i++) {
             const Observation &o = obs[0];
 
             if (o.fid == originFid) {
@@ -797,7 +797,7 @@ void Map::publishMarker(Fiducial &fid)
     cylinder.color.g = 0.0f;
     cylinder.color.b = 1.0f;
     cylinder.color.a = 0.5f;
-    cylinder.id = fid.id; + 10000;
+    cylinder.id = fid.id + 10000;
     cylinder.ns = "sigma";
     cylinder.scale.x = cylinder.scale.y = std::max(sqrt(fid.pose.variance), 0.1);
     cylinder.scale.z = 0.01;

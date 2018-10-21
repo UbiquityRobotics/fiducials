@@ -70,13 +70,13 @@ class Estimator {
     std::map<int, cv::Vec3d> rvecHistory;
     std::map<int, cv::Vec3d> tvecHistory;
 
-    void estimatePose(int fid, const vector<Point3f> &worldPoints,
-                      const vector<Point2f> &imagePoints,
+    void estimatePose(int fid, const vector<Point3d> &worldPoints,
+                      const vector<Point2d> &imagePoints,
                       Observation &obs, fiducial_msgs::FiducialTransform &ft,
                       const ros::Time& stamp, const string& frame);
 
-    double getReprojectionError(const vector<Point3f> &objectPoints,
-                                const vector<Point2f> &imagePoints,
+    double getReprojectionError(const vector<Point3d> &objectPoints,
+                                const vector<Point2d> &imagePoints,
                                 const Vec3d &rvec, const Vec3d &tvec);
 
   public:

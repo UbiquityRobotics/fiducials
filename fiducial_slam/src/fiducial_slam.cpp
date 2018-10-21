@@ -72,6 +72,9 @@ class FiducialSlam {
     ros::Subscriber cameraInfoSub;
     ros::Publisher ftPub;
 
+    bool use_fiducial_area_as_weight;
+    double weighting_scale;
+
     void transformCallback(const fiducial_msgs::FiducialTransformArray::ConstPtr &msg);
 
     void verticesCallback(const fiducial_msgs::FiducialArray::ConstPtr &msg);
@@ -90,7 +93,7 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
 
     vector<Observation> observations;
 
-    for (int i=0; i<msg->transforms.size(); i++) {
+    for (unsigned int i=0; i<msg->transforms.size(); i++) {
         const fiducial_msgs::FiducialTransform &ft = msg->transforms[i];
 
         tf2::Vector3 tvec(ft.transform.translation.x,
@@ -102,11 +105,19 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
                           ft.transform.rotation.z,
                           ft.transform.rotation.w);
 
+        double variance;
+        if (use_fiducial_area_as_weight) {
+            variance = weighting_scale / ft.fiducial_area;
+        }
+        else {
+            variance = weighting_scale * ft.object_error; 
+        }
+
         Observation obs(ft.fiducial_id,
                         tf2::Stamped<TransformWithVariance>(TransformWithVariance(
-                                ft.transform, ft.object_error), msg->header.stamp, msg->header.frame_id),
-                        ft.image_error,
-                        ft.object_error);
+                                                            ft.transform,
+                                                            variance),
+                        msg->header.stamp, msg->header.frame_id));
         observations.push_back(obs);
     }
 
@@ -132,10 +143,19 @@ void FiducialSlam::verticesCallback(const fiducial_msgs::FiducialArray::ConstPtr
 }
 
 
-FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh),
-    estimator(fiducialMap)
+FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : estimator(fiducialMap),
+                                                  fiducialMap(nh)
 {
     bool doPoseEstimation;
+
+    // If set, use the fiducial area in pixels^2 as an indication of the
+    // 'goodness' of it. This will favor fiducials that are close to the
+    // camera and center of the image. The reciprical of the area is actually
+    // used, in place of reprojection error as the estimate's variance
+    nh.param<bool>("use_fiducial_area_as_weight", use_fiducial_area_as_weight,
+                   false);
+    // Scaling factor for weighing
+    nh.param<double>("weighting_scale", weighting_scale, 1e9);
 
     nh.param("do_pose_estimation", doPoseEstimation, false);
 

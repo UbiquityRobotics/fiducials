@@ -36,19 +36,19 @@
 /**
   * @brief Return object points for the system centered in a single marker, given the marker length
   */
-static void getSingleMarkerObjectPoints(float markerLength, vector<Point3f>& objPoints) {
+static void getSingleMarkerObjectPoints(double markerLength, vector<Point3d>& objPoints) {
 
     CV_Assert(markerLength > 0);
 
     // set coordinate system in the middle of the marker, with Z pointing out
-    objPoints.push_back(Vec3f(-markerLength / 2.f, markerLength / 2.f, 0));
-    objPoints.push_back(Vec3f( markerLength / 2.f, markerLength / 2.f, 0));
-    objPoints.push_back(Vec3f( markerLength / 2.f,-markerLength / 2.f, 0));
-    objPoints.push_back(Vec3f(-markerLength / 2.f,-markerLength / 2.f, 0));
+    objPoints.push_back(Vec3d(-markerLength / 2.f, markerLength / 2.f, 0.f));
+    objPoints.push_back(Vec3d( markerLength / 2.f, markerLength / 2.f, 0.f));
+    objPoints.push_back(Vec3d( markerLength / 2.f,-markerLength / 2.f, 0.f));
+    objPoints.push_back(Vec3d(-markerLength / 2.f,-markerLength / 2.f, 0.f));
 }
 
 // Euclidean distance between two points
-static double dist(const cv::Point2f &p1, const cv::Point2f &p2)
+static double dist(const cv::Point2d &p1, const cv::Point2d &p2)
 {
     double x1 = p1.x;
     double y1 = p1.y;
@@ -63,12 +63,12 @@ static double dist(const cv::Point2f &p1, const cv::Point2f &p2)
 
 // Compute area in image of a fiducial, using Heron's formula
 // to find the area of two triangles
-static double calcFiducialArea(const std::vector<cv::Point2f> &pts)
+static double calcFiducialArea(const std::vector<cv::Point2d> &pts)
 {
-    const Point2f &p0 = pts.at(0);
-    const Point2f &p1 = pts.at(1);
-    const Point2f &p2 = pts.at(2);
-    const Point2f &p3 = pts.at(3);
+    const Point2d &p0 = pts.at(0);
+    const Point2d &p1 = pts.at(1);
+    const Point2d &p2 = pts.at(2);
+    const Point2d &p3 = pts.at(3);
 
     double a1 = dist(p0, p1);
     double b1 = dist(p0, p3);
@@ -87,11 +87,11 @@ static double calcFiducialArea(const std::vector<cv::Point2f> &pts)
 }
 
 // estimate reprojection error
-double Estimator::getReprojectionError(const vector<Point3f> &objectPoints,
-                            const vector<Point2f> &imagePoints,
+double Estimator::getReprojectionError(const vector<Point3d> &objectPoints,
+                            const vector<Point2d> &imagePoints,
                             const Vec3d &rvec, const Vec3d &tvec) {
 
-    vector<Point2f> projectedPoints;
+    vector<Point2d> projectedPoints;
 
     cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix,
                       distortionCoeffs, projectedPoints);
@@ -102,13 +102,13 @@ double Estimator::getReprojectionError(const vector<Point3f> &objectPoints,
         double error = dist(imagePoints[i], projectedPoints[i]);
         totalError += error*error;
     }
-    double rerror = totalError/objectPoints.size();
+    double rerror = totalError/(float)objectPoints.size();
     return rerror;
 }
 
 
-void Estimator::estimatePose(int fid, const vector<Point3f> &worldPoints,
-                              const vector<Point2f> &imagePoints,
+void Estimator::estimatePose(int fid, const vector<Point3d> &worldPoints,
+                              const vector<Point2d> &imagePoints,
                               Observation &obs, fiducial_msgs::FiducialTransform &ft,
                               const ros::Time& stamp, const string& frame)
 {
@@ -145,9 +145,7 @@ void Estimator::estimatePose(int fid, const vector<Point3f> &worldPoints,
 
     obs = Observation(fid,
                       tf2::Stamped<TransformWithVariance>(TransformWithVariance(
-                      T, objectError), stamp, frame),
-                      reprojectionError,
-                      objectError);
+                      T, objectError), stamp, frame));
 
     if (reprojectionError < errorThreshold) {
         rvecHistory[fid] = rvec;
@@ -195,7 +193,7 @@ void Estimator::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
         }
     }
 
-    for (int i=0; i<msg->D.size(); i++) {
+    for (unsigned int i=0; i<msg->D.size(); i++) {
         distortionCoeffs.at<double>(0,i) = msg->D[i];
     }
 
@@ -215,24 +213,23 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
         return;
     }
 
-    vector<Point3f> markerObjPoints;
+    vector<Point3d> markerObjPoints;
     getSingleMarkerObjectPoints(fiducialLen, markerObjPoints);
 
-    vector<Point3f> allWorldPoints;
-    vector<Point2f> allImagePoints;
+    vector<Point3d> allWorldPoints;
+    vector<Point2d> allImagePoints;
 
-    for (int i=0; i<msg->fiducials.size(); i++) {
+    for (unsigned int i=0; i<msg->fiducials.size(); i++) {
 
         const fiducial_msgs::Fiducial& fid = msg->fiducials[i];
 
-        vector<Point2f > corners;
-        corners.push_back(Point2f(fid.x0, fid.y0));
-        corners.push_back(Point2f(fid.x1, fid.y1));
-        corners.push_back(Point2f(fid.x2, fid.y2));
-        corners.push_back(Point2f(fid.x3, fid.y3));
+        vector<Point2d > corners;
+        corners.push_back(Point2d(fid.x0, fid.y0));
+        corners.push_back(Point2d(fid.x1, fid.y1));
+        corners.push_back(Point2d(fid.x2, fid.y2));
+        corners.push_back(Point2d(fid.x3, fid.y3));
 
         Vec3d rvec, tvec;
-        double reprojectionError;
 
         if (map.fiducials.find(fid.fiducial_id) != map.fiducials.end()) {
             const tf2::Transform&  fiducialTransform =
@@ -240,11 +237,11 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
 
             for (int j=0; j<4; j++) {
                 // vertex in coordinate system of fiducial
-                Point3f& vertex = markerObjPoints[j];
+                Point3d& vertex = markerObjPoints[j];
                 tf2::Vector3 vertex2(vertex.x, vertex.y, vertex.z);
                 // vertex in world coordinates
                 tf2::Vector3 worldPoint = fiducialTransform * vertex2;
-                allWorldPoints.push_back(Point3f(worldPoint.x(), worldPoint.y(), worldPoint.z()));
+                allWorldPoints.push_back(Point3d(worldPoint.x(), worldPoint.y(), worldPoint.z()));
                 allImagePoints.push_back(corners[j]);
             }
         }
