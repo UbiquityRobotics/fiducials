@@ -80,7 +80,6 @@ def genMarker(i, dicno):
 
 if __name__ == "__main__":
     checkCmd("pdfunite", "poppler-utils")
-    checkCmd("cairosvg-py2", "python-cairosvg")
 
     dicno = 7
     argc = len(sys.argv)
