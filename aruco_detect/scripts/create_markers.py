@@ -80,7 +80,6 @@ def genMarker(i, dicno, paper_size):
 
 if __name__ == "__main__":
     checkCmd("pdfunite", "poppler-utils")
-    checkCmd("cairosvg-py2", "python-cairosvg")
 
 
     parser = argparse.ArgumentParser(description='Generate Aruco Markers.')

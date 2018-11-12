@@ -24,5 +24,7 @@
   <depend>opencv3</depend>
   <depend>fiducial_msgs</depend>
   <depend>dynamic_reconfigure</depend>
+  <depend>python-cairosvg</depend>
+  <depend>python-joblib</depend>
 
 </package>
