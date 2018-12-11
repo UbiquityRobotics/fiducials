@@ -46,6 +46,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <std_msgs/Bool.h>
 #include <dynamic_reconfigure/server.h>
+#include <std_srvs/SetBool.h>
 
 #include "fiducial_msgs/Fiducial.h"
 #include "fiducial_msgs/FiducialArray.h"
@@ -74,6 +75,8 @@ class FiducialsNode {
     image_transport::ImageTransport it;
     image_transport::Subscriber img_sub;
 
+    ros::ServiceServer service_enable_detections;
+
     // if set, we publish the images that contain fiducials
     bool publish_images;
     bool enable_detections;
@@ -88,7 +91,6 @@ class FiducialsNode {
     std::string frameId;
     std::vector<int> ignoreIds;
     std::map<int, double> fiducialLens;
-
 
     image_transport::Publisher image_pub;
 
@@ -108,6 +110,9 @@ class FiducialsNode {
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
     void configCallback(aruco_detect::DetectorParamsConfig &config, uint32_t level);
     void enableDetectionsCallback(const std_msgs::Bool::ConstPtr& msg);
+
+    bool enableDetectionsCallback(std_srvs::SetBool::Request &req,
+                                std_srvs::SetBool::Response &res);
 
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
@@ -419,8 +424,20 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     }
 }
 
-void FiducialsNode::enableDetectionsCallback(const std_msgs::Bool::ConstPtr& msg) {
-    enable_detections = msg->data;
+bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
+                                std_srvs::SetBool::Response &res)
+{
+    enable_detections = req.data;
+    res.success = true;
+    if (enable_detections){
+        res.message = "Enabled aruco detections.";
+        ROS_INFO("Enabled aruco detections.");
+    }
+    else {
+        res.message = "Disabled aruco detections.";
+        ROS_INFO("Disabled aruco detections.");
+    }
+    return true;
 }
 
 FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
@@ -519,7 +536,6 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
     image_pub = it.advertise("/fiducial_images", 1);
 
-
     vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("/fiducial_vertices", 1));
 
     pose_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialTransformArray>("/fiducial_transforms", 1));
@@ -532,7 +548,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     caminfo_sub = nh.subscribe("/camera_info", 1,
                     &FiducialsNode::camInfoCallback, this);
 
-    enable_detections_sub = nh.subscribe("enable", 1,
+    service_enable_detections = nh.advertiseService("enable_detections",
                         &FiducialsNode::enableDetectionsCallback, this);
 
     callbackType = boost::bind(&FiducialsNode::configCallback, this, _1, _2);
