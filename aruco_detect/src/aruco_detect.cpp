@@ -44,7 +44,6 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include <std_msgs/Bool.h>
 #include <dynamic_reconfigure/server.h>
 #include <std_srvs/SetBool.h>
 
@@ -71,7 +70,6 @@ class FiducialsNode {
     ros::Publisher * pose_pub;
 
     ros::Subscriber caminfo_sub;
-    ros::Subscriber enable_detections_sub;
     image_transport::ImageTransport it;
     image_transport::Subscriber img_sub;
 
@@ -109,7 +107,6 @@ class FiducialsNode {
     void imageCallback(const sensor_msgs::ImageConstPtr &msg);
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
     void configCallback(aruco_detect::DetectorParamsConfig &config, uint32_t level);
-    void enableDetectionsCallback(const std_msgs::Bool::ConstPtr& msg);
 
     bool enableDetectionsCallback(std_srvs::SetBool::Request &req,
                                 std_srvs::SetBool::Response &res);
@@ -428,7 +425,6 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
                                 std_srvs::SetBool::Response &res)
 {
     enable_detections = req.data;
-    res.success = true;
     if (enable_detections){
         res.message = "Enabled aruco detections.";
         ROS_INFO("Enabled aruco detections.");
@@ -437,6 +433,8 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
         res.message = "Disabled aruco detections.";
         ROS_INFO("Disabled aruco detections.");
     }
+    
+    res.success = true;
     return true;
 }
 
