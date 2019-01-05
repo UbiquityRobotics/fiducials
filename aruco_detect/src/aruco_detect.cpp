@@ -329,6 +329,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         ROS_INFO("Detected %d markers", (int)ids.size());
 
         for (size_t i=0; i<ids.size(); i++) {
+	    if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
+	        ROS_INFO("Ignoring id %d", ids[i]);
+	        continue;
+	    }
             fiducial_msgs::Fiducial fid;
             fid.fiducial_id = ids[i];
 
