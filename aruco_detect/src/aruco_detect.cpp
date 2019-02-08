@@ -244,7 +244,7 @@ void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, 
     detectorParams->cornerRefinementMaxIterations = config.cornerRefinementMaxIterations;
     detectorParams->cornerRefinementMinAccuracy = config.cornerRefinementMinAccuracy;
     detectorParams->cornerRefinementWinSize = config.cornerRefinementWinSize;
-#if OPENCV_MINOR_VERSION==2
+#if CV_MINOR_VERSION==2
     detectorParams->doCornerRefinement = config.doCornerRefinement;
 #else
     if (config.doCornerRefinement) {
@@ -563,7 +563,7 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     nh.param<int>("cornerRefinementMaxIterations", detectorParams->cornerRefinementMaxIterations, 30);
     nh.param<double>("cornerRefinementMinAccuracy", detectorParams->cornerRefinementMinAccuracy, 0.01); /* default 0.1 */
     nh.param<int>("cornerRefinementWinSize", detectorParams->cornerRefinementWinSize, 5);
-#if OPENCV_MINOR_VERSION==2
+#if CV_MINOR_VERSION==2
     nh.param<bool>("doCornerRefinement",detectorParams->doCornerRefinement, true); /* default false */
 #else
     bool doCornerRefinement = true;
