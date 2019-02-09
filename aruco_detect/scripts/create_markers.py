@@ -114,7 +114,7 @@ if __name__ == "__main__":
     except ImportError:
         # Fallback to serial version
         for i in markers:
-            genMarker(i, dicno)
+            genMarker(i, dicno, paper_size)
 
     print "Combining into %s" % outfile
     os.system("pdfunite %s %s" % (" ".join(pdfs), outfile))
