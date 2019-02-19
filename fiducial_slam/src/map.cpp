@@ -195,6 +195,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<std::string>("base_frame", baseFrame, "base_link");
 
     nh.param<float>("tf_publish_interval", tfPublishInterval, 1.0);
+    nh.param<bool>("publish_tf", publishPoseTf, false);
     nh.param<float>("systematic_error", systematic_error, 0.01f);
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
@@ -491,7 +492,11 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     poseTf = toMsg(outPose);
     poseTf.child_frame_id = outFrame;
     havePose = true;
-    publishTf();
+
+    if (publishPoseTf)
+    {
+        publishTf();
+    }
 
     ROS_INFO("Finished frame\n");
     return numEsts;
@@ -511,7 +516,7 @@ void Map::publishTf()
 void Map::update()
 {
     ros::Time now = ros::Time::now();
-    if (havePose && tfPublishInterval != 0.0 &&
+    if (publishPoseTf && havePose && tfPublishInterval != 0.0 &&
         (now - tfPublishTime).toSec() > tfPublishInterval) {
         publishTf();
         tfPublishTime = now;
