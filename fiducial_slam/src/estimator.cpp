@@ -265,4 +265,6 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
         observations.push_back(obs);
         outMsg.transforms.push_back(ft);
     }
+
+    outMsg.header.stamp = msg->header.stamp;
 }
