@@ -54,6 +54,12 @@ static double suminquadrature(double var1, double var2) {
     return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
 }
 
+static double probabilitydistributionfunction(double sigma, double u, double x)
+{
+    //=(1/(C$2*(2*PI())^0.5))*EXP(-((E3-C$3)^2)/(2*C$2^2))
+    return (1/(sigma* sqrt (2*M_PI())))*exp (-((x-u)*(x-u))/(2*sigma*sigma));
+}
+
 static bool sum_error_in_quadrature = false;
 static float systematic_error = 0.01f;
 
