@@ -211,6 +211,7 @@ class Map {
 
     bool havePose;
     float tfPublishInterval;
+    bool publishPoseTf;
     ros::Time tfPublishTime;
     geometry_msgs::TransformStamped poseTf;
 
