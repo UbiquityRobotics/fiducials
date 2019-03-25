@@ -99,12 +99,14 @@ static void updateTransform(tf2::Transform &t1, double var1,
                             const tf2::Transform &t2, double var2) {
     tf2::Vector3 o1 = t1.getOrigin();
     tf2::Vector3 o2 = t2.getOrigin();
-
-    t1.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
+//=C7+((C6*C6)/(C6*C6+D6*D6))*(D7-C7)
+    double kalman_gain=(var1*var1)/(var1*var1+var2*var2)
+    t1.setOrigin(o1+(kalman_gain)*(o2-o1))
+//    t1.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));   
 
     tf2::Quaternion q1 = t1.getRotation();
     tf2::Quaternion q2 = t2.getRotation();
-    t1.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
+    t1.setRotation(q1.slerp(q2, kalman_gain).normalized());
 }
 #endif
 
