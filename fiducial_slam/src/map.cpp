@@ -46,17 +46,20 @@
 
 #include <boost/filesystem.hpp>
 
+#include <math.h>
+#define _USE_MATH_DEFINES
+
 
 // Update the variance of a gaussian that has been combined with another
 // Does not Take into account the degree of overlap of observations
 static double suminquadrature(double var1, double var2) {
 
-    return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
+    return =SQRT(var1*var1+var2*var2)
 }
 
-static double probabilitydistributionfunction(double sigma, double u, double x)
+static double pdf(double sigma, double u, double x)   //This outputs the probability density at any given point on a probability distribution function
 {
-    //=(1/(C$2*(2*PI())^0.5))*EXP(-((E3-C$3)^2)/(2*C$2^2))
+    //=(1/(C6*SQRT(2*PI())))*EXP(-(($E8-C7)*($E8-C7))/(2*C6*C6))
     return (1/(sigma* sqrt (2*M_PI())))*exp (-((x-u)*(x-u))/(2*sigma*sigma));
 }
 
@@ -68,16 +71,19 @@ static float systematic_error = 0.01f;
 static double updateVarianceDavid(const tf2::Vector3 &newMean,
                                   const tf2::Vector3 &mean1, double var1,
                                   const tf2::Vector3 &mean2, double var2) {
-    if (sum_error_in_quadrature) {
-       return suminquadrature(var1, var2);
-    }
-
-    //=((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))
-    double d1 = (mean1 - newMean).length2();
-    double d2 = (mean2 - newMean).length2();
-
-    double newVar = systematic_error + sqrt(2.0*M_PI) * var1 * var2 *
-         exp(((d1 / (2.0*var1)) + d2 / (2.0*var2)));
+    if (sum_error_in_quadrature) {                          //Isn't this total garbage - shouldn't it be eliminated
+       return suminquadrature(var1, var2);                  //Isn't this total garbage - shouldn't it be eliminated
+    }                                                       //Isn't this total garbage - shouldn't it be eliminated
+    double var1_w_syst_err = suminquadrature(var1,systematic_error)
+    double var2_w_syst_err = suminquadrature(var2,systematic_error)
+    double est_prob_dens_at_newvar = suminquadrature(pdf(var1_w_syst_err,mean1,newMean),pdf(var2_w_syst_err, mean2, newMean))
+      //=1/(E10*(SQRT(2*PI())))      
+    double newVar = (1/(est_prob_dens_at_newvar*(SQRT(2*M_PI))))
+    //=((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))     //All this garbage needs to go
+    //double d1 = (mean1 - newMean).length2();                                             //All this garbage needs to go
+    //double d2 = (mean2 - newMean).length2();                                             //All this garbage needs to go
+    //double newVar = systematic_error + sqrt(2.0*M_PI) * var1 * var2 *                    //All this garbage needs to go
+    //    exp(((d1 / (2.0*var1)) + d2 / (2.0*var2)));                                     //All this garbage needs to go
 
     if (newVar > 100)
         newVar = 100;
