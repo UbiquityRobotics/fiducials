@@ -122,13 +122,10 @@ inline geometry_msgs::PoseWithCovarianceStamped toPose(const tf2::Stamped<Transf
 
     toMsg(in.transform, msg.pose.pose);
 
+    std::fill(msg.pose.covariance.begin(), msg.pose.covariance.end(), 0);
+    
     for (int i=0; i<=5; i++) {
-        for (int j=0; j<=5; j++) {
-            msg.pose.covariance[i*5+j] = 0;
-        }
-    }
-    for (int i=0; i<=5; i++) {
-        msg.pose.covariance[i*5+i] = in.variance;
+        msg.pose.covariance[i*6+i] = in.variance; // Fill the diagonal
     }
 
     return msg;
@@ -208,6 +205,9 @@ class Map {
     int frameNum;
     int initialFrameNum;
     int originFid;
+
+    bool overridePublishedCovariance;
+    std::vector<double> covarianceDiagonal;
 
     bool havePose;
     float tfPublishInterval;
