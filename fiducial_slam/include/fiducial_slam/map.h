@@ -206,6 +206,9 @@ class Map {
     int initialFrameNum;
     int originFid;
 
+    bool overridePublishedCovariance;
+    std::vector<double> covarianceDiagonal;
+
     bool havePose;
     float tfPublishInterval;
     bool publishPoseTf;

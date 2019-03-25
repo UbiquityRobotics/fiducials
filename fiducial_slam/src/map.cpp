@@ -202,6 +202,18 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<bool>("sum_error_in_quadrature", sum_error_in_quadrature, false);
     nh.param<bool>("read_only_map", readOnly, false);
 
+    std::fill(covarianceDiagonal.begin(), covarianceDiagonal.end(), 0);
+    overridePublishedCovariance = nh.getParam("covariance_diagonal", covarianceDiagonal); 
+    if (overridePublishedCovariance) {
+	// Check to make sure that the diagonal is non-zero
+	for (auto variance : covarianceDiagonal) {
+	    if (variance = 0) {
+                ROS_WARN("ignoring covariance_diagonal because it has 0 values"); 
+                std::fill(covarianceDiagonal.begin(), covarianceDiagonal.end(), 0);
+                break;
+	    }
+	}
+    }
 
     // threshold of object error for using multi-fidicial pose
     // set -ve to never use
@@ -458,7 +470,15 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     }
 
     basePose.frame_id_ = mapFrame;
-    robotPosePub.publish(toPose(basePose));
+    auto robotPose = toPose(basePose);
+    
+    if (overridePublishedCovariance) {
+        for (int i=0; i<=5; i++) {
+            robotPose.pose.covariance[i*6+i] = covarianceDiagonal[i]; // Fill the diagonal
+        }
+    }
+
+    robotPosePub.publish(robotPose);
 
     tf2::Stamped<TransformWithVariance> outPose = basePose;
     outPose.frame_id_ = mapFrame;
