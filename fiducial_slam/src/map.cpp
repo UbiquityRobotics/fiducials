@@ -71,21 +71,15 @@ static float systematic_error = 0.01f;
 static double updateVarianceDavid(const tf2::Vector3 &newMean,
                                   const tf2::Vector3 &mean1, double var1,
                                   const tf2::Vector3 &mean2, double var2) {
-    if (sum_error_in_quadrature) {                          //Isn't this total garbage - shouldn't it be eliminated
-       return suminquadrature(var1, var2);                  //Isn't this total garbage - shouldn't it be eliminated
-    }                                                       //Isn't this total garbage - shouldn't it be eliminated
-    double var1_w_syst_err = suminquadrature(var1,systematic_error)
-    double var2_w_syst_err = suminquadrature(var2,systematic_error)
-    double est_prob_dens_at_newvar = suminquadrature(pdf(var1_w_syst_err,mean1,newMean),pdf(var2_w_syst_err, mean2, newMean))
-      //=1/(E10*(SQRT(2*PI())))      
-    double newVar = (1/(est_prob_dens_at_newvar*(SQRT(2*M_PI))))
-    //=((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))     //All this garbage needs to go
-    //double d1 = (mean1 - newMean).length2();                                             //All this garbage needs to go
-    //double d2 = (mean2 - newMean).length2();                                             //All this garbage needs to go
-    //double newVar = systematic_error + sqrt(2.0*M_PI) * var1 * var2 *                    //All this garbage needs to go
-    //    exp(((d1 / (2.0*var1)) + d2 / (2.0*var2)));                                     //All this garbage needs to go
+    if (sum_error_in_quadrature) {                          //Shouldn't it be eliminated?
+       return suminquadrature(var1, var2);                  //Shouldn't it be eliminated?
+    }                                                       //Shouldn't it be eliminated?
+    double var1_w_syst_err = suminquadrature(var1,systematic_error)    //adding in the systematic error **before** the variances get used for anything
+    double var2_w_syst_err = suminquadrature(var2,systematic_error)    //adding in the systematic error **before** the variances get used for anything
+    double est_prob_dens_at_newvar = suminquadrature(pdf(var1_w_syst_err,mean1,newMean),pdf(var2_w_syst_err, mean2, newMean))  // This returns the estimated probability density given the probability density that would be expected from the two measurements at the most likely point where it will be 
+    double newVar = (1/(est_prob_dens_at_newvar*(SQRT(2*M_PI)))) //this converts this estimated probability density in to the new variance
 
-    if (newVar > 100)
+    if (newVar > 100)    //If this occurs then there is something seriously wrong - its not clear to me that this is helpful and may just hide problems
         newVar = 100;
     if (newVar < 10e-4)  //This line should be redundant if systematic_error does anything meaningful
         newVar = 10e-4;  //This line should be redundant if systematic_error does anything meaningful
@@ -99,11 +93,8 @@ static void updateTransform(tf2::Transform &t1, double var1,
                             const tf2::Transform &t2, double var2) {
     tf2::Vector3 o1 = t1.getOrigin();
     tf2::Vector3 o2 = t2.getOrigin();
-//=C7+((C6*C6)/(C6*C6+D6*D6))*(D7-C7)
     double kalman_gain=(var1*var1)/(var1*var1+var2*var2)
     t1.setOrigin(o1+(kalman_gain)*(o2-o1))
-//    t1.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));   
-
     tf2::Quaternion q1 = t1.getRotation();
     tf2::Quaternion q2 = t2.getRotation();
     t1.setRotation(q1.slerp(q2, kalman_gain).normalized());
