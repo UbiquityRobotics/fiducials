@@ -59,7 +59,7 @@ static double suminquadrature(double var1, double var2) {
 
 static double pdf(double sigma, double u, double x)   //This outputs the probability density at any given point on a probability distribution function
 {
-    return (1/(sigma* sqrt (2*M_PI)))*exp (-((x-u)*(x-u))/(2*sigma*sigma));
+    return (1.0 /(sigma* sqrt (2.0 *M_PI)))*exp (-((x-u)*(x-u))/(2.0 *sigma*sigma));
 }
 
 static bool sum_error_in_quadrature = false;
@@ -76,7 +76,7 @@ static double updateVarianceDavid(const tf2::Vector3 &newMean,
     double var1_w_syst_err = suminquadrature(var1,systematic_error);    //adding in the systematic error **before** the variances get used for anything
     double var2_w_syst_err = suminquadrature(var2,systematic_error);    //adding in the systematic error **before** the variances get used for anything
     double est_prob_dens_at_newvar = suminquadrature(pdf(var1_w_syst_err,mean1,newMean),pdf(var2_w_syst_err, mean2, newMean));  // This returns the estimated probability density given the probability density that would be expected from the two measurements at the most likely point where it will be 
-    double newVar = (1/(est_prob_dens_at_newvar*( sqrt (2*M_PI)))); //this converts this estimated probability density in to the new variance
+    double newVar = (1.0/(est_prob_dens_at_newvar*( sqrt (2.0 *M_PI)))); //this converts this estimated probability density in to the new variance
 
     if (newVar > 100)    //If this occurs then there is something seriously wrong - its not clear to me that this is helpful and may just hide problems
         newVar = 100;
