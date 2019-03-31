@@ -96,21 +96,91 @@ static void updateTransform(tf2::Transform &t1, double var1,
 }
 #endif
 
+/* 
+*  Takes 2 variances and gives the kalman gain figure
+*  Kalmain gain represents how much to trust the new measurement compared to the existing one
+*  Taken from equation 12 https://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/ 
+*/  
+static double kalman_gain(double var1, double var2) {
+    return var1 / (var1 + var2);
+}
+
+
+static double probabiltyAtPoint(const double x, const double u, const double var) {
+    return (1.0 /(sqrt(var) * sqrt(2.0 *M_PI)))* exp (-( (x-u)*(x-u) )/(2.0 * var));
+}
+
+/*
+ * Takes in 2 estimates and the combined estimate and calculates the
+ * variance of the new estimate to normalize it
+ */
+static double normalizeDavid(const double newMean,
+		             const double mean1, double var1,
+			     const double mean2, double var2) {
+    
+    // Find the probabilities of the new mean in both original gaussians
+    double prob1_at_newMean = probabiltyAtPoint(newMean, mean1, var1);
+    double prob2_at_newMean = probabiltyAtPoint(newMean, mean2, var2);
+    // We use the sum in quadrature of these 2 probabilities 
+    double prob_at_newMean = sqrt(pow(prob1_at_newMean, 2) + pow(prob2_at_newMean, 2));
+
+    double newVar = std::pow(1.0 / (prob_at_newMean * sqrt(2.0 *M_PI)), 2);
+
+    // Bound the variance to prevent blow up
+    newVar = std::min(newVar, 1e2);
+    newVar = std::max(newVar, 1e-4);
+    
+    return newVar;
+}
+
 // Update this transform with a new one, with variances as weights
 // combine variances using David method
 void TransformWithVariance::update(const TransformWithVariance& newT) {
-    tf2::Vector3 o1 = transform.getOrigin();
+    tf2::Vector3 p1 = transform.getOrigin();
     tf2::Quaternion q1 = transform.getRotation();
-    double var1 = variance;
+    double pvar1 = variance;
+    double ovar1 = variance_orientation;
 
-    tf2::Vector3 o2 = newT.transform.getOrigin();
+    tf2::Vector3 p2 = newT.transform.getOrigin();
     tf2::Quaternion q2 = newT.transform.getRotation();
-    double var2 = newT.variance;
+    double pvar2 = newT.variance; // TODO add systematic error here
+    double ovar2 = newT.variance_orientation;
 
-    transform.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
-    transform.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
+    // Calculate new mean for the position
+    // Use equation 15 in article
+    double pk = kalman_gain(pvar1, pvar2);
+    transform.setOrigin(p1 + pk * (p2 - p1));
 
-    variance = updateVarianceDavid(transform.getOrigin(), o1, var1, o2, var2);
+    // Calculate new mean for the orientation
+    // Use equation 15 in article
+    //
+    // The kalman gain should give us the weight for how far towards the new estimate to go
+    // Slerp should put us in a linear frame so the kalman gain should work as is
+    // Kalman gain is always [0,1] ?
+    double ok = kalman_gain(ovar1, ovar2);
+    transform.setRotation(q1.slerp(q2, ok));
+
+    //
+    // Do the new variance calculations
+    //
+
+    // Do everything in a 1d space between p1 and p2
+    // This should probably use proper multivariate modeling
+    double pMean1 = 0.0;
+    double pMean2 = (p2 - p1).length();
+    double pMean  = (transform.getOrigin() - p1).length();
+
+    // Normalize the variances so that the area under the probabilty remains 1
+    variance = normalizeDavid(pMean, pMean1, pvar1, pMean2, pvar2);
+
+    // Do everything in a 1d space between q1 and q2
+    // This should probably use proper multivariate modeling
+    // TODO: Is this space linear? does it have to be?
+    double oMean1 = 0.0;
+    double oMean2 = q1.angleShortestPath(q2);
+    double oMean  = q1.angleShortestPath(transform.getRotation());
+
+    variance_orientation = normalizeDavid(oMean, oMean1, ovar1, oMean2, ovar2); 
 }
 
 // Weighted average of 2 transforms, variances computed using Alexey Method
