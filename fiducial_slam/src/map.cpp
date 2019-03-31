@@ -52,14 +52,19 @@
 
 // Update the variance of a gaussian that has been combined with another
 // Does not Take into account the degree of overlap of observations
+// TODO: revert to alexy
 static double suminquadrature(double var1, double var2) {
 
     return sqrt (var1*var1+var2*var2);
 }
 
-static double pdf(double sigma, double u, double x)   //This outputs the probability density at any given point on a probability distribution function
+static double geometric_sum(double a, double b) {
+    return sqrt (a*a+b*b);
+}
+
+static double pdf(double var, double u, double x)   //This outputs the probability density at any given point on a probability distribution function
 {
-    return (1.0 /(sigma* sqrt (2.0 *M_PI)))*exp (-((x-u)*(x-u))/(2.0 *sigma*sigma));
+    return (1.0 /(sqrt(var) * sqrt(2.0 *M_PI)))*exp (-((x-u)*(x-u))/(2.0 *var));
 }
 
 static bool sum_error_in_quadrature = false;
@@ -76,11 +81,12 @@ static double updateVarianceDavid(const tf2::Vector3 &newMean,
     
     double meanfunc1 = mean1.length2();  //Is this the correct extraction of the mean from the 1st input? We can clean this line out and incorporate in to line below if we are sure
     double meanfunc2 = mean2.length2();  //Is this the correct extraction of the mean from the 2nd input? We can clean this line out if we are sure
-    
-    double var1_w_syst_err = suminquadrature(var1,systematic_error);    //adding in the systematic error **before** the variances get used for anything
-    double var2_w_syst_err = suminquadrature(var2,systematic_error);    //adding in the systematic error **before** the variances get used for anything
-    double est_prob_dens_at_newvar = suminquadrature(pdf(var1_w_syst_err,meanfunc1,newMean),pdf(var2_w_syst_err, meanfunc2, newMean));  // This returns the estimated probability density given the probability density that would be expected from the two measurements at the most likely point where it will be 
-    double newVar = (1.0/(est_prob_dens_at_newvar*( sqrt (2.0 *M_PI)))); //this converts this estimated probability density in to the new variance
+    double new_mean_func = newMean.length2();
+
+    double var1_w_syst_err = var1 + systematic_error;    //adding in the systematic error **before** the variances get used for anything
+    double var2_w_syst_err = var2 + systematic_error;    //adding in the systematic error **before** the variances get used for anything
+    double est_prob_dens_at_newvar = geometric_sum(pdf(var1_w_syst_err,meanfunc1,new_mean_func), pdf(var2_w_syst_err, meanfunc2, new_mean_func));  // This returns the estimated probability density given the probability density that would be expected from the two measurements at the most likely point where it will be 
+    double newVar = std::pow((1.0/(est_prob_dens_at_newvar * sqrt(2.0 *M_PI))),2); //this converts this estimated probability density in to the new variance
 
     if (newVar > 100)    //If this occurs then there is something seriously wrong - its not clear to me that this is helpful and may just hide problems
         newVar = 100;
@@ -96,7 +102,7 @@ static void updateTransform(tf2::Transform &t1, double var1,
                             const tf2::Transform &t2, double var2) {
     tf2::Vector3 o1 = t1.getOrigin();
     tf2::Vector3 o2 = t2.getOrigin();
-    double kalman_gain=(var1*var1)/(var1*var1+var2*var2)
+    double kalman_gain = var1 / (var1 + var2);
     t1.setOrigin(o1+(kalman_gain)*(o2-o1))
     tf2::Quaternion q1 = t1.getRotation();
     tf2::Quaternion q2 = t2.getRotation();
