@@ -2,8 +2,14 @@
 
 import os, sys, argparse
 import subprocess
-import imp
-em = imp.load_source('em', '/usr/lib/python2.7/dist-packages/em.py')
+import imp, importlib
+
+# Hack if a user has 'em' instead of 'empy' installed with pip
+# If the module em doesn't have the expand function use the full path
+em = importlib.import_module('em')
+if "expand" not in dir(em):
+    print "Using system empy because em is installed"
+    em = imp.load_source('em', '/usr/lib/python2.7/dist-packages/em.py')
 
 import cv2
 import cv2.aruco as aruco
