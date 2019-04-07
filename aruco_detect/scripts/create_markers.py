@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
 import os, sys, argparse
-import em
 import subprocess
+import imp
+em = imp.load_source('em', '/usr/lib/python2.7/dist-packages/em.py')
 
 import cv2
 import cv2.aruco as aruco
