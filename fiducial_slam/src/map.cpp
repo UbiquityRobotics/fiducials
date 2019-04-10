@@ -151,6 +151,7 @@ void TransformWithVariance::update(const TransformWithVariance& newT) {
 
     // Calculate new mean for the orientation
     // Use equation 15 in article
+    // https://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/ 
     //
     // The kalman gain should give us the weight for how far towards the new estimate to go
     // Slerp should put us in a linear frame so the kalman gain should work as is
