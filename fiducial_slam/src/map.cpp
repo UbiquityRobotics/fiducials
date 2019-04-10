@@ -127,8 +127,8 @@ static double normalizeDavid(const double newMean,
     double newVar = std::pow(1.0 / (prob_at_newMean * sqrt(2.0 *M_PI)), 2);
 
     // Bound the variance to prevent blow up
-    newVar = std::min(newVar, 1e2);
-    newVar = std::max(newVar, 1e-4);
+    newVar = std::min(newVar, 1e3);
+    newVar = std::max(newVar, 1e-8);
     
     return newVar;
 }
@@ -138,18 +138,16 @@ static double normalizeDavid(const double newMean,
 void TransformWithVariance::update(const TransformWithVariance& newT) {
     tf2::Vector3 p1 = transform.getOrigin();
     tf2::Quaternion q1 = transform.getRotation();
-    double pvar1 = variance;
-    double ovar1 = variance_orientation;
+    double var1 = variance;
 
     tf2::Vector3 p2 = newT.transform.getOrigin();
     tf2::Quaternion q2 = newT.transform.getRotation();
-    double pvar2 = newT.variance; // TODO add systematic error here
-    double ovar2 = newT.variance_orientation;
+    double var2 = newT.variance; // TODO add systematic error here
 
     // Calculate new mean for the position
     // Use equation 15 in article
-    double pk = kalman_gain(pvar1, pvar2);
-    transform.setOrigin(p1 + pk * (p2 - p1));
+    double k = kalman_gain(var1, var2);
+    transform.setOrigin(p1 + k * (p2 - p1));
 
     // Calculate new mean for the orientation
     // Use equation 15 in article
@@ -157,8 +155,7 @@ void TransformWithVariance::update(const TransformWithVariance& newT) {
     // The kalman gain should give us the weight for how far towards the new estimate to go
     // Slerp should put us in a linear frame so the kalman gain should work as is
     // Kalman gain is always [0,1] ?
-    double ok = kalman_gain(ovar1, ovar2);
-    transform.setRotation(q1.slerp(q2, ok));
+    transform.setRotation(q1.slerp(q2, k));
 
     //
     // Do the new variance calculations
@@ -166,21 +163,12 @@ void TransformWithVariance::update(const TransformWithVariance& newT) {
 
     // Do everything in a 1d space between p1 and p2
     // This should probably use proper multivariate modeling
-    double pMean1 = 0.0;
-    double pMean2 = (p2 - p1).length();
-    double pMean  = (transform.getOrigin() - p1).length();
+    double mean1 = 0.0;
+    double mean2 = (p2 - p1).length();
+    double mean  = (transform.getOrigin() - p1).length();
 
     // Normalize the variances so that the area under the probabilty remains 1
-    variance = normalizeDavid(pMean, pMean1, pvar1, pMean2, pvar2);
-
-    // Do everything in a 1d space between q1 and q2
-    // This should probably use proper multivariate modeling
-    // TODO: Is this space linear? does it have to be?
-    double oMean1 = 0.0;
-    double oMean2 = q1.angleShortestPath(q2);
-    double oMean  = q1.angleShortestPath(transform.getRotation());
-
-    variance_orientation = normalizeDavid(oMean, oMean1, ovar1, oMean2, ovar2); 
+    variance = normalizeDavid(mean, mean1, var1, mean2, var2);
 }
 
 // Weighted average of 2 transforms, variances computed using Alexey Method

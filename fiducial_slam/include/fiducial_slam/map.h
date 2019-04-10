@@ -63,7 +63,6 @@ class TransformWithVariance {
   public:
     tf2::Transform transform;
     double variance;
-    double variance_orientation;
 
     TransformWithVariance() = default;
 
