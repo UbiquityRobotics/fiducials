@@ -10,7 +10,7 @@
     <param name="initial_map_file" value="$(find fiducial_slam)/test/610_initial_map.txt" />
     <param name="map_file" value="$(find fiducial_slam)/test/map2.txt" />
     <param name="odom_frame" value="" />
-    <param name="pose_frame" value="base_link" />
+    <param name="base_frame" value="base_link" />
   </node>
 
   <node name="rosbag" pkg="rosbag" type="play" 
