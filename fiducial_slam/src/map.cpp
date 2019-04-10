@@ -55,7 +55,7 @@ static double suminquadrature(double var1, double var2) {
 }
 
 static bool sum_error_in_quadrature = false;
-static float systematic_error = 0.01f;
+static double systematic_error = 0.01;
 
 // Update the variance of a gaussian that has been combined with another
 // Taking into account the degree of overlap
@@ -254,7 +254,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
     nh.param<float>("tf_publish_interval", tfPublishInterval, 1.0);
     nh.param<bool>("publish_tf", publishPoseTf, true);
-    nh.param<float>("systematic_error", systematic_error, 0.01f);
+    nh.param<float>("systematic_error", systematic_error, 0.01);
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
     nh.param<bool>("sum_error_in_quadrature", sum_error_in_quadrature, false);
@@ -478,7 +478,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             double s1 = o.position.z();
             double s2 = 2.0 * sin(roll);
             double s3 = 2.0 * sin(pitch);
-            p.variance = s1*s1 + s2*s2 + s2*s3 + 1e-4;
+            p.variance = s1*s1 + s2*s2 + s3*s3 + systematic_error;
             o.T_camFid.variance = p.variance;
 
             ROS_INFO("Pose %d %lf %lf %lf %lf %lf %lf %lf", o.fid,
