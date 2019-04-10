@@ -497,7 +497,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
             // compute base_link pose based on this estimate 
 
-            if (p.variance < 0.05) {
+            if (/*p.variance < 0.05*/ true) {
                 if (numEsts == 0) {
                     T_mapBase = p;
                 }
@@ -521,13 +521,6 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
         tf2::Vector3 trans = T_mapBase.transform.getOrigin();
         double r, p, y;
         T_mapBase.transform.getBasis().getRPY(r, p, y);
-
-        // TODO: remove this once the fusion is verifified
-        if (std::abs(trans.z()) > 0.01) {
-            ROS_INFO("Bogus pose %lf %lf %lf %lf %lf %lf %f\n",
-                trans.x(), trans.y(), trans.z(), r, p, y, T_mapBase.variance);
-            return 0;
-        }
 
         ROS_INFO("Pose ALL %lf %lf %lf %lf %lf %lf %f",
             trans.x(), trans.y(), trans.z(), r, p, y, T_mapBase.variance);
