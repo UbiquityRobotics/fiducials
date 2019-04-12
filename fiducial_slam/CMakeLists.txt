@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 2.8.3)
 project(fiducial_slam)
 
@@ -29,7 +28,7 @@ add_definitions(-std=c++11)
 include_directories(${catkin_INCLUDE_DIRS} include)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(fiducial_slam src/fiducial_slam.cpp src/estimator.cpp src/map.cpp)
+add_executable(fiducial_slam src/fiducial_slam.cpp src/estimator.cpp src/map.cpp src/transform_with_variance.cpp)
 add_dependencies(fiducial_slam ${${PROJECT_NAME}_EXPORTED_TARGETS}
                  ${catkin_EXPORTED_TARGETS})
 
