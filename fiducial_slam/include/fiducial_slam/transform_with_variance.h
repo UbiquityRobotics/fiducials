@@ -26,7 +26,10 @@ class TransformWithVariance {
     TransformWithVariance& operator*=(const TransformWithVariance& rhs) {
         // Update this transform, increasing variance
         transform *= rhs.transform;
-        variance += rhs.variance; // TODO(rohbotics): make this use RMS instead of sum
+
+        // Do simple addition of the variances
+        // In a multi-variate case RMS may be more correct
+        variance += rhs.variance;
         return *this;
     }
     friend TransformWithVariance operator*(TransformWithVariance lhs, const TransformWithVariance& rhs) {

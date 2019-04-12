@@ -43,6 +43,7 @@ static double normalizeDavid(const double newMean,
 
 // Update this transform with a new one, with variances as weights
 // combine variances using David method
+// If adding a systematic error is desired it should already be added in
 void TransformWithVariance::update(const TransformWithVariance& newT) {
     tf2::Vector3 p1 = transform.getOrigin();
     tf2::Quaternion q1 = transform.getRotation();
@@ -50,7 +51,7 @@ void TransformWithVariance::update(const TransformWithVariance& newT) {
 
     tf2::Vector3 p2 = newT.transform.getOrigin();
     tf2::Quaternion q2 = newT.transform.getRotation();
-    double var2 = newT.variance; // TODO add systematic error here
+    double var2 = newT.variance;
 
     // Calculate new mean for the position
     // Use equation 15 in article
