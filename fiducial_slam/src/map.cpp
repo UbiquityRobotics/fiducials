@@ -355,16 +355,14 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
             // compute base_link pose based on this estimate 
 
-            if (/*p.variance < 0.05*/ true) {
-                if (numEsts == 0) {
-                    T_mapBase = p;
-                }
-                else {
-                    T_mapBase.setData(averageTransforms(T_mapBase, p));
-                    T_mapBase.stamp_ = p.stamp_;
-                }
-                numEsts++;
-	    }
+            if (numEsts == 0) {
+                T_mapBase = p;
+            }
+            else {
+                T_mapBase.setData(averageTransforms(T_mapBase, p));
+                T_mapBase.stamp_ = p.stamp_;
+            }
+            numEsts++;
         }
     }
 
