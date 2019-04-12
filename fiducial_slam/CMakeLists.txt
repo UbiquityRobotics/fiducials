@@ -63,6 +63,9 @@ if(CATKIN_ENABLE_TESTING)
 
         # Tests need c++11
         add_definitions(-std=c++11)
+	
+	catkin_add_gtest(transform_var_test test/transform_var_test.cpp src/transform_with_variance)
+	target_link_libraries(transform_var_test ${catkin_LIBRARIES})
 
         add_rostest(test/create_map_aruco.xml)
         add_rostest(test/init_map_aruco.xml)
