@@ -1,11 +1,25 @@
 #!/usr/bin/python
 
 import os, sys, argparse
-import em
+import subprocess
+import imp, importlib
+
+# Hack if a user has 'em' instead of 'empy' installed with pip
+# If the module em doesn't have the expand function use the full path
+em = None
+for path in sys.path:
+    filename = os.path.join(path, 'em.py')
+    if os.path.exists(filename):
+         em = imp.load_source('em', filename)
+         if "expand" in dir(em):
+             break
+# For-else: else is called if loop doesn't break 
+else:
+    print "ERROR: could not find module em, please sudo apt install python-empy"
+    exit(2)
 
 import cv2
 import cv2.aruco as aruco
-import cairosvg
 
 """
 Generate a PDF file containaing one or more fiducial marker for printing
@@ -75,11 +89,16 @@ def genMarker(i, dicno, paper_size):
     img = aruco.drawMarker(aruco_dict, i, 2000)
     cv2.imwrite("/tmp/marker%d.png" % i, img)
     svg = genSvg(i, dicno, paper_size)
-    cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i)
+    cairo = subprocess.Popen(('cairosvg', '-f', 'pdf', '-o', '/tmp/marker%d.pdf' % i, '/dev/stdin'), stdin=subprocess.PIPE)
+    cairo.communicate(input=svg)
+    # This way is faster than subprocess, but causes problems when cairosvg is installed from pip
+    # because newer versions only support python3, and opencv3 from ros does not
+    # cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i)
     os.remove("/tmp/marker%d.png" % i)
 
 if __name__ == "__main__":
     checkCmd("pdfunite", "poppler-utils")
+    checkCmd("cairosvg", "python-cairosvg")
 
 
     parser = argparse.ArgumentParser(description='Generate Aruco Markers.')
