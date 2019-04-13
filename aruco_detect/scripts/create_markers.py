@@ -6,10 +6,17 @@ import imp, importlib
 
 # Hack if a user has 'em' instead of 'empy' installed with pip
 # If the module em doesn't have the expand function use the full path
-em = importlib.import_module('em')
-if "expand" not in dir(em):
-    print "Using system empy because em is installed"
-    em = imp.load_source('em', '/usr/lib/python2.7/dist-packages/em.py')
+em = None
+for path in sys.path:
+    filename = os.path.join(path, 'em.py')
+    if os.path.exists(filename):
+         em = imp.load_source('em', filename)
+         if "expand" in dir(em):
+             break
+# For-else: else is called if loop doesn't break 
+else:
+    print "ERROR: could not find module em, please sudo apt install python-empy"
+    exit(2)
 
 import cv2
 import cv2.aruco as aruco
