@@ -334,10 +334,11 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             // Create variance according to how well the robot is upright on the ground
             // TODO: Create variance for each DOF
             // TODO: Take into account position according to odom
-            double s1 = o.position.z();
-            double s2 = 2.0 * sin(roll);
-            double s3 = 2.0 * sin(pitch);
-            p.variance = s1*s1 + s2*s2 + s3*s3 + systematic_error;
+            auto cam_f = o.T_camFid.transform.getOrigin(); 
+            double s1 = std::pow(o.position.z()/cam_f.z(), 2) * (std::pow(cam_f.x(), 2) + std::pow(cam_f.y(), 2)); 
+            double s2 = o.position.length2() * std::pow(sin(roll), 2);
+            double s3 = o.position.length2() * std::pow(sin(pitch), 2);
+            p.variance = s1 + s2 + s3 + systematic_error;
             o.T_camFid.variance = p.variance;
 
             ROS_INFO("Pose %d %lf %lf %lf %lf %lf %lf %lf", o.fid,
