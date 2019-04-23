@@ -279,6 +279,10 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
     tf2::Stamped<TransformWithVariance> T_baseCam;
     tf2::Stamped<TransformWithVariance> T_mapBase;
 
+    if (obs.size() == 0) {
+        return 0;
+    }
+
     if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, T_camBase.transform)) {
         tf2::Vector3 c = T_camBase.transform.getOrigin();
         ROS_INFO("camera->base   %lf %lf %lf",
