@@ -46,91 +46,8 @@
 
 #include <boost/filesystem.hpp>
 
-
-// Update the variance of a gaussian that has been combined with another
-// Does not Take into account the degree of overlap of observations
-static double suminquadrature(double var1, double var2) {
-
-    return max(1.0 / (1.0/var1 + 1.0/var2), 1e-6);
-}
-
 static bool sum_error_in_quadrature = false;
-static float systematic_error = 0.01f;
-
-// Update the variance of a gaussian that has been combined with another
-// Taking into account the degree of overlap
-static double updateVarianceDavid(const tf2::Vector3 &newMean,
-                                  const tf2::Vector3 &mean1, double var1,
-                                  const tf2::Vector3 &mean2, double var2) {
-    if (sum_error_in_quadrature) {
-       return suminquadrature(var1, var2);
-    }
-
-    //=((2*PI())^0.5)*C3*D3*EXP((((((C2-E2)^2))/(2*C3^2))+(((D2-E2)^2)/(2*(D3^2)))))
-    double d1 = (mean1 - newMean).length2();
-    double d2 = (mean2 - newMean).length2();
-
-    double newVar = systematic_error + sqrt(2.0*M_PI) * var1 * var2 *
-         exp(((d1 / (2.0*var1)) + d2 / (2.0*var2)));
-
-    if (newVar > 100)
-        newVar = 100;
-    if (newVar < 10e-4)  //This line should be redundant if systematic_error does anything meaningful
-        newVar = 10e-4;  //This line should be redundant if systematic_error does anything meaningful
-    return newVar;
-}
-
-#if 0
-// Update transform t1 with t2 using variances as weights.
-// The result is in t1
-static void updateTransform(tf2::Transform &t1, double var1,
-                            const tf2::Transform &t2, double var2) {
-    tf2::Vector3 o1 = t1.getOrigin();
-    tf2::Vector3 o2 = t2.getOrigin();
-
-    t1.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
-
-    tf2::Quaternion q1 = t1.getRotation();
-    tf2::Quaternion q2 = t2.getRotation();
-    t1.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
-}
-#endif
-
-// Update this transform with a new one, with variances as weights
-// combine variances using David method
-void TransformWithVariance::update(const TransformWithVariance& newT) {
-    tf2::Vector3 o1 = transform.getOrigin();
-    tf2::Quaternion q1 = transform.getRotation();
-    double var1 = variance;
-
-    tf2::Vector3 o2 = newT.transform.getOrigin();
-    tf2::Quaternion q2 = newT.transform.getRotation();
-    double var2 = newT.variance;
-
-    transform.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
-    transform.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
-
-    variance = updateVarianceDavid(transform.getOrigin(), o1, var1, o2, var2);
-}
-
-// Weighted average of 2 transforms, variances computed using Alexey Method
-TransformWithVariance averageTransforms(const TransformWithVariance& t1, const TransformWithVariance& t2) {
-    TransformWithVariance out;
-    tf2::Vector3 o1 = t1.transform.getOrigin();
-    tf2::Quaternion q1 = t1.transform.getRotation();
-    double var1 = t1.variance;
-
-    tf2::Vector3 o2 = t2.transform.getOrigin();
-    tf2::Quaternion q2 = t2.transform.getRotation();
-    double var2 = t2.variance;
-
-    out.transform.setOrigin((var1 * o2 + var2 * o1) / (var1 + var2));
-    out.transform.setRotation(q1.slerp(q2, var1 / (var1 + var2)).normalized());
-    out.variance = suminquadrature(var1, var2);
-
-    return out;
-}
-
+static double systematic_error = 0.01;
 
 // Constructor for observation
 Observation::Observation(int fid,
@@ -192,11 +109,11 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
     nh.param<std::string>("map_frame", mapFrame, "map");
     nh.param<std::string>("odom_frame", odomFrame, "odom");
-    nh.param<std::string>("base_frame", baseFrame, "base_link");
+    nh.param<std::string>("base_frame", baseFrame, "base_footprint");
 
     nh.param<float>("tf_publish_interval", tfPublishInterval, 1.0);
     nh.param<bool>("publish_tf", publishPoseTf, true);
-    nh.param<float>("systematic_error", systematic_error, 0.01f);
+    nh.param<double>("systematic_error", systematic_error, 0.01);
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
     nh.param<bool>("sum_error_in_quadrature", sum_error_in_quadrature, false);
@@ -349,30 +266,59 @@ bool Map::lookupTransform(const std::string &from, const std::string &to,
      }
 }
 
-// update pose estimate of robot
-
+// update pose estimate of robot.  We combine the camera->base_link
+// tf to each estimate so we can evaluate how good they are.  A good
+// estimate would have z == roll == pitch == 0.
 int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                     tf2::Stamped<TransformWithVariance>& T_mapCam)
 {
     int numEsts = 0;
-    tf2::Stamped<TransformWithVariance> T_fid0Cam;
+    tf2::Stamped<TransformWithVariance> T_fid0Base;
     bool useMulti = false;
+    tf2::Stamped<TransformWithVariance> T_camBase;
+    tf2::Stamped<TransformWithVariance> T_baseCam;
+    tf2::Stamped<TransformWithVariance> T_mapBase;
+
+    if (obs.size() == 0) {
+        return 0;
+    }
+
+    if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, T_camBase.transform)) {
+        tf2::Vector3 c = T_camBase.transform.getOrigin();
+        ROS_INFO("camera->base   %lf %lf %lf",
+                 c.x(), c.y(), c.z());
+        T_camBase.variance = 1.0;
+    }
+    else {
+        ROS_ERROR("Cannot determine tf from camera to robot\n");
+    }
+
+    if (lookupTransform(baseFrame, obs[0].T_camFid.frame_id_, time, T_baseCam.transform)) {
+        tf2::Vector3 c = T_baseCam.transform.getOrigin();
+        ROS_INFO("base->camera   %lf %lf %lf",
+                 c.x(), c.y(), c.z());
+        T_baseCam.variance = 1.0;
+    }
+    else {
+        ROS_ERROR("Cannot determine tf from robot to camera\n");
+        return numEsts;
+    }
 
     for (size_t i=0; i<obs.size(); i++) {
         Observation &o = obs[i];
 
         if (o.fid == 0) {
             // virtual fiducial 0 is at the origin
-            T_fid0Cam = o.T_fidCam;
+            T_fid0Base.setData(o.T_fidCam * T_camBase);
 
-            tf2::Vector3 t = T_fid0Cam.transform.getOrigin();
+            tf2::Vector3 t = T_fid0Base.transform.getOrigin();
             double r, p, y;
-            T_fid0Cam.transform.getBasis().getRPY(r, p, y);
+            T_fid0Base.transform.getBasis().getRPY(r, p, y);
 
             ROS_INFO("Pose MUL %lf %lf %lf %lf %lf %lf %lf",
-              t.x(), t.y(), t.z(), r, p, y, T_fid0Cam.variance);
+              t.x(), t.y(), t.z(), r, p, y, T_fid0Base.variance);
 
-            if (T_fid0Cam.variance < multiErrorThreshold) {
+            if (T_fid0Base.variance < multiErrorThreshold) {
                 useMulti = true;
             }
         }
@@ -380,22 +326,25 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             const Fiducial &fid = fiducials[o.fid];
 
             tf2::Stamped<TransformWithVariance> p = fid.pose * o.T_fidCam;
+
             p.frame_id_ = mapFrame;
             p.stamp_ = o.T_fidCam.stamp_;
 
-            o.position = p.transform.getOrigin();
+            p.setData(p * T_camBase);
+	    o.position = p.transform.getOrigin();
             double roll, pitch, yaw;
             p.transform.getBasis().getRPY(roll, pitch, yaw);
 
-            /*
-               we print out all 6DOF of the camera pose in the world
-               frame as estimated from a single fiducial here.  
-               This is also the transform from base_link to camera
-               that would cause base_link to be at the origin of the
-               map frame.  This can be used to determine the pose of
-               the camera on the robot if a fiducial is correctly setup
-               in the map file
-            */
+            // Create variance according to how well the robot is upright on the ground
+            // TODO: Create variance for each DOF
+            // TODO: Take into account position according to odom
+            auto cam_f = o.T_camFid.transform.getOrigin(); 
+            double s1 = std::pow(o.position.z()/cam_f.z(), 2) * (std::pow(cam_f.x(), 2) + std::pow(cam_f.y(), 2)); 
+            double s2 = o.position.length2() * std::pow(sin(roll), 2);
+            double s3 = o.position.length2() * std::pow(sin(pitch), 2);
+            p.variance = s1 + s2 + s3 + systematic_error;
+            o.T_camFid.variance = p.variance;
+
             ROS_INFO("Pose %d %lf %lf %lf %lf %lf %lf %lf", o.fid,
               o.position.x(), o.position.y(), o.position.z(),
               roll, pitch, yaw, p.variance);
@@ -409,12 +358,14 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
                 continue;
             };
 
+            // compute base_link pose based on this estimate 
+
             if (numEsts == 0) {
-                T_mapCam = p;
+                T_mapBase = p;
             }
             else {
-                T_mapCam.setData(averageTransforms(T_mapCam, p));
-                T_mapCam.stamp_ = p.stamp_;
+                T_mapBase.setData(averageTransforms(T_mapBase, p));
+                T_mapBase.stamp_ = p.stamp_;
             }
             numEsts++;
         }
@@ -428,47 +379,20 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
     // New scope for logging vars
     {
-        tf2::Vector3 trans = T_mapCam.transform.getOrigin();
+        tf2::Vector3 trans = T_mapBase.transform.getOrigin();
         double r, p, y;
-        T_mapCam.transform.getBasis().getRPY(r, p, y);
+        T_mapBase.transform.getBasis().getRPY(r, p, y);
+
         ROS_INFO("Pose ALL %lf %lf %lf %lf %lf %lf %f",
-                 trans.x(), trans.y(), trans.z(), r, p, y, T_mapCam.variance);
+            trans.x(), trans.y(), trans.z(), r, p, y, T_mapBase.variance);
+
     }
+
     if (useMulti) {
-        T_mapCam = T_fid0Cam; 
+        T_mapBase = T_fid0Base; 
     }
 
-    // Publish camera pose
-    tf2::Stamped<TransformWithVariance> cameraPose = T_mapCam;
-    geometry_msgs::PoseWithCovarianceStamped cameraPoseStamped = toPose(cameraPose);
-    cameraPoseStamped.header.stamp = time;
-    cameraPosePub.publish(cameraPoseStamped);
-
-    // Determine transform from camera to robot
-    tf2::Transform T_camBase;
-    // Use robotPose instead of camera pose to hold map to robot
-    tf2::Stamped<TransformWithVariance> basePose = T_mapCam;
-
-    if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, T_camBase)) {
-        basePose.setData(T_mapCam * T_camBase);
-        //basePose.setData(cameraTransform * cameraPose);
-
-        // New scope for logging vars
-        {
-            tf2::Vector3 c = T_mapCam.transform.getOrigin();
-            ROS_INFO("camera   %lf %lf %lf %f",
-                     c.x(), c.y(), c.z(), T_mapCam.variance);
-
-            tf2::Vector3 trans = basePose.transform.getOrigin();
-            ROS_INFO("Pose b_l %lf %lf %lf %f",
-                     trans.x(), trans.y(), trans.z(), basePose.variance);
-        }
-    }
-    else {
-        ROS_ERROR("Cannot determine tf from camera to robot\n");
-        return numEsts;
-    }
-
+    tf2::Stamped<TransformWithVariance> basePose = T_mapBase;
     basePose.frame_id_ = mapFrame;
     auto robotPose = toPose(basePose);
     
@@ -477,6 +401,8 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             robotPose.pose.covariance[i*6+i] = covarianceDiagonal[i]; // Fill the diagonal
         }
     }
+
+    T_mapCam = T_mapBase * T_baseCam;
 
     robotPosePub.publish(robotPose);
 
@@ -493,8 +419,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
              outFrame = odomFrame;
 
              tf2::Vector3 c = odomTransform.getOrigin();
-             ROS_INFO("odom   %lf %lf %lf",
-                c.x(), c.y(), c.z());
+             ROS_INFO("odom   %lf %lf %lf", c.x(), c.y(), c.z());
          }
     }
  
@@ -517,7 +442,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
         publishTf();
     }
 
-    ROS_INFO("Finished frame\n");
+    ROS_INFO("Finished frame. Estimates %d\n", numEsts);
     return numEsts;
 }
 
