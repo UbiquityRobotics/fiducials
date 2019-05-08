@@ -280,6 +280,7 @@ void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, 
 
 void FiducialsNode::ignoreCallback(const std_msgs::String& msg)
 {
+    ignoreIds.clear();
     handleIgnoreString(msg.data);
 }
 
