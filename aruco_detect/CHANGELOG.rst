@@ -2,6 +2,21 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Compatibilty with Melodic
+   * remove opencv3 dependancy, opencv3 is no longer a package in melodic, so we use cv_bridge
+   * Fix build on OpenCV 3.2 
+* Import empy with full path to avoid pip conflict
+* Use subprocess for cairosvg to avoid lack of python2 support
+* call genMarker with correct arguments with no joblib
+* Check ignoreID's in TF publishing
+* Added topic that enables/disables Aruco detections
+* Added rosdeps for cairo and joblib
+* Add params for determining weighting of observations; prevent compiler warnings
+* add cli argument for paper size to create markers
+* Contributors: Jack Kilian, Jim Vaughan, Rohan Agrawal, Tim Übelhör, jack
+
 0.10.0 (2018-10-13)
 -------------------
 * Dramatically speed up create_markers using cairosvg and joblib

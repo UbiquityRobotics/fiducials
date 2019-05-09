@@ -2,6 +2,24 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Compatibilty with Melodic, remove opencv3 dependancy
+  opencv3 is no longer a package in melodic, so we use cv_bridge
+  to get the correct opencv transitively
+* New fusion with planar-based error estimation
+  * Estimate variance of fiducial obsevations based on how well they place the robot on the floor upright
+  * use Kalman + David method of fusing estimates
+  * split out Transform with Variance, do some cleanup
+  * Simple unit tests for core fusion code
+  * remove hokey outlier rejection
+* Add support for overriding covariance diagonal
+* Add fiducial transform array stamp (`#156 <https://github.com/UbiquityRobotics/fiducials/issues/156>`_)
+* Add publish_tf rosparam functionality and updated launch file accordingly (`#154 <https://github.com/UbiquityRobotics/fiducials/issues/154>`_)
+  * Added publish_tf rosparam to disable publishing pose tf
+  * Change default publish_tf to True and fix 'if' formatting
+* Contributors: Jack Kilian, Jim Vaughan, Rohan Agrawal
+
 0.10.0 (2018-10-13)
 -------------------
 * use sum in quadrature by default
