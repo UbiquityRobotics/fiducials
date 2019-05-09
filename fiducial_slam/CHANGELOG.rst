@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.11.0 (2019-05-09)
+-------------------
 * Compatibilty with Melodic, remove opencv3 dependancy
   opencv3 is no longer a package in melodic, so we use cv_bridge
   to get the correct opencv transitively
