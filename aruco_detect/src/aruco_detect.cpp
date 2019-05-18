@@ -91,6 +91,7 @@ class FiducialsNode {
     std::string frameId;
     std::vector<int> ignoreIds;
     std::map<int, double> fiducialLens;
+    ros::NodeHandle nh;
 
     image_transport::Publisher image_pub;
 
@@ -120,7 +121,7 @@ class FiducialsNode {
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
   public:
-    FiducialsNode(ros::NodeHandle &nh);
+    FiducialsNode();
 };
 
 
@@ -281,6 +282,7 @@ void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, 
 void FiducialsNode::ignoreCallback(const std_msgs::String& msg)
 {
     ignoreIds.clear();
+    nh.setParam("ignore_fiducials", msg.data);
     handleIgnoreString(msg.data);
 }
 
@@ -487,7 +489,7 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
 }
 
 
-FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
+FiducialsNode::FiducialsNode() : nh(ros::NodeHandle("~")), it(nh)
 {
     frameNum = 0;
 
@@ -621,9 +623,8 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
 int main(int argc, char ** argv) {
     ros::init(argc, argv, "aruco_detect");
-    ros::NodeHandle nh("~");
 
-    FiducialsNode * node = new FiducialsNode(nh);
+    FiducialsNode* node = new FiducialsNode();
 
     ros::spin();
 
