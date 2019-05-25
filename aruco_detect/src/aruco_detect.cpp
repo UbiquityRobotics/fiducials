@@ -46,6 +46,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <dynamic_reconfigure/server.h>
 #include <std_srvs/SetBool.h>
+#include <std_msgs/String.h>
 
 #include "fiducial_msgs/Fiducial.h"
 #include "fiducial_msgs/FiducialArray.h"
@@ -70,6 +71,7 @@ class FiducialsNode {
     ros::Publisher * pose_pub;
 
     ros::Subscriber caminfo_sub;
+    ros::Subscriber ignore_sub;
     image_transport::ImageTransport it;
     image_transport::Subscriber img_sub;
 
@@ -89,11 +91,14 @@ class FiducialsNode {
     std::string frameId;
     std::vector<int> ignoreIds;
     std::map<int, double> fiducialLens;
+    ros::NodeHandle nh;
 
     image_transport::Publisher image_pub;
 
     cv::Ptr<aruco::DetectorParameters> detectorParams;
     cv::Ptr<aruco::Dictionary> dictionary;
+
+    void handleIgnoreString(const std::string& str);
 
     void estimatePoseSingleMarkers(const vector<int> &ids,
                                    const vector<vector<Point2f > >&corners,
@@ -104,6 +109,7 @@ class FiducialsNode {
                                    vector<double>& reprojectionError);
 
 
+    void ignoreCallback(const std_msgs::String &msg);
     void imageCallback(const sensor_msgs::ImageConstPtr &msg);
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
     void configCallback(aruco_detect::DetectorParamsConfig &config, uint32_t level);
@@ -115,7 +121,7 @@ class FiducialsNode {
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
   public:
-    FiducialsNode(ros::NodeHandle &nh);
+    FiducialsNode();
 };
 
 
@@ -273,6 +279,13 @@ void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, 
     detectorParams->polygonalApproxAccuracyRate = config.polygonalApproxAccuracyRate;
 }
 
+void FiducialsNode::ignoreCallback(const std_msgs::String& msg)
+{
+    ignoreIds.clear();
+    nh.setParam("ignore_fiducials", msg.data);
+    handleIgnoreString(msg.data);
+}
+
 void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
 {
     if (haveCamInfo) {
@@ -425,53 +438,13 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     }
 }
 
-bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
-                                std_srvs::SetBool::Response &res)
+void FiducialsNode::handleIgnoreString(const std::string& str)
 {
-    enable_detections = req.data;
-    if (enable_detections){
-        res.message = "Enabled aruco detections.";
-        ROS_INFO("Enabled aruco detections.");
-    }
-    else {
-        res.message = "Disabled aruco detections.";
-        ROS_INFO("Disabled aruco detections.");
-    }
-    
-    res.success = true;
-    return true;
-}
-
-FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
-{
-    frameNum = 0;
-
-    // Camera intrinsics
-    cameraMatrix = cv::Mat::zeros(3, 3, CV_64F);
-
-    // distortion coefficients
-    distortionCoeffs = cv::Mat::zeros(1, 5, CV_64F);
-
-    haveCamInfo = false;
-    enable_detections = true;
-
-    int dicno;
-
-    detectorParams = new aruco::DetectorParameters();
-
-    nh.param<bool>("publish_images", publish_images, false);
-    nh.param<double>("fiducial_len", fiducial_len, 0.14);
-    nh.param<int>("dictionary", dicno, 7);
-    nh.param<bool>("do_pose_estimation", doPoseEstimation, true);
-
-    std::string str;
-    std::vector<std::string> strs;
-
     /*
     ignogre fiducials can take comma separated list of individual
     fiducial ids or ranges, eg "1,4,8,9-12,30-40"
     */
-    nh.param<string>("ignore_fiducials", str, "");
+    std::vector<std::string> strs;
     boost::split(strs, str, boost::is_any_of(","));
     for (const string& element : strs) {
         if (element == "") {
@@ -496,6 +469,53 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
            ROS_ERROR("Malformed ignore_fiducials: %s", element.c_str());
         }
     }
+}
+
+bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
+                                std_srvs::SetBool::Response &res)
+{
+    enable_detections = req.data;
+    if (enable_detections){
+        res.message = "Enabled aruco detections.";
+        ROS_INFO("Enabled aruco detections.");
+    }
+    else {
+        res.message = "Disabled aruco detections.";
+        ROS_INFO("Disabled aruco detections.");
+    }
+    
+    res.success = true;
+    return true;
+}
+
+
+FiducialsNode::FiducialsNode() : nh(ros::NodeHandle("~")), it(nh)
+{
+    frameNum = 0;
+
+    // Camera intrinsics
+    cameraMatrix = cv::Mat::zeros(3, 3, CV_64F);
+
+    // distortion coefficients
+    distortionCoeffs = cv::Mat::zeros(1, 5, CV_64F);
+
+    haveCamInfo = false;
+    enable_detections = true;
+
+    int dicno;
+
+    detectorParams = new aruco::DetectorParameters();
+
+    nh.param<bool>("publish_images", publish_images, false);
+    nh.param<double>("fiducial_len", fiducial_len, 0.14);
+    nh.param<int>("dictionary", dicno, 7);
+    nh.param<bool>("do_pose_estimation", doPoseEstimation, true);
+
+    std::string str;
+    std::vector<std::string> strs;
+
+    nh.param<string>("ignore_fiducials", str, "");
+    handleIgnoreString(str);
 
     /*
     fiducial size can take comma separated list of size: id or size: range,
@@ -550,6 +570,9 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
     caminfo_sub = nh.subscribe("/camera_info", 1,
                     &FiducialsNode::camInfoCallback, this);
 
+    ignore_sub = nh.subscribe("/ignore_fiducials", 1,
+                              &FiducialsNode::ignoreCallback, this);
+
     service_enable_detections = nh.advertiseService("enable_detections",
                         &FiducialsNode::enableDetectionsCallback, this);
 
@@ -600,9 +623,8 @@ FiducialsNode::FiducialsNode(ros::NodeHandle & nh) : it(nh)
 
 int main(int argc, char ** argv) {
     ros::init(argc, argv, "aruco_detect");
-    ros::NodeHandle nh("~");
 
-    FiducialsNode * node = new FiducialsNode(nh);
+    FiducialsNode* node = new FiducialsNode();
 
     ros::spin();
 
