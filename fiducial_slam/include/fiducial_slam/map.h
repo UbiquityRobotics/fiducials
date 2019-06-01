@@ -64,9 +64,6 @@ class Observation {
     tf2::Stamped<TransformWithVariance> T_fidCam;
     tf2::Stamped<TransformWithVariance> T_camFid;
 
-    // how well this fitted the consensus of cameraPose
-    tf2::Vector3 position;
-
     Observation() {};
 
     Observation(int fid, const tf2::Stamped<TransformWithVariance>& camFid);

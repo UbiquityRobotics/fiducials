@@ -324,7 +324,7 @@ int Map::updatePose(std::vector<Observation>& obs, const ros::Time &time,
             p.stamp_ = o.T_fidCam.stamp_;
 
             p.setData(p * T_camBase);
-	    o.position = p.transform.getOrigin();
+	    auto position = p.transform.getOrigin();
             double roll, pitch, yaw;
             p.transform.getBasis().getRPY(roll, pitch, yaw);
 
@@ -332,21 +332,21 @@ int Map::updatePose(std::vector<Observation>& obs, const ros::Time &time,
             // TODO: Create variance for each DOF
             // TODO: Take into account position according to odom
             auto cam_f = o.T_camFid.transform.getOrigin(); 
-            double s1 = std::pow(o.position.z()/cam_f.z(), 2) * (std::pow(cam_f.x(), 2) + std::pow(cam_f.y(), 2)); 
-            double s2 = o.position.length2() * std::pow(std::sin(roll), 2);
-            double s3 = o.position.length2() * std::pow(std::sin(pitch), 2);
+            double s1 = std::pow(position.z()/cam_f.z(), 2) * (std::pow(cam_f.x(), 2) + std::pow(cam_f.y(), 2)); 
+            double s2 = position.length2() * std::pow(std::sin(roll), 2);
+            double s3 = position.length2() * std::pow(std::sin(pitch), 2);
             p.variance = s1 + s2 + s3 + systematic_error;
             o.T_camFid.variance = p.variance;
 
             ROS_INFO("Pose %d %lf %lf %lf %lf %lf %lf %lf", o.fid,
-              o.position.x(), o.position.y(), o.position.z(),
+              position.x(), position.y(), position.z(),
               roll, pitch, yaw, p.variance);
 
             //drawLine(fid.pose.getOrigin(), o.position);
 
-            if (std::isnan(o.position.x()) || 
-                std::isnan(o.position.y()) ||
-                std::isnan(o.position.z())) {
+            if (std::isnan(position.x()) || 
+                std::isnan(position.y()) ||
+                std::isnan(position.z())) {
                 ROS_WARN("Skipping NAN estimate\n");
                 continue;
             };
