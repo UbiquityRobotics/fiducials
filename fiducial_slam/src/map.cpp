@@ -192,15 +192,12 @@ void Map::update(std::vector<Observation>& obs, const ros::Time &time)
 void Map::updateMap(const std::vector<Observation>& obs, const ros::Time &time,
                     const tf2::Stamped<TransformWithVariance>& T_mapCam)
 {
-    std::map<int, Fiducial>::iterator fit;
-
-    for (fit = fiducials.begin(); fit != fiducials.end(); fit++) {
-        Fiducial &f = fit->second;
+    for (auto& map_pair : fiducials) {
+        Fiducial &f = map_pair.second;
         f.visible = false;
     }
 
-    for (size_t i=0; i<obs.size(); i++) {
-        const Observation &o = obs[i];
+    for (const Observation& o : obs) {
         if (o.fid == 0) {
             continue;
         }
@@ -236,8 +233,8 @@ void Map::updateMap(const std::vector<Observation>& obs, const ros::Time &time,
            f.numObs++;
         }
 
-        for (size_t j=0; j<obs.size(); j++) {
-            int fid = obs[j].fid;
+        for (const Observation& observation : obs) {
+            int fid = observation.fid;
             if (f.id != fid) {
                 f.links[fid] = 1;
             }
@@ -304,9 +301,7 @@ int Map::updatePose(std::vector<Observation>& obs, const ros::Time &time,
         return numEsts;
     }
 
-    for (size_t i=0; i<obs.size(); i++) {
-        Observation &o = obs[i];
-
+    for (Observation &o : obs) {
         if (o.fid == 0) {
             // virtual fiducial 0 is at the origin
             T_fid0Base.setData(o.T_fidCam * T_camBase);
@@ -476,7 +471,7 @@ static int findClosestObs(const std::vector<Observation>& obs)
     int closestIdx = -1;
 
     for (size_t i=0; i<obs.size(); i++) {
-        const Observation &o = obs[0];
+        const Observation &o = obs[i];
         double d = o.T_camFid.transform.getOrigin().length2();
         if (smallestDist < 0 || d < smallestDist) {
             smallestDist = d;
@@ -520,9 +515,7 @@ void Map::autoInit(const std::vector<Observation>& obs, const ros::Time &time) {
         fiducials[o.fid] = Fiducial(o.fid, T);
     }
     else {
-        for (size_t i=0; i<obs.size(); i++) {
-            const Observation &o = obs[0];
-
+        for (const Observation& o: obs) {
             if (o.fid == originFid) {
                 tf2::Stamped<TransformWithVariance> T = o.T_camFid;
 
@@ -566,11 +559,8 @@ bool Map::saveMap(std::string filename)
         return false;
     }
 
-    std::map<int, Fiducial>::iterator it;
-    std::map<int, int>::iterator lit;
-
-    for (it = fiducials.begin(); it != fiducials.end(); it++) {
-        Fiducial &f = it->second;
+    for (auto& map_pair : fiducials) {
+        Fiducial &f = map_pair.second;
         tf2::Vector3 trans = f.pose.transform.getOrigin();
         double rx, ry, rz;
         f.pose.transform.getBasis().getRPY(rx, ry, rz);
@@ -580,8 +570,8 @@ bool Map::saveMap(std::string filename)
                  rad2deg(rx), rad2deg(ry), rad2deg(rz), 
                  f.pose.variance, f.numObs);
 
-        for (lit = f.links.begin(); lit != f.links.end(); lit++) {
-            fprintf(fp, " %d", lit->first);
+        for (auto& link_pair : f.links) {
+            fprintf(fp, " %d", link_pair.first);
         }
         fprintf(fp, "\n");
     }
@@ -661,8 +651,8 @@ void Map::publishMap()
     fiducial_msgs::FiducialMapEntryArray fmea;
     std::map<int, Fiducial>::iterator it;
 
-    for (it = fiducials.begin(); it != fiducials.end(); it++) {
-        const Fiducial &f = it->second;
+    for (const auto& map_pair : fiducials) {
+        const Fiducial &f = map_pair.second;
         if (f.id == 0) {
             continue;
         }
@@ -696,8 +686,8 @@ void Map::publishMarkers()
     ros::Time now = ros::Time::now();
     std::map<int, Fiducial>::iterator it;
 
-    for (it = fiducials.begin(); it != fiducials.end(); it++) {
-        Fiducial &f = it->second;
+    for (auto& map_pair : fiducials) {
+        Fiducial &f = map_pair.second;
         if ((now - f.lastPublished).toSec() > 1.0) {
             publishMarker(f);
         }
@@ -796,8 +786,8 @@ void Map::publishMarker(Fiducial &fid)
     gp0.z = p0.z();
 
     std::map<int, int>::iterator lit;
-    for (lit = fid.links.begin(); lit != fid.links.end(); lit++) {
-        int ofid = lit->first;
+    for (const auto& link_pair : fid.links) {
+        int ofid = link_pair.first;
         // only draw links in one direction
         if (fid.id < ofid) {
             if (fiducials.find(ofid) != fiducials.end()) {

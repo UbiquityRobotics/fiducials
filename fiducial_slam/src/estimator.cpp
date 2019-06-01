@@ -219,9 +219,7 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
     std::vector<cv::Point3d> allWorldPoints;
     std::vector<cv::Point2d> allImagePoints;
 
-    for (size_t i=0; i<msg->fiducials.size(); i++) {
-
-        const fiducial_msgs::Fiducial& fid = msg->fiducials[i];
+    for (const auto& fid : msg->fiducials) {
 
         std::vector<cv::Point2d> corners;
         corners.push_back(cv::Point2d(fid.x0, fid.y0));
