@@ -57,7 +57,7 @@ Observation::Observation(int fid,
 
     tf2_ros::TransformBroadcaster broadcaster;
     geometry_msgs::TransformStamped ts = toMsg(camFid);
-    ts.child_frame_id = "fid" + to_string(fid);
+    ts.child_frame_id = "fid" + std::to_string(fid);
     broadcaster.sendTransform(ts);
 
     T_camFid = camFid;
@@ -137,7 +137,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<double>("multi_error_theshold", multiErrorThreshold, -1);
 
     nh.param<std::string>("map_file", mapFilename,
-        string(getenv("HOME")) + "/.ros/slam/map.txt");
+        std::string(getenv("HOME")) + "/.ros/slam/map.txt");
 
     boost::filesystem::path mapPath(mapFilename);
     boost::filesystem::path dir = mapPath.parent_path();
@@ -159,7 +159,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
 
 // Update map with a set of observations
 
-void Map::update(vector<Observation>& obs, const ros::Time &time)
+void Map::update(std::vector<Observation>& obs, const ros::Time &time)
 {
     ROS_INFO("Updating map with %d observations. Map has %d fiducials",
         (int)obs.size(), (int)fiducials.size());
@@ -189,10 +189,10 @@ void Map::update(vector<Observation>& obs, const ros::Time &time)
 // update estimates of observed fiducials from previously estimated
 // camera pose
 
-void Map::updateMap(const vector<Observation>& obs, const ros::Time &time,
+void Map::updateMap(const std::vector<Observation>& obs, const ros::Time &time,
                     const tf2::Stamped<TransformWithVariance>& T_mapCam)
 {
-    map<int, Fiducial>::iterator fit;
+    std::map<int, Fiducial>::iterator fit;
 
     for (fit = fiducials.begin(); fit != fiducials.end(); fit++) {
         Fiducial &f = fit->second;
@@ -269,7 +269,7 @@ bool Map::lookupTransform(const std::string &from, const std::string &to,
 // update pose estimate of robot.  We combine the camera->base_link
 // tf to each estimate so we can evaluate how good they are.  A good
 // estimate would have z == roll == pitch == 0.
-int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
+int Map::updatePose(std::vector<Observation>& obs, const ros::Time &time,
                     tf2::Stamped<TransformWithVariance>& T_mapCam)
 {
     int numEsts = 0;
@@ -340,8 +340,8 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
             // TODO: Take into account position according to odom
             auto cam_f = o.T_camFid.transform.getOrigin(); 
             double s1 = std::pow(o.position.z()/cam_f.z(), 2) * (std::pow(cam_f.x(), 2) + std::pow(cam_f.y(), 2)); 
-            double s2 = o.position.length2() * std::pow(sin(roll), 2);
-            double s3 = o.position.length2() * std::pow(sin(pitch), 2);
+            double s2 = o.position.length2() * std::pow(std::sin(roll), 2);
+            double s3 = o.position.length2() * std::pow(std::sin(pitch), 2);
             p.variance = s1 + s2 + s3 + systematic_error;
             o.T_camFid.variance = p.variance;
 
@@ -408,7 +408,7 @@ int Map::updatePose(vector<Observation>& obs, const ros::Time &time,
 
     tf2::Stamped<TransformWithVariance> outPose = basePose;
     outPose.frame_id_ = mapFrame;
-    string outFrame=baseFrame;
+    std::string outFrame=baseFrame;
 
     if (!odomFrame.empty()) {
          outFrame=odomFrame;
@@ -470,7 +470,7 @@ void Map::update()
 
 // Find closest fiducial to camera
 
-static int findClosestObs(const vector<Observation>& obs)
+static int findClosestObs(const std::vector<Observation>& obs)
 {
     double smallestDist = -1;
     int closestIdx = -1;
@@ -493,7 +493,7 @@ static int findClosestObs(const vector<Observation>& obs)
 // pose of that marker such that base_link is at the origin of the 
 // map frame
 
-void Map::autoInit(const vector<Observation>& obs, const ros::Time &time) {
+void Map::autoInit(const std::vector<Observation>& obs, const ros::Time &time) {
 
     ROS_INFO("Auto init map %d", frameNum);
 
@@ -566,8 +566,8 @@ bool Map::saveMap(std::string filename)
         return false;
     }
 
-    map<int, Fiducial>::iterator it;
-    map<int, int>::iterator lit;
+    std::map<int, Fiducial>::iterator it;
+    std::map<int, int>::iterator lit;
 
     for (it = fiducials.begin(); it != fiducials.end(); it++) {
         Fiducial &f = it->second;
@@ -633,8 +633,8 @@ bool Map::loadMap(std::string filename)
              Fiducial f = Fiducial(id, tf2::Stamped<TransformWithVariance>(twv, ros::Time::now(), mapFrame));
              f.numObs = numObs;
 
-             istringstream ss(linkbuf);
-             string s;
+	     std::istringstream ss(linkbuf);
+	     std::string s;
              while (getline(ss, s, ' ')) {
                  if (!s.empty()) {
                      f.links[stoi(s)] = 1;
@@ -659,7 +659,7 @@ bool Map::loadMap(std::string filename)
 void Map::publishMap()
 {
     fiducial_msgs::FiducialMapEntryArray fmea;
-    map<int, Fiducial>::iterator it;
+    std::map<int, Fiducial>::iterator it;
 
     for (it = fiducials.begin(); it != fiducials.end(); it++) {
         const Fiducial &f = it->second;
@@ -694,7 +694,7 @@ void Map::publishMap()
 void Map::publishMarkers()
 {
     ros::Time now = ros::Time::now();
-    map<int, Fiducial>::iterator it;
+    std::map<int, Fiducial>::iterator it;
 
     for (it = fiducials.begin(); it != fiducials.end(); it++) {
         Fiducial &f = it->second;
@@ -748,7 +748,7 @@ void Map::publishMarker(Fiducial &fid)
     cylinder.color.a = 0.5f;
     cylinder.id = fid.id + 10000;
     cylinder.ns = "sigma";
-    cylinder.scale.x = cylinder.scale.y = std::max(sqrt(fid.pose.variance), 0.1);
+    cylinder.scale.x = cylinder.scale.y = std::max(std::sqrt(fid.pose.variance), 0.1);
     cylinder.scale.z = 0.01;
     cylinder.pose.position.x = marker.pose.position.x;
     cylinder.pose.position.y = marker.pose.position.y;
@@ -795,7 +795,7 @@ void Map::publishMarker(Fiducial &fid)
     gp0.y = p0.y();
     gp0.z = p0.z();
 
-    map<int, int>::iterator lit;
+    std::map<int, int>::iterator lit;
     for (lit = fid.links.begin(); lit != fid.links.end(); lit++) {
         int ofid = lit->first;
         // only draw links in one direction

@@ -36,15 +36,15 @@
 /**
   * @brief Return object points for the system centered in a single marker, given the marker length
   */
-static void getSingleMarkerObjectPoints(double markerLength, vector<Point3d>& objPoints) {
+static void getSingleMarkerObjectPoints(double markerLength, std::vector<cv::Point3d>& objPoints) {
 
     CV_Assert(markerLength > 0);
 
     // set coordinate system in the middle of the marker, with Z pointing out
-    objPoints.push_back(Vec3d(-markerLength / 2.f, markerLength / 2.f, 0.f));
-    objPoints.push_back(Vec3d( markerLength / 2.f, markerLength / 2.f, 0.f));
-    objPoints.push_back(Vec3d( markerLength / 2.f,-markerLength / 2.f, 0.f));
-    objPoints.push_back(Vec3d(-markerLength / 2.f,-markerLength / 2.f, 0.f));
+    objPoints.push_back(cv::Vec3d(-markerLength / 2.f, markerLength / 2.f, 0.f));
+    objPoints.push_back(cv::Vec3d( markerLength / 2.f, markerLength / 2.f, 0.f));
+    objPoints.push_back(cv::Vec3d( markerLength / 2.f,-markerLength / 2.f, 0.f));
+    objPoints.push_back(cv::Vec3d(-markerLength / 2.f,-markerLength / 2.f, 0.f));
 }
 
 // Euclidean distance between two points
@@ -58,17 +58,17 @@ static double dist(const cv::Point2d &p1, const cv::Point2d &p2)
     double dx = x1 - x2;
     double dy = y1 - y2;
 
-    return sqrt(dx*dx + dy*dy);
+    return std::sqrt(dx*dx + dy*dy);
 }
 
 // Compute area in image of a fiducial, using Heron's formula
 // to find the area of two triangles
 static double calcFiducialArea(const std::vector<cv::Point2d> &pts)
 {
-    const Point2d &p0 = pts.at(0);
-    const Point2d &p1 = pts.at(1);
-    const Point2d &p2 = pts.at(2);
-    const Point2d &p3 = pts.at(3);
+    const cv::Point2d &p0 = pts.at(0);
+    const cv::Point2d &p1 = pts.at(1);
+    const cv::Point2d &p2 = pts.at(2);
+    const cv::Point2d &p3 = pts.at(3);
 
     double a1 = dist(p0, p1);
     double b1 = dist(p0, p3);
@@ -81,17 +81,17 @@ static double calcFiducialArea(const std::vector<cv::Point2d> &pts)
     double s1 = (a1 + b1 + c1) / 2.0;
     double s2 = (a2 + b2 + c2) / 2.0;
 
-    a1 = sqrt(s1*(s1-a1)*(s1-b1)*(s1-c1));
-    a2 = sqrt(s2*(s2-a2)*(s2-b2)*(s2-c2));
+    a1 = std::sqrt(s1*(s1-a1)*(s1-b1)*(s1-c1));
+    a2 = std::sqrt(s2*(s2-a2)*(s2-b2)*(s2-c2));
     return a1+a2;
 }
 
 // estimate reprojection error
-double Estimator::getReprojectionError(const vector<Point3d> &objectPoints,
-                            const vector<Point2d> &imagePoints,
-                            const Vec3d &rvec, const Vec3d &tvec) {
+double Estimator::getReprojectionError(const std::vector<cv::Point3d> &objectPoints,
+                            const std::vector<cv::Point2d> &imagePoints,
+                            const cv::Vec3d &rvec, const cv::Vec3d &tvec) {
 
-    vector<Point2d> projectedPoints;
+    std::vector<cv::Point2d> projectedPoints;
 
     cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix,
                       distortionCoeffs, projectedPoints);
@@ -107,12 +107,12 @@ double Estimator::getReprojectionError(const vector<Point3d> &objectPoints,
 }
 
 
-void Estimator::estimatePose(int fid, const vector<Point3d> &worldPoints,
-                              const vector<Point2d> &imagePoints,
+void Estimator::estimatePose(int fid, const std::vector<cv::Point3d> &worldPoints,
+                              const std::vector<cv::Point2d> &imagePoints,
                               Observation &obs, fiducial_msgs::FiducialTransform &ft,
-                              const ros::Time& stamp, const string& frame)
+                              const ros::Time& stamp, const std::string& frame)
 {
-    Vec3d rvec, tvec;
+    cv::Vec3d rvec, tvec;
     bool haveHistory = false;
 
     if (rvecHistory.find(fid) != rvecHistory.end()) {
@@ -130,7 +130,7 @@ void Estimator::estimatePose(int fid, const vector<Point3d> &worldPoints,
               tvec[0], tvec[1], tvec[2], rvec[0], rvec[1], rvec[2]);
 
     double angle = norm(rvec);
-    Vec3d axis = rvec / angle;
+    cv::Vec3d axis = rvec / angle;
     ROS_INFO("angle %f axis %f %f %f", angle, axis[0], axis[1], axis[2]);
 
     tf2::Quaternion q;
@@ -203,7 +203,7 @@ void Estimator::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
 
 
 void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
-                              vector<Observation> &observations,
+                              std::vector<Observation> &observations,
                               fiducial_msgs::FiducialTransformArray &outMsg)
 {
     if (!haveCaminfo) {
@@ -213,23 +213,23 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
         return;
     }
 
-    vector<Point3d> markerObjPoints;
+    std::vector<cv::Point3d> markerObjPoints;
     getSingleMarkerObjectPoints(fiducialLen, markerObjPoints);
 
-    vector<Point3d> allWorldPoints;
-    vector<Point2d> allImagePoints;
+    std::vector<cv::Point3d> allWorldPoints;
+    std::vector<cv::Point2d> allImagePoints;
 
     for (size_t i=0; i<msg->fiducials.size(); i++) {
 
         const fiducial_msgs::Fiducial& fid = msg->fiducials[i];
 
-        vector<Point2d > corners;
-        corners.push_back(Point2d(fid.x0, fid.y0));
-        corners.push_back(Point2d(fid.x1, fid.y1));
-        corners.push_back(Point2d(fid.x2, fid.y2));
-        corners.push_back(Point2d(fid.x3, fid.y3));
+        std::vector<cv::Point2d> corners;
+        corners.push_back(cv::Point2d(fid.x0, fid.y0));
+        corners.push_back(cv::Point2d(fid.x1, fid.y1));
+        corners.push_back(cv::Point2d(fid.x2, fid.y2));
+        corners.push_back(cv::Point2d(fid.x3, fid.y3));
 
-        Vec3d rvec, tvec;
+        cv::Vec3d rvec, tvec;
 
         if (map.fiducials.find(fid.fiducial_id) != map.fiducials.end()) {
             const tf2::Transform&  fiducialTransform =
@@ -237,11 +237,11 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
 
             for (int j=0; j<4; j++) {
                 // vertex in coordinate system of fiducial
-                Point3d& vertex = markerObjPoints[j];
+                cv::Point3d& vertex = markerObjPoints[j];
                 tf2::Vector3 vertex2(vertex.x, vertex.y, vertex.z);
                 // vertex in world coordinates
                 tf2::Vector3 worldPoint = fiducialTransform * vertex2;
-                allWorldPoints.push_back(Point3d(worldPoint.x(), worldPoint.y(), worldPoint.z()));
+                allWorldPoints.push_back(cv::Point3d(worldPoint.x(), worldPoint.y(), worldPoint.z()));
                 allImagePoints.push_back(corners[j]);
             }
         }

@@ -57,9 +57,6 @@
 
 #include <fiducial_slam/transform_with_variance.h>
 
-using namespace std;
-using namespace cv;
-
 // An observation of a single fiducial in a single image
 class Observation {
   public:
@@ -81,7 +78,7 @@ class Fiducial {
     int id;
     int numObs;
     bool visible;
-    map<int,int> links;
+    std::map<int,int> links;
 
     tf2::Stamped<TransformWithVariance> pose;
     ros::Time lastPublished;
@@ -98,7 +95,7 @@ class Map {
   public:
     tf2_ros::TransformBroadcaster broadcaster;
     tf2_ros::Buffer tfBuffer;
-    unique_ptr<tf2_ros::TransformListener> listener;
+    std::unique_ptr<tf2_ros::TransformListener> listener;
 
     ros::Publisher markerPub;
     ros::Publisher mapPub;
@@ -108,11 +105,11 @@ class Map {
     ros::ServiceServer clearSrv;
     bool clearCallback(std_srvs::Empty::Request &req,
                        std_srvs::Empty::Response &res);
-    string mapFilename;
-    string mapFrame;
-    string odomFrame;
-    string cameraFrame;
-    string baseFrame;
+    std::string mapFilename;
+    std::string mapFrame;
+    std::string odomFrame;
+    std::string cameraFrame;
+    std::string baseFrame;
     double future_date_transforms;
     bool publish_6dof_pose;
     double multiErrorThreshold;
@@ -132,15 +129,15 @@ class Map {
     ros::Time tfPublishTime;
     geometry_msgs::TransformStamped poseTf;
 
-    map<int, Fiducial> fiducials;
+    std::map<int, Fiducial> fiducials;
 
     Map(ros::NodeHandle &nh);
     void update();
-    void update(vector<Observation> &obs, const ros::Time &time);
-    void autoInit(const vector<Observation> &obs, const ros::Time &time);
-    int  updatePose(vector<Observation> &obs, const ros::Time &time,
+    void update(std::vector<Observation> &obs, const ros::Time &time);
+    void autoInit(const std::vector<Observation> &obs, const ros::Time &time);
+    int  updatePose(std::vector<Observation> &obs, const ros::Time &time,
                     tf2::Stamped<TransformWithVariance>& cameraPose);
-    void updateMap(const vector<Observation> &obs, const ros::Time &time,
+    void updateMap(const std::vector<Observation> &obs, const ros::Time &time,
                    const tf2::Stamped<TransformWithVariance>& cameraPose);
 
     bool loadMap();

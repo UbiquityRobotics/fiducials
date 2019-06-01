@@ -51,8 +51,6 @@
 
 #include "fiducial_slam/map.h"
 
-using namespace std;
-
 class Estimator {
     cv::Mat cameraMatrix;
     cv::Mat distortionCoeffs;
@@ -65,19 +63,19 @@ class Estimator {
     double errorThreshold;
 
     int frameNum;
-    string frameId;
+    std::string frameId;
 
     std::map<int, cv::Vec3d> rvecHistory;
     std::map<int, cv::Vec3d> tvecHistory;
 
-    void estimatePose(int fid, const vector<Point3d> &worldPoints,
-                      const vector<Point2d> &imagePoints,
+    void estimatePose(int fid, const std::vector<cv::Point3d> &worldPoints,
+                      const std::vector<cv::Point2d> &imagePoints,
                       Observation &obs, fiducial_msgs::FiducialTransform &ft,
-                      const ros::Time& stamp, const string& frame);
+                      const ros::Time& stamp, const std::string& frame);
 
-    double getReprojectionError(const vector<Point3d> &objectPoints,
-                                const vector<Point2d> &imagePoints,
-                                const Vec3d &rvec, const Vec3d &tvec);
+    double getReprojectionError(const std::vector<cv::Point3d> &objectPoints,
+                                const std::vector<cv::Point2d> &imagePoints,
+                                const cv::Vec3d &rvec, const cv::Vec3d &tvec);
 
   public:
     Estimator(Map &fiducialMap);
@@ -85,7 +83,7 @@ class Estimator {
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
 
     void estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
-                       vector<Observation> &observations,
+                       std::vector<Observation> &observations,
                        fiducial_msgs::FiducialTransformArray &outMsg);
 
     void setFiducialLen(double fiducialLen) { this->fiducialLen = fiducialLen; };
