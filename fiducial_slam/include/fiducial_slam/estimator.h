@@ -3,13 +3,13 @@
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer. 
+ *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution. 
+ *    and/or other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -33,8 +33,8 @@
 #define ESTIMATE_H
 
 #include <ros/ros.h>
-#include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Transform.h>
 
 #include <opencv2/calib3d.hpp>
 
@@ -43,8 +43,8 @@
 #include <fiducial_msgs/FiducialTransform.h>
 #include <fiducial_msgs/FiducialTransformArray.h>
 
-#include <map>
 #include <list>
+#include <map>
 #include <string>
 
 #include <sensor_msgs/CameraInfo.h>
@@ -69,20 +69,20 @@ class Estimator {
     std::map<int, cv::Vec3d> tvecHistory;
 
     void estimatePose(int fid, const std::vector<cv::Point3d> &worldPoints,
-                      const std::vector<cv::Point2d> &imagePoints,
-                      Observation &obs, fiducial_msgs::FiducialTransform &ft,
-                      const ros::Time& stamp, const std::string& frame);
+                      const std::vector<cv::Point2d> &imagePoints, Observation &obs,
+                      fiducial_msgs::FiducialTransform &ft, const ros::Time &stamp,
+                      const std::string &frame);
 
     double getReprojectionError(const std::vector<cv::Point3d> &objectPoints,
-                                const std::vector<cv::Point2d> &imagePoints,
-                                const cv::Vec3d &rvec, const cv::Vec3d &tvec);
+                                const std::vector<cv::Point2d> &imagePoints, const cv::Vec3d &rvec,
+                                const cv::Vec3d &tvec);
 
-  public:
+public:
     Estimator(Map &fiducialMap);
 
-    void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
+    void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
 
-    void estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
+    void estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr &msg,
                        std::vector<Observation> &observations,
                        fiducial_msgs::FiducialTransformArray &outMsg);
 

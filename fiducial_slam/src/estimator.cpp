@@ -4,13 +4,13 @@
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer. 
+ *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution. 
+ *    and/or other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,26 +30,24 @@
  *
  */
 
-#include "fiducial_slam/map.h"
 #include "fiducial_slam/estimator.h"
+#include "fiducial_slam/map.h"
 
 /**
-  * @brief Return object points for the system centered in a single marker, given the marker length
-  */
-static void getSingleMarkerObjectPoints(double markerLength, std::vector<cv::Point3d>& objPoints) {
-
+ * @brief Return object points for the system centered in a single marker, given the marker length
+ */
+static void getSingleMarkerObjectPoints(double markerLength, std::vector<cv::Point3d> &objPoints) {
     CV_Assert(markerLength > 0);
 
     // set coordinate system in the middle of the marker, with Z pointing out
     objPoints.push_back(cv::Vec3d(-markerLength / 2.f, markerLength / 2.f, 0.f));
-    objPoints.push_back(cv::Vec3d( markerLength / 2.f, markerLength / 2.f, 0.f));
-    objPoints.push_back(cv::Vec3d( markerLength / 2.f,-markerLength / 2.f, 0.f));
-    objPoints.push_back(cv::Vec3d(-markerLength / 2.f,-markerLength / 2.f, 0.f));
+    objPoints.push_back(cv::Vec3d(markerLength / 2.f, markerLength / 2.f, 0.f));
+    objPoints.push_back(cv::Vec3d(markerLength / 2.f, -markerLength / 2.f, 0.f));
+    objPoints.push_back(cv::Vec3d(-markerLength / 2.f, -markerLength / 2.f, 0.f));
 }
 
 // Euclidean distance between two points
-static double dist(const cv::Point2d &p1, const cv::Point2d &p2)
-{
+static double dist(const cv::Point2d &p1, const cv::Point2d &p2) {
     double x1 = p1.x;
     double y1 = p1.y;
     double x2 = p2.x;
@@ -58,13 +56,12 @@ static double dist(const cv::Point2d &p1, const cv::Point2d &p2)
     double dx = x1 - x2;
     double dy = y1 - y2;
 
-    return std::sqrt(dx*dx + dy*dy);
+    return std::sqrt(dx * dx + dy * dy);
 }
 
 // Compute area in image of a fiducial, using Heron's formula
 // to find the area of two triangles
-static double calcFiducialArea(const std::vector<cv::Point2d> &pts)
-{
+static double calcFiducialArea(const std::vector<cv::Point2d> &pts) {
     const cv::Point2d &p0 = pts.at(0);
     const cv::Point2d &p1 = pts.at(1);
     const cv::Point2d &p2 = pts.at(2);
@@ -81,37 +78,33 @@ static double calcFiducialArea(const std::vector<cv::Point2d> &pts)
     double s1 = (a1 + b1 + c1) / 2.0;
     double s2 = (a2 + b2 + c2) / 2.0;
 
-    a1 = std::sqrt(s1*(s1-a1)*(s1-b1)*(s1-c1));
-    a2 = std::sqrt(s2*(s2-a2)*(s2-b2)*(s2-c2));
-    return a1+a2;
+    a1 = std::sqrt(s1 * (s1 - a1) * (s1 - b1) * (s1 - c1));
+    a2 = std::sqrt(s2 * (s2 - a2) * (s2 - b2) * (s2 - c2));
+    return a1 + a2;
 }
 
 // estimate reprojection error
 double Estimator::getReprojectionError(const std::vector<cv::Point3d> &objectPoints,
-                            const std::vector<cv::Point2d> &imagePoints,
-                            const cv::Vec3d &rvec, const cv::Vec3d &tvec) {
-
+                                       const std::vector<cv::Point2d> &imagePoints,
+                                       const cv::Vec3d &rvec, const cv::Vec3d &tvec) {
     std::vector<cv::Point2d> projectedPoints;
 
-    cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix,
-                      distortionCoeffs, projectedPoints);
+    cv::projectPoints(objectPoints, rvec, tvec, cameraMatrix, distortionCoeffs, projectedPoints);
 
     // calculate RMS image error
     double totalError = 0.0;
-    for (size_t i=0; i<objectPoints.size(); i++) {
+    for (size_t i = 0; i < objectPoints.size(); i++) {
         double error = dist(imagePoints[i], projectedPoints[i]);
-        totalError += error*error;
+        totalError += error * error;
     }
-    double rerror = totalError/(float)objectPoints.size();
+    double rerror = totalError / (float)objectPoints.size();
     return rerror;
 }
 
-
 void Estimator::estimatePose(int fid, const std::vector<cv::Point3d> &worldPoints,
-                              const std::vector<cv::Point2d> &imagePoints,
-                              Observation &obs, fiducial_msgs::FiducialTransform &ft,
-                              const ros::Time& stamp, const std::string& frame)
-{
+                             const std::vector<cv::Point2d> &imagePoints, Observation &obs,
+                             fiducial_msgs::FiducialTransform &ft, const ros::Time &stamp,
+                             const std::string &frame) {
     cv::Vec3d rvec, tvec;
     bool haveHistory = false;
 
@@ -123,11 +116,10 @@ void Estimator::estimatePose(int fid, const std::vector<cv::Point3d> &worldPoint
 
     cv::solvePnP(worldPoints, imagePoints, cameraMatrix, distortionCoeffs, rvec, tvec, haveHistory);
 
-    double reprojectionError =
-          getReprojectionError(worldPoints, imagePoints, rvec, tvec);
+    double reprojectionError = getReprojectionError(worldPoints, imagePoints, rvec, tvec);
 
-    ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", fid,
-              tvec[0], tvec[1], tvec[2], rvec[0], rvec[1], rvec[2]);
+    ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", fid, tvec[0], tvec[1], tvec[2],
+             rvec[0], rvec[1], rvec[2]);
 
     double angle = norm(rvec);
     cv::Vec3d axis = rvec / angle;
@@ -137,15 +129,13 @@ void Estimator::estimatePose(int fid, const std::vector<cv::Point3d> &worldPoint
     q.setRotation(tf2::Vector3(axis[0], axis[1], axis[2]), angle);
 
     // Convert image_error (in pixels) to object_error (in meters)
-        double objectError =
-            (reprojectionError / dist(imagePoints[0], imagePoints[2])) *
-            (norm(tvec) / fiducialLen);
+    double objectError =
+        (reprojectionError / dist(imagePoints[0], imagePoints[2])) * (norm(tvec) / fiducialLen);
 
     tf2::Transform T(q, tf2::Vector3(tvec[0], tvec[1], tvec[2]));
 
-    obs = Observation(fid,
-                      tf2::Stamped<TransformWithVariance>(TransformWithVariance(
-                      T, objectError), stamp, frame));
+    obs = Observation(fid, tf2::Stamped<TransformWithVariance>(
+                               TransformWithVariance(T, objectError), stamp, frame));
 
     if (reprojectionError < errorThreshold) {
         rvecHistory[fid] = rvec;
@@ -168,9 +158,7 @@ void Estimator::estimatePose(int fid, const std::vector<cv::Point3d> &worldPoint
     ft.object_error = objectError;
 }
 
-
-Estimator::Estimator(Map &fiducialMap): map(fiducialMap)
-{
+Estimator::Estimator(Map &fiducialMap) : map(fiducialMap) {
     haveCaminfo = false;
 
     // Camera intrinsics
@@ -180,32 +168,28 @@ Estimator::Estimator(Map &fiducialMap): map(fiducialMap)
     distortionCoeffs = cv::Mat::zeros(1, 5, CV_64F);
 }
 
-
-void Estimator::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg)
-{
+void Estimator::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg) {
     if (haveCaminfo) {
         return;
     }
 
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
-            cameraMatrix.at<double>(i, j) = msg->K[i*3+j];
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            cameraMatrix.at<double>(i, j) = msg->K[i * 3 + j];
         }
     }
 
-    for (size_t i=0; i<msg->D.size(); i++) {
-        distortionCoeffs.at<double>(0,i) = msg->D[i];
+    for (size_t i = 0; i < msg->D.size(); i++) {
+        distortionCoeffs.at<double>(0, i) = msg->D[i];
     }
 
     haveCaminfo = true;
     frameId = msg->header.frame_id;
 }
 
-
-void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
+void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr &msg,
                               std::vector<Observation> &observations,
-                              fiducial_msgs::FiducialTransformArray &outMsg)
-{
+                              fiducial_msgs::FiducialTransformArray &outMsg) {
     if (!haveCaminfo) {
         if (frameNum > 5) {
             ROS_ERROR("No camera intrinsics");
@@ -219,8 +203,7 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
     std::vector<cv::Point3d> allWorldPoints;
     std::vector<cv::Point2d> allImagePoints;
 
-    for (const auto& fid : msg->fiducials) {
-
+    for (const auto &fid : msg->fiducials) {
         std::vector<cv::Point2d> corners;
         corners.push_back(cv::Point2d(fid.x0, fid.y0));
         corners.push_back(cv::Point2d(fid.x1, fid.y1));
@@ -230,24 +213,24 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
         cv::Vec3d rvec, tvec;
 
         if (map.fiducials.find(fid.fiducial_id) != map.fiducials.end()) {
-            const tf2::Transform&  fiducialTransform =
-                map.fiducials[fid.fiducial_id].pose.transform;
+            const tf2::Transform &fiducialTransform = map.fiducials[fid.fiducial_id].pose.transform;
 
-            for (int j=0; j<4; j++) {
+            for (int j = 0; j < 4; j++) {
                 // vertex in coordinate system of fiducial
-                cv::Point3d& vertex = markerObjPoints[j];
+                cv::Point3d &vertex = markerObjPoints[j];
                 tf2::Vector3 vertex2(vertex.x, vertex.y, vertex.z);
                 // vertex in world coordinates
                 tf2::Vector3 worldPoint = fiducialTransform * vertex2;
-                allWorldPoints.push_back(cv::Point3d(worldPoint.x(), worldPoint.y(), worldPoint.z()));
+                allWorldPoints.push_back(
+                    cv::Point3d(worldPoint.x(), worldPoint.y(), worldPoint.z()));
                 allImagePoints.push_back(corners[j]);
             }
         }
 
         Observation obs;
         fiducial_msgs::FiducialTransform ft;
-        estimatePose(fid.fiducial_id, markerObjPoints, corners, obs, ft,
-           msg->header.stamp, frameId);
+        estimatePose(fid.fiducial_id, markerObjPoints, corners, obs, ft, msg->header.stamp,
+                     frameId);
 
         observations.push_back(obs);
         outMsg.transforms.push_back(ft);
@@ -257,8 +240,7 @@ void Estimator::estimatePoses(const fiducial_msgs::FiducialArray::ConstPtr& msg,
         Observation obs;
         fiducial_msgs::FiducialTransform ft;
 
-        estimatePose(0, allWorldPoints, allImagePoints, obs, ft,
-           msg->header.stamp, frameId);
+        estimatePose(0, allWorldPoints, allImagePoints, obs, ft, msg->header.stamp, frameId);
 
         observations.push_back(obs);
         outMsg.transforms.push_back(ft);
