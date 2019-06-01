@@ -234,7 +234,7 @@ void Map::updateMap(const std::vector<Observation>& obs, const ros::Time &time,
         for (const Observation& observation : obs) {
             int fid = observation.fid;
             if (f.id != fid) {
-                f.links[fid] = 1;
+                f.links.insert(fid);
             }
         }
         publishMarker(fiducials[o.fid]);
@@ -568,8 +568,8 @@ bool Map::saveMap(std::string filename)
                  rad2deg(rx), rad2deg(ry), rad2deg(rz), 
                  f.pose.variance, f.numObs);
 
-        for (auto& link_pair : f.links) {
-            fprintf(fp, " %d", link_pair.first);
+        for (const auto linked_fid : f.links) {
+            fprintf(fp, " %d", linked_fid);
         }
         fprintf(fp, "\n");
     }
@@ -625,7 +625,7 @@ bool Map::loadMap(std::string filename)
 	     std::string s;
              while (getline(ss, s, ' ')) {
                  if (!s.empty()) {
-                     f.links[stoi(s)] = 1;
+		     f.links.insert(stoi(s));
                  }
              }
              fiducials[id] = f;
@@ -784,12 +784,11 @@ void Map::publishMarker(Fiducial &fid)
     gp0.z = p0.z();
 
     std::map<int, int>::iterator lit;
-    for (const auto& link_pair : fid.links) {
-        int ofid = link_pair.first;
+    for (const auto linked_fid : fid.links) {
         // only draw links in one direction
-        if (fid.id < ofid) {
-            if (fiducials.find(ofid) != fiducials.end()) {
-                tf2::Vector3 p1 = fiducials[ofid].pose.transform.getOrigin();
+        if (fid.id < linked_fid) {
+            if (fiducials.find(linked_fid) != fiducials.end()) {
+                tf2::Vector3 p1 = fiducials[linked_fid].pose.transform.getOrigin();
                 gp1.x = p1.x();
                 gp1.y = p1.y();
                 gp1.z = p1.z();

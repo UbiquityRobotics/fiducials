@@ -78,7 +78,7 @@ class Fiducial {
     int id;
     int numObs;
     bool visible;
-    std::map<int,int> links;
+    std::set<int> links; // Stores the IDs of connected fiducials
 
     tf2::Stamped<TransformWithVariance> pose;
     ros::Time lastPublished;
