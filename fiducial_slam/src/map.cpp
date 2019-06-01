@@ -46,7 +46,6 @@
 
 #include <boost/filesystem.hpp>
 
-static bool sum_error_in_quadrature = false;
 static double systematic_error = 0.01;
 
 // Constructor for observation
@@ -116,7 +115,6 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)){
     nh.param<double>("systematic_error", systematic_error, 0.01);
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
-    nh.param<bool>("sum_error_in_quadrature", sum_error_in_quadrature, false);
     nh.param<bool>("read_only_map", readOnly, false);
 
     std::fill(covarianceDiagonal.begin(), covarianceDiagonal.end(), 0);
