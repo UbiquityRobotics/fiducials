@@ -3,13 +3,13 @@
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer. 
+ *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution. 
+ *    and/or other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -32,16 +32,16 @@
 #define MAP_H
 
 #include <ros/ros.h>
-#include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Transform.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <visualization_msgs/Marker.h>
 
-#include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
 #include <opencv2/calib3d.hpp>
+#include <opencv2/highgui.hpp>
 
 #include <fiducial_msgs/FiducialMapEntry.h>
 #include <fiducial_msgs/FiducialMapEntryArray.h>
@@ -57,48 +57,42 @@
 
 #include <fiducial_slam/transform_with_variance.h>
 
-using namespace std;
-using namespace cv;
-
 // An observation of a single fiducial in a single image
 class Observation {
-  public:
+public:
     int fid;
     tf2::Stamped<TransformWithVariance> T_fidCam;
     tf2::Stamped<TransformWithVariance> T_camFid;
 
-    // how well this fitted the consensus of cameraPose
-    tf2::Vector3 position;
+    Observation(){};
 
-    Observation() {};
-
-    Observation(int fid, const tf2::Stamped<TransformWithVariance>& camFid);
+    Observation(int fid, const tf2::Stamped<TransformWithVariance> &camFid);
 };
 
 // A single fiducial that is in the map
 class Fiducial {
-  public:
+public:
     int id;
     int numObs;
     bool visible;
-    map<int,int> links;
+    std::set<int> links;  // Stores the IDs of connected fiducials
 
     tf2::Stamped<TransformWithVariance> pose;
     ros::Time lastPublished;
 
-    void update(const tf2::Stamped<TransformWithVariance>& newPose);
+    void update(const tf2::Stamped<TransformWithVariance> &newPose);
 
     Fiducial() {}
 
-    Fiducial(int id, const tf2::Stamped<TransformWithVariance>& pose);
+    Fiducial(int id, const tf2::Stamped<TransformWithVariance> &pose);
 };
 
 // Class containing map data
 class Map {
-  public:
+public:
     tf2_ros::TransformBroadcaster broadcaster;
     tf2_ros::Buffer tfBuffer;
-    unique_ptr<tf2_ros::TransformListener> listener;
+    std::unique_ptr<tf2_ros::TransformListener> listener;
 
     ros::Publisher markerPub;
     ros::Publisher mapPub;
@@ -106,13 +100,12 @@ class Map {
     ros::Publisher cameraPosePub;
 
     ros::ServiceServer clearSrv;
-    bool clearCallback(std_srvs::Empty::Request &req,
-                       std_srvs::Empty::Response &res);
-    string mapFilename;
-    string mapFrame;
-    string odomFrame;
-    string cameraFrame;
-    string baseFrame;
+    bool clearCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+    std::string mapFilename;
+    std::string mapFrame;
+    std::string odomFrame;
+    std::string cameraFrame;
+    std::string baseFrame;
     double future_date_transforms;
     bool publish_6dof_pose;
     double multiErrorThreshold;
@@ -132,16 +125,16 @@ class Map {
     ros::Time tfPublishTime;
     geometry_msgs::TransformStamped poseTf;
 
-    map<int, Fiducial> fiducials;
+    std::map<int, Fiducial> fiducials;
 
     Map(ros::NodeHandle &nh);
     void update();
-    void update(vector<Observation> &obs, const ros::Time &time);
-    void autoInit(const vector<Observation> &obs, const ros::Time &time);
-    int  updatePose(vector<Observation> &obs, const ros::Time &time,
-                    tf2::Stamped<TransformWithVariance>& cameraPose);
-    void updateMap(const vector<Observation> &obs, const ros::Time &time,
-                   const tf2::Stamped<TransformWithVariance>& cameraPose);
+    void update(std::vector<Observation> &obs, const ros::Time &time);
+    void autoInit(const std::vector<Observation> &obs, const ros::Time &time);
+    int updatePose(std::vector<Observation> &obs, const ros::Time &time,
+                   tf2::Stamped<TransformWithVariance> &cameraPose);
+    void updateMap(const std::vector<Observation> &obs, const ros::Time &time,
+                   const tf2::Stamped<TransformWithVariance> &cameraPose);
 
     bool loadMap();
     bool loadMap(std::string filename);
@@ -154,8 +147,8 @@ class Map {
     void publishMarkers();
     void drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1);
 
-    bool lookupTransform(const std::string &from, const std::string &to,
-                         const ros::Time &time, tf2::Transform &T) const;
+    bool lookupTransform(const std::string &from, const std::string &to, const ros::Time &time,
+                         tf2::Transform &T) const;
 };
 
 #endif
