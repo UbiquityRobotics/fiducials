@@ -524,6 +524,7 @@ void Map::handleAddFiducial(const std::vector<Observation> &obs) {
         if (o.fid == fiducialToAdd) {
             ROS_INFO("Adding fiducial_id %d to map", fiducialToAdd);
 
+
             tf2::Stamped<TransformWithVariance> T = o.T_camFid;
 
             // Take into account position of camera on base
@@ -536,11 +537,15 @@ void Map::handleAddFiducial(const std::vector<Observation> &obs) {
             // Take into account position of robot in the world if known
             tf2::Transform T_mapBase;
             if (lookupTransform(mapFrame, baseFrame, ros::Time(0), T_mapBase)) {
-                printf("We know where we are");
                 T.setData(T_mapBase * T);
+            }
+            else {
+                ROS_INFO("Placing robot at the origin");
             }
 
             fiducials[o.fid] = Fiducial(o.fid, T);
+            fiducials[originFid].pose.variance = 0.0;
+            isInitializingMap = false;
 
             fiducialToAdd = -1;
             return;
