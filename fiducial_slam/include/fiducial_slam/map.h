@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-8, Ubiquity Robotics
+ * Copyright (c) 2017-9, Ubiquity Robotics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <std_srvs/Empty.h>
+#include <fiducial_slam/AddFiducial.h>
 
 #include <fiducial_slam/transform_with_variance.h>
 
@@ -100,7 +101,11 @@ public:
     ros::Publisher cameraPosePub;
 
     ros::ServiceServer clearSrv;
+    ros::ServiceServer addSrv;
     bool clearCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+    bool addFiducialCallback(fiducial_slam::AddFiducial::Request &req,
+                             fiducial_slam::AddFiducial::Response &res);
+
     std::string mapFilename;
     std::string mapFrame;
     std::string odomFrame;
@@ -126,6 +131,7 @@ public:
     geometry_msgs::TransformStamped poseTf;
 
     std::map<int, Fiducial> fiducials;
+    int fiducialToAdd;
 
     Map(ros::NodeHandle &nh);
     void update();
@@ -135,6 +141,7 @@ public:
                    tf2::Stamped<TransformWithVariance> &cameraPose);
     void updateMap(const std::vector<Observation> &obs, const ros::Time &time,
                    const tf2::Stamped<TransformWithVariance> &cameraPose);
+    void handleAddFiducial(const std::vector<Observation> &obs);
 
     bool loadMap();
     bool loadMap(std::string filename);

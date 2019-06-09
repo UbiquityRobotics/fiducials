@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Ubiquity Robotics
+ * Copyright (c) 2017-9, Ubiquity Robotics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@
 
 #include <boost/filesystem.hpp>
 
+
 static double systematic_error = 0.01;
 
 // Constructor for observation
@@ -85,6 +86,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
     originFid = -1;
     isInitializingMap = false;
     havePose = false;
+    fiducialToAdd = -1;
 
     listener = make_unique<tf2_ros::TransformListener>(tfBuffer);
 
@@ -97,6 +99,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
     mapPub = ros::Publisher(nh.advertise<fiducial_msgs::FiducialMapEntryArray>("/fiducial_map", 1));
 
     clearSrv = nh.advertiseService("clear_map", &Map::clearCallback, this);
+    addSrv = nh.advertiseService("add_fiducial", &Map::addFiducialCallback, this);
 
     nh.param<std::string>("map_frame", mapFrame, "map");
     nh.param<std::string>("odom_frame", odomFrame, "odom");
@@ -167,6 +170,8 @@ void Map::update(std::vector<Observation> &obs, const ros::Time &time) {
             updateMap(obs, time, T_mapCam);
         }
     }
+
+    handleAddFiducial(obs);
 
     publishMap();
 }
@@ -500,6 +505,51 @@ void Map::autoInit(const std::vector<Observation> &obs, const ros::Time &time) {
     }
 }
 
+// Attempt to add the specified fiducial to the map
+
+void Map::handleAddFiducial(const std::vector<Observation> &obs) {
+
+    if (fiducialToAdd == -1) {
+        return;
+    }
+
+    if (fiducials.find(fiducialToAdd) != fiducials.end()) {
+        ROS_INFO("Fiducial %d is already in map - ignoring add request",
+                 fiducialToAdd);
+        fiducialToAdd = -1;
+        return;
+    }
+
+    for (const Observation &o : obs) {
+        if (o.fid == fiducialToAdd) {
+            ROS_INFO("Adding fiducial_id %d to map", fiducialToAdd);
+
+            tf2::Stamped<TransformWithVariance> T = o.T_camFid;
+
+            // Take into account position of camera on base
+            tf2::Transform T_baseCam;
+            if (lookupTransform(baseFrame, o.T_camFid.frame_id_,
+                                o.T_camFid.stamp_, T_baseCam)) {
+                T.setData(T_baseCam * T);
+            }
+
+            // Take into account position of robot in the world if known
+            tf2::Transform T_mapBase;
+            if (lookupTransform(mapFrame, baseFrame, ros::Time(0), T_mapBase)) {
+                printf("We know where we are");
+                T.setData(T_mapBase * T);
+            }
+
+            fiducials[o.fid] = Fiducial(o.fid, T);
+
+            fiducialToAdd = -1;
+            return;
+        }
+    }
+
+    ROS_INFO("Unable to add fiducial %d to map", fiducialToAdd);
+}
+
 // save map to file
 
 bool Map::saveMap() { return saveMap(mapFilename); }
@@ -783,4 +833,15 @@ bool Map::clearCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response
     originFid = -1;
 
     return true;
+}
+
+// Service to add a fiducial to the map
+
+bool Map::addFiducialCallback(fiducial_slam::AddFiducial::Request &req,
+                              fiducial_slam::AddFiducial::Response &res)
+{
+   ROS_INFO("Request to add fiducial %d to map", req.fiducial_id);
+   fiducialToAdd = req.fiducial_id;
+
+   return true;
 }
