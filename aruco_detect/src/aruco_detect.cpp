@@ -530,7 +530,7 @@ FiducialsNode::FiducialsNode() : nh(ros::NodeHandle("~")), it(nh)
         std::vector<std::string> parts;
         boost::split(parts, element, boost::is_any_of(":"));
         if (parts.size() == 2) {
-            double len = std::stod(parts[0]);
+            double len = std::stod(parts[1]);
             std::vector<std::string> range;
             boost::split(range, element, boost::is_any_of("-"));
             if (range.size() == 2) {
