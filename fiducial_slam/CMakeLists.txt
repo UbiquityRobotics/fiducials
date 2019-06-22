@@ -16,8 +16,21 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(OpenCV REQUIRED)
 
-catkin_package(INCLUDE_DIRS include
-  DEPENDS OpenCV)
+##############
+## Services ##
+##############
+
+## Generate services in the 'srv' folder
+add_service_files(
+  FILES
+  AddFiducial.srv
+)
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 ###########
 ## Build ##
@@ -26,6 +39,9 @@ catkin_package(INCLUDE_DIRS include
 add_definitions(-std=c++11)
 
 include_directories(${catkin_INCLUDE_DIRS} include)
+catkin_package(INCLUDE_DIRS include
+  DEPENDS OpenCV)
+
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(fiducial_slam src/fiducial_slam.cpp src/estimator.cpp src/map.cpp src/transform_with_variance.cpp)
