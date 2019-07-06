@@ -187,10 +187,6 @@ void Map::updateMap(const std::vector<Observation> &obs, const ros::Time &time,
     }
 
     for (const Observation &o : obs) {
-        if (o.fid == 0) {
-            continue;
-        }
-
         // This should take into account the variances from both
         tf2::Stamped<TransformWithVariance> T_mapFid = T_mapCam * o.T_camFid;
         T_mapFid.frame_id_ = mapFrame;
@@ -252,8 +248,6 @@ bool Map::lookupTransform(const std::string &from, const std::string &to, const 
 int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
                     tf2::Stamped<TransformWithVariance> &T_mapCam) {
     int numEsts = 0;
-    tf2::Stamped<TransformWithVariance> T_fid0Base;
-    bool useMulti = false;
     tf2::Stamped<TransformWithVariance> T_camBase;
     tf2::Stamped<TransformWithVariance> T_baseCam;
     tf2::Stamped<TransformWithVariance> T_mapBase;
@@ -280,21 +274,7 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
     }
 
     for (Observation &o : obs) {
-        if (o.fid == 0) {
-            // virtual fiducial 0 is at the origin
-            T_fid0Base.setData(o.T_fidCam * T_camBase);
-
-            tf2::Vector3 t = T_fid0Base.transform.getOrigin();
-            double r, p, y;
-            T_fid0Base.transform.getBasis().getRPY(r, p, y);
-
-            ROS_INFO("Pose MUL %lf %lf %lf %lf %lf %lf %lf", t.x(), t.y(), t.z(), r, p, y,
-                     T_fid0Base.variance);
-
-            if (T_fid0Base.variance < multiErrorThreshold) {
-                useMulti = true;
-            }
-        } else if (fiducials.find(o.fid) != fiducials.end()) {
+        if (fiducials.find(o.fid) != fiducials.end()) {
             const Fiducial &fid = fiducials[o.fid];
 
             tf2::Stamped<TransformWithVariance> p = fid.pose * o.T_fidCam;
@@ -353,10 +333,6 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
 
         ROS_INFO("Pose ALL %lf %lf %lf %lf %lf %lf %f", trans.x(), trans.y(), trans.z(), r, p, y,
                  T_mapBase.variance);
-    }
-
-    if (useMulti) {
-        T_mapBase = T_fid0Base;
     }
 
     tf2::Stamped<TransformWithVariance> basePose = T_mapBase;
@@ -653,9 +629,6 @@ void Map::publishMap() {
 
     for (const auto &map_pair : fiducials) {
         const Fiducial &f = map_pair.second;
-        if (f.id == 0) {
-            continue;
-        }
 
         fiducial_msgs::FiducialMapEntry fme;
         fme.fiducial_id = f.id;
