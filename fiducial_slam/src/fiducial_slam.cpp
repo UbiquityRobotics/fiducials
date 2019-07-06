@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-8, Ubiquity Robotics
+ * Copyright (c) 2017-9, Ubiquity Robotics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,6 @@
 #include "fiducial_msgs/FiducialTransform.h"
 #include "fiducial_msgs/FiducialTransformArray.h"
 
-#include "fiducial_slam/estimator.h"
 #include "fiducial_slam/map.h"
 
 #include <opencv2/calib3d.hpp>
@@ -74,11 +73,6 @@ private:
     double weighting_scale;
 
     void transformCallback(const fiducial_msgs::FiducialTransformArray::ConstPtr &msg);
-
-    void verticesCallback(const fiducial_msgs::FiducialArray::ConstPtr &msg);
-    void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
-
-    Estimator estimator;
 
 public:
     Map fiducialMap;
@@ -113,21 +107,7 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
     fiducialMap.update(observations, msg->header.stamp);
 }
 
-void FiducialSlam::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg) {
-    estimator.camInfoCallback(msg);
-}
-
-void FiducialSlam::verticesCallback(const fiducial_msgs::FiducialArray::ConstPtr &msg) {
-    vector<Observation> observations;
-    fiducial_msgs::FiducialTransformArray fta;
-
-    estimator.estimatePoses(msg, observations, fta);
-
-    fiducialMap.update(observations, msg->header.stamp);
-    ftPub.publish(fta);
-}
-
-FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : estimator(fiducialMap), fiducialMap(nh) {
+FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
     bool doPoseEstimation;
 
     // If set, use the fiducial area in pixels^2 as an indication of the
@@ -144,13 +124,6 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : estimator(fiducialMap), fiduci
         double fiducialLen, errorThreshold;
         nh.param<double>("fiducial_len", fiducialLen, 0.14);
         nh.param<double>("pose_error_theshold", errorThreshold, 1.0);
-
-        estimator.setFiducialLen(fiducialLen);
-        estimator.setErrorThreshold(errorThreshold);
-
-        verticesSub = nh.subscribe("/fiducial_vertices", 1, &FiducialSlam::verticesCallback, this);
-
-        cameraInfoSub = nh.subscribe("/camera_info", 1, &FiducialSlam::camInfoCallback, this);
 
         ftPub = ros::Publisher(
             nh.advertise<fiducial_msgs::FiducialTransformArray>("/fiducial_transforms", 1));
