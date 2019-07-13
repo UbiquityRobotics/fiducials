@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Austin Hendrix
+ * Copyright (c) 2017-19, Ubiquity Robotics Inc., Austin Hendrix
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -92,6 +92,7 @@ class FiducialsNode {
     std::vector<int> ignoreIds;
     std::map<int, double> fiducialLens;
     ros::NodeHandle nh;
+    ros::NodeHandle pnh;
 
     image_transport::Publisher image_pub;
 
@@ -282,7 +283,7 @@ void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, 
 void FiducialsNode::ignoreCallback(const std_msgs::String& msg)
 {
     ignoreIds.clear();
-    nh.setParam("ignore_fiducials", msg.data);
+    pnh.setParam("ignore_fiducials", msg.data);
     handleIgnoreString(msg.data);
 }
 
@@ -489,7 +490,7 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
 }
 
 
-FiducialsNode::FiducialsNode() : nh(ros::NodeHandle("~")), it(nh)
+FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
 {
     frameNum = 0;
 
@@ -506,22 +507,22 @@ FiducialsNode::FiducialsNode() : nh(ros::NodeHandle("~")), it(nh)
 
     detectorParams = new aruco::DetectorParameters();
 
-    nh.param<bool>("publish_images", publish_images, false);
-    nh.param<double>("fiducial_len", fiducial_len, 0.14);
-    nh.param<int>("dictionary", dicno, 7);
-    nh.param<bool>("do_pose_estimation", doPoseEstimation, true);
+    pnh.param<bool>("publish_images", publish_images, false);
+    pnh.param<double>("fiducial_len", fiducial_len, 0.14);
+    pnh.param<int>("dictionary", dicno, 7);
+    pnh.param<bool>("do_pose_estimation", doPoseEstimation, true);
 
     std::string str;
     std::vector<std::string> strs;
 
-    nh.param<string>("ignore_fiducials", str, "");
+    pnh.param<string>("ignore_fiducials", str, "");
     handleIgnoreString(str);
 
     /*
     fiducial size can take comma separated list of size: id or size: range,
     e.g. "200.0: 12, 300.0: 200-300"
     */
-    nh.param<string>("fiducial_len_override", str, "");
+    pnh.param<string>("fiducial_len_override", str, "");
     boost::split(strs, str, boost::is_any_of(","));
     for (const string& element : strs) {
         if (element == "") {
@@ -558,19 +559,19 @@ FiducialsNode::FiducialsNode() : nh(ros::NodeHandle("~")), it(nh)
 
     image_pub = it.advertise("/fiducial_images", 1);
 
-    vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("/fiducial_vertices", 1));
+    vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("fiducial_vertices", 1));
 
-    pose_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialTransformArray>("/fiducial_transforms", 1));
+    pose_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialTransformArray>("fiducial_transforms", 1));
 
     dictionary = aruco::getPredefinedDictionary(dicno);
 
-    img_sub = it.subscribe("/camera", 1,
+    img_sub = it.subscribe("camera", 1,
                         &FiducialsNode::imageCallback, this);
 
-    caminfo_sub = nh.subscribe("/camera_info", 1,
+    caminfo_sub = nh.subscribe("camera_info", 1,
                     &FiducialsNode::camInfoCallback, this);
 
-    ignore_sub = nh.subscribe("/ignore_fiducials", 1,
+    ignore_sub = nh.subscribe("ignore_fiducials", 1,
                               &FiducialsNode::ignoreCallback, this);
 
     service_enable_detections = nh.advertiseService("enable_detections",
@@ -579,21 +580,21 @@ FiducialsNode::FiducialsNode() : nh(ros::NodeHandle("~")), it(nh)
     callbackType = boost::bind(&FiducialsNode::configCallback, this, _1, _2);
     configServer.setCallback(callbackType);
 
-    nh.param<double>("adaptiveThreshConstant", detectorParams->adaptiveThreshConstant, 7);
-    nh.param<int>("adaptiveThreshWinSizeMax", detectorParams->adaptiveThreshWinSizeMax, 53); /* defailt 23 */
-    nh.param<int>("adaptiveThreshWinSizeMin", detectorParams->adaptiveThreshWinSizeMin, 3);
-    nh.param<int>("adaptiveThreshWinSizeStep", detectorParams->adaptiveThreshWinSizeStep, 4); /* default 10 */
-    nh.param<int>("cornerRefinementMaxIterations", detectorParams->cornerRefinementMaxIterations, 30);
-    nh.param<double>("cornerRefinementMinAccuracy", detectorParams->cornerRefinementMinAccuracy, 0.01); /* default 0.1 */
-    nh.param<int>("cornerRefinementWinSize", detectorParams->cornerRefinementWinSize, 5);
+    pnh.param<double>("adaptiveThreshConstant", detectorParams->adaptiveThreshConstant, 7);
+    pnh.param<int>("adaptiveThreshWinSizeMax", detectorParams->adaptiveThreshWinSizeMax, 53); /* defailt 23 */
+    pnh.param<int>("adaptiveThreshWinSizeMin", detectorParams->adaptiveThreshWinSizeMin, 3);
+    pnh.param<int>("adaptiveThreshWinSizeStep", detectorParams->adaptiveThreshWinSizeStep, 4); /* default 10 */
+    pnh.param<int>("cornerRefinementMaxIterations", detectorParams->cornerRefinementMaxIterations, 30);
+    pnh.param<double>("cornerRefinementMinAccuracy", detectorParams->cornerRefinementMinAccuracy, 0.01); /* default 0.1 */
+    pnh.param<int>("cornerRefinementWinSize", detectorParams->cornerRefinementWinSize, 5);
 #if CV_MINOR_VERSION==2
-    nh.param<bool>("doCornerRefinement",detectorParams->doCornerRefinement, true); /* default false */
+    pnh.param<bool>("doCornerRefinement",detectorParams->doCornerRefinement, true); /* default false */
 #else
     bool doCornerRefinement = true;
-    nh.param<bool>("doCornerRefinement", doCornerRefinement, true);
+    pnh.param<bool>("doCornerRefinement", doCornerRefinement, true);
     if (doCornerRefinement) {
        bool cornerRefinementSubPix = true;
-       nh.param<bool>("cornerRefinementSubPix", cornerRefinementSubPix, true);
+       pnh.param<bool>("cornerRefinementSubPix", cornerRefinementSubPix, true);
        if (cornerRefinementSubPix) {
          detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
        }
@@ -605,18 +606,18 @@ FiducialsNode::FiducialsNode() : nh(ros::NodeHandle("~")), it(nh)
        detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_NONE;
     }
 #endif
-    nh.param<double>("errorCorrectionRate", detectorParams->errorCorrectionRate , 0.6);
-    nh.param<double>("minCornerDistanceRate", detectorParams->minCornerDistanceRate , 0.05);
-    nh.param<int>("markerBorderBits", detectorParams->markerBorderBits, 1);
-    nh.param<double>("maxErroneousBitsInBorderRate", detectorParams->maxErroneousBitsInBorderRate, 0.04);
-    nh.param<int>("minDistanceToBorder", detectorParams->minDistanceToBorder, 3);
-    nh.param<double>("minMarkerDistanceRate", detectorParams->minMarkerDistanceRate, 0.05);
-    nh.param<double>("minMarkerPerimeterRate", detectorParams->minMarkerPerimeterRate, 0.1); /* default 0.3 */
-    nh.param<double>("maxMarkerPerimeterRate", detectorParams->maxMarkerPerimeterRate, 4.0);
-    nh.param<double>("minOtsuStdDev", detectorParams->minOtsuStdDev, 5.0);
-    nh.param<double>("perspectiveRemoveIgnoredMarginPerCell", detectorParams->perspectiveRemoveIgnoredMarginPerCell, 0.13);
-    nh.param<int>("perspectiveRemovePixelPerCell", detectorParams->perspectiveRemovePixelPerCell, 8);
-    nh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.01); /* default 0.05 */
+    pnh.param<double>("errorCorrectionRate", detectorParams->errorCorrectionRate , 0.6);
+    pnh.param<double>("minCornerDistanceRate", detectorParams->minCornerDistanceRate , 0.05);
+    pnh.param<int>("markerBorderBits", detectorParams->markerBorderBits, 1);
+    pnh.param<double>("maxErroneousBitsInBorderRate", detectorParams->maxErroneousBitsInBorderRate, 0.04);
+    pnh.param<int>("minDistanceToBorder", detectorParams->minDistanceToBorder, 3);
+    pnh.param<double>("minMarkerDistanceRate", detectorParams->minMarkerDistanceRate, 0.05);
+    pnh.param<double>("minMarkerPerimeterRate", detectorParams->minMarkerPerimeterRate, 0.1); /* default 0.3 */
+    pnh.param<double>("maxMarkerPerimeterRate", detectorParams->maxMarkerPerimeterRate, 4.0);
+    pnh.param<double>("minOtsuStdDev", detectorParams->minOtsuStdDev, 5.0);
+    pnh.param<double>("perspectiveRemoveIgnoredMarginPerCell", detectorParams->perspectiveRemoveIgnoredMarginPerCell, 0.13);
+    pnh.param<int>("perspectiveRemovePixelPerCell", detectorParams->perspectiveRemovePixelPerCell, 8);
+    pnh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.01); /* default 0.05 */
 
     ROS_INFO("Aruco detection ready");
 }
