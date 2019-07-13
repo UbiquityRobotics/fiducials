@@ -31,4 +31,4 @@ install:
   - sh devel_job.sh -y
 script:
   # get summary of test results
-  - /tmp/catkin/bin/catkin_test_results $JOB_PATH/catkin_workspace/test_results --all
+  - /tmp/catkin/bin/catkin_test_results $JOB_PATH/ws/test_results --all
