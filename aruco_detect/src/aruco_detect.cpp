@@ -490,7 +490,7 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
 }
 
 
-FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh), image_mutex()
+FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
 {
     frameNum = 0;
 
