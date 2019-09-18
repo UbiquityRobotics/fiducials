@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <mutex>
 
 #include <ros/ros.h>
 #include <tf/transform_datatypes.h>
@@ -74,6 +75,8 @@ class FiducialsNode {
     ros::Subscriber ignore_sub;
     image_transport::ImageTransport it;
     image_transport::Subscriber img_sub;
+
+    std::mutex image_mutex;
 
     ros::ServiceServer service_enable_detections;
 
@@ -317,6 +320,8 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         return; //return without doing anything
     }
 
+    image_mutex.lock();
+
     ROS_INFO("Got image %d", msg->header.seq);
     frameNum++;
 
@@ -372,6 +377,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                 if (frameNum > 5) {
                     ROS_ERROR("No camera intrinsics");
                 }
+                image_mutex.unlock();
                 return;
             }
 
@@ -437,6 +443,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
     catch(cv::Exception & e) {
         ROS_ERROR("cv exception: %s", e.what());
     }
+    image_mutex.unlock();
 }
 
 void FiducialsNode::handleIgnoreString(const std::string& str)
@@ -490,7 +497,7 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
 }
 
 
-FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
+FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh), image_mutex()
 {
     frameNum = 0;
 
