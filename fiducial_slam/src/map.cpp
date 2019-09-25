@@ -53,12 +53,21 @@ static double systematic_error = 0.01;
 Observation::Observation(int fid, const tf2::Stamped<TransformWithVariance> &camFid) {
     this->fid = fid;
 
+    tf2::Stamped<TransformWithVariance> camFidFix = camFid;
+    // test fix
+    double r, p, y;
+    camFidFix.transform.getBasis().getRPY(r, p, y);
+    tf2::Quaternion filRot = camFidFix.transform.getRotation();
+    filRot.setEuler(0, M_PI, y);
+    camFidFix.transform.setRotation(filRot);
+    // ---
+
     tf2_ros::TransformBroadcaster broadcaster;
-    geometry_msgs::TransformStamped ts = toMsg(camFid);
+    geometry_msgs::TransformStamped ts = toMsg(camFidFix);
     ts.child_frame_id = "fid" + std::to_string(fid);
     broadcaster.sendTransform(ts);
 
-    T_camFid = camFid;
+    T_camFid = camFidFix;
     T_fidCam = T_camFid;
     T_fidCam.transform = T_camFid.transform.inverse();
 }
