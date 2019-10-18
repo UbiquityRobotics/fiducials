@@ -149,14 +149,11 @@ int main(int argc, char **argv) {
     node = make_unique<FiducialSlam>(nh);
     signal(SIGINT, mySigintHandler);
 
-    ROS_INFO("Chur's version");
-
     ros::Rate r(20);
     while (ros::ok()) {
         ros::spinOnce();
-        usleep(50);
+        r.sleep();
         node->fiducialMap.update();
-
     }
 
     return 0;
