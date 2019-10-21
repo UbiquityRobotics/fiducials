@@ -117,6 +117,7 @@ public:
 
     bool isInitializingMap;
     bool readOnly;
+    bool verboseInfo;
     int frameNum;
     int initialFrameNum;
     int originFid;

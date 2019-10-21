@@ -84,6 +84,7 @@ class FiducialsNode {
     double fiducial_len;
 
     bool doPoseEstimation;
+    bool verboseInfo;
     bool haveCamInfo;
     cv::Mat cameraMatrix;
     cv::Mat distortionCoeffs;
@@ -317,7 +318,9 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         return; //return without doing anything
     }
 
-    ROS_INFO("Got image %d", msg->header.seq);
+    if (verboseInfo) {
+        ROS_INFO("Got image %d", msg->header.seq);
+    }
     frameNum++;
 
     cv_bridge::CvImagePtr cv_ptr;
@@ -385,9 +388,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                 aruco::drawAxis(cv_ptr->image, cameraMatrix, distortionCoeffs,
                                 rvecs[i], tvecs[i], (float)fiducial_len);
 
-                ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
-                         tvecs[i][0], tvecs[i][1], tvecs[i][2],
-                         rvecs[i][0], rvecs[i][1], rvecs[i][2]);
+                if (verboseInfo) {
+                    ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
+                         tvecs[i][0], tvecs[i][1], tvecs[i][2], rvecs[i][0], rvecs[i][1], rvecs[i][2]);
+                }
 
                 if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
                     ROS_INFO("Ignoring id %d", ids[i]);
@@ -396,8 +400,9 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
                 double angle = norm(rvecs[i]);
                 Vec3d axis = rvecs[i] / angle;
-                ROS_INFO("angle %f axis %f %f %f",
-                         angle, axis[0], axis[1], axis[2]);
+                if (verboseInfo) {
+                    ROS_INFO("angle %f axis %f %f %f", angle, axis[0], axis[1], axis[2]);
+                }
 
                 fiducial_msgs::FiducialTransform ft;
                 ft.fiducial_id = ids[i];
@@ -511,6 +516,7 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
     pnh.param<double>("fiducial_len", fiducial_len, 0.14);
     pnh.param<int>("dictionary", dicno, 7);
     pnh.param<bool>("do_pose_estimation", doPoseEstimation, true);
+    pnh.param<bool>("verbose_info", verboseInfo, false);
 
     std::string str;
     std::vector<std::string> strs;

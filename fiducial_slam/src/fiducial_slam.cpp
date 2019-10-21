@@ -75,9 +75,16 @@ private:
     void transformCallback(const fiducial_msgs::FiducialTransformArray::ConstPtr &msg);
 
 public:
+    bool use_read_only_map;
+    bool verboseInfo;
     Map fiducialMap;
     FiducialSlam(ros::NodeHandle &nh);
 };
+
+// To sort the fiducials we need a compare routine looking at fiducial id
+static bool compareObservation(Observation obs1, Observation obs2) {
+    return (obs1.fid < obs2.fid);
+}
 
 void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray::ConstPtr &msg) {
     vector<Observation> observations;
@@ -104,6 +111,17 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
         observations.push_back(obs);
     }
 
+    // To make debug easier sort the observations by fiducial id 
+    std::sort(observations.begin(), observations.end(), compareObservation); 
+
+    // Walk the sorted fiducial list and show translation from camera (not from base_link)
+    if (verboseInfo) {
+        for (Observation &o : observations) {
+            auto cam_f = o.T_camFid.transform.getOrigin();
+            ROS_INFO("FSlam: fid %d  XYZ %9.6lf %9.6lf %9.6lf ", o.fid, cam_f.x(), cam_f.y(), cam_f.z());
+        }
+    }
+
     fiducialMap.update(observations, msg->header.stamp);
 }
 
@@ -119,6 +137,15 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
     nh.param<double>("weighting_scale", weighting_scale, 1e9);
 
     nh.param("do_pose_estimation", doPoseEstimation, false);
+
+    nh.param("read_only_map", use_read_only_map, false);
+    if (use_read_only_map) {
+        ROS_INFO("Fiducial Slam in READ ONLY MAP MODE!");
+    } else {
+        ROS_INFO("Fiducial Slam will save the generated map");
+    }
+    nh.param("verbose_info", verboseInfo, true);
+
 
     if (doPoseEstimation) {
         double fiducialLen, errorThreshold;
@@ -137,7 +164,13 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
 auto node = unique_ptr<FiducialSlam>(nullptr);
 
 void mySigintHandler(int sig) {
-    if (node != nullptr) node->fiducialMap.saveMap();
+    if (node != nullptr) {
+        if (node->use_read_only_map) {
+            ROS_INFO("Fiducial Slam not saving map per read_only_map option");
+        } else {
+            node->fiducialMap.saveMap();
+        }
+    }
 
     ros::shutdown();
 }

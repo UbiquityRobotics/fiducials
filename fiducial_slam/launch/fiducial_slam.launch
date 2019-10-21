@@ -14,6 +14,7 @@
   <arg name="systematic_error" default="0.01"/>
   <arg name="do_pose_estimation" default="false"/>
   <arg name="covariance_diagonal" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+  <arg name="read_only_map" default="false"/>
 
   <node type="fiducial_slam" pkg="fiducial_slam" output="screen" 
     name="fiducial_slam">
@@ -29,6 +30,7 @@
     <param name="sum_error_in_quadrature" value="true"/>
     <param name="fiducial_len" value="$(arg fiducial_len)"/>
     <param name="covariance_diagonal" value="$(arg covariance_diagonal)"/>
+    <param name="read_only_map" value="$(arg read_only_map)"/>
     <remap from="/camera_info" to="$(arg camera)/camera_info"/>
 
   </node>
