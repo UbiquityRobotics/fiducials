@@ -29,6 +29,11 @@
  *
  */
 
+// Set to 1 to actually use the Nav2D pose for robotPose when in read_only_map mode
+// Nav2D projects fiducials to the floor and solved for translation and 2D rotation
+// using openCV method estimateRigidTransform()
+#define  USE_NAV2D_ROBOT_POSE   1   
+
 #include <fiducial_slam/helpers.h>
 #include <fiducial_slam/map.h>
 
@@ -168,11 +173,11 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
 
 void Map::update(std::vector<Observation> &obs, const ros::Time &time) {
     if (!readOnly) {
-        ROS_INFO("Map: Updating pose and map with %d observations. Map has %d fiducials",
-            (int)obs.size(), (int)fiducials.size());
+        ROS_INFO("Map: Updating pose and map with %d observations. Map has %d fids. autoInit fid %d",
+            (int)obs.size(), (int)fiducials.size(), originFid);
     } else {
-        ROS_INFO("Map: Updating pose but not map with %d observations. Map has %d fiducials",
-            (int)obs.size(), (int)fiducials.size());
+        ROS_INFO("Map: Updating pose but not map with %d observations. Map has %d fids. autoInit fid %d",
+            (int)obs.size(), (int)fiducials.size(), originFid);
     }
 
     frameNum++;
@@ -319,7 +324,9 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
 
             // EXPERIMENT: Use estimateRigidTransform
             auto ot = o.T_camFid.transform.getOrigin();
-            fidCamXY = cv::Point2f(((ot.x()*(-1.0)) + cb.x()), ((ot.y()*(-1.0)) + cb.y()));
+            //fidCamXY = cv::Point2f(((ot.x()*(-1.0)) + cb.x()), ((ot.y()*(-1.0)) + cb.y()));
+            //fidCamXY = cv::Point2f((ot.x() + cb.x()), (ot.y() + cb.y()));
+            fidCamXY = cv::Point2f(ot.x(), ot.y());
             fidsInCam.push_back(fidCamXY);
 
             auto mt = fid.pose.transform.getOrigin();
@@ -376,18 +383,6 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
         return numEsts;
     }
 
-    if (numEsts > 2) {    // Till we know 2 will work do not do this with too few fids seen
-
-        // EXPERIMENT: Use estimateRigidTransform
-        // cv::Mat_<float> nt = estimateRigidTransform(fidsInMap, fidsInCam, false);
-        cv::Mat_<float> nt = estimateRigidTransform(fidsInCam, fidsInMap, false);
-        float fidDisp = sqrt((nt.at<float>(0,2) * nt.at<float>(0,2)) + (nt.at<float>(1,2) * nt.at<float>(1,2)));
-        float fidRads = atan2(nt.at<float>(1,0), nt.at<float>(1,1));
-        ROS_INFO("Map: Nav2D matrix: [ %9.6f %9.6f %9.6f ]", nt.at<float>(0,0), nt.at<float>(0,1), nt.at<float>(0,2));
-        ROS_INFO("                   [ %9.6f %9.6f %9.6f ]", nt.at<float>(1,0), nt.at<float>(1,1), nt.at<float>(1,2));
-        ROS_INFO("Map: Nav2D pose:   %9.6f meters from map origin with bot rotation %9.4f rads", fidDisp, fidRads);
-    }
-
     // New scope for logging vars
     {
         tf2::Vector3 trans = T_mapBase.transform.getOrigin();
@@ -396,6 +391,41 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
 
         ROS_INFO("Map: Pose ALL %lf %lf %lf %lf %lf %lf %f", trans.x(), trans.y(), trans.z(), r, p, y,
                  T_mapBase.variance);
+    }
+
+
+    // Nav2D: Use estimateRigidTransform
+    tf2::Stamped<TransformWithVariance> T_mapCameraRigid;
+    if (numEsts > 2) {    // Till we know 2 will work do not do this with too few fids seen
+        tf2::Stamped<TransformWithVariance> T_mapBase2;
+        cv::Mat_<float> nt = estimateRigidTransform(fidsInCam, fidsInMap, false);
+        ROS_INFO("Map: Nav2D matrix: [ %9.6f %9.6f %9.6f ]", nt.at<float>(0,0), nt.at<float>(0,1), nt.at<float>(0,2));
+        ROS_INFO("                   [ %9.6f %9.6f %9.6f ]", nt.at<float>(1,0), nt.at<float>(1,1), nt.at<float>(1,2));
+
+        float fidDisp = sqrt((nt.at<float>(0,2) * nt.at<float>(0,2)) + (nt.at<float>(1,2) * nt.at<float>(1,2)));
+        float cameraYaw = atan2(nt.at<float>(1,0), nt.at<float>(1,1));
+        ROS_INFO("Map: Nav2D radius: %9.6f meters from map with bot yaw %9.4f rads %6.2f deg",
+            fidDisp, cameraYaw, rad2deg(cameraYaw));
+
+        // Create a map to camera transform
+        T_mapCameraRigid.transform.setOrigin(tf2::Vector3(nt.at<float>(0,2), nt.at<float>(1,2), 0.0));
+        T_mapCameraRigid.transform.getBasis().setRPY(0, 0, cameraYaw);
+
+        T_mapCameraRigid.setData(T_mapCameraRigid * T_camBase);
+        auto position = T_mapCameraRigid.transform.getOrigin();
+        double roll, pitch, yaw;
+        T_mapCameraRigid.transform.getBasis().getRPY(roll, pitch, yaw);
+
+        // Now if we want to use the Nav2D we replace other one here
+        if (readOnly && (USE_NAV2D_ROBOT_POSE != 0)) {
+            T_mapCameraRigid.stamp_ = T_mapBase.stamp_;
+            T_mapBase.setData(T_mapCameraRigid);
+            ROS_INFO("Map: Nav2DPose xyz %8.5lf %8.5lf %8.5lf  rpy  %8.5lf  %8.5lf %8.5lf rad %6.2lf deg INUSE",  
+                  position.x(), position.y(), position.z(), roll, pitch, yaw, rad2deg(yaw));
+        } else {
+            ROS_INFO("Map: Nav2DPose xyz %8.5lf %8.5lf %8.5lf  rpy  %8.5lf  %8.5lf %8.5lf rad %6.2lf deg",  
+                  position.x(), position.y(), position.z(), roll, pitch, yaw, rad2deg(yaw));
+        }
     }
 
     tf2::Stamped<TransformWithVariance> basePose = T_mapBase;
