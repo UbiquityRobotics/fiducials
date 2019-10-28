@@ -692,14 +692,14 @@ void Map::publishMarker(Fiducial &fid) {
     }
     marker.id = fid.id;
     marker.ns = "fiducial";
-    marker.header.frame_id = "/map";
+    marker.header.frame_id = mapFrame;
     markerPub.publish(marker);
 
     // cylinder scaled by stddev
     visualization_msgs::Marker cylinder;
     cylinder.type = visualization_msgs::Marker::CYLINDER;
     cylinder.action = visualization_msgs::Marker::ADD;
-    cylinder.header.frame_id = "/map";
+    cylinder.header.frame_id = mapFrame;
     cylinder.color.r = 0.0f;
     cylinder.color.g = 0.0f;
     cylinder.color.b = 1.0f;
@@ -718,7 +718,7 @@ void Map::publishMarker(Fiducial &fid) {
     visualization_msgs::Marker text;
     text.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
     text.action = visualization_msgs::Marker::ADD;
-    text.header.frame_id = "/map";
+    text.header.frame_id = mapFrame;
     text.color.r = text.color.g = text.color.b = text.color.a = 1.0f;
     text.id = fid.id;
     text.scale.x = text.scale.y = text.scale.z = 0.1;
@@ -735,7 +735,7 @@ void Map::publishMarker(Fiducial &fid) {
     visualization_msgs::Marker links;
     links.type = visualization_msgs::Marker::LINE_LIST;
     links.action = visualization_msgs::Marker::ADD;
-    links.header.frame_id = "/map";
+    links.header.frame_id = mapFrame;
     links.color.r = 0.0f;
     links.color.g = 0.0f;
     links.color.b = 1.0f;
@@ -778,7 +778,7 @@ void Map::drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1) {
     visualization_msgs::Marker line;
     line.type = visualization_msgs::Marker::LINE_LIST;
     line.action = visualization_msgs::Marker::ADD;
-    line.header.frame_id = "/map";
+    line.header.frame_id = mapFrame;
     line.color.r = 1.0f;
     line.color.g = 0.0f;
     line.color.b = 0.0f;
