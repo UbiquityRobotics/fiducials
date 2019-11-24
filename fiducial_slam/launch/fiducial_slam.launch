@@ -15,6 +15,7 @@
   <arg name="do_pose_estimation" default="false"/>
   <arg name="covariance_diagonal" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
   <arg name="read_only_map" default="false"/>
+  <arg name="navigate_flat" default="false"/>
 
   <node type="fiducial_slam" pkg="fiducial_slam" output="screen" 
     name="fiducial_slam">
@@ -31,6 +32,7 @@
     <param name="fiducial_len" value="$(arg fiducial_len)"/>
     <param name="covariance_diagonal" value="$(arg covariance_diagonal)"/>
     <param name="read_only_map" value="$(arg read_only_map)"/>
+    <param name="navigate_flat" value="$(arg navigate_flat)"/>
     <remap from="/camera_info" to="$(arg camera)/camera_info"/>
 
   </node>

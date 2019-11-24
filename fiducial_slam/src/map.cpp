@@ -29,10 +29,6 @@
  *
  */
 
-// Set to 1 to actually use the Nav2D pose for robotPose when in read_only_map mode
-// Nav2D projects fiducials to the floor and solved for translation and 2D rotation
-// using openCV method estimateRigidTransform()
-#define  USE_NAV2D_ROBOT_POSE   1   
 
 #include <fiducial_slam/helpers.h>
 #include <fiducial_slam/map.h>
@@ -131,6 +127,14 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
     nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
     nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
     nh.param<bool>("read_only_map", readOnly, false);
+
+    // navigateFlat when true uses Nav2D pose for robotPose when in read_only_map mode
+    // Nav2D projects fiducials to the floor and solved for translation and 2D rotation
+    nh.param<bool>("navigate_flat", navigateFlat, false);
+    if (navigateFlat) {
+        ROS_INFO("Map: Forceing read_only_map mode because we are in navigate_flat mode");
+        readOnly = true;   // Force read_only_map mode when in navigate_flat
+    }
     nh.param<bool>("verbose_info", verboseInfo, true);
 
     std::fill(covarianceDiagonal.begin(), covarianceDiagonal.end(), 0);
@@ -394,39 +398,57 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
     }
 
 
-    // Nav2D: Use estimateRigidTransform
-    tf2::Stamped<TransformWithVariance> T_mapCameraRigid;
-    if (numEsts > 2) {    // Till we know 2 will work do not do this with too few fids seen
-        tf2::Stamped<TransformWithVariance> T_mapBase2;
-        cv::Mat_<float> nt = estimateRigidTransform(fidsInCam, fidsInMap, false);
-        ROS_INFO("Map: Nav2D matrix: [ %9.6f %9.6f %9.6f ]", nt.at<float>(0,0), nt.at<float>(0,1), nt.at<float>(0,2));
-        ROS_INFO("                   [ %9.6f %9.6f %9.6f ]", nt.at<float>(1,0), nt.at<float>(1,1), nt.at<float>(1,2));
+    // Nav2D: Use estimateRigidTransform for pose if that mode is active
+    if (navigateFlat) {
+        tf2::Stamped<TransformWithVariance> T_mapCameraRigid;
 
-        float fidDisp = sqrt((nt.at<float>(0,2) * nt.at<float>(0,2)) + (nt.at<float>(1,2) * nt.at<float>(1,2)));
-        float cameraYaw = atan2(nt.at<float>(1,0), nt.at<float>(1,1));
-        ROS_INFO("Map: Nav2D radius: %9.6f meters from map with bot yaw %9.4f rads %6.2f deg",
-            fidDisp, cameraYaw, rad2deg(cameraYaw));
-
-        // Create a map to camera transform
-        T_mapCameraRigid.transform.setOrigin(tf2::Vector3(nt.at<float>(0,2), nt.at<float>(1,2), 0.0));
-        T_mapCameraRigid.transform.getBasis().setRPY(0, 0, cameraYaw);
-
-        T_mapCameraRigid.setData(T_mapCameraRigid * T_camBase);
-        auto position = T_mapCameraRigid.transform.getOrigin();
-        double roll, pitch, yaw;
-        T_mapCameraRigid.transform.getBasis().getRPY(roll, pitch, yaw);
-
-        // Now if we want to use the Nav2D we replace other one here
-        if (readOnly && (USE_NAV2D_ROBOT_POSE != 0)) {
-            T_mapCameraRigid.stamp_ = T_mapBase.stamp_;
-            T_mapBase.setData(T_mapCameraRigid);
-            ROS_INFO("Map: Nav2DPose xyz %8.5lf %8.5lf %8.5lf  rpy  %8.5lf  %8.5lf %8.5lf rad %6.2lf deg INUSE",  
-                  position.x(), position.y(), position.z(), roll, pitch, yaw, rad2deg(yaw));
+        // Using Nav2D and rigid transform.  
+        if (numEsts < 2) {
+            // skip this pass if not enough fiducials 
+            ROS_WARN("Map: Less than 2 fiducials to attempt rigid transform. SKIPPING THIS PASS!"); 
+            return 0;
+            // If we get here we will use older pose but it may lead to a jump. Not tested yet.
         } else {
-            ROS_INFO("Map: Nav2DPose xyz %8.5lf %8.5lf %8.5lf  rpy  %8.5lf  %8.5lf %8.5lf rad %6.2lf deg",  
-                  position.x(), position.y(), position.z(), roll, pitch, yaw, rad2deg(yaw));
+            cv::Mat_<float> nt;
+            try {
+                tf2::Stamped<TransformWithVariance> T_mapBase2;
+                nt = estimateRigidTransform(fidsInCam, fidsInMap, false);
+            } catch (tf2::TransformException &ex) {
+                ROS_WARN("%s", ex.what());
+            }
+            ROS_INFO("Map: Done  rigid transform calc"); 
+            if (nt.empty()) {
+                ROS_WARN("Map: NO SOLUTION for rigid transform calc! We see %d fiducials", numEsts); 
+                return 0;
+            } else {
+                ROS_INFO("Map: Nav2D matrix: [ %9.6f %9.6f %9.6f ]",
+                    nt.at<float>(0,0), nt.at<float>(0,1), nt.at<float>(0,2));
+                ROS_INFO("                   [ %9.6f %9.6f %9.6f ]",
+                    nt.at<float>(1,0), nt.at<float>(1,1), nt.at<float>(1,2));
+
+                float fidDisp = sqrt((nt.at<float>(0,2) * nt.at<float>(0,2)) + (nt.at<float>(1,2) * nt.at<float>(1,2)));
+                float cameraYaw = atan2(nt.at<float>(1,0), nt.at<float>(1,1));
+                ROS_INFO("Map: Nav2D radius: %9.6f meters from map with bot yaw %9.4f rads %6.2f deg",
+                    fidDisp, cameraYaw, rad2deg(cameraYaw));
+
+                // Create a map to camera transform
+                T_mapCameraRigid.transform.setOrigin(tf2::Vector3(nt.at<float>(0,2), nt.at<float>(1,2), 0.0));
+                T_mapCameraRigid.transform.getBasis().setRPY(0, 0, cameraYaw);
+
+                T_mapCameraRigid.setData(T_mapCameraRigid * T_camBase);
+                auto position = T_mapCameraRigid.transform.getOrigin();
+                double roll, pitch, yaw;
+                T_mapCameraRigid.transform.getBasis().getRPY(roll, pitch, yaw);
+
+                // Since we are using Nav2D we replace prior 3D nav pose now
+                T_mapCameraRigid.stamp_ = T_mapBase.stamp_;
+                T_mapBase.setData(T_mapCameraRigid);
+                ROS_INFO("Map: Nav2DPose xyz %8.5lf %8.5lf %8.5lf  rpy  %8.5lf  %8.5lf %8.5lf rad %6.2lf deg INUSE",  
+                    position.x(), position.y(), position.z(), roll, pitch, yaw, rad2deg(yaw));
+            }
         }
-    }
+        // End use of Nav2D for pose if enabled
+    } 
 
     tf2::Stamped<TransformWithVariance> basePose = T_mapBase;
     basePose.frame_id_ = mapFrame;

@@ -98,6 +98,9 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
         tf2::Quaternion q(ft.transform.rotation.x, ft.transform.rotation.y, ft.transform.rotation.z,
                           ft.transform.rotation.w);
 
+        if (verboseInfo) {
+            ROS_INFO("FSlam: fid %d obj_err %9.5lf", ft.fiducial_id, ft.object_error);
+        }
         double variance;
         if (use_fiducial_area_as_weight) {
             variance = weighting_scale / ft.fiducial_area;
@@ -118,7 +121,8 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
     if (verboseInfo) {
         for (Observation &o : observations) {
             auto cam_f = o.T_camFid.transform.getOrigin();
-            ROS_INFO("FSlam: fid %d  XYZ %9.6lf %9.6lf %9.6lf ", o.fid, cam_f.x(), cam_f.y(), cam_f.z());
+            ROS_INFO("FSlam: fid %d  XYZ %9.6lf %9.6lf %9.6lf",
+                o.fid, cam_f.x(), cam_f.y(), cam_f.z());
         }
     }
 
@@ -144,7 +148,7 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
     } else {
         ROS_INFO("Fiducial Slam will save the generated map");
     }
-    nh.param("verbose_info", verboseInfo, true);
+    nh.param("verbose_info", verboseInfo, false);
 
 
     if (doPoseEstimation) {
