@@ -290,11 +290,6 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
     cv::Point2f         fidCamXY;
     cv::Point2f         fidMapXY;
 
-
-    tf2::Stamped<TransformWithVariance> T_fid0Cam;    // MJ reversion test
-    bool useMulti = false;    // MJ reversion test
-
-
     if (obs.size() == 0) {
         return 0;
     }
@@ -332,6 +327,7 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
             //fidCamXY = cv::Point2f((ot.x() + cb.x()), (ot.y() + cb.y()));
             fidCamXY = cv::Point2f(ot.x(), ot.y());
             fidsInCam.push_back(fidCamXY);
+            double fidCamZ = ot.z();
 
             auto mt = fid.pose.transform.getOrigin();
             fidMapXY = cv::Point2f((mt.x()), (mt.y()));    // !!! TEST ONLY, LATER USE GLOBAL MAP 
@@ -363,6 +359,12 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
             if (verboseInfo) {
                 ROS_INFO("Map: Pose %d %8.5lf %8.5lf %8.5lf   %8.5lf  %8.5lf %8.5lf %8.5lf", o.fid, 
                      position.x(), position.y(), position.z(), roll, pitch, yaw, p.variance);
+                // Form a position corrected for camera to be pointing straight up
+                auto camCorPos = position;
+                camCorPos.setX(position.x() - (fidCamZ * std::sin(pitch)));
+                camCorPos.setY(position.y() - (fidCamZ * std::sin(roll)));
+
+                // ROS_INFO("Map: Cpos %d %8.5lf %8.5lf"  , o.fid, camCorPos.x(), camCorPos.y());
             }
             // drawLine(fid.pose.getOrigin(), o.position);
 
@@ -398,7 +400,20 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
     }
 
 
-    // Nav2D: Use estimateRigidTransform for pose if that mode is active
+    /* Nav2D: Use estimateRigidTransform for pose if that mode is active
+     *
+     * estimateRigidTransform returns a matrix with an x-y translation and terms defining angle of rotation, theta
+     * When we use it with third parameter of  fullAffine set to false and the return matrix is as follows
+     * besides opencv docs for estimateRigidTransform this page seems nicely written: https://nghiaho.com/?p=2208
+     *
+     *                 | cos(theta)s   -sin(theta)s   translationX |
+     *   Translation = |                                           |
+     *                 | sin(theta)s    cos(theta)s   translationY |
+     *
+     * The X and Y translations are clearly given with no math required to use those values.
+     * Because s, the scaling factor will cancel out when we take arctan of    sin(theta)s / cos(theta)s
+     * we can determine theta in this way.  Theta is arctan( Translation[1,0] / Translation[1,1]
+     */
     if (navigateFlat) {
         tf2::Stamped<TransformWithVariance> T_mapCameraRigid;
 
@@ -421,15 +436,17 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
                 ROS_WARN("Map: NO SOLUTION for rigid transform calc! We see %d fiducials", numEsts); 
                 return 0;
             } else {
+                double sinThetaS =  nt.at<float>(1,0);
+                double cosThetaS =  nt.at<float>(1,1);
                 ROS_INFO("Map: Nav2D matrix: [ %9.6f %9.6f %9.6f ]",
                     nt.at<float>(0,0), nt.at<float>(0,1), nt.at<float>(0,2));
                 ROS_INFO("                   [ %9.6f %9.6f %9.6f ]",
                     nt.at<float>(1,0), nt.at<float>(1,1), nt.at<float>(1,2));
 
                 float fidDisp = sqrt((nt.at<float>(0,2) * nt.at<float>(0,2)) + (nt.at<float>(1,2) * nt.at<float>(1,2)));
-                float cameraYaw = atan2(nt.at<float>(1,0), nt.at<float>(1,1));
-                ROS_INFO("Map: Nav2D radius: %9.6f meters from map with bot yaw %9.4f rads %6.2f deg",
-                    fidDisp, cameraYaw, rad2deg(cameraYaw));
+                float cameraYaw = atan2(sinThetaS, cosThetaS);
+                ROS_INFO("Map: Nav2Drad: %9.6f meters with yaw %9.4f rads %6.2f deg [atan(%9.4f/%9.4f)",
+                    fidDisp, cameraYaw, rad2deg(cameraYaw), (float)sinThetaS, (float)cosThetaS );
 
                 // Create a map to camera transform
                 T_mapCameraRigid.transform.setOrigin(tf2::Vector3(nt.at<float>(0,2), nt.at<float>(1,2), 0.0));
