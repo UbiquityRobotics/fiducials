@@ -80,6 +80,7 @@ class FiducialsNode {
     // if set, we publish the images that contain fiducials
     bool publish_images;
     bool enable_detections;
+    bool subscribe_topics;
 
     double fiducial_len;
 
@@ -117,6 +118,12 @@ class FiducialsNode {
 
     bool enableDetectionsCallback(std_srvs::SetBool::Request &req,
                                 std_srvs::SetBool::Response &res);
+
+    void subscribe();
+    void unsubscribe();
+    void subscriberConnectionCallback(const ros::SingleSubscriberPublisher &ssp);
+    void imageSubscriberConnectionCallback(const image_transport::SingleSubscriberPublisher &ssp);
+    void subscriberConnectionCallback();
 
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
@@ -313,10 +320,6 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
 }
 
 void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
-    if (enable_detections == false) {
-        return; //return without doing anything
-    }
-
     ROS_INFO("Got image %d", msg->header.seq);
     frameNum++;
 
@@ -476,6 +479,22 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
                                 std_srvs::SetBool::Response &res)
 {
     enable_detections = req.data;
+
+    if (enable_detections)
+    {
+        if (vertices_pub->getNumSubscribers() > 0 ||
+            pose_pub->getNumSubscribers() > 0 ||
+            image_pub.getNumSubscribers() > 0)
+        {
+            subscribe();
+        }
+    }
+    else
+    {
+        unsubscribe();
+    }
+
+
     if (enable_detections){
         res.message = "Enabled aruco detections.";
         ROS_INFO("Enabled aruco detections.");
@@ -489,6 +508,59 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
     return true;
 }
 
+void FiducialsNode::subscriberConnectionCallback(const ros::SingleSubscriberPublisher &ssp)
+{
+    subscriberConnectionCallback();
+}
+
+void FiducialsNode::imageSubscriberConnectionCallback(
+    const image_transport::SingleSubscriberPublisher &ssp)
+{
+    subscriberConnectionCallback();
+}
+
+void FiducialsNode::subscriberConnectionCallback()
+{
+    if (!enable_detections) return;
+    if (vertices_pub->getNumSubscribers() > 0 ||
+        pose_pub->getNumSubscribers() > 0 ||
+        image_pub.getNumSubscribers() > 0)
+    {
+        subscribe();
+    }
+    else if (vertices_pub->getNumSubscribers() == 0 &&
+             pose_pub->getNumSubscribers() == 0 &&
+             image_pub.getNumSubscribers() == 0)
+    {
+        unsubscribe();
+    }
+}
+
+void FiducialsNode::subscribe()
+{
+    if (!subscribe_topics)
+    {
+        subscribe_topics = true;
+
+        img_sub = it.subscribe("camera", 1,
+                               &FiducialsNode::imageCallback, this);
+        caminfo_sub = nh.subscribe("camera_info", 1,
+                                   &FiducialsNode::camInfoCallback, this);
+        ROS_INFO("subscribed camera/camera_info topics");
+    }
+}
+
+void FiducialsNode::unsubscribe()
+{
+    if (subscribe_topics)
+    {
+        subscribe_topics = false;
+
+        img_sub.shutdown();
+        caminfo_sub.shutdown();
+        ROS_INFO("unsubscribed camera/camera_info topics");
+    }
+}
 
 FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
 {
@@ -502,6 +574,7 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
 
     haveCamInfo = false;
     enable_detections = true;
+    subscribe_topics = false;
 
     int dicno;
 
@@ -557,19 +630,20 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
         }
     }
 
-    image_pub = it.advertise("/fiducial_images", 1);
+    image_transport::SubscriberStatusCallback it_conn_cb = boost::bind(
+        &FiducialsNode::imageSubscriberConnectionCallback, this, _1);
+    ros::SubscriberStatusCallback conn_cb = boost::bind(&FiducialsNode::subscriberConnectionCallback,
+                                                        this, _1);
+    image_pub = it.advertise("/fiducial_images", 1, it_conn_cb, it_conn_cb);
 
-    vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("fiducial_vertices", 1));
 
-    pose_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialTransformArray>("fiducial_transforms", 1));
+    vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>(
+                                          "fiducial_vertices", 1, conn_cb, conn_cb));
+
+    pose_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialTransformArray>(
+                                      "fiducial_transforms", 1, conn_cb, conn_cb));
 
     dictionary = aruco::getPredefinedDictionary(dicno);
-
-    img_sub = it.subscribe("camera", 1,
-                        &FiducialsNode::imageCallback, this);
-
-    caminfo_sub = nh.subscribe("camera_info", 1,
-                    &FiducialsNode::camInfoCallback, this);
 
     ignore_sub = nh.subscribe("ignore_fiducials", 1,
                               &FiducialsNode::ignoreCallback, this);
