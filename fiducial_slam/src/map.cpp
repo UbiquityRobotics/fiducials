@@ -232,7 +232,7 @@ bool Map::lookupTransform(const std::string &from, const std::string &to, const 
     geometry_msgs::TransformStamped transform;
 
     try {
-        transform = tfBuffer.lookupTransform(from, to, time, ros::Duration(0.5));
+        transform = tfBuffer.lookupTransform(from, to, time);
 
         tf2::fromMsg(transform.transform, T);
         return true;
@@ -354,6 +354,7 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
     std::string outFrame = baseFrame;
 
     if (!odomFrame.empty()) {
+        outFrame = odomFrame;
         tf2::Transform odomTransform;
         if (lookupTransform(odomFrame, baseFrame, outPose.stamp_, odomTransform)) {
             outPose.setData(basePose * odomTransform.inverse());
@@ -361,10 +362,6 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
 
             tf2::Vector3 c = odomTransform.getOrigin();
             ROS_INFO("odom   %lf %lf %lf", c.x(), c.y(), c.z());
-        }
-        else {
-            // Don't publish anything if map->odom was requested and is unavailaable
-            return numEsts;
         }
     }
 
