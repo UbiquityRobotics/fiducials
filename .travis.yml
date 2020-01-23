@@ -2,7 +2,7 @@ sudo: true
 dist: trusty
 language: python
 python:
-  - "3.4"
+  - "3.6"
 env:
   global:
     - JOB_PATH=/tmp/devel_job
