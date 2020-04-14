@@ -86,6 +86,8 @@ class FiducialsNode {
 
     bool doPoseEstimation;
     bool haveCamInfo;
+    bool publishFiducialTf;
+
     cv::Mat cameraMatrix;
     cv::Mat distortionCoeffs;
     int frameNum;
@@ -426,12 +428,14 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                 fta.transforms.push_back(ft);
 
                 // Publish tf for the fiducial relative to the camera
-                geometry_msgs::TransformStamped ts;
-                ts.transform = ft.transform;
-                ts.header.frame_id = frameId;
-                ts.header.stamp = msg->header.stamp;
-                ts.child_frame_id = "fiducial_" + std::to_string(ft.fiducial_id);
-                broadcaster.sendTransform(ts);
+                if (publishFiducialTf) {
+                    geometry_msgs::TransformStamped ts;
+                    ts.transform = ft.transform;
+                    ts.header.frame_id = frameId;
+                    ts.header.stamp = msg->header.stamp;
+                    ts.child_frame_id = "fiducial_" + std::to_string(ft.fiducial_id);
+                    broadcaster.sendTransform(ts);
+                }
             }
             pose_pub->publish(fta);
         }
@@ -520,6 +524,7 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
     pnh.param<double>("fiducial_len", fiducial_len, 0.14);
     pnh.param<int>("dictionary", dicno, 7);
     pnh.param<bool>("do_pose_estimation", doPoseEstimation, true);
+    pnh.param<bool>("publish_fiducial_tf", publishFiducialTf, true);
 
     std::string str;
     std::vector<std::string> strs;
