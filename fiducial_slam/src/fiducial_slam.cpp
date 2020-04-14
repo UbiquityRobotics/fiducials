@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-9, Ubiquity Robotics
+ * Copyright (c) 2017-20, Ubiquity Robotics
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

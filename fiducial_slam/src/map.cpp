@@ -53,11 +53,6 @@ static double systematic_error = 0.01;
 Observation::Observation(int fid, const tf2::Stamped<TransformWithVariance> &camFid) {
     this->fid = fid;
 
-    tf2_ros::TransformBroadcaster broadcaster;
-    geometry_msgs::TransformStamped ts = toMsg(camFid);
-    ts.child_frame_id = "fid" + std::to_string(fid);
-    broadcaster.sendTransform(ts);
-
     T_camFid = camFid;
     T_fidCam = T_camFid;
     T_fidCam.transform = T_camFid.transform.inverse();
