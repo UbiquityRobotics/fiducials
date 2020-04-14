@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-19, Ubiquity Robotics Inc., Austin Hendrix
+ * Copyright (c) 2017-20, Ubiquity Robotics Inc., Austin Hendrix
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,6 +74,7 @@ class FiducialsNode {
     ros::Subscriber ignore_sub;
     image_transport::ImageTransport it;
     image_transport::Subscriber img_sub;
+    tf2_ros::TransformBroadcaster broadcaster;
 
     ros::ServiceServer service_enable_detections;
 
@@ -329,7 +330,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
     fiducial_msgs::FiducialArray fva;
     fva.header.stamp = msg->header.stamp;
-    fva.header.frame_id =frameId;
+    fva.header.frame_id = frameId;
     fva.image_seq = msg->header.seq;
 
     try {
@@ -423,6 +424,14 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                     (norm(tvecs[i]) / fiducial_len);
 
                 fta.transforms.push_back(ft);
+
+                // Publish tf for the fiducial relative to the camera
+                geometry_msgs::TransformStamped ts;
+                ts.transform = ft.transform;
+                ts.header.frame_id = frameId;
+                ts.header.stamp = msg->header.stamp;
+                ts.child_frame_id = "fiducial_" + std::to_string(ft.fiducial_id);
+                broadcaster.sendTransform(ts);
             }
             pose_pub->publish(fta);
         }
