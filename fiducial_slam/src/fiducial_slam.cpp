@@ -76,6 +76,7 @@ private:
 
 public:
     bool use_read_only_map;
+    bool fiducialsFlat;
     bool verboseInfo;
     Map fiducialMap;
     FiducialSlam(ros::NodeHandle &nh);
@@ -86,6 +87,8 @@ static bool compareObservation(Observation obs1, Observation obs2) {
     return (obs1.fid < obs2.fid);
 }
 
+// transformCallback gets fiducials currently in view as found by aruco package.
+// These fiducials are placed into 'observations' vector and are relative to camera frame
 void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray::ConstPtr &msg) {
     vector<Observation> observations;
 
@@ -95,8 +98,15 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
         tf2::Vector3 tvec(ft.transform.translation.x, ft.transform.translation.y,
                           ft.transform.translation.z);
 
-        tf2::Quaternion q(ft.transform.rotation.x, ft.transform.rotation.y, ft.transform.rotation.z,
+        // A special mode of forcing the fiducials to be flat can only be used in
+        // environments where ceiling and floor are parallel or both flat to earth.
+        // This is basically a workaround to eliminate fiducial noise in roll and pitch
+        if (fiducialsFlat) {
+            tf2::Quaternion q(0.0, 0.0, ft.transform.rotation.z, ft.transform.rotation.w);
+        } else {
+            tf2::Quaternion q(ft.transform.rotation.x, ft.transform.rotation.y, ft.transform.rotation.z,
                           ft.transform.rotation.w);
+        }
 
         if (verboseInfo) {
             ROS_INFO("FSlam: fid %d obj_err %9.5lf", ft.fiducial_id, ft.object_error);
@@ -141,6 +151,9 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
     nh.param<double>("weighting_scale", weighting_scale, 1e9);
 
     nh.param("do_pose_estimation", doPoseEstimation, false);
+
+    // Forces a nav 2D mode where flat floor is assumed
+    nh.param<bool>("fiducials_flat", fiducialsFlat, false); 
 
     nh.param("read_only_map", use_read_only_map, false);
     if (use_read_only_map) {
