@@ -438,7 +438,8 @@ void Map::autoInit(const std::vector<Observation> &obs, const ros::Time &time) {
         int idx = findClosestObs(obs);
 
         if (idx == -1) {
-            ROS_WARN("Could not find a fiducial to initialize map from");
+	     ROS_WARN("Could not find a fiducial to initialize map from");
+	     return;
         }
         const Observation &o = obs[idx];
         originFid = o.fid;
