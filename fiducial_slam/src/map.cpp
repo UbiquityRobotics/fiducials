@@ -58,6 +58,7 @@ static double systematic_error = 0.01;
 Observation::Observation(int fid, const tf2::Stamped<TransformWithVariance> &camFid) {
     this->fid = fid;
 
+#ifdef EARLIER_CODE_1
     tf2::Stamped<TransformWithVariance> camFidFix = camFid;
     // test fix
     double r, p, y;
@@ -73,6 +74,9 @@ Observation::Observation(int fid, const tf2::Stamped<TransformWithVariance> &cam
     broadcaster.sendTransform(ts);
 
     T_camFid = camFidFix;
+#endif
+	
+	T_camFid = camFid;
     T_fidCam = T_camFid;
     T_fidCam.transform = T_camFid.transform.inverse();
 }
@@ -132,7 +136,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
     // Nav2D projects fiducials to the floor and solved for translation and 2D rotation
     nh.param<bool>("navigate_flat", navigateFlat, false);
     if (navigateFlat) {
-        ROS_INFO("Map: Forceing read_only_map mode because we are in navigate_flat mode");
+        ROS_INFO("Map: Forcing read_only_map mode because we are in navigate_flat mode");
         readOnly = true;   // Force read_only_map mode when in navigate_flat
     }
     nh.param<bool>("verbose_info", verboseInfo, true);
@@ -265,7 +269,7 @@ bool Map::lookupTransform(const std::string &from, const std::string &to, const 
     geometry_msgs::TransformStamped transform;
 
     try {
-        transform = tfBuffer.lookupTransform(from, to, time);
+        transform = tfBuffer.lookupTransform(from, to, time, ros::Duration(0.5));  // FIX: 20200122
 
         tf2::fromMsg(transform.transform, T);
         return true;
@@ -294,23 +298,19 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
         return 0;
     }
 
-    tf2::Vector3 cb;
     if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, T_camBase.transform)) {
-        cb = T_camBase.transform.getOrigin();
+        tf2::Vector3 c = T_camBase.transform.getOrigin();
         if (verboseInfo) {
-            ROS_INFO("Map: camera->base   %lf %lf %lf", cb.x(), cb.y(), cb.z());
+            ROS_INFO("Map: camera->base   %lf %lf %lf", c.x(), c.y(), c.z());
         }
         T_camBase.variance = 1.0;
     } else {
         ROS_ERROR("Map: Cannot determine tf from camera to robot\n");
     }
 
-    tf2::Vector3 cf;
     if (lookupTransform(baseFrame, obs[0].T_camFid.frame_id_, time, T_baseCam.transform)) {
-        cf = T_baseCam.transform.getOrigin();
-        if (verboseInfo) {
-            ROS_INFO("Map: base->camera   %lf %lf %lf", cf.x(), cf.y(), cf.z());
-        }
+        tf2::Vector3 c = T_baseCam.transform.getOrigin();
+        ROS_INFO("base->camera   %lf %lf %lf", c.x(), c.y(), c.z());
         T_baseCam.variance = 1.0;
     } else {
         ROS_ERROR("Map: Cannot determine tf from robot to camera\n");
@@ -321,19 +321,21 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
         if (fiducials.find(o.fid) != fiducials.end()) {
             const Fiducial &fid = fiducials[o.fid];
 
-            // EXPERIMENT: Use estimateRigidTransform
-            auto ot = o.T_camFid.transform.getOrigin();
-            //fidCamXY = cv::Point2f(((ot.x()*(-1.0)) + cb.x()), ((ot.y()*(-1.0)) + cb.y()));
-            //fidCamXY = cv::Point2f((ot.x() + cb.x()), (ot.y() + cb.y()));
-            fidCamXY = cv::Point2f(ot.x(), ot.y());
-            fidsInCam.push_back(fidCamXY);
-            double fidCamZ = ot.z();
+            if (navigateFlat) {
+	            // These values only used when estimateRigidTransform is to be used later
+	            auto ot = o.T_camFid.transform.getOrigin();
+	            //fidCamXY = cv::Point2f(((ot.x()*(-1.0)) + cb.x()), ((ot.y()*(-1.0)) + cb.y()));
+	            //fidCamXY = cv::Point2f((ot.x() + cb.x()), (ot.y() + cb.y()));
+	            fidCamXY = cv::Point2f(ot.x(), ot.y());
+	            fidsInCam.push_back(fidCamXY);
+	            double fidCamZ = ot.z();
 
-            auto mt = fid.pose.transform.getOrigin();
-            fidMapXY = cv::Point2f((mt.x()), (mt.y()));    // !!! TEST ONLY, LATER USE GLOBAL MAP 
-            fidsInMap.push_back(fidMapXY);
-            ROS_INFO("Map: Nav2D Shift fid %d  mapXY  %9.6lf %9.6lf  camXY  %9.6lf %9.6lf", o.fid, 
-                fidMapXY.x, fidMapXY.y, fidCamXY.x, fidCamXY.y);
+	            auto mt = fid.pose.transform.getOrigin();
+	            fidMapXY = cv::Point2f((mt.x()), (mt.y()));    // !!! TEST ONLY, LATER USE GLOBAL MAP 
+	            fidsInMap.push_back(fidMapXY);
+	            ROS_INFO("Map: Nav2D Shift fid %d  mapXY  %9.6lf %9.6lf  camXY  %9.6lf %9.6lf", o.fid, 
+	                fidMapXY.x, fidMapXY.y, fidCamXY.x, fidCamXY.y);
+			}
 
             tf2::Stamped<TransformWithVariance> p = fid.pose * o.T_fidCam;
 
@@ -360,9 +362,9 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
                 ROS_INFO("Map: Pose %d %8.5lf %8.5lf %8.5lf   %8.5lf  %8.5lf %8.5lf %8.5lf", o.fid, 
                      position.x(), position.y(), position.z(), roll, pitch, yaw, p.variance);
                 // Form a position corrected for camera to be pointing straight up
-                auto camCorPos = position;
-                camCorPos.setX(position.x() - (fidCamZ * std::sin(pitch)));
-                camCorPos.setY(position.y() - (fidCamZ * std::sin(roll)));
+                // auto camCorPos = position;
+                // camCorPos.setX(position.x() - (fidCamZ * std::sin(pitch)));
+                // camCorPos.setY(position.y() - (fidCamZ * std::sin(roll)));
 
                 // ROS_INFO("Map: Cpos %d %8.5lf %8.5lf"  , o.fid, camCorPos.x(), camCorPos.y());
             }
@@ -493,14 +495,17 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
     }
 
     if (!odomFrame.empty()) {
-        outFrame = odomFrame;
         tf2::Transform odomTransform;
         if (lookupTransform(odomFrame, baseFrame, outPose.stamp_, odomTransform)) {
             outPose.setData(basePose * odomTransform.inverse());
             outFrame = odomFrame;
 
             tf2::Vector3 c = odomTransform.getOrigin();
-            ROS_INFO("Map: odom   %lf %lf %lf", c.x(), c.y(), c.z());
+            ROS_INFO("odom   %lf %lf %lf", c.x(), c.y(), c.z());
+        }
+        else {
+            // FIX: 20200122  Don't publish anything if map->odom was requested and is unavailaable
+            return numEsts;
         }
     }
 
@@ -580,6 +585,7 @@ void Map::autoInit(const std::vector<Observation> &obs, const ros::Time &time) {
 
         if (idx == -1) {
             ROS_WARN("Map: Could not find a fiducial to initialize map from");
+            return;
         }
         const Observation &o = obs[idx];
         originFid = o.fid;
@@ -831,14 +837,14 @@ void Map::publishMarker(Fiducial &fid) {
     }
     marker.id = fid.id;
     marker.ns = "fiducial";
-    marker.header.frame_id = "/map";
+    marker.header.frame_id = mapFrame;
     markerPub.publish(marker);
 
     // cylinder scaled by stddev
     visualization_msgs::Marker cylinder;
     cylinder.type = visualization_msgs::Marker::CYLINDER;
     cylinder.action = visualization_msgs::Marker::ADD;
-    cylinder.header.frame_id = "/map";
+    cylinder.header.frame_id = mapFrame;
     cylinder.color.r = 0.0f;
     cylinder.color.g = 0.0f;
     cylinder.color.b = 1.0f;
@@ -857,7 +863,7 @@ void Map::publishMarker(Fiducial &fid) {
     visualization_msgs::Marker text;
     text.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
     text.action = visualization_msgs::Marker::ADD;
-    text.header.frame_id = "/map";
+    text.header.frame_id = mapFrame;
     text.color.r = text.color.g = text.color.b = text.color.a = 1.0f;
     text.id = fid.id;
     text.scale.x = text.scale.y = text.scale.z = 0.1;
@@ -874,7 +880,7 @@ void Map::publishMarker(Fiducial &fid) {
     visualization_msgs::Marker links;
     links.type = visualization_msgs::Marker::LINE_LIST;
     links.action = visualization_msgs::Marker::ADD;
-    links.header.frame_id = "/map";
+    links.header.frame_id = mapFrame;
     links.color.r = 0.0f;
     links.color.g = 0.0f;
     links.color.b = 1.0f;
@@ -917,7 +923,7 @@ void Map::drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1) {
     visualization_msgs::Marker line;
     line.type = visualization_msgs::Marker::LINE_LIST;
     line.action = visualization_msgs::Marker::ADD;
-    line.header.frame_id = "/map";
+    line.header.frame_id = mapFrame;
     line.color.r = 1.0f;
     line.color.g = 0.0f;
     line.color.b = 0.0f;

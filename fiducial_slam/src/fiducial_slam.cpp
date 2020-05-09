@@ -161,6 +161,8 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
     } else {
         ROS_INFO("Fiducial Slam will save the generated map");
     }
+	
+	// Set verbosity level if present
     nh.param("verbose_info", verboseInfo, false);
 
 
