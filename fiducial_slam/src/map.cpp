@@ -110,9 +110,13 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
     std::fill(covarianceDiagonal.begin(), covarianceDiagonal.end(), 0);
     overridePublishedCovariance = nh.getParam("covariance_diagonal", covarianceDiagonal);
     if (overridePublishedCovariance) {
+        if (covarianceDiagonal.size() != 6) {
+            ROS_WARN("ignoring covariance_diagonal because it has %ld elements, not 6", covarianceDiagonal.size());
+            overridePublishedCovariance = false;
+        }
         // Check to make sure that the diagonal is non-zero
         for (auto variance : covarianceDiagonal) {
-            if (variance = 0) {
+            if (variance == 0) {
                 ROS_WARN("ignoring covariance_diagonal because it has 0 values");
                 std::fill(covarianceDiagonal.begin(), covarianceDiagonal.end(), 0);
                 break;
