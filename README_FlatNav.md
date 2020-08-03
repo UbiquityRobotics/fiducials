@@ -67,7 +67,22 @@ while remaining in a parallel plane to the plane of the floor.
                     Set this option to true to enable (default is false)
 
 This mode of navigation is not yet released but has been coming along 
-nicely.  
+nicely.  Significant testing has not been done since the launch files have
+been made to support entry of the flat modes.   Most of the prior testing
+was done with other depricated flat launch files.
+
+## Running Flat Navigation Mapping And Nav
+
+Below is the command to run mapping using flat navigation. 
+Leave off fiducials_flat specification for general solution navigation 
+
+    roslaunch magni_demos simple_navigation.launch fiducials_flat:=True
+
+
+Below is the command to run navigation after the map creation using flat navigation
+leave off navigate_flat specification for general solution navigation
+
+    roslaunch magni_demos simple_navigation.launch navigate_flat:=True 
 
 
 ## Recording A Bag File
