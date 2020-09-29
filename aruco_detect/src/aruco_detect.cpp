@@ -65,6 +65,8 @@
 using namespace std;
 using namespace cv;
 
+typedef std::shared_ptr< fiducial_msgs::FiducialArray const> FiducialArrayConstPtr;
+
 class FiducialsNode {
   private:
     ros::Publisher * vertices_pub;
@@ -87,6 +89,9 @@ class FiducialsNode {
     bool doPoseEstimation;
     bool haveCamInfo;
     bool publishFiducialTf;
+    vector <vector <Point2f> > corners;
+    vector <int> ids;
+    cv_bridge::CvImagePtr cv_ptr;
 
     cv::Mat cameraMatrix;
     cv::Mat distortionCoeffs;
@@ -104,9 +109,7 @@ class FiducialsNode {
 
     void handleIgnoreString(const std::string& str);
 
-    void estimatePoseSingleMarkers(const vector<int> &ids,
-                                   const vector<vector<Point2f > >&corners,
-                                   float markerLength,
+    void estimatePoseSingleMarkers(float markerLength,
                                    const cv::Mat &cameraMatrix,
                                    const cv::Mat &distCoeffs,
                                    vector<Vec3d>& rvecs, vector<Vec3d>& tvecs,
@@ -115,11 +118,12 @@ class FiducialsNode {
 
     void ignoreCallback(const std_msgs::String &msg);
     void imageCallback(const sensor_msgs::ImageConstPtr &msg);
+    void poseEstimateCallback(const FiducialArrayConstPtr &msg);
     void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr &msg);
     void configCallback(aruco_detect::DetectorParamsConfig &config, uint32_t level);
 
     bool enableDetectionsCallback(std_srvs::SetBool::Request &req,
-                                std_srvs::SetBool::Response &res);
+                        std_srvs::SetBool::Response &res);
 
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
     dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
@@ -204,9 +208,7 @@ static double getReprojectionError(const vector<Point3f> &objectPoints,
     return rerror;
 }
 
-void FiducialsNode::estimatePoseSingleMarkers(const vector<int> &ids,
-                                const vector<vector<Point2f > >&corners,
-                                float markerLength,
+void FiducialsNode::estimatePoseSingleMarkers(float markerLength,
                                 const cv::Mat &cameraMatrix,
                                 const cv::Mat &distCoeffs,
                                 vector<Vec3d>& rvecs, vector<Vec3d>& tvecs,
@@ -315,20 +317,13 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
     }
 }
 
-void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
+void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
+{
     if (enable_detections == false) {
         return; //return without doing anything
     }
 
     ROS_INFO("Got image %d", msg->header.seq);
-    frameNum++;
-
-    cv_bridge::CvImagePtr cv_ptr;
-
-    fiducial_msgs::FiducialTransformArray fta;
-    fta.header.stamp = msg->header.stamp;
-    fta.header.frame_id = frameId;
-    fta.image_seq = msg->header.seq;
 
     fiducial_msgs::FiducialArray fva;
     fva.header.stamp = msg->header.stamp;
@@ -337,10 +332,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
 
     try {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-
-        vector <int>  ids;
-        vector <vector <Point2f> > corners, rejected;
-        vector <Vec3d>  rvecs, tvecs;
 
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
         ROS_INFO("Detected %d markers", (int)ids.size());
@@ -370,7 +361,30 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             aruco::drawDetectedMarkers(cv_ptr->image, corners, ids);
         }
 
-        if (doPoseEstimation) {
+        if (publish_images) {
+	    image_pub.publish(cv_ptr->toImageMsg());
+        }
+    }
+    catch(cv_bridge::Exception & e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+    }
+    catch(cv::Exception & e) {
+        ROS_ERROR("cv exception: %s", e.what());
+    }
+}
+
+void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
+{
+    vector <Vec3d>  rvecs, tvecs;
+
+    fiducial_msgs::FiducialTransformArray fta;
+    fta.header.stamp = msg->header.stamp;
+    fta.header.frame_id = frameId;
+    fta.image_seq = msg->header.seq;
+    frameNum++;
+
+    if (doPoseEstimation) {
+        try {
             if (!haveCamInfo) {
                 if (frameNum > 5) {
                     ROS_ERROR("No camera intrinsics");
@@ -379,7 +393,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             }
 
             vector <double>reprojectionError;
-            estimatePoseSingleMarkers(ids, corners, (float)fiducial_len,
+            estimatePoseSingleMarkers((float)fiducial_len,
                                       cameraMatrix, distortionCoeffs,
                                       rvecs, tvecs,
                                       reprojectionError);
@@ -437,19 +451,15 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                     broadcaster.sendTransform(ts);
                 }
             }
-            pose_pub->publish(fta);
         }
-
-        if (publish_images) {
-	    image_pub.publish(cv_ptr->toImageMsg());
+        catch(cv_bridge::Exception & e) {
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+        }
+        catch(cv::Exception & e) {
+            ROS_ERROR("cv exception: %s", e.what());
         }
     }
-    catch(cv_bridge::Exception & e) {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-    }
-    catch(cv::Exception & e) {
-        ROS_ERROR("cv exception: %s", e.what());
-    }
+    pose_pub->publish(fta);
 }
 
 void FiducialsNode::handleIgnoreString(const std::string& str)
@@ -497,7 +507,7 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
         res.message = "Disabled aruco detections.";
         ROS_INFO("Disabled aruco detections.");
     }
-    
+
     res.success = true;
     return true;
 }
