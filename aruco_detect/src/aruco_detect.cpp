@@ -377,7 +377,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
 
 void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
 {
-    ROS_INFO("HURA");
     vector <Vec3d>  rvecs, tvecs;
 
     fiducial_msgs::FiducialTransformArray fta;
