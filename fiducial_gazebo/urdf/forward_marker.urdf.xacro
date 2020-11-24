@@ -1,0 +1,11 @@
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="aruco_marker">
+
+    <xacro:include filename="$(find breadcrumb_gazebo)/urdf/fiducials/aruco_marker.xacro"/>
+
+    <link name="world"/>
+
+    <xacro:aruco_marker prefix="$aruco_marker_" marker_id="49" parent="world">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+</robot>

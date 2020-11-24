@@ -1,0 +1,19 @@
+<launch>
+
+    <arg name="name" default="fiducial_marker_grid"/>
+    <arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.0"/>
+    <arg name="roll" default="0.0"/>
+    <arg name="pitch" default="0.0"/>
+    <arg name="yaw" default="0.0"/>
+
+    <param name="marker_grid_description"
+           command="$(find xacro)/xacro --inorder '$(find fiducial_gazebo)/urdf/fiducial_grid_7x7.urdf.xacro'
+                prefix:=$(arg name)
+            "/>
+
+    <node name="fiducial_marker_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+          args="-urdf -param marker_grid_description -model $(arg name) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw)"/>
+
+</launch>

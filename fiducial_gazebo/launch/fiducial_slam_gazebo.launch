@@ -1,0 +1,20 @@
+<launch>
+
+    <include file="$(find aruco_detect)/launch/aruco_detect.launch">
+        <arg name="camera" value="/raspicam_node"/>
+        <arg name="image" value="image/compressed"/>
+        <arg name="transport" default="compressed"/>
+        <arg name="fiducial_len" value="0.14"/>
+        <arg name="dictionary" value="16"/>
+    </include>
+
+    <include file="$(find fiducial_slam)/launch/fiducial_slam.launch">
+        <arg name="camera" value="/raspicam_node"/>
+        <arg name="map_frame" value="map"/>
+        <arg name="odom_frame" value="odom"/>
+        <arg name="base_frame" value="base_footprint"/>
+        <arg name="future_date_transforms" value="0.5"/>
+        <arg name="publish_6dof_pose" value="true"/>
+    </include>
+
+</launch>

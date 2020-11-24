@@ -1,0 +1,245 @@
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="aruco_marker">
+
+    <xacro:arg name="prefix" default="aruco_marker_" />
+    <xacro:arg name="grid_size" default="0.75" />
+    <xacro:arg name="height" default="2.0" />
+
+
+    <xacro:property name="grid_size" value="$(arg grid_size)" />
+    <xacro:property name="height" value="$(arg height)" />
+    <xacro:property name="offset_x" value="${-3 * grid_size}" />
+    <xacro:property name="offset_y" value="${-3 * grid_size}" />
+
+    <xacro:include filename="$(find fiducial_gazebo)/urdf/aruco_marker.xacro"/>
+
+    <link name="world"/>
+
+
+    <!-- Line 0-->
+    <xacro:property name="line" value="0"/>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="0" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 0*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="1" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 1*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="2" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 2*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="3" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 3*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="4" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 4*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="5" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 5*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="6" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 6*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+
+    <!-- Line 1-->
+    <xacro:property name="line" value="1"/>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="7" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 0*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="8" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 1*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="9" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 2*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="10" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 3*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="11" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 4*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="12" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 5*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="13" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 6*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+
+    <!-- Line 2-->
+    <xacro:property name="line" value="2"/>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="14" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 0*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="15" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 1*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="16" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 2*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="17" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 3*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="18" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 4*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="19" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 5*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="20" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 6*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+
+    <!-- Line 3-->
+    <xacro:property name="line" value="3"/>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="21" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 0*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="22" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 1*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="23" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 2*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="24" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 3*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="25" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 4*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="26" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 5*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="27" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 6*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+
+    <!-- Line 4-->
+    <xacro:property name="line" value="4"/>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="28" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 0*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="29" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 1*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="30" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 2*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="31" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 3*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="32" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 4*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="33" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 5*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="34" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 6*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+
+    <!-- Line 5-->
+    <xacro:property name="line" value="5"/>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="35" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 0*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="36" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 1*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="37" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 2*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="38" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 3*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="39" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 4*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="40" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 5*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="41" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 6*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+
+
+    <!-- Line 6-->
+    <xacro:property name="line" value="6"/>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="42" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 0*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="43" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 1*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="44" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 2*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="45" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 3*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="46" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 4*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="47" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 5*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+    <xacro:aruco_marker prefix="$(arg prefix)" marker_id="48" parent="world">
+        <origin xyz="${offset_x + line*grid_size} ${offset_y + 6*grid_size} ${height}" rpy="0 0 0"/>
+    </xacro:aruco_marker>
+
+
+
+
+</robot>

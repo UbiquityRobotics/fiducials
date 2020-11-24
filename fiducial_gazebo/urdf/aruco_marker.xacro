@@ -1,0 +1,50 @@
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="aruco_marker">
+
+    <xacro:macro name="aruco_marker" params="prefix marker_id parent='' *origin">
+
+        <xacro:if value="${parent != ''}">
+            <joint name="${prefix}${marker_id}_joint" type="fixed">
+                <parent link="world"/>
+                <child link="${prefix}${marker_id}base_link"/>
+                <insert_block name="origin"/>
+            </joint>
+        </xacro:if>
+
+        <link name="${prefix}${marker_id}base_link">
+            <inertial>
+                <mass value="0.01"/>
+                <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+            </inertial>
+            <visual>
+                <geometry>
+                    <box size="0.14 0.14 0.003"/>
+                </geometry>
+            </visual>
+        </link>
+
+        <gazebo reference="${prefix}${marker_id}base_link">
+            <material>ArucoVisualMarker${marker_id}/Marker</material>
+            <turnGravityOff>true</turnGravityOff>
+        </gazebo>
+
+
+        <joint name="${prefix}${marker_id}paper_joint" type="fixed">
+            <parent link="${prefix}${marker_id}base_link"/>
+            <child link="${prefix}${marker_id}paper_link"/>
+        </joint>
+
+        <link name="${prefix}${marker_id}paper_link">
+            <visual>
+                <geometry>
+                    <box size="0.297 0.21 0.001"/>
+                </geometry>
+            </visual>
+        </link>
+
+        <gazebo reference="${prefix}${marker_id}paper_link">
+            <material>MagniWorld/White</material>
+        </gazebo>
+
+    </xacro:macro>
+
+</robot>
