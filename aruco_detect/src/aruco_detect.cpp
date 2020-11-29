@@ -281,7 +281,7 @@ void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, 
     detectorParams->perspectiveRemoveIgnoredMarginPerCell = config.perspectiveRemoveIgnoredMarginPerCell;
     detectorParams->perspectiveRemovePixelPerCell = config.perspectiveRemovePixelPerCell;
     detectorParams->polygonalApproxAccuracyRate = config.polygonalApproxAccuracyRate;
-    //detectorParams->isFisheye = config.isFisheye;
+    nh.setParam("/aruco_detect/isFisheye", config.isFisheye);
 }
 
 void FiducialsNode::ignoreCallback(const std_msgs::String& msg)
@@ -342,8 +342,9 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         vector <int>  ids;
         vector <vector <Point2f> > corners, rejected;
         vector <Vec3d>  rvecs, tvecs;
-        //if (detectorParams->isFisheye)
-        if (true)
+        bool isFisheye;
+        nh.getParam("/aruco_detect/isFisheye", isFisheye);
+        if (isFisheye)
         {
             cv::fisheye::undistortImage(cv_ptr->image,cv_ptr->image,cameraMatrix,distortionCoeffs,cameraMatrix,cv::Size(cv_ptr->image.cols,cv_ptr->image.rows));
         }
@@ -638,7 +639,6 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
     pnh.param<double>("perspectiveRemoveIgnoredMarginPerCell", detectorParams->perspectiveRemoveIgnoredMarginPerCell, 0.13);
     pnh.param<int>("perspectiveRemovePixelPerCell", detectorParams->perspectiveRemovePixelPerCell, 8);
     pnh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.01); /* default 0.05 */
-    //pnh.param<bool>("isFisheye", detectorParams->isFisheye, false);
 
     ROS_INFO("Aruco detection ready");
 }
