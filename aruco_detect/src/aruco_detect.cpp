@@ -344,9 +344,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         vector <Vec3d>  rvecs, tvecs;
         bool isFisheye;
         nh.getParam("/aruco_detect/isFisheye", isFisheye);
-        if (isFisheye)
-        {
-            cv::fisheye::undistortImage(cv_ptr->image,cv_ptr->image,cameraMatrix,distortionCoeffs,cameraMatrix,cv::Size(cv_ptr->image.cols,cv_ptr->image.rows));
+        if (isFisheye) {
+            cv::fisheye::undistortImage(cv_ptr->image, cv_ptr->image, cameraMatrix, 
+                                        distortionCoeffs, cameraMatrix, 
+                                        cv::Size(cv_ptr->image.cols, cv_ptr->image.rows));
         }
         
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
