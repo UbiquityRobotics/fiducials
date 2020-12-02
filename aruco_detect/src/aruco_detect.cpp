@@ -343,6 +343,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         vector <vector <Point2f> > corners, rejected;
         vector <Vec3d>  rvecs, tvecs;
         bool isFisheye;
+
         nh.getParam("/aruco_detect/isFisheye", isFisheye);
         if (isFisheye) {
             cv::fisheye::undistortImage(cv_ptr->image, cv_ptr->image, cameraMatrix, 
@@ -354,10 +355,10 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         ROS_INFO("Detected %d markers", (int)ids.size());
 
         for (size_t i=0; i<ids.size(); i++) {
-	    if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
-	        ROS_INFO("Ignoring id %d", ids[i]);
-	        continue;
-	    }
+            if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
+                ROS_INFO("Ignoring id %d", ids[i]);
+                continue;
+            }
             fiducial_msgs::Fiducial fid;
             fid.fiducial_id = ids[i];
 
@@ -387,11 +388,19 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
             }
 
             vector <double>reprojectionError;
-            estimatePoseSingleMarkers(ids, corners, (float)fiducial_len,
-                                      cameraMatrix, distortionCoeffs,
-                                      rvecs, tvecs,
-                                      reprojectionError);
-
+            if (isFisheye) {
+                estimatePoseSingleMarkers(ids, corners, (float)fiducial_len,
+                                        cameraMatrix, cv::Mat::zeros(1, 4, CV_64F),
+                                        rvecs, tvecs,
+                                        reprojectionError);
+            }
+            else {
+                estimatePoseSingleMarkers(ids, corners, (float)fiducial_len,
+                                        cameraMatrix, distortionCoeffs,
+                                        rvecs, tvecs,
+                                        reprojectionError);
+            }
+            
             for (size_t i=0; i<ids.size(); i++) {
                 aruco::drawAxis(cv_ptr->image, cameraMatrix, distortionCoeffs,
                                 rvecs[i], tvecs[i], (float)fiducial_len);
