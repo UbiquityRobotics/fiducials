@@ -8,14 +8,10 @@
 
   <license>TODO</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>rospy</build_depend>
-  <build_depend>vision_msgs</build_depend>
-  <build_export_depend>rospy</build_export_depend>
-  <build_export_depend>vision_msgs</build_export_depend>
-  <exec_depend>rospy</exec_depend>
-  <exec_depend>vision_msgs</exec_depend>
+  <depend>rclpy</depend>
+  <depend>vision_msgs</depend>
 
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

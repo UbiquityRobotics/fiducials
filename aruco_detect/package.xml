@@ -11,9 +11,7 @@
 
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
-
-  <depend>roscpp</depend>
+  <depend>rclcpp</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
@@ -23,8 +21,15 @@
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>fiducial_msgs</depend>
-  <depend>dynamic_reconfigure</depend>
-  <depend>python-cairosvg</depend>
-  <depend>python-joblib</depend>
+  <depend>std_srvs</depend>
+  <depend>geometry_msgs</depend>
+  <!--<depend>dynamic_reconfigure</depend>-->
+  
+  <!-- <depend>python-cairosvg</depend> Installed via pip3 install cairosvg -->
+  <depend>python-joblib</depend> <!-- TODO Manually needed to install apt python3-joblib -->
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 
 </package>

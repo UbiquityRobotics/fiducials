@@ -70,7 +70,7 @@ protected:
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(),
                                                    "bgr8", image).toImageMsg();
     image_pub.publish(msg);
-    c_info.header.stamp = ros::Time::now();
+    c_info.header.stamp = rclcpp::Time::now();
     CameraInfoPub.publish(c_info);
   }
 
