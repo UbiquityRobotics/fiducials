@@ -9,7 +9,7 @@ import tf2_ros
 import numpy as np
 import cv2
 
-from vision_msgs.msg import Detection3D, Detection3DArray, ObjectHypothesisWithPose
+from vision_msgs.msg import Detection2D, Detection2DArray, ObjectHypothesisWithPose
 from geometry_msgs.msg import TransformStamped, Vector3Stamped, Vector3, Quaternion
 from fiducial_msgs.msg import FiducialTransformArray, FiducialTransform
 from sensor_msgs.msg import CameraInfo
@@ -21,6 +21,7 @@ IMAGE_ERROR = rospy.get_param("~image_error", 0.001)
 OBJECT_ERROR = rospy.get_param("~object_error", 0.001)
 FIDUCIAL_AREA = rospy.get_param("~fiducial_area", 0.0196)
 FIDUCIAL_LEN = rospy.get_param("~fiducial_len", 0.14)
+vis_msg = rospy.get_param("/aruco_gazebo/vis_msgs", False)
 
 
 def transformVector(x, y, z, quat):
@@ -72,10 +73,14 @@ class ArucoPublisher:
 
         self.camera_info_sub = rospy.Subscriber(
             "/camera_info", CameraInfo, self.camera_info)
-        self.fid_pub = rospy.Publisher(
-            "/fiducial_transforms", Detection3DArray, queue_size=5)
+        if vis_msg:
+            self.fid_pub = rospy.Publisher(
+                "/fiducial_transforms", Detection2DArray, queue_size=5)
+        else:
+            self.fid_pub = rospy.Publisher(
+                "/fiducial_transforms", FiducialTransformArray, queue_size=5)
 
-        # a counter to emulate aruco_detect's image numbering
+            # a counter to emulate aruco_detect's image numbering
         self.pointless_counter = 0
 
         self.candidates = []
@@ -110,26 +115,42 @@ class ArucoPublisher:
                 self.magnipose = msg.pose[i]
 
     def publish_markers(self, fid_data_array):
-        fidarray = Detection3DArray()
+        fidarray = FiducialTransformArray()
         fidarray.header.stamp = rospy.Time.now()
+        vis = Detection2DArray()
+        vis.header.stamp = rospy.Time.now()
 
         for fid in fid_data_array:
-            obj = Detection3D()
-            oh = ObjectHypothesisWithPose()
-            oh.id = fid.id
-            oh.pose.pose.position.x = fid.translation.x
-            oh.pose.pose.position.y = fid.translation.y
-            oh.pose.pose.position.z = fid.translation.z
-            oh.pose.pose.orientation.w = fid.rotation.w
-            oh.pose.pose.orientation.x = fid.rotation.x
-            oh.pose.pose.orientation.y = fid.rotation.y
-            oh.pose.pose.orientation.z = fid.rotation.z
-            oh.score = math.exp(-OBJECT_ERROR)
+            if vis_msg:
+                obj = Detection2D()
+                oh = ObjectHypothesisWithPose()
+                oh.id = fid.id
+                oh.pose.pose.position.x = fid.translation.x
+                oh.pose.pose.position.y = fid.translation.y
+                oh.pose.pose.position.z = fid.translation.z
+                oh.pose.pose.orientation.w = fid.rotation.w
+                oh.pose.pose.orientation.x = fid.rotation.x
+                oh.pose.pose.orientation.y = fid.rotation.y
+                oh.pose.pose.orientation.z = fid.rotation.z
+                oh.score = math.exp(-2 * OBJECT_ERROR)
 
-            obj.results.append(oh)
-            fidarray.detections.append(obj)
+                obj.results.append(oh)
+                vis.detections.append(obj)
+            else:
+                data = FiducialTransform()
+                data.fiducial_id = fid.id
+                data.transform.translation = fid.translation
+                data.transform.rotation = fid.rotation
+                data.image_error = IMAGE_ERROR
+                data.object_error = OBJECT_ERROR
+                data.fiducial_area = FIDUCIAL_AREA
 
-        self.fid_pub.publish(fidarray)
+                fidarray.transforms.append(data)
+
+        if vis_msg:
+            self.fid_pub.publish(vis)
+        else:
+            self.fid_pub.publish(fidarray)
 
     def transmit_TF(self, id, x, y, z, rotation):
         t = TransformStamped()
