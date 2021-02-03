@@ -19,8 +19,8 @@
     <param name="do_pose_estimation" value="$(arg do_pose_estimation)"/>
     <param name="ignore_fiducials" value="$(arg ignore_fiducials)"/>
     <param name="fiducial_len_override" value="$(arg fiducial_len_override)"/>
-    <remap from="/camera/compressed" 
+    <remap from="camera/compressed" 
         to="$(arg camera)/$(arg image)/$(arg transport)"/>
-    <remap from="/camera_info" to="$(arg camera)/camera_info"/>
+    <remap from="camera_info" to="$(arg camera)/camera_info"/>
   </node>
 </launch>
