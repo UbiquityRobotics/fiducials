@@ -60,6 +60,7 @@
 
 #include <list>
 #include <string>
+#include <unordered_set>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
@@ -87,6 +88,7 @@ class FiducialsNode {
     bool doPoseEstimation;
     bool haveCamInfo;
     bool publishFiducialTf;
+    bool isFisheye;
 
     cv::Mat cameraMatrix;
     cv::Mat distortionCoeffs;
@@ -94,6 +96,7 @@ class FiducialsNode {
     std::string frameId;
     std::vector<int> ignoreIds;
     std::map<int, double> fiducialLens;
+    std::unordered_set<std::string> fisheye_models;
     ros::NodeHandle nh;
     ros::NodeHandle pnh;
 
@@ -281,7 +284,6 @@ void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, 
     detectorParams->perspectiveRemoveIgnoredMarginPerCell = config.perspectiveRemoveIgnoredMarginPerCell;
     detectorParams->perspectiveRemovePixelPerCell = config.perspectiveRemovePixelPerCell;
     detectorParams->polygonalApproxAccuracyRate = config.polygonalApproxAccuracyRate;
-    nh.setParam("/aruco_detect/isFisheye", config.isFisheye);
 }
 
 void FiducialsNode::ignoreCallback(const std_msgs::String& msg)
@@ -296,6 +298,9 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
     if (haveCamInfo) {
         return;
     }
+
+    fisheye_models = {"fisheye", "equidistant"};
+    nh.setParam("/aruco_detect/isFisheye", fisheye_models.find(msg->distortion_model) != fisheye_models.end());
 
     if (msg->K != boost::array<double, 9>({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0})) {
         for (int i=0; i<3; i++) {
@@ -342,7 +347,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         vector <int>  ids;
         vector <vector <Point2f> > corners, rejected;
         vector <Vec3d>  rvecs, tvecs;
-        bool isFisheye;
 
         nh.getParam("/aruco_detect/isFisheye", isFisheye);
         if (isFisheye) {
