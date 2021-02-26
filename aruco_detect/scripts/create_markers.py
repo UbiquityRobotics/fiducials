@@ -21,6 +21,7 @@ else:
 
 import cv2
 import cv2.aruco as aruco
+import cairosvg
 
 """
 Generate a PDF file containaing one or more fiducial marker for printing
@@ -90,16 +91,15 @@ def genMarker(i, dicno, paper_size):
     img = aruco.drawMarker(aruco_dict, i, 2000)
     cv2.imwrite("/tmp/marker%d.png" % i, img)
     svg = genSvg(i, dicno, paper_size)
-    cairo = subprocess.Popen(('cairosvg', '-f', 'pdf', '-o', '/tmp/marker%d.pdf' % i, '/dev/stdin'), stdin=subprocess.PIPE)
-    cairo.communicate(input=bytes(svg, 'utf-8'))
-    # This way is faster than subprocess, but causes problems when cairosvg is installed from pip
-    # because newer versions only support python3, and opencv3 from ros does not
-    # cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i)
+    cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i)
+    # Old slower method using subprocess for SVG to PDF conversion
+    # cairo = subprocess.Popen(('cairosvg', '-f', 'pdf', '-o', '/tmp/marker%d.pdf' % i, '/dev/stdin'), stdin=subprocess.PIPE)
+    # cairo.communicate(input=bytes(svg, 'utf-8'))
     os.remove("/tmp/marker%d.png" % i)
 
 if __name__ == "__main__":
     checkCmd("pdfunite", "poppler-utils")
-    checkCmd("cairosvg", "cairosvg") # Installed from apt
+    checkCmd("cairosvg", "python3-cairosvg")
 
 
     parser = argparse.ArgumentParser(description='Generate Aruco Markers.')
