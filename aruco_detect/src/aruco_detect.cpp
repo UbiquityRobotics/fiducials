@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <ros/ros.h>
 #include <tf/transform_datatypes.h>
@@ -53,6 +54,10 @@
 #include "fiducial_msgs/FiducialTransform.h"
 #include "fiducial_msgs/FiducialTransformArray.h"
 #include "aruco_detect/DetectorParamsConfig.h"
+
+#include <vision_msgs/Detection2D.h>
+#include <vision_msgs/Detection2DArray.h>
+#include <vision_msgs/ObjectHypothesisWithPose.h>
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/aruco.hpp>
@@ -85,6 +90,7 @@ class FiducialsNode {
     // if set, we publish the images that contain fiducials
     bool publish_images;
     bool enable_detections;
+    bool vis_msgs;
 
     double fiducial_len;
 
@@ -379,10 +385,18 @@ void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
 {
     vector <Vec3d>  rvecs, tvecs;
 
+    vision_msgs::Detection2DArray vma;
     fiducial_msgs::FiducialTransformArray fta;
-    fta.header.stamp = msg->header.stamp;
-    fta.header.frame_id = frameId;
-    fta.image_seq = msg->header.seq;
+    if (vis_msgs) {
+	vma.header.stamp = msg->header.stamp;
+	vma.header.frame_id = frameId;
+	vma.header.seq = msg->header.seq;
+    }
+    else {
+	fta.header.stamp = msg->header.stamp;
+    	fta.header.frame_id = frameId;
+    	fta.image_seq = msg->header.seq;
+    }
     frameNum++;
 
     if (doPoseEstimation) {
@@ -417,40 +431,75 @@ void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
                 Vec3d axis = rvecs[i] / angle;
                 ROS_INFO("angle %f axis %f %f %f",
                          angle, axis[0], axis[1], axis[2]);
+		double object_error =
+			(reprojectionError[i] / dist(corners[i][0], corners[i][2])) *
+			(norm(tvecs[i]) / fiducial_len);
 
-                fiducial_msgs::FiducialTransform ft;
-                ft.fiducial_id = ids[i];
+		// Standard ROS vision_msgs
+		fiducial_msgs::FiducialTransform ft;
+		tf2::Quaternion q;
+		if (vis_msgs) {
+		    vision_msgs::Detection2D vm;
+		    vision_msgs::ObjectHypothesisWithPose vmh;
+		    vmh.id = ids[i];
+		    vmh.score = exp(-2 * object_error); // [0, infinity] -> [1,0]
+	            vmh.pose.pose.position.x = tvecs[i][0];
+		    vmh.pose.pose.position.y = tvecs[i][1];
+		    vmh.pose.pose.position.z = tvecs[i][2];
+		    q.setRotation(tf2::Vector3(axis[0], axis[1], axis[2]), angle);
+		    vmh.pose.pose.orientation.w = q.w();
+		    vmh.pose.pose.orientation.x = q.x();
+		    vmh.pose.pose.orientation.y = q.y();
+		    vmh.pose.pose.orientation.z = q.z();
 
-                ft.transform.translation.x = tvecs[i][0];
-                ft.transform.translation.y = tvecs[i][1];
-                ft.transform.translation.z = tvecs[i][2];
+		    vm.results.push_back(vmh);
+		    vma.detections.push_back(vm);
+		}
+		else {
+                    ft.fiducial_id = ids[i];
 
-                tf2::Quaternion q;
-                q.setRotation(tf2::Vector3(axis[0], axis[1], axis[2]), angle);
+                    ft.transform.translation.x = tvecs[i][0];
+                    ft.transform.translation.y = tvecs[i][1];
+                    ft.transform.translation.z = tvecs[i][2];
+                    q.setRotation(tf2::Vector3(axis[0], axis[1], axis[2]), angle);
+                    ft.transform.rotation.w = q.w();
+                    ft.transform.rotation.x = q.x();
+                    ft.transform.rotation.y = q.y();
+                    ft.transform.rotation.z = q.z();
+                    ft.fiducial_area = calcFiducialArea(corners[i]);
+                    ft.image_error = reprojectionError[i];
+                    // Convert image_error (in pixels) to object_error (in meters)
+                    ft.object_error =
+                        (reprojectionError[i] / dist(corners[i][0], corners[i][2])) *
+                        (norm(tvecs[i]) / fiducial_len);
 
-                ft.transform.rotation.w = q.w();
-                ft.transform.rotation.x = q.x();
-                ft.transform.rotation.y = q.y();
-                ft.transform.rotation.z = q.z();
-
-                ft.fiducial_area = calcFiducialArea(corners[i]);
-                ft.image_error = reprojectionError[i];
-
-                // Convert image_error (in pixels) to object_error (in meters)
-                ft.object_error =
-                    (reprojectionError[i] / dist(corners[i][0], corners[i][2])) *
-                    (norm(tvecs[i]) / fiducial_len);
-
-                fta.transforms.push_back(ft);
+                    fta.transforms.push_back(ft);
+		}
 
                 // Publish tf for the fiducial relative to the camera
                 if (publishFiducialTf) {
-                    geometry_msgs::TransformStamped ts;
-                    ts.transform = ft.transform;
-                    ts.header.frame_id = frameId;
-                    ts.header.stamp = msg->header.stamp;
-                    ts.child_frame_id = "fiducial_" + std::to_string(ft.fiducial_id);
-                    broadcaster.sendTransform(ts);
+		    if (vis_msgs) {
+                    	geometry_msgs::TransformStamped ts;
+                    	ts.transform.translation.x = tvecs[i][0];
+                    	ts.transform.translation.y = tvecs[i][1];
+                    	ts.transform.translation.z = tvecs[i][2];
+                    	ts.transform.rotation.w = q.w();
+                    	ts.transform.rotation.x = q.x();
+                    	ts.transform.rotation.y = q.y();
+                    	ts.transform.rotation.z = q.z();
+                    	ts.header.frame_id = frameId;
+                    	ts.header.stamp = msg->header.stamp;
+                    	ts.child_frame_id = "fiducial_" + std::to_string(ids[i]);
+                    	broadcaster.sendTransform(ts);
+		    }
+		    else {
+			geometry_msgs::TransformStamped ts;
+                    	ts.transform = ft.transform;
+                    	ts.header.frame_id = frameId;
+                    	ts.header.stamp = msg->header.stamp;
+                    	ts.child_frame_id = "fiducial_" + std::to_string(ft.fiducial_id);
+                    	broadcaster.sendTransform(ts);
+		    }
                 }
             }
         }
@@ -461,7 +510,10 @@ void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
             ROS_ERROR("cv exception: %s", e.what());
         }
     }
-    pose_pub.publish(fta);
+    if (vis_msgs)
+    	pose_pub.publish(vma);
+    else 
+	pose_pub.publish(fta);
 }
 
 void FiducialsNode::handleIgnoreString(const std::string& str)
@@ -537,6 +589,7 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
     pnh.param<int>("dictionary", dicno, 7);
     pnh.param<bool>("do_pose_estimation", doPoseEstimation, true);
     pnh.param<bool>("publish_fiducial_tf", publishFiducialTf, true);
+    pnh.param<bool>("vis_msgs", vis_msgs, false);
 
     std::string str;
     std::vector<std::string> strs;
@@ -587,7 +640,10 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
 
     vertices_pub = nh.advertise<fiducial_msgs::FiducialArray>("fiducial_vertices", 1);
 
-    pose_pub = nh.advertise<fiducial_msgs::FiducialTransformArray>("fiducial_transforms", 1);
+    if (vis_msgs)
+    	pose_pub = nh.advertise<vision_msgs::Detection2DArray>("fiducial_transforms", 1);
+    else	
+	pose_pub = nh.advertise<fiducial_msgs::FiducialTransformArray>("fiducial_transforms", 1);
 
     dictionary = aruco::getPredefinedDictionary(dicno);
 
