@@ -1,0 +1,21 @@
+<!-- Run the aruco_gazebo node -->
+<launch>
+  <!-- namespace for camera input -->
+  <arg name="camera" default="raspicam_node"/>
+  <arg name="image" default="image"/>
+  <arg name="transport" default="compressed"/>
+  <arg name="camera_tf_frame" default="raspicam"/>
+  <arg name="framerate" default="10"/>
+  <arg name="fiducial_len" default="0.14"/>
+  <!-- If vis_msgs set to true, pose estimation will be published with ROS standard vision_msgs -->
+  <arg name="vis_msgs" default="false"/>
+
+  <node pkg="aruco_gazebo" name="aruco_gazebo" type="aruco.py" output="screen" respawn="false">
+    <param name="camera_frame" value="$(arg camera_tf_frame)" />
+    <param name="framerate" value="$(arg framerate)" />
+    <param name="fiducial_len" value="$(arg fiducial_len)" />
+    <param name="vis_msgs" value="$(arg vis_msgs)" />
+    <remap from="/camera/compressed" to="/$(arg camera)/$(arg image)/$(arg transport)"/>
+    <remap from="/camera_info" to="$(arg camera)/camera_info"/>
+  </node>
+</launch>

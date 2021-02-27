@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2
   visualization_msgs
+  vision_msgs
   image_transport
   cv_bridge
   sensor_msgs
