@@ -65,7 +65,6 @@
 
 #include <list>
 #include <string>
-#include <unordered_set>
 #include <boost/algorithm/string.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -98,7 +97,6 @@ class FiducialsNode {
     bool doPoseEstimation;
     bool haveCamInfo;
     bool publishFiducialTf;
-    bool isFisheye;
     vector <vector <Point2f> > corners;
     vector <int> ids;
     cv_bridge::CvImagePtr cv_ptr;
@@ -109,7 +107,6 @@ class FiducialsNode {
     std::string frameId;
     std::vector<int> ignoreIds;
     std::map<int, double> fiducialLens;
-    std::unordered_set<std::string> fisheye_models;
     ros::NodeHandle nh;
     ros::NodeHandle pnh;
 
@@ -309,9 +306,6 @@ void FiducialsNode::camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg
         return;
     }
 
-    fisheye_models = {"fisheye", "equidistant"};
-    nh.setParam("/aruco_detect/isFisheye", fisheye_models.find(msg->distortion_model) != fisheye_models.end());
-
     if (msg->K != boost::array<double, 9>({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0})) {
         for (int i=0; i<3; i++) {
             for (int j=0; j<3; j++) {
@@ -347,21 +341,14 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg)
     try {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
 
-        nh.getParam("/aruco_detect/isFisheye", isFisheye);
-        if (isFisheye) {
-            cv::fisheye::undistortImage(cv_ptr->image, cv_ptr->image, cameraMatrix, 
-                                        distortionCoeffs, cameraMatrix, 
-                                        cv::Size(cv_ptr->image.cols, cv_ptr->image.rows));
-        }
-        
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
         ROS_INFO("Detected %d markers", (int)ids.size());
 
         for (size_t i=0; i<ids.size(); i++) {
-            if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
-                ROS_INFO("Ignoring id %d", ids[i]);
-                continue;
-            }
+	    if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
+	        ROS_INFO("Ignoring id %d", ids[i]);
+	        continue;
+	    }
             fiducial_msgs::Fiducial fid;
             fid.fiducial_id = ids[i];
 
@@ -422,20 +409,11 @@ void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
             }
 
             vector <double>reprojectionError;
+            estimatePoseSingleMarkers((float)fiducial_len,
+                                      cameraMatrix, distortionCoeffs,
+                                      rvecs, tvecs,
+                                      reprojectionError);
 
-            if (isFisheye) {
-                estimatePoseSingleMarkers(ids, corners, (float)fiducial_len,
-                                        cameraMatrix, cv::Mat::zeros(1, 4, CV_64F),
-                                        rvecs, tvecs,
-                                        reprojectionError);
-            }
-            else {
-                estimatePoseSingleMarkers(ids, corners, (float)fiducial_len,
-                                        cameraMatrix, distortionCoeffs,
-                                        rvecs, tvecs,
-                                        reprojectionError);
-            }
-            
             for (size_t i=0; i<ids.size(); i++) {
                 aruco::drawAxis(cv_ptr->image, cameraMatrix, distortionCoeffs,
                                 rvecs[i], tvecs[i], (float)fiducial_len);
@@ -597,7 +575,7 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
     cameraMatrix = cv::Mat::zeros(3, 3, CV_64F);
 
     // distortion coefficients
-    distortionCoeffs = cv::Mat::zeros(1, 4, CV_64F);
+    distortionCoeffs = cv::Mat::zeros(1, 5, CV_64F);
 
     haveCamInfo = false;
     enable_detections = true;
