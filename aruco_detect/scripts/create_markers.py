@@ -113,7 +113,7 @@ if __name__ == "__main__":
                         help='dictionary to generate from')
     parser.add_argument('--paper-size', dest='paper_size', action='store',
                         default='letter', help='paper size to use (letter or a4)')
-    parser.add_argument('--fid-len', type=float, dest='fid_len', action="store",
+    parser.add_argument('--fiducial-length', type=float, dest='fid_len', action="store",
                         default="14.0", help="fiducial side length in centimeter")
 
     args = parser.parse_args()
