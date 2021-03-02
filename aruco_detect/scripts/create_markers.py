@@ -146,5 +146,5 @@ if __name__ == "__main__":
         os.remove(f)
 
     print('\033[91m' + """After printing, please make sure that the long lines around the marker are 
-          EXACTLY %3.1f cm long. This is required for accurate position estimation."""  % fid_len + '\033[0m')
+EXACTLY %3.1f cm long. This is required for accurate position estimation."""  % fid_len + '\033[0m')
 
