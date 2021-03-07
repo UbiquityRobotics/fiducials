@@ -65,8 +65,6 @@ class FiducialSlam {
 private:
     ros::Subscriber ft_sub;
 
-    ros::Subscriber verticesSub;
-    ros::Subscriber cameraInfoSub;
     ros::Publisher ftPub;
 
     bool use_fiducial_area_as_weight;
