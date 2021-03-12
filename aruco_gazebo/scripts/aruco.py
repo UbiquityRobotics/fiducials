@@ -17,12 +17,6 @@ from gazebo_msgs.msg import ModelStates
 from tf2_geometry_msgs import do_transform_vector3
 from tf.transformations import quaternion_from_euler, euler_from_quaternion, quaternion_multiply, quaternion_conjugate
 
-IMAGE_ERROR = rospy.get_param("~image_error", 0.001)
-OBJECT_ERROR = rospy.get_param("~object_error", 0.001)
-FIDUCIAL_AREA = rospy.get_param("~fiducial_area", 0.0196)
-FIDUCIAL_LEN = rospy.get_param("~fiducial_len", 0.14)
-vis_msg = rospy.get_param("/aruco_gazebo/vis_msgs", False)
-
 
 def transformVector(x, y, z, quat):
     v = Vector3Stamped()
@@ -73,7 +67,7 @@ class ArucoPublisher:
 
         self.camera_info_sub = rospy.Subscriber(
             "/camera_info", CameraInfo, self.camera_info)
-        if vis_msg:
+        if VIS_MSGS:
             self.fid_pub = rospy.Publisher(
                 "/fiducial_transforms", Detection2DArray, queue_size=5)
         else:
@@ -121,7 +115,7 @@ class ArucoPublisher:
         vis.header.stamp = rospy.Time.now()
 
         for fid in fid_data_array:
-            if vis_msg:
+            if VIS_MSGS:
                 obj = Detection2D()
                 oh = ObjectHypothesisWithPose()
                 oh.id = fid.id
@@ -147,7 +141,7 @@ class ArucoPublisher:
 
                 fidarray.transforms.append(data)
 
-        if vis_msg:
+        if VIS_MSGS:
             self.fid_pub.publish(vis)
         else:
             self.fid_pub.publish(fidarray)
@@ -252,6 +246,12 @@ class ArucoPublisher:
 
 
 if __name__ == '__main__':
+    IMAGE_ERROR = rospy.get_param("~image_error", 0.001)
+    OBJECT_ERROR = rospy.get_param("~object_error", 0.001)
+    FIDUCIAL_AREA = rospy.get_param("~fiducial_area", 0.0196)
+    FIDUCIAL_LEN = rospy.get_param("~fiducial_len", 0.14)
+    VIS_MSGS = rospy.get_param("~vis_msgs", False)
+
     try:
         ar = ArucoPublisher()
         rate = rospy.Rate(ar.framerate)
