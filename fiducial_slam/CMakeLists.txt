@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   fiducial_msgs
   genmsg
+  message_generation
 )
 
 find_package(OpenCV REQUIRED)
@@ -40,7 +41,8 @@ add_definitions(-std=c++11)
 
 include_directories(${catkin_INCLUDE_DIRS} include)
 catkin_package(INCLUDE_DIRS include
-  DEPENDS OpenCV)
+  DEPENDS OpenCV 
+  CATKIN_DEPENDS message_runtime)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 
