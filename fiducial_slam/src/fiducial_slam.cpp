@@ -65,10 +65,6 @@ class FiducialSlam {
 private:
     ros::Subscriber ft_sub;
 
-    ros::Subscriber verticesSub;
-    ros::Subscriber cameraInfoSub;
-    ros::Publisher ftPub;
-
     bool use_fiducial_area_as_weight;
     double weighting_scale;
 
@@ -108,7 +104,6 @@ void FiducialSlam::transformCallback(const fiducial_msgs::FiducialTransformArray
 }
 
 FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
-    bool doPoseEstimation;
 
     // If set, use the fiducial area in pixels^2 as an indication of the
     // 'goodness' of it. This will favor fiducials that are close to the
@@ -118,18 +113,7 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
     // Scaling factor for weighing
     nh.param<double>("weighting_scale", weighting_scale, 1e9);
 
-    nh.param("do_pose_estimation", doPoseEstimation, false);
-
-    if (doPoseEstimation) {
-        double fiducialLen, errorThreshold;
-        nh.param<double>("fiducial_len", fiducialLen, 0.14);
-        nh.param<double>("pose_error_theshold", errorThreshold, 1.0);
-
-        ftPub = ros::Publisher(
-            nh.advertise<fiducial_msgs::FiducialTransformArray>("/fiducial_transforms", 1));
-    } else {
-        ft_sub = nh.subscribe("/fiducial_transforms", 1, &FiducialSlam::transformCallback, this);
-    }
+    ft_sub = nh.subscribe("/fiducial_transforms", 1, &FiducialSlam::transformCallback, this);
 
     ROS_INFO("Fiducial Slam ready");
 }

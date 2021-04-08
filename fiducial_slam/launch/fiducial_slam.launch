@@ -10,12 +10,10 @@
   <arg name="tf_publish_interval" default="0.2"/>
   <arg name="future_date_transforms" default="0.0"/>
   <arg name="publish_6dof_pose" default="false"/>
-  <arg name="fiducial_len" default="0.14"/>
   <arg name="systematic_error" default="0.01"/>
-  <arg name="do_pose_estimation" default="false"/>
   <arg name="covariance_diagonal" default=""/>
 
-  <node type="fiducial_slam" pkg="fiducial_slam" output="screen" 
+  <node type="fiducial_slam" pkg="fiducial_slam" output="screen"
     name="fiducial_slam">
     <param name="map_file" value="$(env HOME)/.ros/slam/map.txt" />
     <param name="map_frame" value="$(arg map_frame)" />
@@ -25,9 +23,7 @@
     <param name="tf_publish_interval" value="$(arg tf_publish_interval)" />
     <param name="future_date_transforms" value="$(arg future_date_transforms)" />
     <param name="publish_6dof_pose" value="$(arg publish_6dof_pose)" />
-    <param name="do_pose_estimation" value="$(arg do_pose_estimation)"/>
     <param name="sum_error_in_quadrature" value="true"/>
-    <param name="fiducial_len" value="$(arg fiducial_len)"/>
     <rosparam param="covariance_diagonal" subst_value="True">$(arg covariance_diagonal)</rosparam>
     <remap from="/camera_info" to="$(arg camera)/camera_info"/>
 
