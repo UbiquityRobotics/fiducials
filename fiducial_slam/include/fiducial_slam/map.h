@@ -55,7 +55,7 @@
 #include <std_srvs/srv/empty.hpp>
 #include "fiducial_msgs/srv/add_fiducial.hpp"
 
-#include <fiducial_slam/transform_with_variance.h>
+#include "fiducial_slam/transform_with_variance.h"
 #include "fiducial_slam/observation.h"
 
 // A single fiducial that is in the map

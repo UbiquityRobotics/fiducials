@@ -29,7 +29,7 @@
  *
  */
 
-#include <fiducial_slam/helpers.h>
+#include "fiducial_slam/helpers.h"
 
 #include <assert.h>
 #include <signal.h>
