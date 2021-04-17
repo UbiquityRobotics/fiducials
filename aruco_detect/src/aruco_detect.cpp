@@ -350,9 +350,6 @@ void FiducialsNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr 
     }
 
     RCLCPP_INFO(nh->get_logger(), "Got image");
-    frameNum++;
-
-    cv_bridge::CvImagePtr cv_ptr;
 
     fiducial_msgs::msg::FiducialArray fva;
     fva.header.stamp = msg->header.stamp;
