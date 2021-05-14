@@ -12,7 +12,10 @@
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-
+  
+  <depend>compressed_depth_image_transport</depend>
+  <depend>compressed_image_transport</depend>
+  <depend>theora_image_transport</depend>  
   <depend>roscpp</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
