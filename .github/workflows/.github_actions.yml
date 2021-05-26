@@ -1,0 +1,28 @@
+name: ROS Kinetic
+
+on:
+  push:
+    branches:
+      - kinetic-devel
+    paths-ignore:
+      - README.md
+      - '*/README.md'
+  pull_request:
+    branches:
+      - kinetic-devel
+    paths-ignore:
+      - README.md
+      - '*/README.md'
+jobs:
+  Build-and-Test:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:xenial
+    steps:
+      - uses: ros-tooling/setup-ros@v0.1
+        with:
+          required-ros-distributions: kinetic
+      - uses: ros-tooling/action-ros-ci@v0.2
+        with:
+          package-name: fiducials 
+          target-ros1-distro: kinetic
