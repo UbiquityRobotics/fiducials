@@ -86,6 +86,25 @@ install(PROGRAMS scripts/create_markers.py
 ## Tests ##
 ###########
 
+if(BUILD_TESTING)
+
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ros_testing REQUIRED)
+
+  # Not sure if this is correct
+  install(DIRECTORY test/test_images
+    DESTINATION share/${PROJECT_NAME}
+  )
+
+  ament_add_gtest_executable(
+    aruco_images_test
+    test/aruco_images_test.cpp
+  )
+  target_link_libraries(aruco_images_test)
+  ament_target_dependencies(aruco_images_test ${DEPENDENCIES})
+  add_ros_test(test/aruco_images.test.py ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+endif()
+
 # if(CATKIN_ENABLE_TESTING)
 #         find_package(rostest REQUIRED)
 

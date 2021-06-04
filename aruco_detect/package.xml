@@ -27,6 +27,8 @@
   
   <!-- <depend>python-cairosvg</depend> Installed via pip3 install cairosvg -->
   <depend>python-joblib</depend> <!-- TODO Manually needed to install apt python3-joblib -->
+  <test_depend>ros_testing</test_depend>
+  <test_depend>ament_cmake_test</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
