@@ -85,6 +85,14 @@ install(FILES fiducials.rviz
 ## Tests ##
 ###########
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(transform_var_test
+                  test/transform_var_test.cpp
+                  src/transform_with_variance.cpp)
+  ament_target_dependencies(transform_var_test
+                            "geometry_msgs")
+endif()
 # if(CATKIN_ENABLE_TESTING)
 #         find_package(catkin REQUIRED COMPONENTS
 #           rostest roscpp sensor_msgs tf2_ros image_transport cv_bridge)
