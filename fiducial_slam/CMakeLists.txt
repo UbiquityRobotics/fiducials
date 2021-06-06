@@ -86,12 +86,29 @@ install(FILES fiducials.rviz
 ###########
 
 if(BUILD_TESTING)
+
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ros_testing REQUIRED)
+
+  install(DIRECTORY test/test_images
+    DESTINATION share/${PROJECT_NAME}/test
+  )
+
+  # transform_var_test
   ament_add_gtest(transform_var_test
                   test/transform_var_test.cpp
                   src/transform_with_variance.cpp)
   ament_target_dependencies(transform_var_test
                             "geometry_msgs")
+
+  # auto_init_403_test
+  ament_add_gtest_executable(
+    auto_init_403_test
+    test/auto_init_403_test.cpp
+  )
+  target_link_libraries(auto_init_403_test)
+  ament_target_dependencies(auto_init_403_test ${DEPENDENCIES})
+  add_ros_test(test/auto_init_403.test.py ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 # if(CATKIN_ENABLE_TESTING)
 #         find_package(catkin REQUIRED COMPONENTS
