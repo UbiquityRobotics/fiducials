@@ -11,6 +11,7 @@
   <arg name="vis_msgs" default="false"/>
   <arg name="ignore_fiducials" default="" />
   <arg name="fiducial_len_override" default="" />
+  <arg name="verbose" default="false"/>
 
   <node pkg="aruco_detect" name="aruco_detect"
     type="aruco_detect" output="screen" respawn="false">
@@ -22,6 +23,7 @@
     <param name="vis_msgs" value="$(arg vis_msgs)"/>
     <param name="ignore_fiducials" value="$(arg ignore_fiducials)"/>
     <param name="fiducial_len_override" value="$(arg fiducial_len_override)"/>
+    <param name="verbose" value="$(arg verbose)"/>
     <remap from="camera/compressed" 
         to="$(arg camera)/$(arg image)/$(arg transport)"/>
     <remap from="camera_info" to="$(arg camera)/camera_info"/>
