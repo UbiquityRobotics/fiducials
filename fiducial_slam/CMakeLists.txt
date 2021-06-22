@@ -88,6 +88,7 @@ install(FILES fiducials.rviz
 if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_nose REQUIRED)
   find_package(ros_testing REQUIRED)
 
   install(DIRECTORY test/test_images
@@ -109,6 +110,13 @@ if(BUILD_TESTING)
   target_link_libraries(auto_init_403_test)
   ament_target_dependencies(auto_init_403_test ${DEPENDENCIES})
   add_ros_test(test/auto_init_403.test.py ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+
+  # init_map_aruco
+  install(FILES test/map_test.py # I guess there is a better way
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test
+    PERMISSIONS OWNER_READ OWNER_EXECUTE
+  )
+  add_ros_test(test/init_map_aruco.test.py ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}/test")
 endif()
 # if(CATKIN_ENABLE_TESTING)
 #         find_package(catkin REQUIRED COMPONENTS
