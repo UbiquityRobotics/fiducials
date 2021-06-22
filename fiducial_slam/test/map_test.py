@@ -77,7 +77,7 @@ class MapTest(unittest.TestCase):
                         ex = line.split()
                         fid = int(ex[0])
                         ex = ex[1:]
-                        if not self.map.has_key(fid):
+                        if not fid in self.map:
                             self.fail("Fiducial %d not in map" % fid)
                         fiducial = self.map[fid]
                         for i in range(len(ex)):

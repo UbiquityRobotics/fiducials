@@ -15,8 +15,15 @@ def generate_test_description():
         executable=PathJoinSubstitution([LaunchConfiguration('test_binary_dir'), 'map_test.py']),
         output='screen',
         parameters=[
-            {"min_lines":7},
-            {"expected_pose":"0 0 0 0 0 0 1"},
+            {"min_lines":3},
+            {"expected_pose":"0.73 0.11 1.0 0.98 -0.01 -0.18 0.07"},
+            {"expect": "100 -0.27 0.82 -1.77 -38.17 -0.15 -149.53,\
+                        103 -1.86 -0.59 -1.04 1.70 -23.72 -165.87,\
+                        106 0.22 -0.0 -0.0 -0.9 0.24 0.15,\
+                        107 0.2 -0.28 -0.0 -0.94 1.49 -0.92,\
+                        110 0.7 0.05 0.0 3.38 -4.9 -90,\
+                        111 0.0 0.0 0.0 0.0 0.0 0.0,\
+                        112 0.0 -0.3 0.0 -1.0 0.48 -0.05"}
         ],
     )
 
@@ -61,7 +68,9 @@ def generate_test_description():
             {"base_frame":"base_link"},
             {"future_date_transforms", "0.0"},
             {"publish_6dof_pose","true"},
-            {"map_file":"/dev/null"}
+            {"map_file":"/dev/null"},
+            {"initial_map_file": PathJoinSubstitution([LaunchConfiguration('test_binary_dir'), '111_initial_map.txt'])},
+            {"do_rotation":"true"}
         ],
     )
 
