@@ -9,8 +9,8 @@ import unittest
 import os
 import math
 
-import rospy
-import rostest
+import rclpy
+from rclpy.node import Node
 
 from fiducial_msgs.msg import FiducialMapEntryArray
 from geometry_msgs.msg import PoseWithCovarianceStamped
@@ -35,6 +35,10 @@ class MapTest(unittest.TestCase):
         self.mapEntries = -1
         self.map = {}
         self.pose = None
+        self.node = Node("test_map")
+
+        self.map_subscription = self.node.create_subscription(FiducialMapEntryArray, "/fiducial_map", self.mapCallback, 1)
+        self.pose_subscription = self.node.create_subscription(PoseWithCovarianceStamped,"/fiducial_pose", self.poseCallback, 1)
 
     def mapCallback(self, msg):
         self.mapEntries = len(msg.fiducials)
@@ -49,20 +53,19 @@ class MapTest(unittest.TestCase):
                      orientation.x, orientation.y, orientation.z, orientation.w)
 
     def test_map(self):
-        rospy.init_node('test_map')
-        minLines = rospy.get_param("~min_lines", 1)
-        expect = rospy.get_param("~expect", "")
-        expectedPose = rospy.get_param("~expected_pose", "")
+        self.node.declare_parameter("min_lines", 1)
+        minLines = self.node.get_parameter('min_lines').value
 
-        rospy.Subscriber("/fiducial_map", FiducialMapEntryArray,
-                         self.mapCallback)
-        rospy.Subscriber("/fiducial_pose", PoseWithCovarianceStamped,
-                         self.poseCallback)
+        expect = self.node.declare_parameter("expect", "")
+        expect = self.node.get_parameter('expect').value
 
-        print("test_map");
+        self.node.declare_parameter("expected_pose", "")
+        expectedPose = self.node.get_parameter('expected_pose').value
+
         t = 0
         while True:
-            if self.mapEntries >= minLines and self.pose != None:
+            rclpy.spin_once(self.node) #Spin the node to receive callbacks
+            if self.mapEntries >= minLines and self.pose != None: #If there are map entries and a pose is set
                 if expectedPose != "":
                     ep = expectedPose.split()
                     for i in range(len(ep)):
@@ -74,7 +77,7 @@ class MapTest(unittest.TestCase):
                         ex = line.split()
                         fid = int(ex[0])
                         ex = ex[1:]
-                        if not self.map.has_key(fid):
+                        if not fid in self.map:
                             self.fail("Fiducial %d not in map" % fid)
                         fiducial = self.map[fid]
                         for i in range(len(ex)):
@@ -82,11 +85,12 @@ class MapTest(unittest.TestCase):
                                 self.fail("fiducial %d %s expected %s" % \
                                   (fid, fiducial, ex,))
                 return
-	    time.sleep(0.5)
+            #time.sleep(0.5)
 
-if __name__ == '__main__':
-    try:
-        rostest.run('rostest', NAME, MapTest, sys.argv)
-    except KeyboardInterrupt:
-        pass
-    print("exiting")
+def main(args=None):
+    sys.argv = [sys.argv[0]]
+    unittest.main()
+
+if __name__ == "__main__":
+    rclpy.init()
+    main()

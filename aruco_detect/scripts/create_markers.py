@@ -1,8 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import os, sys, argparse
 import subprocess
 import imp, importlib
+import cairosvg
 
 # Hack if a user has 'em' instead of 'empy' installed with pip
 # If the module em doesn't have the expand function use the full path
@@ -15,9 +16,11 @@ for path in sys.path:
              break
 # For-else: else is called if loop doesn't break 
 else:
-    print "ERROR: could not find module em, please sudo apt install python-empy"
+    print("ERROR: could not find module em, please sudo apt install python-empy")
     exit(2)
 
+
+# TODO Needs `python3 -m pip install opencv-contrib-python` on Ubuntu 20
 import cv2
 import cv2.aruco as aruco
 
@@ -28,8 +31,8 @@ Generate a PDF file containaing one or more fiducial marker for printing
 def checkCmd(cmd, package):
     rc = os.system("which %s > /dev/null" % cmd)
     if rc != 0:
-        print """This utility requires %s. It can be installed by typing:
-    sudo apt install %s""" % (cmd, package)
+        print("""This utility requires %s. It can be installed by typing:
+    sudo apt install %s""" % (cmd, package))
         sys.exit(1)
      
 def genSvg(id, dicno, paper_size):
@@ -83,22 +86,24 @@ def genSvg(id, dicno, paper_size):
 """, {"id": id, "dicno": dicno, "paper_width": paper_size[0], "paper_height": paper_size[1], "fid_len": 140.0})
 
 def genMarker(i, dicno, paper_size):
-    print " Marker %d\r" % i,
+    print(" Marker %d\r" % i)
     sys.stdout.flush()
     aruco_dict = aruco.Dictionary_get(dicno)
     img = aruco.drawMarker(aruco_dict, i, 2000)
     cv2.imwrite("/tmp/marker%d.png" % i, img)
     svg = genSvg(i, dicno, paper_size)
-    cairo = subprocess.Popen(('cairosvg', '-f', 'pdf', '-o', '/tmp/marker%d.pdf' % i, '/dev/stdin'), stdin=subprocess.PIPE)
-    cairo.communicate(input=svg)
+    
+    # This would cause errors with python3
+    #cairo = subprocess.Popen(('cairosvg', '-f', 'pdf', '-o', '/tmp/marker%d.pdf' % i, '/dev/stdin'), stdin=subprocess.PIPE)
+    #cairo.communicate(input=svg)
     # This way is faster than subprocess, but causes problems when cairosvg is installed from pip
     # because newer versions only support python3, and opencv3 from ros does not
-    # cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i)
+    cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i)
     os.remove("/tmp/marker%d.png" % i)
 
 if __name__ == "__main__":
     checkCmd("pdfunite", "poppler-utils")
-    checkCmd("cairosvg", "python-cairosvg")
+    #checkCmd("cairosvg", "python-cairosvg")
 
 
     parser = argparse.ArgumentParser(description='Generate Aruco Markers.')
@@ -135,11 +140,11 @@ if __name__ == "__main__":
         for i in markers:
             genMarker(i, dicno, paper_size)
 
-    print "Combining into %s" % outfile
+    print("Combining into %s" % outfile)
     os.system("pdfunite %s %s" % (" ".join(pdfs), outfile))
     for f in pdfs:
         os.remove(f)
 
-    print '\033[91m' + """After printing, please make sure that the long lines around the marker are
-EXACTLY 14.0 cm long. This is required for accurate position estimation.""" + '\033[0m'
+    print('\033[91m' + """After printing, please make sure that the long lines around the marker are
+EXACTLY 14.0 cm long. This is required for accurate position estimation.""" + '\033[0m')
 
