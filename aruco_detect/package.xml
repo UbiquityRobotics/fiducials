@@ -23,7 +23,6 @@
   <depend>fiducial_msgs</depend>
   <depend>std_srvs</depend>
   <depend>geometry_msgs</depend>
-  <!--<depend>dynamic_reconfigure</depend>-->
   
   <!-- <depend>python-cairosvg</depend> Installed via pip3 install cairosvg -->
   <depend>python-joblib</depend> <!-- TODO Manually needed to install apt python3-joblib -->

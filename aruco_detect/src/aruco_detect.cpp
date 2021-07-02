@@ -33,8 +33,11 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <math.h>
+#include <limits>
 
 #include <rclcpp/rclcpp.hpp>
+#include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <rcl_interfaces/msg/parameter_descriptor.hpp>
 #include <tf2/transform_datatypes.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2_ros/buffer.h>
@@ -130,14 +133,11 @@ private:
     void camInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
     void poseEstimateCallback(const fiducial_msgs::msg::FiducialArray::SharedPtr msg);
     rcl_interfaces::msg::SetParametersResult param_change_callback(const std::vector<rclcpp::Parameter> & parameters);
-    //void configCallback(aruco_detect::DetectorParamsConfig &config, uint32_t level);
 
     bool enableDetectionsCallback(const std_srvs::srv::SetBool::Request::SharedPtr req,
                                   std_srvs::srv::SetBool::Response::SharedPtr res);
 
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_handle;
-    //dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig> configServer;
-    //dynamic_reconfigure::Server<aruco_detect::DetectorParamsConfig>::CallbackType callbackType;
 
   public:
     FiducialsNode();
@@ -260,62 +260,64 @@ FiducialsNode::param_change_callback(const std::vector<rclcpp::Parameter> & para
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
   for (const auto & parameter : parameters) {
-    if (!true) {
-      result.successful = false;
-      result.reason = "the reason it could not be allowed";
-    }
+    RCLCPP_INFO(nh->get_logger(), "Parameter '%s' changed.", parameter.get_name().c_str());
   }
+
+  try
+  {
+    detectorParams->adaptiveThreshConstant = nh->get_parameter("adaptiveThreshConstant").as_double();
+    detectorParams->adaptiveThreshWinSizeMin = nh->get_parameter("adaptiveThreshWinSizeMin").as_int();
+    detectorParams->adaptiveThreshWinSizeMax = nh->get_parameter("adaptiveThreshWinSizeMax").as_int();
+    detectorParams->adaptiveThreshWinSizeStep = nh->get_parameter("adaptiveThreshWinSizeStep").as_int();
+    detectorParams->cornerRefinementMaxIterations = nh->get_parameter("cornerRefinementMaxIterations").as_int();
+    detectorParams->cornerRefinementMinAccuracy = nh->get_parameter("cornerRefinementMinAccuracy").as_double();
+    detectorParams->cornerRefinementWinSize = nh->get_parameter("cornerRefinementWinSize").as_int();
+    #if CV_MINOR_VERSION==2 and CV_MAJOR_VERSION==3
+        detectorParams->doCornerRefinement = nh->get_parameter("doCornerRefinement").as_bool();
+    #else
+        bool doCornerRefinement = nh->get_parameter("doCornerRefinement").as_bool();
+        if (doCornerRefinement) {
+            bool cornerRefinementSubpix = nh->get_parameter("cornerRefinementSubpix").as_bool();
+        if (cornerRefinementSubpix) {
+            detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
+        }
+        else {
+            detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_CONTOUR;
+        }
+        }
+        else {
+        detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_NONE;
+        }
+    #endif
+
+    detectorParams->errorCorrectionRate = nh->get_parameter("errorCorrectionRate").as_double();
+    detectorParams->minCornerDistanceRate = nh->get_parameter("minCornerDistanceRate").as_double();
+    detectorParams->markerBorderBits = nh->get_parameter("markerBorderBits").as_int();
+    detectorParams->maxErroneousBitsInBorderRate = nh->get_parameter("maxErroneousBitsInBorderRate").as_double();
+    detectorParams->minDistanceToBorder = nh->get_parameter("minDistanceToBorder").as_int();
+    detectorParams->minMarkerDistanceRate = nh->get_parameter("minMarkerDistanceRate").as_double();
+    detectorParams->minMarkerPerimeterRate = nh->get_parameter("minMarkerPerimeterRate").as_double();
+    detectorParams->maxMarkerPerimeterRate = nh->get_parameter("maxMarkerPerimeterRate").as_double();
+    detectorParams->minOtsuStdDev = nh->get_parameter("minOtsuStdDev").as_double();
+    detectorParams->perspectiveRemoveIgnoredMarginPerCell = nh->get_parameter("perspectiveRemoveIgnoredMarginPerCell").as_double();
+    detectorParams->perspectiveRemovePixelPerCell = nh->get_parameter("perspectiveRemovePixelPerCell").as_int();
+    detectorParams->polygonalApproxAccuracyRate = nh->get_parameter("polygonalApproxAccuracyRate").as_double();
+
+  }
+  catch(const rclcpp::exceptions::ParameterNotDeclaredException & e)
+  {
+    RCLCPP_ERROR(nh->get_logger(), "Could not update parameter. %s", e.what());
+    result.successful = false;
+    return result;
+  }
+
   return result;
 }
-
-
-// void FiducialsNode::configCallback(aruco_detect::DetectorParamsConfig & config, uint32_t level)
-// {
-//     /* Don't load initial config, since it will overwrite the rosparam settings */
-//     if (level == 0xFFFFFFFF) {
-//         return;
-//     }
-
-//     detectorParams->adaptiveThreshConstant = config.adaptiveThreshConstant;
-//     detectorParams->adaptiveThreshWinSizeMin = config.adaptiveThreshWinSizeMin;
-//     detectorParams->adaptiveThreshWinSizeMax = config.adaptiveThreshWinSizeMax;
-//     detectorParams->adaptiveThreshWinSizeStep = config.adaptiveThreshWinSizeStep;
-//     detectorParams->cornerRefinementMaxIterations = config.cornerRefinementMaxIterations;
-//     detectorParams->cornerRefinementMinAccuracy = config.cornerRefinementMinAccuracy;
-//     detectorParams->cornerRefinementWinSize = config.cornerRefinementWinSize;
-// #if CV_MINOR_VERSION==2 and CV_MAJOR_VERSION==3
-//     detectorParams->doCornerRefinement = config.doCornerRefinement;
-// #else
-//     if (config.doCornerRefinement) {
-//        if (config.cornerRefinementSubpix) {
-//          detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
-//        }
-//        else {
-//          detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_CONTOUR;
-//        }
-//     }
-//     else {
-//        detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_NONE;
-//     }
-// #endif
-//     detectorParams->errorCorrectionRate = config.errorCorrectionRate;
-//     detectorParams->minCornerDistanceRate = config.minCornerDistanceRate;
-//     detectorParams->markerBorderBits = config.markerBorderBits;
-//     detectorParams->maxErroneousBitsInBorderRate = config.maxErroneousBitsInBorderRate;
-//     detectorParams->minDistanceToBorder = config.minDistanceToBorder;
-//     detectorParams->minMarkerDistanceRate = config.minMarkerDistanceRate;
-//     detectorParams->minMarkerPerimeterRate = config.minMarkerPerimeterRate;
-//     detectorParams->maxMarkerPerimeterRate = config.maxMarkerPerimeterRate;
-//     detectorParams->minOtsuStdDev = config.minOtsuStdDev;
-//     detectorParams->perspectiveRemoveIgnoredMarginPerCell = config.perspectiveRemoveIgnoredMarginPerCell;
-//     detectorParams->perspectiveRemovePixelPerCell = config.perspectiveRemovePixelPerCell;
-//     detectorParams->polygonalApproxAccuracyRate = config.polygonalApproxAccuracyRate;
-// }
 
 void FiducialsNode::ignoreCallback(const std_msgs::msg::String::SharedPtr msg)
 {
     ignoreIds.clear();
-    //this.declare_parameter("ignore_fiducials", msg.data); // TODO ROS2 migrate
+    nh->set_parameter(rclcpp::Parameter("ignore_fiducials", msg->data));
     handleIgnoreString(msg->data);
 }
 
@@ -686,22 +688,83 @@ FiducialsNode::FiducialsNode()
 
     service_enable_detections = nh->create_service<std_srvs::srv::SetBool>("enable_detections", std::bind(&FiducialsNode::enableDetectionsCallback, this, std::placeholders::_1, std::placeholders::_2));
 
-    detectorParams->adaptiveThreshConstant = nh->declare_parameter("adaptiveThreshConstant", 7.0);
-    detectorParams->adaptiveThreshWinSizeMax = nh->declare_parameter("adaptiveThreshWinSizeMax", 53); /* default 23 */
-    detectorParams->adaptiveThreshWinSizeMin = nh->declare_parameter("adaptiveThreshWinSizeMin", 3);
-    detectorParams->adaptiveThreshWinSizeStep = nh->declare_parameter("adaptiveThreshWinSizeStep", 4); /* default 10 */
-    detectorParams->cornerRefinementMaxIterations = nh->declare_parameter("cornerRefinementMaxIterations", 30);
-    detectorParams->cornerRefinementMinAccuracy = nh->declare_parameter("cornerRefinementMinAccuracy", 0.01); /* default 0.1 */
-    detectorParams->cornerRefinementWinSize = nh->declare_parameter("cornerRefinementWinSize", 5);
+    /* adaptiveThreshConstant */
+    auto adaptiveThreshConstantDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    adaptiveThreshConstantDescription.name = "Constant for adaptive thresholding before finding contours";
+    auto adaptiveThreshConstantRange = rcl_interfaces::msg::FloatingPointRange{};
+    adaptiveThreshConstantRange.from_value = 0;
+    adaptiveThreshConstantRange.to_value = std::numeric_limits<double>::infinity();
+    adaptiveThreshConstantDescription.floating_point_range = {adaptiveThreshConstantRange};
+    detectorParams->adaptiveThreshConstant = nh->declare_parameter("adaptiveThreshConstant", 7.0, adaptiveThreshConstantDescription);
+
+    /* adaptiveThreshWinSizeMax */
+    auto adaptiveThreshWinSizeMaxDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    adaptiveThreshWinSizeMaxDescription.name = "Maximum window size for adaptive thresholding before finding contours";
+    auto adaptiveThreshWinSizeMaxRange = rcl_interfaces::msg::IntegerRange();
+    adaptiveThreshWinSizeMaxRange.from_value = 1;
+    adaptiveThreshWinSizeMaxRange.to_value = std::numeric_limits<int>::max();
+    adaptiveThreshWinSizeMaxDescription.integer_range = {adaptiveThreshWinSizeMaxRange};
+    detectorParams->adaptiveThreshWinSizeMax = nh->declare_parameter("adaptiveThreshWinSizeMax", 53, adaptiveThreshWinSizeMaxDescription); /* default 23 */
+
+    /* adaptiveThreshWinSizeMin */
+    auto adaptiveThreshWinSizeMinDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    adaptiveThreshWinSizeMinDescription.name = "Minimum window size for adaptive thresholding before finding contours";
+    auto adaptiveThreshWinSizeMinRange = rcl_interfaces::msg::IntegerRange();
+    adaptiveThreshWinSizeMinRange.from_value = 1;
+    adaptiveThreshWinSizeMinRange.to_value = std::numeric_limits<int>::max();
+    adaptiveThreshWinSizeMinDescription.integer_range = {adaptiveThreshWinSizeMinRange};
+    detectorParams->adaptiveThreshWinSizeMin = nh->declare_parameter("adaptiveThreshWinSizeMin", 3, adaptiveThreshWinSizeMinDescription);
+
+    /* adaptiveThreshWinSizeStep */
+    auto adaptiveThreshWinSizeStepDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    adaptiveThreshWinSizeStepDescription.name = "Increments from adaptiveThreshWinSizeMin to adaptiveThreshWinSizeMax during the thresholding";
+    auto adaptiveThreshWinSizeStepRange = rcl_interfaces::msg::IntegerRange();
+    adaptiveThreshWinSizeStepRange.from_value = 1;
+    adaptiveThreshWinSizeStepRange.to_value = std::numeric_limits<int>::max();
+    adaptiveThreshWinSizeStepDescription.integer_range = {adaptiveThreshWinSizeStepRange};
+    detectorParams->adaptiveThreshWinSizeStep = nh->declare_parameter("adaptiveThreshWinSizeStep", 4, adaptiveThreshWinSizeStepDescription); /* default 10 */
+
+    /* cornerRefinementMaxIterations */
+    auto cornerRefinementMaxIterationsDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    cornerRefinementMaxIterationsDescription.name = "Maximum number of iterations for stop criteria of the corner refinement process";
+    auto cornerRefinementMaxIterationsRange = rcl_interfaces::msg::IntegerRange();
+    cornerRefinementMaxIterationsRange.from_value = 1;
+    cornerRefinementMaxIterationsRange.to_value = std::numeric_limits<int>::max();
+    cornerRefinementMaxIterationsDescription.integer_range = {cornerRefinementMaxIterationsRange};
+    detectorParams->cornerRefinementMaxIterations = nh->declare_parameter("cornerRefinementMaxIterations", 30, cornerRefinementMaxIterationsDescription);
+
+    /* cornerRefinementMinAccuracy */
+    auto cornerRefinementMinAccuracyDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    cornerRefinementMinAccuracyDescription.name = "Minimum error for the stop criteria of the corner refinement process";
+    auto cornerRefinementMinAccuracyRange = rcl_interfaces::msg::FloatingPointRange();
+    cornerRefinementMinAccuracyRange.from_value = 0.0;
+    cornerRefinementMinAccuracyRange.to_value = 1.0;
+    cornerRefinementMinAccuracyDescription.floating_point_range = {cornerRefinementMinAccuracyRange};
+    detectorParams->cornerRefinementMinAccuracy = nh->declare_parameter("cornerRefinementMinAccuracy", 0.01, cornerRefinementMinAccuracyDescription); /* default 0.1 */
+
+    /* cornerRefinementWinSize */
+    auto cornerRefinementWinSizeDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    cornerRefinementWinSizeDescription.name = "Window size for the corner refinement process (in pixels)";
+    auto cornerRefinementWinSizeRange = rcl_interfaces::msg::IntegerRange();
+    cornerRefinementWinSizeRange.from_value = 1;
+    cornerRefinementWinSizeRange.to_value = std::numeric_limits<int>::max();
+    cornerRefinementWinSizeDescription.integer_range = {cornerRefinementWinSizeRange};
+    detectorParams->cornerRefinementWinSize = nh->declare_parameter("cornerRefinementWinSize", 5, cornerRefinementWinSizeDescription);
+
 #if CV_MINOR_VERSION==2 and CV_MAJOR_VERSION==3
     detectorParams->doCornerRefinement = nh->declare_parameter("doCornerRefinement", true); /* default false */
 #else
     bool doCornerRefinement = true;
-    doCornerRefinement = nh->declare_parameter("doCornerRefinement", true);
+
+    auto doCornerRefinementDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    doCornerRefinementDescription.name = "Whether to do subpixel corner refinement";
+    doCornerRefinement = nh->declare_parameter("doCornerRefinement", true, doCornerRefinementDescription);
     if (doCornerRefinement) {
-       bool cornerRefinementSubPix = true;
-       cornerRefinementSubPix = nh->declare_parameter("cornerRefinementSubPix", true);
-       if (cornerRefinementSubPix) {
+       bool cornerRefinementSubpix = true;
+       auto cornerRefinementSubpixDescription = rcl_interfaces::msg::ParameterDescriptor{};
+       cornerRefinementSubpixDescription.name = "Whether to do subpixel corner refinement (true) or contour (false)";
+       cornerRefinementSubpix = nh->declare_parameter("cornerRefinementSubpix", true, cornerRefinementSubpixDescription);
+       if (cornerRefinementSubpix) {
          detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_SUBPIX;
        }
        else {
@@ -712,18 +775,115 @@ FiducialsNode::FiducialsNode()
        detectorParams->cornerRefinementMethod = aruco::CORNER_REFINE_NONE;
     }
 #endif
-    detectorParams->errorCorrectionRate = nh->declare_parameter("errorCorrectionRate", 0.6);
-    detectorParams->minCornerDistanceRate = nh->declare_parameter("minCornerDistanceRate", 0.05);
-    detectorParams->markerBorderBits = nh->declare_parameter("markerBorderBits", 1);
-    detectorParams->maxErroneousBitsInBorderRate = nh->declare_parameter("maxErroneousBitsInBorderRate", 0.04);
-    detectorParams->minDistanceToBorder = nh->declare_parameter("minDistanceToBorder", 3);
-    detectorParams->minMarkerDistanceRate = nh->declare_parameter("minMarkerDistanceRate", 0.05);
-    detectorParams->minMarkerPerimeterRate = nh->declare_parameter("minMarkerPerimeterRate", 0.1); /* default 0.3 */
-    detectorParams->maxMarkerPerimeterRate = nh->declare_parameter("maxMarkerPerimeterRate", 4.0);
-    detectorParams->minOtsuStdDev = nh->declare_parameter("minOtsuStdDev", 5.0);
-    detectorParams->perspectiveRemoveIgnoredMarginPerCell = nh->declare_parameter("perspectiveRemoveIgnoredMarginPerCell", 0.13);
-    detectorParams->perspectiveRemovePixelPerCell = nh->declare_parameter("perspectiveRemovePixelPerCell", 8);
-    detectorParams->polygonalApproxAccuracyRate = nh->declare_parameter("polygonalApproxAccuracyRate", 0.01); /* default 0.05 */
+
+
+    /* errorCorrectionRate */
+    auto errorCorrectionRateDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    errorCorrectionRateDescription.name = "Error correction rate respect to the maximum error correction capability for each dictionary";
+    auto errorCorrectionRateRange = rcl_interfaces::msg::FloatingPointRange();
+    errorCorrectionRateRange.from_value = 0.0;
+    errorCorrectionRateRange.to_value = 1.0;
+    errorCorrectionRateDescription.floating_point_range = {errorCorrectionRateRange};
+    detectorParams->errorCorrectionRate = nh->declare_parameter("errorCorrectionRate", 0.6, errorCorrectionRateDescription);
+
+    /* minCornerDistanceRate */
+    auto minCornerDistanceRateDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    minCornerDistanceRateDescription.name = "Minimum distance between corners for detected markers relative to its perimeter";
+    auto minCornerDistanceRateRange = rcl_interfaces::msg::FloatingPointRange();
+    minCornerDistanceRateRange.from_value = 0;
+    minCornerDistanceRateRange.to_value = std::numeric_limits<double>::infinity();
+    minCornerDistanceRateDescription.floating_point_range = {minCornerDistanceRateRange};
+    detectorParams->minCornerDistanceRate = nh->declare_parameter("minCornerDistanceRate", 0.05, minCornerDistanceRateDescription);
+
+    /* markerBorderBits */
+    auto markerBorderBitsDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    markerBorderBitsDescription.name = "Number of bits of the marker border, i.e. marker border width";
+    auto markerBorderBitsRange = rcl_interfaces::msg::IntegerRange();
+    markerBorderBitsRange.from_value = 0;
+    markerBorderBitsRange.to_value = std::numeric_limits<int>::max();
+    markerBorderBitsDescription.integer_range = {markerBorderBitsRange};
+    detectorParams->markerBorderBits = nh->declare_parameter("markerBorderBits", 1, markerBorderBitsDescription);
+
+    /* maxErroneousBitsInBorderRate */
+    auto maxErroneousBitsInBorderRateDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    maxErroneousBitsInBorderRateDescription.name = "Maximum number of accepted erroneous bits in the border (i.e. number of allowed white bits in the border)";
+    auto maxErroneousBitsInBorderRateRange = rcl_interfaces::msg::FloatingPointRange();
+    maxErroneousBitsInBorderRateRange.from_value = 0.0;
+    maxErroneousBitsInBorderRateRange.to_value = 1.0;
+    maxErroneousBitsInBorderRateDescription.floating_point_range = {maxErroneousBitsInBorderRateRange};
+    detectorParams->maxErroneousBitsInBorderRate = nh->declare_parameter("maxErroneousBitsInBorderRate", 0.04, maxErroneousBitsInBorderRateDescription);
+
+    /* minDistanceToBorder */
+    auto minDistanceToBorderDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    minDistanceToBorderDescription.name = "Minimum distance of any corner to the image border for detected markers (in pixels)";
+    auto minDistanceToBorderRange = rcl_interfaces::msg::IntegerRange();
+    minDistanceToBorderRange.from_value = 0;
+    minDistanceToBorderRange.to_value = std::numeric_limits<int>::max();
+    minDistanceToBorderDescription.integer_range = {minDistanceToBorderRange};
+    detectorParams->minDistanceToBorder = nh->declare_parameter("minDistanceToBorder", 3, minDistanceToBorderDescription);
+
+    /* minMarkerDistanceRate */
+    auto minMarkerDistanceRateDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    minMarkerDistanceRateDescription.name = "Minimum mean distance beetween two marker corners to be considered similar, so that the smaller one is removed. The rate is relative to the smaller perimeter of the two markers";
+    auto minMarkerDistanceRateRange = rcl_interfaces::msg::FloatingPointRange();
+    minMarkerDistanceRateRange.from_value = 0.0;
+    minMarkerDistanceRateRange.to_value = 1.0;
+    minMarkerDistanceRateDescription.floating_point_range = {minMarkerDistanceRateRange};
+    detectorParams->minMarkerDistanceRate = nh->declare_parameter("minMarkerDistanceRate", 0.05, minMarkerDistanceRateDescription);
+
+    /* minMarkerPerimeterRate */
+    auto minMarkerPerimeterRateDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    minMarkerPerimeterRateDescription.name = "Determine minumum perimeter for marker contour to be detected. This is defined as a rate respect to the maximum dimension of the input image";
+    auto minMarkerPerimeterRateRange = rcl_interfaces::msg::FloatingPointRange();
+    minMarkerPerimeterRateRange.from_value = 0.0;
+    minMarkerPerimeterRateRange.to_value = 1.0;
+    minMarkerPerimeterRateDescription.floating_point_range = {minMarkerPerimeterRateRange};
+    detectorParams->minMarkerPerimeterRate = nh->declare_parameter("minMarkerPerimeterRate", 0.1, minMarkerPerimeterRateDescription); /* default 0.3 */
+
+    /* maxMarkerPerimeterRate */
+    auto maxMarkerPerimeterRateDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    maxMarkerPerimeterRateDescription.name = "Determine maximum perimeter for marker contour to be detected. This is defined as a rate respect to the maximum dimension of the input image";
+    auto maxMarkerPerimeterRateRange = rcl_interfaces::msg::IntegerRange();
+    maxMarkerPerimeterRateRange.from_value = 0.0;
+    maxMarkerPerimeterRateRange.to_value = 1.0;
+    maxMarkerPerimeterRateDescription.integer_range = {maxMarkerPerimeterRateRange};
+    detectorParams->maxMarkerPerimeterRate = nh->declare_parameter("maxMarkerPerimeterRate", 4.0, maxMarkerPerimeterRateDescription);
+
+    /* minOtsuStdDev */
+    auto minOtsuStdDevDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    minOtsuStdDevDescription.name = "Minimum standard deviation in pixels values during the decodification step to apply Otsu thresholding (otherwise, all the bits are set to 0 or 1 depending on mean higher than 128 or not)";
+    auto minOtsuStdDevRange = rcl_interfaces::msg::FloatingPointRange();
+    minOtsuStdDevRange.from_value = 0.0;
+    minOtsuStdDevRange.to_value = std::numeric_limits<double>::infinity();
+    minOtsuStdDevDescription.floating_point_range = {minOtsuStdDevRange};
+    detectorParams->minOtsuStdDev = nh->declare_parameter("minOtsuStdDev", 5.0, minOtsuStdDevDescription);
+
+    /* perspectiveRemoveIgnoredMarginPerCell */
+    auto perspectiveRemoveIgnoredMarginPerCellDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    perspectiveRemoveIgnoredMarginPerCellDescription.name = "Width of the margin of pixels on each cell not considered for the determination of the cell bit. Represents the rate respect to the total size of the cell, i.e. perpectiveRemovePixelPerCell";
+    auto perspectiveRemoveIgnoredMarginPerCellRange = rcl_interfaces::msg::FloatingPointRange();
+    perspectiveRemoveIgnoredMarginPerCellRange.from_value = 0.0;
+    perspectiveRemoveIgnoredMarginPerCellRange.to_value = 1.0;
+    perspectiveRemoveIgnoredMarginPerCellDescription.floating_point_range = {perspectiveRemoveIgnoredMarginPerCellRange};
+    detectorParams->perspectiveRemoveIgnoredMarginPerCell = nh->declare_parameter("perspectiveRemoveIgnoredMarginPerCell", 0.13, perspectiveRemoveIgnoredMarginPerCellDescription);
+
+    /* perspectiveRemovePixelPerCell */
+    auto perspectiveRemovePixelPerCellDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    perspectiveRemovePixelPerCellDescription.name = "Number of bits (per dimension) for each cell of the marker when removing the perspective";
+    auto perspectiveRemovePixelPerCellRange = rcl_interfaces::msg::IntegerRange();
+    perspectiveRemovePixelPerCellRange.from_value = 1;
+    perspectiveRemovePixelPerCellRange.to_value = std::numeric_limits<int>::max();
+    perspectiveRemovePixelPerCellDescription.integer_range = {perspectiveRemovePixelPerCellRange};
+    detectorParams->perspectiveRemovePixelPerCell = nh->declare_parameter("perspectiveRemovePixelPerCell", 8, perspectiveRemovePixelPerCellDescription);
+
+    /* polygonalApproxAccuracyRate */
+    auto polygonalApproxAccuracyRateDescription = rcl_interfaces::msg::ParameterDescriptor{};
+    polygonalApproxAccuracyRateDescription.name = "Width of the margin of pixels on each cell not considered for the determination of the cell bit. Represents the rate respect to the total size of the cell, i.e. perpectiveRemovePixelPerCell";
+    auto polygonalApproxAccuracyRateRange = rcl_interfaces::msg::FloatingPointRange();
+    polygonalApproxAccuracyRateRange.from_value = 0.0;
+    polygonalApproxAccuracyRateRange.to_value = 1.0;
+    polygonalApproxAccuracyRateDescription.floating_point_range = {polygonalApproxAccuracyRateRange};
+    detectorParams->polygonalApproxAccuracyRate = nh->declare_parameter("polygonalApproxAccuracyRate", 0.01, polygonalApproxAccuracyRateDescription); /* default 0.05 */
 
     parameter_callback_handle = nh->add_on_set_parameters_callback(std::bind(&FiducialsNode::param_change_callback, this, std::placeholders::_1));
 
