@@ -1,3 +1,10 @@
+"""
+Internal functions for generating a fiducial marker PDF.
+
+This has to be in a separate module from the main entry point in order to work with joblib,
+which we use to generate markers in parallel.
+"""
+
 import os, sys, argparse
 import subprocess
 import importlib.machinery
