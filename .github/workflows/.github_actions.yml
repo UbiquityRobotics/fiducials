@@ -19,7 +19,7 @@ jobs:
     container:
       image: ubuntu:xenial
     steps:
-      - uses: ros-tooling/setup-ros@v0.1
+      - uses: ros-tooling/setup-ros@v0.2
         with:
           required-ros-distributions: kinetic
       - uses: ros-tooling/action-ros-ci@v0.2
