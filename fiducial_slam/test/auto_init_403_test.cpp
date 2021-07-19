@@ -65,7 +65,7 @@ protected:
 
   void publish_image(std::string file)
   {
-    cv::Mat image = cv::imread(image_directory+file, CV_LOAD_IMAGE_COLOR);
+    cv::Mat image = cv::imread(image_directory+file, cv::IMREAD_COLOR);
     cv::waitKey(30);
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(),
                                                    "bgr8", image).toImageMsg();
