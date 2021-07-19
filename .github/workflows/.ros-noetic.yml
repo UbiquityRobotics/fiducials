@@ -1,0 +1,27 @@
+name: ROS Noetic
+on:
+  push:
+    branches:
+      - noetic-devel
+    paths-ignore:
+      - README.md
+      - '*/README.md'
+  pull_request:
+    branches:
+      - noetic-devel
+    paths-ignore:
+      - README.md
+      - '*/README.md'
+jobs:
+  Build-and-Test:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:focal
+    steps:
+      - uses: ros-tooling/setup-ros@v0.2
+        with:
+          required-ros-distributions: noetic
+      - uses: ros-tooling/action-ros-ci@v0.2
+        with:
+          package-name: fiducials 
+          target-ros1-distro: noetic
