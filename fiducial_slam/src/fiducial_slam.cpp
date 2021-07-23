@@ -72,6 +72,7 @@ private:
 
 public:
     Map fiducialMap;
+    int pose_publish_rate;
     FiducialSlam(ros::NodeHandle &nh);
 };
 
@@ -112,6 +113,7 @@ FiducialSlam::FiducialSlam(ros::NodeHandle &nh) : fiducialMap(nh) {
     nh.param<bool>("use_fiducial_area_as_weight", use_fiducial_area_as_weight, false);
     // Scaling factor for weighing
     nh.param<double>("weighting_scale", weighting_scale, 1e9);
+    nh.param<int>("pose_publish_rate", pose_publish_rate, 20);
 
     ft_sub = nh.subscribe("/fiducial_transforms", 1, &FiducialSlam::transformCallback, this);
 
@@ -133,7 +135,7 @@ int main(int argc, char **argv) {
     node = make_unique<FiducialSlam>(nh);
     signal(SIGINT, mySigintHandler);
 
-    ros::Rate r(20);
+    ros::Rate r(node->pose_publish_rate);
     while (ros::ok()) {
         ros::spinOnce();
         r.sleep();
