@@ -27,7 +27,7 @@
   <depend>cv_bridge</depend>
   <depend>fiducial_msgs</depend>
   <depend>dynamic_reconfigure</depend>
-  <depend>python-cairosvg</depend>
-  <depend>python-joblib</depend>
+  <depend>python3-cairosvg</depend>
+  <depend>python3-joblib</depend>
 
 </package>

@@ -21,7 +21,7 @@ for path in sys.path:
              break
 # For-else: else is called if loop doesn't break 
 else:
-    print("ERROR: could not find module em, please sudo apt install python-empy")
+    print("ERROR: could not find module em, please sudo apt install python3-empy")
     exit(2)
 
 import cv2
