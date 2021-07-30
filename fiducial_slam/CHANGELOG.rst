@@ -2,6 +2,58 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#259 <https://github.com/UbiquityRobotics/fiducials/issues/259>`_ from ivan140/feature/pose_publish_rate
+  Added pose_publish_rate which controls the rate of /fiducial_pose
+* added feature pose_publish_rate which controls the rate of topic /fiducial_pose
+* Merge pull request `#258 <https://github.com/UbiquityRobotics/fiducials/issues/258>`_ from UbiquityRobotics/opencv-deprecated-constant
+  Replace deprecated OpenCV constant in fiducial_slam test
+* Replace deprecated OpenCV constant in fiducial_slam test
+* Merge pull request `#244 <https://github.com/UbiquityRobotics/fiducials/issues/244>`_ from agutenkunst/fix/remove_unused_subs
+  I think this is sensible to merge, since it does not affect the workings of the package and it removes some confusion, so merging
+* Remove non-functional doPoseEstimation from fiducial_slam
+* Remove unused subscriber
+* Merge pull request `#221 <https://github.com/UbiquityRobotics/fiducials/issues/221>`_ from `UbiquityRobotics/bugfix-#220 <https://github.com/UbiquityRobotics/bugfix-/issues/220>`_
+  Allow covariance to be overridden by launch file
+* Allow covariance to be overriden by launch file
+  Uses YAML interpretation for the parameter so that it becomes an array
+  instead of a string. Fix a comparison issue in the code to make the
+  override actually warn on 0 values.
+* Return early from auto init when no fiducials
+* Merge pull request `#214 <https://github.com/UbiquityRobotics/fiducials/issues/214>`_ from UbiquityRobotics/publish_fids
+  Moved fiducial tf publishing to aruco_detect node
+* Moved fiducial tf publishing to aruco_detect node
+* Address `#204 <https://github.com/UbiquityRobotics/fiducials/issues/204>`_ (`#205 <https://github.com/UbiquityRobotics/fiducials/issues/205>`_)
+* Revert "Address `#204 <https://github.com/UbiquityRobotics/fiducials/issues/204>`_"
+  This reverts commit ba13b567ca71a33202547dd6df03d61b94a90d45.
+* Address `#204 <https://github.com/UbiquityRobotics/fiducials/issues/204>`_
+* Use FrameId in rviz markers (`#195 <https://github.com/UbiquityRobotics/fiducials/issues/195>`_)
+  * FrameId used in the rviz markers
+  * FrameId used in rviz markers
+* Removed multi-fiducial code (`#184 <https://github.com/UbiquityRobotics/fiducials/issues/184>`_)
+* Add service call to add a fiducial to the map (`#176 <https://github.com/UbiquityRobotics/fiducials/issues/176>`_)
+  * Add service call to add a fiducial to the map
+  * Abort auto-init when add fiducial service is called.
+* Merge pull request `#175 <https://github.com/UbiquityRobotics/fiducials/issues/175>`_ from `UbiquityRobotics/fix-#173 <https://github.com/UbiquityRobotics/fix-/issues/173>`_
+  Cleanup for fiducial_slam
+* add and run clang-format
+* Get rid of observation.positon, it was only being used in 1 place
+* Links to other fiducials uses set instead map<int,int>
+  We only care if the element exists or not, so a set is a
+  clearer data structure to use.
+* Unused sum_in_qudrature removed, holdover from Alexy stuff
+* Use clearer ranged for where possible
+  Ranged for provides an easier way to interate over every
+  element in a containter.
+  NOTE: This commit changes what I consider to be buggy behavior
+  in the autoInit and findClosestObs code, which was not properly
+  iterating over every elemnent, using obs[0] every time.
+* Remove using namespace declarations
+  These are generally considered dangerous, due to the potential
+  for namespace collisions and unclarity when using types.
+* Contributors: Alexander Gutenkunst, David Alejo Teissière, Ivan Shalnov, Janez Cimerman, Jim Vaughan, Rohan Agrawal
+
 0.11.0 (2019-05-09)
 -------------------
 * Compatibilty with Melodic, remove opencv3 dependancy

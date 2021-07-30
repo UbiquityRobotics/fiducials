@@ -2,6 +2,40 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Deps python2 -> python3
+* Updated marker generation script to work with Python3  (`#254 <https://github.com/UbiquityRobotics/fiducials/issues/254>`_)
+  * Updated create marker script for python3
+  * Updated to use Python 3 cairosvg module
+  * Added argument to change fiducial length and scaling the marker based on it
+  * Change to Python 3
+  * Fixed string format
+  * Changed argument name for passing in fiducial length
+  * Updated marker generation script to work with Python3
+  * Added a comment about why marker_gen is a separate module
+  * gitignore bagfiles, we don't want them to be checked in generally
+  Co-authored-by: Ajith Thomas <ajiththomas152@gmail.com>
+* Use newer constant for imread in aruco tests
+* Add missing dependencies on transport plugins
+* Merge pull request `#236 <https://github.com/UbiquityRobotics/fiducials/issues/236>`_ from UbiquityRobotics/bugfix-aruco-detect-relative-topics
+  fixed aruco detect remaps to relative topic names to suport namespaces
+* Dynamic Reconfigure rosparam integration completed
+* Splitted aruco vertices detection and pose estimation.
+* Splitted detection and pose estimation.
+* Make fiducial_tf_publish a param
+* Moved fiducial tf publishing to aruco_detect node
+* Add mutex to image callback
+* Public node handle instead of leading / for namespace support
+  This allows someone to start the node in a namespace and have all the
+  topics remapped into the namespace automatically. Parameters are still
+  kept in a private node handle so they come up in aruco_detect/*
+  Fixes: https://github.com/UbiquityRobotics/fiducials/issues/183
+* Fix fiducial_len_override bug (`#180 <https://github.com/UbiquityRobotics/fiducials/issues/180>`_)
+* Make ignored fiducials dynamically reconfigurable (`#170 <https://github.com/UbiquityRobotics/fiducials/issues/170>`_)
+  * Make ignored fiducials dynamically reconfigurable
+* Contributors: Caio Amaral, Canberk S. Gurel, Janez Cimerman, Jim Vaughan, MoffKalast, Rohan Agrawal, Teodor, Vid Rijavec, canberkgurel
+
 0.11.0 (2019-05-09)
 -------------------
 * Compatibilty with Melodic
