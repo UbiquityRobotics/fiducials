@@ -2,8 +2,8 @@
 Changelog for package fiducial_slam
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.12.0 (2021-07-30)
+-------------------
 * Merge pull request `#259 <https://github.com/UbiquityRobotics/fiducials/issues/259>`_ from ivan140/feature/pose_publish_rate
   Added pose_publish_rate which controls the rate of /fiducial_pose
 * added feature pose_publish_rate which controls the rate of topic /fiducial_pose

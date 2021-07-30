@@ -2,8 +2,8 @@
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.12.0 (2021-07-30)
+-------------------
 * Deps python2 -> python3
 * Updated marker generation script to work with Python3  (`#254 <https://github.com/UbiquityRobotics/fiducials/issues/254>`_)
   * Updated create marker script for python3
