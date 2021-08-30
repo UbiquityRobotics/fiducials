@@ -25,7 +25,7 @@
   <depend>geometry_msgs</depend>
   
   <!-- <depend>python-cairosvg</depend> Installed via pip3 install cairosvg -->
-  <depend>python-joblib</depend> <!-- TODO Manually needed to install apt python3-joblib -->
+  <depend>python3-joblib</depend>
   <test_depend>ros_testing</test_depend>
   <test_depend>ament_cmake_test</test_depend>
 
