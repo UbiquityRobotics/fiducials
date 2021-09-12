@@ -44,9 +44,6 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
-#include <boost/filesystem.hpp>
-
-
 static double systematic_error = 0.01;
 
 // Update a fiducial position in map with a new estimate
@@ -122,11 +119,6 @@ Map::Map(rclcpp::Node::SharedPtr &nh)
     // set -ve to never use
     multiErrorThreshold = nh->declare_parameter("multi_error_theshold", -1.0);
     mapFilename = nh->declare_parameter("map_file", std::string(getenv("HOME")) + "/.ros/slam/map.txt");
-
-
-    boost::filesystem::path mapPath(mapFilename);
-    boost::filesystem::path dir = mapPath.parent_path();
-    boost::filesystem::create_directories(dir);
 
     std::string initialMap;
     initialMap = nh->declare_parameter("initial_map_file", "");

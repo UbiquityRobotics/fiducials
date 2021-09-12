@@ -23,10 +23,6 @@ find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 find_package(OpenCV REQUIRED)
-find_package(Boost REQUIRED COMPONENTS
-  filesystem
-)
-
 
 set(DEPENDENCIES
   rclcpp
@@ -60,7 +56,7 @@ add_executable(fiducial_slam_node #TODO ROS2PORT should be "fiducial_slam" but t
                src/transform_with_variance.cpp
                src/observation.cpp)
 
-target_link_libraries(fiducial_slam_node ${Boost_LIBRARIES})
+target_link_libraries(fiducial_slam_node)
 
 ament_target_dependencies(fiducial_slam_node ${DEPENDENCIES} OpenCV)
 
@@ -80,6 +76,8 @@ install(DIRECTORY launch/
 install(FILES fiducials.rviz
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(DIRECTORY DESTINATION $ENV{HOME}/.ros/slam)
 
 ###########
 ## Tests ##
