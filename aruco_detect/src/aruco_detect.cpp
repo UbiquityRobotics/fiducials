@@ -68,8 +68,7 @@
 
 #include <list>
 #include <string>
-#include <boost/algorithm/string.hpp>
-#include <boost/shared_ptr.hpp>
+#include <helpers.h>
 
 using namespace std;
 using namespace cv;
@@ -541,13 +540,13 @@ void FiducialsNode::handleIgnoreString(const std::string& str)
     fiducial ids or ranges, eg "1,4,8,9-12,30-40"
     */
     std::vector<std::string> strs;
-    boost::split(strs, str, boost::is_any_of(","));
+    split(strs, str, ',');
     for (const string& element : strs) {
         if (element == "") {
            continue;
         }
         std::vector<std::string> range;
-        boost::split(range, element, boost::is_any_of("-"));
+        split(range, element, '-');
         if (range.size() == 2) {
            int start = std::stoi(range[0]);
            int end = std::stoi(range[1]);
@@ -629,17 +628,17 @@ FiducialsNode::FiducialsNode()
     e.g. "200.0: 12, 300.0: 200-300"
     */
     str = nh->declare_parameter("fiducial_len_override", std::string());
-    boost::split(strs, str, boost::is_any_of(","));
+    split(strs, str, ',');
     for (const string& element : strs) {
         if (element == "") {
            continue;
         }
         std::vector<std::string> parts;
-        boost::split(parts, element, boost::is_any_of(":"));
+        split(parts, element, ':');
         if (parts.size() == 2) {
             double len = std::stod(parts[1]);
             std::vector<std::string> range;
-            boost::split(range, element, boost::is_any_of("-"));
+            split(range, element, '-');
             if (range.size() == 2) {
                int start = std::stoi(range[0]);
                int end = std::stoi(range[1]);

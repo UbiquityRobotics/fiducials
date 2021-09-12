@@ -46,6 +46,7 @@ set(DEPENDENCIES
 ## Build ##
 ###########
 
+include_directories(include)
 add_definitions(-std=c++11)
 
 #include_directories(${OpenCV_INCLUDE_DIRS})
@@ -89,11 +90,17 @@ install(PROGRAMS scripts/create_markers.py
 if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ros_testing REQUIRED)
 
   # Not sure if this is correct
   install(DIRECTORY test/test_images
     DESTINATION share/${PROJECT_NAME}
+  )
+
+  ament_add_gmock(
+    helpers_test
+    test/helpers_test.cpp
   )
 
   ament_add_gtest_executable(
