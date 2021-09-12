@@ -14,7 +14,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>rosidl_default_generators</build_depend>
 
-  <depend>roscpp</depend>
+  <depend>rclcpp</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
@@ -30,7 +30,7 @@
 
   <test_depend>ros_testing</test_depend>
   <test_depend>ament_cmake_test</test_depend>
-  <test_depend>ament_cmake_node</test_depend>
+  <test_depend>ament_cmake_nose</test_depend>
   <test_depend>fiducial_msgs</test_depend>
   <test_depend>aruco_detect</test_depend>
   <member_of_group>rosidl_interface_packages</member_of_group>
