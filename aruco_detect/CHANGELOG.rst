@@ -1,6 +1,10 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package aruco_detect
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FORTHCOMING
+-----------
+* Port to ROS2
+* Contributors: Alexander Gutenkunst
 
 0.11.0 (2019-05-09)
 -------------------

@@ -29,34 +29,22 @@
  *
  */
 
-#include <fiducial_slam/helpers.h>
-#include <fiducial_slam/map.h>
+#include "fiducial_slam/helpers.h"
+#include "fiducial_slam/map.h"
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Vector3.h>
 #include <string>
 
-#include <std_msgs/ColorRGBA.h>
-#include <std_msgs/String.h>
+#include <std_msgs/msg/color_rgba.hpp>
+#include <std_msgs/msg/string.hpp>
 
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <visualization_msgs/Marker.h>
-
-#include <boost/filesystem.hpp>
-
+#include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 static double systematic_error = 0.01;
-
-// Constructor for observation
-Observation::Observation(int fid, const tf2::Stamped<TransformWithVariance> &camFid) {
-    this->fid = fid;
-
-    T_camFid = camFid;
-    T_fidCam = T_camFid;
-    T_fidCam.transform = T_camFid.transform.inverse();
-}
 
 // Update a fiducial position in map with a new estimate
 void Fiducial::update(const tf2::Stamped<TransformWithVariance> &newPose) {
@@ -68,14 +56,18 @@ void Fiducial::update(const tf2::Stamped<TransformWithVariance> &newPose) {
 Fiducial::Fiducial(int id, const tf2::Stamped<TransformWithVariance> &pose) {
     this->id = id;
     this->pose = pose;
-    this->lastPublished = ros::Time(0);
+    this->lastPublished = rclcpp::Time(0);
     this->numObs = 0;
     this->visible = false;
 }
 
 // Constructor for map
 
-Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
+Map::Map(rclcpp::Node::SharedPtr &nh)
+    : nh_(nh),
+    tfBuffer(nh->get_clock(), tf2::Duration(std::chrono::seconds(30))),
+    broadcaster(nh)
+{
     frameNum = 0;
     initialFrameNum = 0;
     originFid = -1;
@@ -85,39 +77,38 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
 
     listener = make_unique<tf2_ros::TransformListener>(tfBuffer);
 
-    robotPosePub =
-        ros::Publisher(nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/fiducial_pose", 1));
-    cameraPosePub = ros::Publisher(
-        nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/fiducial_slam/camera_pose", 1));
+    robotPosePub = nh->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/fiducial_pose", 1);
+    cameraPosePub = nh->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/fiducial_slam/camera_pose", 1);
 
-    markerPub = ros::Publisher(nh.advertise<visualization_msgs::Marker>("/fiducials", 100));
-    mapPub = ros::Publisher(nh.advertise<fiducial_msgs::FiducialMapEntryArray>("/fiducial_map", 1));
+    markerPub = nh->create_publisher<visualization_msgs::msg::Marker>("/fiducials", 100);
+    mapPub = nh->create_publisher<fiducial_msgs::msg::FiducialMapEntryArray>("/fiducial_map", 1);
 
-    clearSrv = nh.advertiseService("clear_map", &Map::clearCallback, this);
-    addSrv = nh.advertiseService("add_fiducial", &Map::addFiducialCallback, this);
+    clearSrv = nh->create_service<std_srvs::srv::Empty>("clear_map", std::bind(&Map::clearCallback, this, std::placeholders::_1, std::placeholders::_2));
+    addSrv = nh->create_service<fiducial_msgs::srv::AddFiducial>("add_fiducial", std::bind(&Map::addFiducialCallback, this, std::placeholders::_1, std::placeholders::_2));
 
-    nh.param<std::string>("map_frame", mapFrame, "map");
-    nh.param<std::string>("odom_frame", odomFrame, "odom");
-    nh.param<std::string>("base_frame", baseFrame, "base_footprint");
+    mapFrame = nh->declare_parameter("map_frame", "map");
+    odomFrame = nh->declare_parameter("odom_frame", "odom");
+    baseFrame = nh->declare_parameter("base_frame", "base_footprint");
 
-    nh.param<float>("tf_publish_interval", tfPublishInterval, 1.0);
-    nh.param<bool>("publish_tf", publishPoseTf, true);
-    nh.param<double>("systematic_error", systematic_error, 0.01);
-    nh.param<double>("future_date_transforms", future_date_transforms, 0.1);
-    nh.param<bool>("publish_6dof_pose", publish_6dof_pose, false);
-    nh.param<bool>("read_only_map", readOnly, false);
+    tfPublishInterval = nh->declare_parameter("tf_publish_interval", 1.0);
+    publishPoseTf = nh->declare_parameter("publish_tf", true);
+    systematic_error = nh->declare_parameter("systematic_error", 0.01);
+    future_date_transforms = nh->declare_parameter("future_date_transforms", 0.1);
+    publish_6dof_pose = nh->declare_parameter("publish_6dof_pose", false);
+    readOnly = nh->declare_parameter("read_only_map", false);
 
     std::fill(covarianceDiagonal.begin(), covarianceDiagonal.end(), 0);
-    overridePublishedCovariance = nh.getParam("covariance_diagonal", covarianceDiagonal);
+
+    overridePublishedCovariance = nh->get_parameter("covariance_diagonal", covarianceDiagonal);
     if (overridePublishedCovariance) {
         if (covarianceDiagonal.size() != 6) {
-            ROS_WARN("ignoring covariance_diagonal because it has %ld elements, not 6", covarianceDiagonal.size());
+            RCLCPP_WARN(nh->get_logger(), "ignoring covariance_diagonal because it has %ld elements, not 6", covarianceDiagonal.size());
             overridePublishedCovariance = false;
         }
         // Check to make sure that the diagonal is non-zero
         for (auto variance : covarianceDiagonal) {
             if (variance == 0) {
-                ROS_WARN("ignoring covariance_diagonal because it has 0 values");
+                RCLCPP_WARN(nh->get_logger(), "ignoring covariance_diagonal because it has 0 values");
                 std::fill(covarianceDiagonal.begin(), covarianceDiagonal.end(), 0);
                 break;
             }
@@ -126,17 +117,11 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
 
     // threshold of object error for using multi-fidicial pose
     // set -ve to never use
-    nh.param<double>("multi_error_theshold", multiErrorThreshold, -1);
-
-    nh.param<std::string>("map_file", mapFilename,
-                          std::string(getenv("HOME")) + "/.ros/slam/map.txt");
-
-    boost::filesystem::path mapPath(mapFilename);
-    boost::filesystem::path dir = mapPath.parent_path();
-    boost::filesystem::create_directories(dir);
+    multiErrorThreshold = nh->declare_parameter("multi_error_theshold", -1.0);
+    mapFilename = nh->declare_parameter("map_file", std::string(getenv("HOME")) + "/.ros/slam/map.txt");
 
     std::string initialMap;
-    nh.param<std::string>("initial_map_file", initialMap, "");
+    initialMap = nh->declare_parameter("initial_map_file", "");
 
     if (!initialMap.empty()) {
         loadMap(initialMap);
@@ -149,8 +134,8 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
 
 // Update map with a set of observations
 
-void Map::update(std::vector<Observation> &obs, const ros::Time &time) {
-    ROS_INFO("Updating map with %d observations. Map has %d fiducials", (int)obs.size(),
+void Map::update(std::vector<Observation> &obs, const rclcpp::Time &time) {
+    RCLCPP_INFO(nh_->get_logger(), "Updating map with %d observations. Map has %d fiducials", (int)obs.size(),
              (int)fiducials.size());
 
     frameNum++;
@@ -178,7 +163,7 @@ void Map::update(std::vector<Observation> &obs, const ros::Time &time) {
 // update estimates of observed fiducials from previously estimated
 // camera pose
 
-void Map::updateMap(const std::vector<Observation> &obs, const ros::Time &time,
+void Map::updateMap(const std::vector<Observation> &obs, const rclcpp::Time &time,
                     const tf2::Stamped<TransformWithVariance> &T_mapCam) {
     for (auto &map_pair : fiducials) {
         Fiducial &f = map_pair.second;
@@ -194,17 +179,17 @@ void Map::updateMap(const std::vector<Observation> &obs, const ros::Time &time,
         {
             tf2::Vector3 trans = T_mapFid.transform.getOrigin();
 
-            ROS_INFO("Estimate of %d %lf %lf %lf var %lf %lf", o.fid, trans.x(), trans.y(),
+            RCLCPP_INFO(nh_->get_logger(), "Estimate of %d %lf %lf %lf var %lf %lf", o.fid, trans.x(), trans.y(),
                      trans.z(), o.T_camFid.variance, T_mapFid.variance);
 
             if (std::isnan(trans.x()) || std::isnan(trans.y()) || std::isnan(trans.z())) {
-                ROS_WARN("Skipping NAN estimate\n");
+                RCLCPP_WARN(nh_->get_logger(), "Skipping NAN estimate\n");
                 continue;
             };
         }
 
         if (fiducials.find(o.fid) == fiducials.end()) {
-            ROS_INFO("New fiducial %d", o.fid);
+            RCLCPP_INFO(nh_->get_logger(), "New fiducial %d", o.fid);
             fiducials[o.fid] = Fiducial(o.fid, T_mapFid);
         }
         Fiducial &f = fiducials[o.fid];
@@ -226,17 +211,17 @@ void Map::updateMap(const std::vector<Observation> &obs, const ros::Time &time,
 
 // lookup specified transform
 
-bool Map::lookupTransform(const std::string &from, const std::string &to, const ros::Time &time,
+bool Map::lookupTransform(const std::string &from, const std::string &to, const rclcpp::Time &time,
                           tf2::Transform &T) const {
-    geometry_msgs::TransformStamped transform;
+    geometry_msgs::msg::TransformStamped transform;
 
     try {
-        transform = tfBuffer.lookupTransform(from, to, time, ros::Duration(0.5));
+        transform = tfBuffer.lookupTransform(from, to, time, rclcpp::Duration(0.5));
 
         tf2::fromMsg(transform.transform, T);
         return true;
     } catch (tf2::TransformException &ex) {
-        ROS_WARN("%s", ex.what());
+        RCLCPP_WARN(nh_->get_logger(), "%s", ex.what());
         return false;
     }
 }
@@ -244,7 +229,7 @@ bool Map::lookupTransform(const std::string &from, const std::string &to, const 
 // update pose estimate of robot.  We combine the camera->base_link
 // tf to each estimate so we can evaluate how good they are.  A good
 // estimate would have z == roll == pitch == 0.
-int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
+int Map::updatePose(std::vector<Observation> &obs, const rclcpp::Time &time,
                     tf2::Stamped<TransformWithVariance> &T_mapCam) {
     int numEsts = 0;
     tf2::Stamped<TransformWithVariance> T_camBase;
@@ -257,18 +242,18 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
 
     if (lookupTransform(obs[0].T_camFid.frame_id_, baseFrame, time, T_camBase.transform)) {
         tf2::Vector3 c = T_camBase.transform.getOrigin();
-        ROS_INFO("camera->base   %lf %lf %lf", c.x(), c.y(), c.z());
+        RCLCPP_INFO(nh_->get_logger(), "camera->base   %lf %lf %lf", c.x(), c.y(), c.z());
         T_camBase.variance = 1.0;
     } else {
-        ROS_ERROR("Cannot determine tf from camera to robot\n");
+        RCLCPP_ERROR(nh_->get_logger(), "Cannot determine tf from camera to robot\n");
     }
 
     if (lookupTransform(baseFrame, obs[0].T_camFid.frame_id_, time, T_baseCam.transform)) {
         tf2::Vector3 c = T_baseCam.transform.getOrigin();
-        ROS_INFO("base->camera   %lf %lf %lf", c.x(), c.y(), c.z());
+        RCLCPP_INFO(nh_->get_logger(), "base->camera   %lf %lf %lf", c.x(), c.y(), c.z());
         T_baseCam.variance = 1.0;
     } else {
-        ROS_ERROR("Cannot determine tf from robot to camera\n");
+        RCLCPP_ERROR(nh_->get_logger(), "Cannot determine tf from robot to camera\n");
         return numEsts;
     }
 
@@ -297,13 +282,13 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
             p.variance = s1 + s2 + s3 + systematic_error;
             o.T_camFid.variance = p.variance;
 
-            ROS_INFO("Pose %d %lf %lf %lf %lf %lf %lf %lf", o.fid, position.x(), position.y(),
+            RCLCPP_INFO(nh_->get_logger(), "Pose %d %lf %lf %lf %lf %lf %lf %lf", o.fid, position.x(), position.y(),
                      position.z(), roll, pitch, yaw, p.variance);
 
             // drawLine(fid.pose.getOrigin(), o.position);
 
             if (std::isnan(position.x()) || std::isnan(position.y()) || std::isnan(position.z())) {
-                ROS_WARN("Skipping NAN estimate\n");
+                RCLCPP_WARN(nh_->get_logger(), "Skipping NAN estimate\n");
                 continue;
             };
 
@@ -320,7 +305,7 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
     }
 
     if (numEsts == 0) {
-        ROS_INFO("Finished frame - no estimates\n");
+        RCLCPP_INFO(nh_->get_logger(), "Finished frame - no estimates\n");
         return numEsts;
     }
 
@@ -330,7 +315,7 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
         double r, p, y;
         T_mapBase.transform.getBasis().getRPY(r, p, y);
 
-        ROS_INFO("Pose ALL %lf %lf %lf %lf %lf %lf %f", trans.x(), trans.y(), trans.z(), r, p, y,
+        RCLCPP_INFO(nh_->get_logger(), "Pose ALL %lf %lf %lf %lf %lf %lf %f", trans.x(), trans.y(), trans.z(), r, p, y,
                  T_mapBase.variance);
     }
 
@@ -346,7 +331,7 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
 
     T_mapCam = T_mapBase * T_baseCam;
 
-    robotPosePub.publish(robotPose);
+    robotPosePub->publish(robotPose);
 
     tf2::Stamped<TransformWithVariance> outPose = basePose;
     outPose.frame_id_ = mapFrame;
@@ -354,12 +339,12 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
 
     if (!odomFrame.empty()) {
         tf2::Transform odomTransform;
-        if (lookupTransform(odomFrame, baseFrame, outPose.stamp_, odomTransform)) {
+        if (lookupTransform(odomFrame, baseFrame, tf2_ros::toMsg(outPose.stamp_), odomTransform)) {
             outPose.setData(basePose * odomTransform.inverse());
             outFrame = odomFrame;
 
             tf2::Vector3 c = odomTransform.getOrigin();
-            ROS_INFO("odom   %lf %lf %lf", c.x(), c.y(), c.z());
+            RCLCPP_INFO(nh_->get_logger(), "odom   %lf %lf %lf", c.x(), c.y(), c.z());
         }
         else {
             // Don't publish anything if map->odom was requested and is unavailaable
@@ -386,24 +371,24 @@ int Map::updatePose(std::vector<Observation> &obs, const ros::Time &time,
         publishTf();
     }
 
-    ROS_INFO("Finished frame. Estimates %d\n", numEsts);
+    RCLCPP_INFO(nh_->get_logger(), "Finished frame. Estimates %d\n", numEsts);
     return numEsts;
 }
 
 // Publish map -> odom tf
 
 void Map::publishTf() {
-    tfPublishTime = ros::Time::now();
-    poseTf.header.stamp = tfPublishTime + ros::Duration(future_date_transforms);
+    tfPublishTime = nh_->get_clock()->now();
+    poseTf.header.stamp = tfPublishTime + rclcpp::Duration(future_date_transforms);
     broadcaster.sendTransform(poseTf);
 }
 
 // publish latest tf if enough time has elapsed
 
 void Map::update() {
-    ros::Time now = ros::Time::now();
+    rclcpp::Time now = nh_->get_clock()->now();
     if (publishPoseTf && havePose && tfPublishInterval != 0.0 &&
-        (now - tfPublishTime).toSec() > tfPublishInterval) {
+        (now - tfPublishTime).nanoseconds() > tfPublishInterval * 10e9) {
         publishTf();
         tfPublishTime = now;
     }
@@ -433,8 +418,8 @@ static int findClosestObs(const std::vector<Observation> &obs) {
 // pose of that marker such that base_link is at the origin of the
 // map frame
 
-void Map::autoInit(const std::vector<Observation> &obs, const ros::Time &time) {
-    ROS_INFO("Auto init map %d", frameNum);
+void Map::autoInit(const std::vector<Observation> &obs, const rclcpp::Time &time) {
+    RCLCPP_INFO(nh_->get_logger(), "Auto init map %d", frameNum);
 
     tf2::Transform T_baseCam;
 
@@ -442,17 +427,17 @@ void Map::autoInit(const std::vector<Observation> &obs, const ros::Time &time) {
         int idx = findClosestObs(obs);
 
         if (idx == -1) {
-	     ROS_WARN("Could not find a fiducial to initialize map from");
+	     RCLCPP_WARN(nh_->get_logger(), "Could not find a fiducial to initialize map from");
 	     return;
         }
         const Observation &o = obs[idx];
         originFid = o.fid;
 
-        ROS_INFO("Initializing map from fiducial %d", o.fid);
+        RCLCPP_INFO(nh_->get_logger(), "Initializing map from fiducial %d", o.fid);
 
         tf2::Stamped<TransformWithVariance> T = o.T_camFid;
 
-        if (lookupTransform(baseFrame, o.T_camFid.frame_id_, o.T_camFid.stamp_, T_baseCam)) {
+        if (lookupTransform(baseFrame, o.T_camFid.frame_id_, tf2_ros::toMsg(o.T_camFid.stamp_), T_baseCam)) {
             T.setData(T_baseCam * T);
         }
 
@@ -463,10 +448,10 @@ void Map::autoInit(const std::vector<Observation> &obs, const ros::Time &time) {
                 tf2::Stamped<TransformWithVariance> T = o.T_camFid;
 
                 tf2::Vector3 trans = T.transform.getOrigin();
-                ROS_INFO("Estimate of %d from base %lf %lf %lf err %lf", o.fid, trans.x(),
+                RCLCPP_INFO(nh_->get_logger(), "Estimate of %d from base %lf %lf %lf err %lf", o.fid, trans.x(),
                          trans.y(), trans.z(), o.T_camFid.variance);
 
-                if (lookupTransform(baseFrame, o.T_camFid.frame_id_, o.T_camFid.stamp_,
+                if (lookupTransform(baseFrame, o.T_camFid.frame_id_, tf2_ros::toMsg(o.T_camFid.stamp_),
                                     T_baseCam)) {
                     T.setData(T_baseCam * T);
                 }
@@ -493,7 +478,7 @@ void Map::handleAddFiducial(const std::vector<Observation> &obs) {
     }
 
     if (fiducials.find(fiducialToAdd) != fiducials.end()) {
-        ROS_INFO("Fiducial %d is already in map - ignoring add request",
+        RCLCPP_INFO(nh_->get_logger(), "Fiducial %d is already in map - ignoring add request",
                  fiducialToAdd);
         fiducialToAdd = -1;
         return;
@@ -501,7 +486,7 @@ void Map::handleAddFiducial(const std::vector<Observation> &obs) {
 
     for (const Observation &o : obs) {
         if (o.fid == fiducialToAdd) {
-            ROS_INFO("Adding fiducial_id %d to map", fiducialToAdd);
+            RCLCPP_INFO(nh_->get_logger(), "Adding fiducial_id %d to map", fiducialToAdd);
 
 
             tf2::Stamped<TransformWithVariance> T = o.T_camFid;
@@ -509,17 +494,17 @@ void Map::handleAddFiducial(const std::vector<Observation> &obs) {
             // Take into account position of camera on base
             tf2::Transform T_baseCam;
             if (lookupTransform(baseFrame, o.T_camFid.frame_id_,
-                                o.T_camFid.stamp_, T_baseCam)) {
+                                tf2_ros::toMsg(o.T_camFid.stamp_), T_baseCam)) {
                 T.setData(T_baseCam * T);
             }
 
             // Take into account position of robot in the world if known
             tf2::Transform T_mapBase;
-            if (lookupTransform(mapFrame, baseFrame, ros::Time(0), T_mapBase)) {
+            if (lookupTransform(mapFrame, baseFrame, rclcpp::Time(0), T_mapBase)) {
                 T.setData(T_mapBase * T);
             }
             else {
-                ROS_INFO("Placing robot at the origin");
+                RCLCPP_INFO(nh_->get_logger(), "Placing robot at the origin");
             }
 
             fiducials[o.fid] = Fiducial(o.fid, T);
@@ -531,7 +516,7 @@ void Map::handleAddFiducial(const std::vector<Observation> &obs) {
         }
     }
 
-    ROS_INFO("Unable to add fiducial %d to map", fiducialToAdd);
+    RCLCPP_INFO(nh_->get_logger(), "Unable to add fiducial %d to map", fiducialToAdd);
 }
 
 // save map to file
@@ -539,11 +524,11 @@ void Map::handleAddFiducial(const std::vector<Observation> &obs) {
 bool Map::saveMap() { return saveMap(mapFilename); }
 
 bool Map::saveMap(std::string filename) {
-    ROS_INFO("Saving map with %d fiducials to file %s\n", (int)fiducials.size(), filename.c_str());
+    RCLCPP_INFO(nh_->get_logger(), "Saving map with %d fiducials to file %s\n", (int)fiducials.size(), filename.c_str());
 
     FILE *fp = fopen(filename.c_str(), "w");
     if (fp == NULL) {
-        ROS_WARN("Could not open %s for write\n", filename.c_str());
+        RCLCPP_WARN(nh_->get_logger(), "Could not open %s for write\n", filename.c_str());
         return false;
     }
 
@@ -572,11 +557,11 @@ bool Map::loadMap() { return loadMap(mapFilename); }
 bool Map::loadMap(std::string filename) {
     int numRead = 0;
 
-    ROS_INFO("Load map %s", filename.c_str());
+    RCLCPP_INFO(nh_->get_logger(), "Load map %s", filename.c_str());
 
     FILE *fp = fopen(filename.c_str(), "r");
     if (fp == NULL) {
-        ROS_WARN("Could not open %s for read\n", filename.c_str());
+        RCLCPP_WARN(nh_->get_logger(), "Could not open %s for read\n", filename.c_str());
         return false;
     }
 
@@ -602,7 +587,7 @@ bool Map::loadMap(std::string filename) {
             auto twv = TransformWithVariance(tvec, q, var);
             // TODO: figure out what the timestamp in Fiducial should be
             Fiducial f =
-                Fiducial(id, tf2::Stamped<TransformWithVariance>(twv, ros::Time::now(), mapFrame));
+                Fiducial(id, tf2::Stamped<TransformWithVariance>(twv, tf2_ros::fromMsg(nh_->get_clock()->now()), mapFrame));
             f.numObs = numObs;
 
             std::istringstream ss(linkbuf);
@@ -615,25 +600,25 @@ bool Map::loadMap(std::string filename) {
             fiducials[id] = f;
             numRead++;
         } else {
-            ROS_WARN("Invalid line: %s", linebuf);
+            RCLCPP_WARN(nh_->get_logger(), "Invalid line: %s", linebuf);
         }
     }
 
     fclose(fp);
-    ROS_INFO("Load map %s read %d entries", filename.c_str(), numRead);
+    RCLCPP_INFO(nh_->get_logger(), "Load map %s read %d entries", filename.c_str(), numRead);
     return true;
 }
 
 // Publish the map
 
 void Map::publishMap() {
-    fiducial_msgs::FiducialMapEntryArray fmea;
+    fiducial_msgs::msg::FiducialMapEntryArray fmea;
     std::map<int, Fiducial>::iterator it;
 
     for (const auto &map_pair : fiducials) {
         const Fiducial &f = map_pair.second;
 
-        fiducial_msgs::FiducialMapEntry fme;
+        fiducial_msgs::msg::FiducialMapEntry fme;
         fme.fiducial_id = f.id;
 
         tf2::Vector3 t = f.pose.transform.getOrigin();
@@ -650,19 +635,19 @@ void Map::publishMap() {
         fmea.fiducials.push_back(fme);
     }
 
-    mapPub.publish(fmea);
+    mapPub->publish(fmea);
 }
 
 // Publish the next marker visualization messages that hasn't been
 // published recently
 
 void Map::publishMarkers() {
-    ros::Time now = ros::Time::now();
+    rclcpp::Time now = nh_->get_clock()->now();
     std::map<int, Fiducial>::iterator it;
 
     for (auto &map_pair : fiducials) {
         Fiducial &f = map_pair.second;
-        if ((now - f.lastPublished).toSec() > 1.0) {
+        if ((now.nanoseconds() - f.lastPublished.nanoseconds()) > 1.0 * 10e9) {
             publishMarker(f);
         }
     }
@@ -671,12 +656,12 @@ void Map::publishMarkers() {
 // Publish visualization messages for a single fiducial
 
 void Map::publishMarker(Fiducial &fid) {
-    fid.lastPublished = ros::Time::now();
+    fid.lastPublished = nh_->get_clock()->now();
 
     // Flattened cube
-    visualization_msgs::Marker marker;
-    marker.type = visualization_msgs::Marker::CUBE;
-    marker.action = visualization_msgs::Marker::ADD;
+    visualization_msgs::msg::Marker marker;
+    marker.type = visualization_msgs::msg::Marker::CUBE;
+    marker.action = visualization_msgs::msg::Marker::ADD;
     toMsg(fid.pose.transform, marker.pose);
 
     marker.scale.x = 0.15;
@@ -696,12 +681,12 @@ void Map::publishMarker(Fiducial &fid) {
     marker.id = fid.id;
     marker.ns = "fiducial";
     marker.header.frame_id = mapFrame;
-    markerPub.publish(marker);
+    markerPub->publish(marker);
 
     // cylinder scaled by stddev
-    visualization_msgs::Marker cylinder;
-    cylinder.type = visualization_msgs::Marker::CYLINDER;
-    cylinder.action = visualization_msgs::Marker::ADD;
+    visualization_msgs::msg::Marker cylinder;
+    cylinder.type = visualization_msgs::msg::Marker::CYLINDER;
+    cylinder.action = visualization_msgs::msg::Marker::ADD;
     cylinder.header.frame_id = mapFrame;
     cylinder.color.r = 0.0f;
     cylinder.color.g = 0.0f;
@@ -715,12 +700,12 @@ void Map::publishMarker(Fiducial &fid) {
     cylinder.pose.position.y = marker.pose.position.y;
     cylinder.pose.position.z = marker.pose.position.z;
     cylinder.pose.position.z += (marker.scale.z / 2.0) + 0.05;
-    markerPub.publish(cylinder);
+    markerPub->publish(cylinder);
 
     // Text
-    visualization_msgs::Marker text;
-    text.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-    text.action = visualization_msgs::Marker::ADD;
+    visualization_msgs::msg::Marker text;
+    text.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+    text.action = visualization_msgs::msg::Marker::ADD;
     text.header.frame_id = mapFrame;
     text.color.r = text.color.g = text.color.b = text.color.a = 1.0f;
     text.id = fid.id;
@@ -732,12 +717,12 @@ void Map::publishMarker(Fiducial &fid) {
     text.id = fid.id + 30000;
     text.ns = "text";
     text.text = std::to_string(fid.id);
-    markerPub.publish(text);
+    markerPub->publish(text);
 
     // Links
-    visualization_msgs::Marker links;
-    links.type = visualization_msgs::Marker::LINE_LIST;
-    links.action = visualization_msgs::Marker::ADD;
+    visualization_msgs::msg::Marker links;
+    links.type = visualization_msgs::msg::Marker::LINE_LIST;
+    links.action = visualization_msgs::msg::Marker::ADD;
     links.header.frame_id = mapFrame;
     links.color.r = 0.0f;
     links.color.g = 0.0f;
@@ -750,7 +735,7 @@ void Map::publishMarker(Fiducial &fid) {
     links.pose.position.y = 0;
     links.pose.position.z = 0;
 
-    geometry_msgs::Point gp0, gp1;
+    geometry_msgs::msg::Point gp0, gp1;
     tf2::Vector3 p0 = fid.pose.transform.getOrigin();
     gp0.x = p0.x();
     gp0.y = p0.y();
@@ -771,16 +756,16 @@ void Map::publishMarker(Fiducial &fid) {
         }
     }
 
-    markerPub.publish(links);
+    markerPub->publish(links);
 }
 
 // Publish a line marker between two points
 
 void Map::drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1) {
     static int lid = 60000;
-    visualization_msgs::Marker line;
-    line.type = visualization_msgs::Marker::LINE_LIST;
-    line.action = visualization_msgs::Marker::ADD;
+    visualization_msgs::msg::Marker line;
+    line.type = visualization_msgs::msg::Marker::LINE_LIST;
+    line.action = visualization_msgs::msg::Marker::ADD;
     line.header.frame_id = mapFrame;
     line.color.r = 1.0f;
     line.color.g = 0.0f;
@@ -791,7 +776,7 @@ void Map::drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1) {
     line.scale.x = line.scale.y = line.scale.z = 0.01;
     line.pose.position.x = 0;
     line.pose.position.y = 0;
-    geometry_msgs::Point gp0, gp1;
+    geometry_msgs::msg::Point gp0, gp1;
     gp0.x = p0.x();
     gp0.y = p0.y();
     gp0.z = p0.z();
@@ -801,13 +786,13 @@ void Map::drawLine(const tf2::Vector3 &p0, const tf2::Vector3 &p1) {
     line.points.push_back(gp0);
     line.points.push_back(gp1);
 
-    markerPub.publish(line);
+    markerPub->publish(line);
 }
 
 // Service to clear the map and enable auto initialization
 
-bool Map::clearCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res) {
-    ROS_INFO("Clearing fiducial map from service call");
+bool Map::clearCallback(const std_srvs::srv::Empty::Request::SharedPtr req, std_srvs::srv::Empty::Response::SharedPtr res) {
+    RCLCPP_INFO(nh_->get_logger(), "Clearing fiducial map from service call");
 
     fiducials.clear();
     initialFrameNum = frameNum;
@@ -818,11 +803,11 @@ bool Map::clearCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response
 
 // Service to add a fiducial to the map
 
-bool Map::addFiducialCallback(fiducial_slam::AddFiducial::Request &req,
-                              fiducial_slam::AddFiducial::Response &res)
+bool Map::addFiducialCallback(const fiducial_msgs::srv::AddFiducial::Request::SharedPtr req,
+                              fiducial_msgs::srv::AddFiducial::Response::SharedPtr res)
 {
-   ROS_INFO("Request to add fiducial %d to map", req.fiducial_id);
-   fiducialToAdd = req.fiducial_id;
+   RCLCPP_INFO(nh_->get_logger(), "Request to add fiducial %d to map", req->fiducial_id);
+   fiducialToAdd = req->fiducial_id;
 
    return true;
 }

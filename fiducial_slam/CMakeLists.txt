@@ -1,35 +1,41 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(fiducial_slam)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  tf2_geometry_msgs
-  tf2_ros
-  tf2
-  visualization_msgs
-  cv_bridge
-  sensor_msgs
-  std_msgs
-  fiducial_msgs
-  genmsg
-)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+
+find_package(rclcpp REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(fiducial_msgs REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(std_srvs REQUIRED)
+
+find_package(ament_cmake REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 find_package(OpenCV REQUIRED)
 
-##############
-## Services ##
-##############
-
-## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  AddFiducial.srv
-)
-
-## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
+set(DEPENDENCIES
+  rclcpp
+  sensor_msgs
   std_msgs
+  visualization_msgs
+  fiducial_msgs
+  geometry_msgs
+  cv_bridge
+  tf2_ros
+  image_transport
+  tf2_geometry_msgs
+  std_srvs
 )
 
 ###########
@@ -38,60 +44,104 @@ generate_messages(
 
 add_definitions(-std=c++11)
 
-include_directories(${catkin_INCLUDE_DIRS} include)
-catkin_package(INCLUDE_DIRS include
-  DEPENDS OpenCV)
+include_directories(include)
+# catkin_package(INCLUDE_DIRS include
+#   DEPENDS OpenCV)
 
-include_directories(${OpenCV_INCLUDE_DIRS})
+# include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(fiducial_slam src/fiducial_slam.cpp
-               src/map.cpp src/transform_with_variance.cpp)
-add_dependencies(fiducial_slam ${${PROJECT_NAME}_EXPORTED_TARGETS}
-                 ${catkin_EXPORTED_TARGETS})
+add_executable(fiducial_slam_node #TODO ROS2PORT should be "fiducial_slam" but the clashes with rosidl_generate_interfaces
+               src/fiducial_slam.cpp
+               src/map.cpp
+               src/transform_with_variance.cpp
+               src/observation.cpp)
 
-target_link_libraries(fiducial_slam ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(fiducial_slam_node)
+
+ament_target_dependencies(fiducial_slam_node ${DEPENDENCIES} OpenCV)
 
 #############
 ## Install ##
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS fiducial_slam
-   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(TARGETS fiducial_slam_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY launch/
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 install(FILES fiducials.rviz
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  DESTINATION share/${PROJECT_NAME}
 )
+
+install(DIRECTORY DESTINATION $ENV{HOME}/.ros/slam)
 
 ###########
 ## Tests ##
 ###########
 
-if(CATKIN_ENABLE_TESTING)
-        find_package(catkin REQUIRED COMPONENTS
-          rostest roscpp sensor_msgs tf2_ros image_transport cv_bridge)
+if(BUILD_TESTING)
 
-        # Tests need c++11
-        add_definitions(-std=c++11)
-	
-	catkin_add_gtest(transform_var_test test/transform_var_test.cpp src/transform_with_variance)
-	target_link_libraries(transform_var_test ${catkin_LIBRARIES})
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_nose REQUIRED)
+  find_package(ros_testing REQUIRED)
 
-        add_rostest(test/create_map_aruco.xml)
-        add_rostest(test/init_map_aruco.xml)
+  install(DIRECTORY test/test_images
+    DESTINATION share/${PROJECT_NAME}/test
+  )
 
-        add_rostest_gtest(auto_init_403_test
-           test/auto_init_403.test
-           test/auto_init_403_test.cpp)
-        target_link_libraries(auto_init_403_test
-            ${catkin_LIBRARIES}
-            ${OpenCV_LIBS})
+  # transform_var_test
+  ament_add_gtest(transform_var_test
+                  test/transform_var_test.cpp
+                  src/transform_with_variance.cpp)
+  ament_target_dependencies(transform_var_test
+                            "geometry_msgs")
 
+  # auto_init_403_test
+  ament_add_gtest_executable(
+    auto_init_403_test
+    test/auto_init_403_test.cpp
+  )
+  target_link_libraries(auto_init_403_test)
+  ament_target_dependencies(auto_init_403_test ${DEPENDENCIES})
+  add_ros_test(test/auto_init_403.test.py ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}")
+
+
+  install(FILES
+    test/map_test.py # I guess there is a better way
+    test/aruco_transforms.db3 # I guess there is a better way
+    test/111_initial_map.txt # I guess there is a better way
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test
+    PERMISSIONS OWNER_READ OWNER_EXECUTE
+  )
+  add_ros_test(test/init_map_aruco.test.py ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}/test")
+
+  add_ros_test(test/create_map_aruco.test.py ARGS "test_binary_dir:=${CMAKE_CURRENT_BINARY_DIR}/test")
 endif()
+# if(CATKIN_ENABLE_TESTING)
+#         find_package(catkin REQUIRED COMPONENTS
+#           rostest roscpp sensor_msgs tf2_ros image_transport cv_bridge)
+
+#         # Tests need c++11
+#         add_definitions(-std=c++11)
+	
+# 	catkin_add_gtest(transform_var_test test/transform_var_test.cpp src/transform_with_variance)
+# 	target_link_libraries(transform_var_test ${catkin_LIBRARIES})
+
+#         add_rostest(test/create_map_aruco.xml)
+#         add_rostest(test/init_map_aruco.xml)
+
+#         add_rostest_gtest(auto_init_403_test
+#            test/auto_init_403.test
+#            test/auto_init_403_test.cpp)
+#         target_link_libraries(auto_init_403_test
+#             ${catkin_LIBRARIES}
+#             ${OpenCV_LIBS})
+
+# endif()
+
+ament_export_include_directories(include)
+ament_package()

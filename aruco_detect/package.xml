@@ -11,9 +11,7 @@
 
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
-
-  <depend>roscpp</depend>
+  <depend>rclcpp</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
@@ -23,8 +21,18 @@
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>fiducial_msgs</depend>
-  <depend>dynamic_reconfigure</depend>
-  <depend>python-cairosvg</depend>
-  <depend>python-joblib</depend>
+  <depend>std_srvs</depend>
+  <depend>geometry_msgs</depend>
+  
+  <!-- <depend>python-cairosvg</depend> Installed via pip3 install cairosvg -->
+  <depend>python3-joblib</depend>
+  <test_depend>ros_testing</test_depend>
+  <test_depend>ament_cmake_test</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_cmake_gmock</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 
 </package>

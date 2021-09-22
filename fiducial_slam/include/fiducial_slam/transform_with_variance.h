@@ -1,11 +1,12 @@
 #ifndef TRANSFORM_VARIANCE_H
 #define TRANSFORM_VARIANCE_H
 
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/transform_datatypes.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/buffer_interface.h>
 
 class TransformWithVariance {
 public:
@@ -16,7 +17,7 @@ public:
 
     // Constructors that make a transform out of the different implementations
     TransformWithVariance(const tf2::Transform& t, double var) : transform(t), variance(var){};
-    TransformWithVariance(const geometry_msgs::Transform& t, double var) : variance(var) {
+    TransformWithVariance(const geometry_msgs::msg::Transform& t, double var) : variance(var) {
         fromMsg(t, transform);
     };
     TransformWithVariance(const tf2::Vector3& tvec, const tf2::Quaternion& q, double var)
@@ -67,10 +68,10 @@ public:
 TransformWithVariance averageTransforms(const TransformWithVariance& t1,
                                         const TransformWithVariance& t2);
 
-inline geometry_msgs::PoseWithCovarianceStamped toPose(
+inline geometry_msgs::msg::PoseWithCovarianceStamped toPose(
     const tf2::Stamped<TransformWithVariance>& in) {
-    geometry_msgs::PoseWithCovarianceStamped msg;
-    msg.header.stamp = in.stamp_;
+    geometry_msgs::msg::PoseWithCovarianceStamped msg;
+    msg.header.stamp = tf2_ros::toMsg(in.stamp_);
     msg.header.frame_id = in.frame_id_;
 
     toMsg(in.transform, msg.pose.pose);
@@ -84,9 +85,9 @@ inline geometry_msgs::PoseWithCovarianceStamped toPose(
     return msg;
 }
 
-inline geometry_msgs::TransformStamped toMsg(const tf2::Stamped<TransformWithVariance>& in) {
-    geometry_msgs::TransformStamped msg;
-    msg.header.stamp = in.stamp_;
+inline geometry_msgs::msg::TransformStamped toMsg(const tf2::Stamped<TransformWithVariance>& in) {
+    geometry_msgs::msg::TransformStamped msg;
+    msg.header.stamp = tf2_ros::toMsg(in.stamp_);
     msg.header.frame_id = in.frame_id_;
     msg.transform = toMsg(in.transform);
 

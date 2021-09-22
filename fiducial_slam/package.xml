@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>fiducial_slam</name>
   <version>0.11.0</version>
   <description>ROS node to build a 3D map of fiducials and estimate robot pose from fiducial transforms</description>
@@ -11,9 +11,10 @@
 
   <author email="jimv@mrjim.com">Jim Vaughan</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>rosidl_default_generators</build_depend>
 
-  <depend>roscpp</depend>
+  <depend>rclcpp</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
@@ -22,6 +23,19 @@
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>fiducial_msgs</depend>
-  <depend>dynamic_reconfigure</depend>
+  <depend>std_srvs</depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <test_depend>ament_lint_common</test_depend>
+
+  <test_depend>ros_testing</test_depend>
+  <test_depend>ament_cmake_test</test_depend>
+  <test_depend>ament_cmake_nose</test_depend>
+  <test_depend>fiducial_msgs</test_depend>
+  <test_depend>aruco_detect</test_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 
 </package>
