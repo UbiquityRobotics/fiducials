@@ -6,6 +6,7 @@
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/transform_datatypes.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/buffer_interface.h>
 
 class TransformWithVariance {
 public:
@@ -70,7 +71,7 @@ TransformWithVariance averageTransforms(const TransformWithVariance& t1,
 inline geometry_msgs::msg::PoseWithCovarianceStamped toPose(
     const tf2::Stamped<TransformWithVariance>& in) {
     geometry_msgs::msg::PoseWithCovarianceStamped msg;
-    //msg.header.stamp = in.stamp_; // TODO ROS2PORT
+    msg.header.stamp = tf2_ros::toMsg(in.stamp_);
     msg.header.frame_id = in.frame_id_;
 
     toMsg(in.transform, msg.pose.pose);
@@ -86,7 +87,7 @@ inline geometry_msgs::msg::PoseWithCovarianceStamped toPose(
 
 inline geometry_msgs::msg::TransformStamped toMsg(const tf2::Stamped<TransformWithVariance>& in) {
     geometry_msgs::msg::TransformStamped msg;
-    //msg.header.stamp = in.stamp_; // TODO ROS2PORT
+    msg.header.stamp = tf2_ros::toMsg(in.stamp_);
     msg.header.frame_id = in.frame_id_;
     msg.transform = toMsg(in.transform);
 
