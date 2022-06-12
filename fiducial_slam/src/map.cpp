@@ -83,7 +83,7 @@ Map::Map(ros::NodeHandle &nh) : tfBuffer(ros::Duration(30.0)) {
     havePose = false;
     fiducialToAdd = -1;
 
-    listener = make_unique<tf2_ros::TransformListener>(tfBuffer);
+    listener = std::make_unique<tf2_ros::TransformListener>(tfBuffer);
 
     robotPosePub =
         ros::Publisher(nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/fiducial_pose", 1));
