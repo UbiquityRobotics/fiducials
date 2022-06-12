@@ -684,7 +684,7 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
     service_enable_detections = nh.advertiseService("enable_detections",
                         &FiducialsNode::enableDetectionsCallback, this);
 
-    callbackType = boost::bind(&FiducialsNode::configCallback, this, _1, _2);
+    callbackType = boost::bind(&FiducialsNode::configCallback, this, boost::placeholders::_1, boost::placeholders::_2);
     configServer.setCallback(callbackType);
 
     pnh.param<double>("adaptiveThreshConstant", detectorParams->adaptiveThreshConstant, 7);

@@ -30,8 +30,6 @@ catkin_package(INCLUDE_DIRS DEPENDS OpenCV)
 ## Build ##
 ###########
 
-add_definitions(-std=c++11)
-
 include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -67,9 +65,6 @@ install(DIRECTORY launch/
 if(CATKIN_ENABLE_TESTING)
         find_package(rostest REQUIRED)
 
-        # Tests need c++11
-        add_definitions(-std=c++11)
-        
         add_rostest_gtest(aruco_images_test 
           test/aruco_images.test 
           test/aruco_images_test.cpp)
