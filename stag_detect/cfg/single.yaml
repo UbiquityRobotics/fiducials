@@ -1,0 +1,13 @@
+# STag parameters
+libraryHD: 11
+errorCorrection: 2
+
+# Camera configuration
+camera_info_topic: raspicam_node/camera_info
+raw_image_topic: raspicam_node/image
+is_compressed: true
+
+# Node configuration
+tag_tf_prefix: fiducial_
+show_markers: true
+publish_tf: true
