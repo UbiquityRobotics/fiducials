@@ -36,8 +36,6 @@ generate_messages(
 ## Build ##
 ###########
 
-add_definitions(-std=c++11)
-
 include_directories(${catkin_INCLUDE_DIRS} include)
 catkin_package(INCLUDE_DIRS include
   DEPENDS OpenCV)
@@ -78,9 +76,6 @@ if(CATKIN_ENABLE_TESTING)
         find_package(catkin REQUIRED COMPONENTS
           rostest roscpp sensor_msgs tf2_ros image_transport cv_bridge)
 
-        # Tests need c++11
-        add_definitions(-std=c++11)
-	
 	catkin_add_gtest(transform_var_test test/transform_var_test.cpp src/transform_with_variance)
 	target_link_libraries(transform_var_test ${catkin_LIBRARIES})
 
