@@ -10,6 +10,8 @@ Based on:
 - https://github.com/usrl-uofsc/stag_ros
 - https://github.com/bbenligiray/stag
 
+With added support for vision_msgs which are required for full integration.
+
 #### Library HD
 
 You can generate STag markers from any library you prefer. 
