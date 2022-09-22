@@ -4,9 +4,11 @@
 
 This package consist of files for generating and launching STag marker related software.
 
-This node finds STag markers in images stream and estimates 3d transforms from the camera to the fiducials.
-It is based on the [`STag`](https://github.com/usrl-uofsc/stag_ros), which documents also how well they perform according to ArUco.
-We modified STag markers detection node for our needs and will not work with the codebase from original repository.
+The stag_detect node finds STag markers in images stream and estimates 3D transforms from the camera to the fiducials.
+
+Based on:
+- https://github.com/usrl-uofsc/stag_ros
+- https://github.com/bbenligiray/stag
 
 #### Library HD
 
