@@ -1,0 +1,13 @@
+<launch>
+
+    <!-- Get's overriden in ground_fiducial if included there -->
+    <arg name="fiducial_transform_topic" default="/fiducial_transforms"/>
+
+    <node name="stag_detect" pkg="stag_detect" type="stag_detect" output="screen" required="true">
+        <rosparam command="load" file="$(find stag_detect)/cfg/single.yaml"/>
+        <param name="marker_size" value="0.18"/>
+	<param name="libraryHD" value="11"/>
+	<remap from="stag_ros/markers_array" to="$(arg fiducial_transform_topic)"/>
+    </node>
+
+</launch>
