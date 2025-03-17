@@ -53,10 +53,14 @@ if __name__ == "__main__":
         for i in markers:
             genMarker(i, dicno, paper_size)
 
+    pdf_list = list(pdfs)
+    pdfs = map(lambda i: "/tmp/marker%d.pdf" % i, markers)
+
     print("Combining into %s" % outfile)
     os.system("pdfunite %s %s" % (" ".join(pdfs), outfile))
-    for f in pdfs:
-        os.remove(f)
+
+    for i in pdf_list:
+        os.remove(i)
 
     print('\033[91m' + """After printing, please make sure that the long lines around the marker are 
 EXACTLY 14.0cm long. This is required for accurate position estimation.""" + '\033[0m')
