@@ -21,11 +21,11 @@ if __name__ == "__main__":
 
 
     parser = argparse.ArgumentParser(description='Generate Aruco Markers.')
-    parser.add_argument('startId', type=int,
+    parser.add_argument('startId', type=int, default='1',
                         help='start of marker range to generate')
-    parser.add_argument('endId', type=int,
+    parser.add_argument('endId', type=int, default='4',
                         help='end of marker range to generate')
-    parser.add_argument('pdfFile', type=str,
+    parser.add_argument('pdfFile', type=str, default='markers.pdf',
                         help='file to store markers in')
     parser.add_argument('dictionary', type=int, default='7', nargs='?',
                         help='dictionary to generate from')

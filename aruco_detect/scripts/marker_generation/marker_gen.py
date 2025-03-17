@@ -28,6 +28,22 @@ import cv2
 import cv2.aruco as aruco
 import cairosvg
 
+# Load the custom Aruco dictionary from the YAML file
+fs = cv2.FileStorage("custom_aruco_dict.yml", cv2.FILE_STORAGE_READ)
+
+# Read the stored byte list
+bytes_list = fs.getNode("dictionary").mat()
+
+# Create a new dictionary object with the same size
+marker_count = 5010  # The number of markers you initially created
+marker_size = 7  # 7x7 grid
+custom_dict = aruco.Dictionary_create(marker_count, marker_size)
+
+# Assign the bytes list to the custom dictionary
+custom_dict.bytesList = bytes_list
+
+fs.release()  # Close the file
+
 def genSvg(id, dicno, paper_size):
     return em.expand("""<svg width="@(paper_width)mm" height="@(paper_height)mm"
  version="1.1"
@@ -81,11 +97,12 @@ def genSvg(id, dicno, paper_size):
 def genMarker(i, dicno, paper_size):
     print(" Marker %d\r" % i)
     sys.stdout.flush()
-    aruco_dict = aruco.Dictionary_get(dicno)
-    img = aruco.drawMarker(aruco_dict, i, int(2000))
+    # aruco_dict = aruco.Dictionary_get('custom_aruco_dict.yml')
+    #aruco_dict = aruco.Dictionary_create(5010, 7)
+    img = aruco.drawMarker(custom_dict, i, int(2000))
     cv2.imwrite("/tmp/marker%d.png" % i, img)
     svg = genSvg(i, dicno, paper_size)
-    cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i)
+    cairosvg.svg2pdf(bytestring=svg, write_to='/tmp/marker%d.pdf' % i, unsafe=True)
     # Old slower method using subprocess for SVG to PDF conversion
     # cairo = subprocess.Popen(('cairosvg', '-f', 'pdf', '-o', '/tmp/marker%d.pdf' % i, '/dev/stdin'), stdin=subprocess.PIPE)
     # cairo.communicate(input=bytes(svg, 'utf-8'))
