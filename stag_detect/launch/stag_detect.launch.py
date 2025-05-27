@@ -26,6 +26,8 @@ def generate_launch_description():
         parameters=[
             {'marker_size': 0.18},
             {'stag_library': 11},
+            {'image_topic': "/camera/image_raw"},
+            {'camera_info_topic': "/camera/camera_info"},
             single_yaml_path  # Load parameters from YAML file
         ],
         remappings=[
