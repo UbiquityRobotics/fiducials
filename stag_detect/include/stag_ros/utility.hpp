@@ -20,6 +20,10 @@ inline bool msgToGray(const sensor_msgs::msg::Image::ConstSharedPtr &msg, cv::Ma
     cv::Mat src = cv_bridge::toCvShare(msg, msg->encoding)->image;
     cv::cvtColor(src, gray, CV_RGB2GRAY);
     return true;
+  } else if (msg->encoding == "bgra8") {
+    cv::Mat src = cv_bridge::toCvShare(msg, msg->encoding)->image;
+    cv::cvtColor(src, gray, cv::COLOR_BGRA2GRAY);
+    return true;
   } else if (msg->encoding.compare("mono8") == 0) {
     gray = cv_bridge::toCvShare(msg, msg->encoding)->image;
     return true;
