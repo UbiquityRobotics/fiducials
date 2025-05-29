@@ -17,6 +17,12 @@ def generate_launch_description():
         description='Fiducial transform topic override'
     )
 
+    marker_size_arg = DeclareLaunchArgument(
+        'marker_size',
+        default_value='0.18',
+        description='Size of the fiducial marker in meters'
+    )
+
     # Node definition
     stag_detect_node = Node(
         package='stag_detect',
@@ -24,7 +30,7 @@ def generate_launch_description():
         name='stag_detect',
         output='screen',
         parameters=[
-            {'marker_size': 0.18},
+            {'marker_size': LaunchConfiguration('marker_size')},
             {'stag_library': 11},
             {'image_topic': "/camera/image_raw"},
             {'camera_info_topic': "/camera/camera_info"},
@@ -37,5 +43,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         fiducial_transform_topic_arg,
+        marker_size_arg,
         stag_detect_node,
     ])

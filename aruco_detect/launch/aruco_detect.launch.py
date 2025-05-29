@@ -37,6 +37,7 @@ def generate_launch_description():
             remappings=[
                 ('camera/compressed', [LaunchConfiguration('camera'), '/', LaunchConfiguration('image'), '/', LaunchConfiguration('transport')]),
                 ('camera_info', [LaunchConfiguration('camera'), '/camera_info']),
-            ]
+            ],
+            arguments=['--ros-args', '--log-level', 'warn']
         ),
     ])

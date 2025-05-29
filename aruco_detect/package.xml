@@ -29,4 +29,8 @@
   <depend>python3-cairosvg</depend>
   <depend>python3-joblib</depend>
 
+
+  <export>
+    <build_type>ament_cmake</build_type>
+</export>
 </package>
