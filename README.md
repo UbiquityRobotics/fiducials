@@ -4,6 +4,8 @@
 
 ## Overview
 
+### Ceiling fiducials
+
 This package implements a system that uses ceiling mounted
 fiducial markers (think QR Codes) to allow a robot to identify
 its location and orientation.  It does this by constructing
@@ -14,15 +16,6 @@ Once the map has been constructed, the robot can identify
 its location by locating itself relative to one or more 
 ceiling fiducials.
 
-Documentation is at [http://wiki.ros.org/fiducials](http://wiki.ros.org/fiducials).
+### Floor fiducials
 
-## Recording A Bag File
-
-Sometimes for trobleshooting purposes it is useful to record a bag 
-file to capture the exact data on the topics going into and out of 
-fiducials.
-
-To do this, while the system is running, run `rosbag record -a`.
-You can upload this bag file to a file sharing service like Google
-Drive and link to it in your issue, this will help us diagnose 
-the problem. 
+You can put the fiducials also on the floor and direct the camera downwards. This is used in EZ-Map and Conveyorbot as additional source of localization data.
