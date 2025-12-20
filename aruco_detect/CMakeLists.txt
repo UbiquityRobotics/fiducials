@@ -30,6 +30,16 @@ install(PROGRAMS scripts/create_markers.py
 
 # Build the executable
 add_executable(aruco_detect src/aruco_detect.cpp)
+
+# เชื่อม OpenCV แยกต่างหาก (Best Practice)
+target_include_directories(aruco_detect PUBLIC
+  ${OpenCV_INCLUDE_DIRS}
+)
+target_link_libraries(aruco_detect
+  ${OpenCV_LIBS}
+)
+
+# เชื่อม ROS Dependencies (เอา OpenCV ออกจากตรงนี้)
 ament_target_dependencies(aruco_detect 
   rclcpp 
   tf2 
@@ -40,11 +50,11 @@ ament_target_dependencies(aruco_detect
   cv_bridge 
   sensor_msgs 
   std_msgs 
-  vision_msgs 
+  vision_msgs   
   std_srvs
   fiducial_msgs 
-  OpenCV
 )
+
 
 # Install executable
 install(TARGETS aruco_detect

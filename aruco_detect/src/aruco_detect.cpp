@@ -42,7 +42,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <image_transport/image_transport.hpp>
-#include <cv_bridge/cv_bridge.hpp>
+#include <cv_bridge/cv_bridge.h> // this error 
 #include <sensor_msgs/image_encodings.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_msgs/msg/string.hpp>
@@ -690,7 +690,10 @@ FiducialsNode::FiducialsNode() : Node("aruco_detect"), broadcaster(this)
     image_pub = image_transport::create_publisher(this, "fiducial_images");
 
 
-    dictionary = aruco::getPredefinedDictionary(dicno);
+    dictionary = cv::makePtr<cv::aruco::Dictionary>(
+        aruco::getPredefinedDictionary(dicno)
+    );
+    // dictionary = aruco::getPredefinedDictionary(dicno);
 
     vertices_sub = this->create_subscription<fiducial_msgs::msg::FiducialArray>(
         "fiducial_vertices", 10, std::bind(&FiducialsNode::poseEstimateCallback, this, std::placeholders::_1));
