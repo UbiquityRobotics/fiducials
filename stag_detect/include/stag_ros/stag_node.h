@@ -29,6 +29,7 @@ SOFTWARE.
 #include "cv_bridge/cv_bridge.hpp"
 #include "image_transport/image_transport.hpp"
 #include <map>
+#include <set>
 #include <string>
 
 // ROS msgs
@@ -58,6 +59,7 @@ class StagNode : public rclcpp::Node {
   void loadParameters();
   void loadMarkerSizeConfig();
   float getMarkerSizeForId(int marker_id) const;
+  void logMarkerSizeSelection(int marker_id, float marker_size_value, bool is_configured_size);
 
   // STag handle
   Stag *stag;
@@ -66,6 +68,8 @@ class StagNode : public rclcpp::Node {
   float marker_size;
   std::string config_file;
   std::map<int, float> marker_sizes_by_id;
+  std::set<int> logged_marker_size_ids;
+  std::set<int> warned_missing_marker_ids;
 
   // ROS 2 Interfaces
   image_transport::Subscriber imageSub;

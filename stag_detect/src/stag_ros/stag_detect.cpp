@@ -113,7 +113,12 @@ void StagNode::loadParameters() {
 
 void StagNode::loadMarkerSizeConfig() {
   marker_sizes_by_id.clear();
+  logged_marker_size_ids.clear();
+  warned_missing_marker_ids.clear();
   if (config_file.empty()) {
+    RCLCPP_INFO(this->get_logger(),
+                "No marker config file provided. Using marker_size=%.3f m for all tags.",
+                marker_size);
     return;
   }
 
@@ -158,6 +163,9 @@ void StagNode::loadMarkerSizeConfig() {
       }
 
       marker_sizes_by_id[marker_id] = configured_size;
+      RCLCPP_INFO(this->get_logger(),
+                  "Configured marker %d size: %.3f m",
+                  marker_id, configured_size);
     }
 
     if (const YAML::Node default_size = config["default_marker_size"]) {
@@ -187,6 +195,25 @@ float StagNode::getMarkerSizeForId(int marker_id) const {
     return marker_size_it->second;
   }
   return marker_size;
+}
+
+void StagNode::logMarkerSizeSelection(
+    int marker_id, float marker_size_value, bool is_configured_size) {
+  if (logged_marker_size_ids.find(marker_id) != logged_marker_size_ids.end()) {
+    return;
+  }
+
+  if (is_configured_size) {
+    RCLCPP_INFO(this->get_logger(),
+                "Marker %d will use configured size %.3f m for pose estimation.",
+                marker_id, marker_size_value);
+  } else if (warned_missing_marker_ids.insert(marker_id).second) {
+    RCLCPP_WARN(this->get_logger(),
+                "Marker %d is not present in '%s'. Falling back to marker_size %.3f m.",
+                marker_id, config_file.c_str(), marker_size_value);
+  }
+
+  logged_marker_size_ids.insert(marker_id);
 }
 
 void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg) {
@@ -237,7 +264,10 @@ void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
             tag_image[ci + 1] = markers[i].corners[ci];
           }
 
+          const bool has_configured_size =
+              marker_sizes_by_id.find(markers[i].id) != marker_sizes_by_id.end();
           const float current_marker_size = getMarkerSizeForId(markers[i].id);
+          logMarkerSizeSelection(markers[i].id, current_marker_size, has_configured_size);
           const float half_marker_size = current_marker_size / 2.0f;
           // Top left
           tag_world[1] = cv::Point3d(-half_marker_size, half_marker_size, 0.0);
