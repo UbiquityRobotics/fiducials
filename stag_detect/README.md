@@ -6,6 +6,32 @@ This package consist of files for generating and launching STag marker related s
 
 The stag_detect node finds STag markers in images stream and estimates 3D transforms from the camera to the fiducials.
 
+## Per-marker size configuration
+
+The node now supports an optional `config_file` parameter for per-marker size lookup.
+The file is a YAML document with one default size and a list of marker-specific overrides:
+
+```yaml
+default_marker_size: 0.18
+markers:
+  - id: 8
+    size: 0.08
+  - id: 18
+    size: 0.14
+```
+
+Launch example:
+
+```bash
+ros2 launch stag_detect stag_detect.launch.py marker_size:=0.18 config_file:=cfg/marker_sizes.yaml
+```
+
+If a detected marker id exists in the file, that size is used for pose estimation. Otherwise the node falls back to `marker_size`.
+
+## TODO
+
+- Extend the YAML config to optionally store world-frame tag positions for future global pose estimation.
+
 Based on:
 - https://github.com/usrl-uofsc/stag_ros
 - https://github.com/bbenligiray/stag

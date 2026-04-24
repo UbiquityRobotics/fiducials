@@ -28,7 +28,8 @@ SOFTWARE.
 #include "rclcpp/rclcpp.hpp"
 #include "cv_bridge/cv_bridge.hpp"
 #include "image_transport/image_transport.hpp"
-#include "camera_info_manager/camera_info_manager.hpp"
+#include <map>
+#include <string>
 
 // ROS msgs
 #include "sensor_msgs/image_encodings.hpp"
@@ -55,13 +56,16 @@ class StagNode : public rclcpp::Node {
 
   // Functions
   void loadParameters();
-  // bool getTagIndex(const int id, int &tag_index);
+  void loadMarkerSizeConfig();
+  float getMarkerSizeForId(int marker_id) const;
 
   // STag handle
   Stag *stag;
   int stag_library;
   int error_correction;
   float marker_size;
+  std::string config_file;
+  std::map<int, float> marker_sizes_by_id;
 
   // ROS 2 Interfaces
   image_transport::Subscriber imageSub;

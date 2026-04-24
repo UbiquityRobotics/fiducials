@@ -19,3 +19,7 @@ ceiling fiducials.
 ### Floor fiducials
 
 You can put the fiducials also on the floor and direct the camera downwards. This is used in EZ-Map and Conveyorbot as additional source of localization data.
+
+## TODO
+
+- Extend the STag marker configuration so each tag can optionally store a known world-frame pose (`x`, `y`, `z`) for future global robot pose estimation.
