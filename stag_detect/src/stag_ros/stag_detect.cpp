@@ -254,14 +254,11 @@ void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
 
       for (int i = 0; i < markers.size(); i++) {
 
-          std::vector<cv::Point2d> tag_image(5);
-          std::vector<cv::Point3d> tag_world(5);
-
-          tag_image[0] = markers[i].center;
-          tag_world[0] = cv::Point3d(0.0, 0.0, 0.0);
+          std::vector<cv::Point2d> tag_image(4);
+          std::vector<cv::Point3d> tag_world(4);
 
           for (size_t ci = 0; ci < 4; ++ci) {
-            tag_image[ci + 1] = markers[i].corners[ci];
+            tag_image[ci] = markers[i].corners[ci];
           }
 
           const bool has_configured_size =
@@ -270,13 +267,13 @@ void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
           logMarkerSizeSelection(markers[i].id, current_marker_size, has_configured_size);
           const float half_marker_size = current_marker_size / 2.0f;
           // Top left
-          tag_world[1] = cv::Point3d(-half_marker_size, half_marker_size, 0.0);
+          tag_world[0] = cv::Point3d(-half_marker_size, half_marker_size, 0.0);
           // Top right
-          tag_world[2] = cv::Point3d(half_marker_size, half_marker_size, 0.0);
+          tag_world[1] = cv::Point3d(half_marker_size, half_marker_size, 0.0);
           // Bottom right
-          tag_world[3] = cv::Point3d(half_marker_size, -half_marker_size, 0.0);
+          tag_world[2] = cv::Point3d(half_marker_size, -half_marker_size, 0.0);
           // Bottom left
-          tag_world[4] = cv::Point3d(-half_marker_size, -half_marker_size, 0.0);
+          tag_world[3] = cv::Point3d(-half_marker_size, -half_marker_size, 0.0);
 
 
           cv::Mat marker_pose = cv::Mat::zeros(3, 4, CV_64F);

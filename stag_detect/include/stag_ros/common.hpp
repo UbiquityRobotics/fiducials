@@ -35,11 +35,15 @@ struct Common {
                              const std::vector<cv::Point3d> &world,
                              cv::Mat &output, const cv::Mat &cameraMatrix,
                              const cv::Mat &distortionMatrix) {
-    if (img.empty() or world.empty()) return;
+    if (img.size() != 4 || world.size() != 4) return;
     cv::Mat rVec, rMat, tVec;
-    // optimize for 5 planar points
-    // possibly choose to reduce to the 4 for use with advanced algos
-    cv::solvePnP(world, img, cameraMatrix, distortionMatrix, rVec, tVec);
+    // Square fiducials are planar and have a dedicated PnP solver that is
+    // more stable than the generic iterative solver for this geometry.
+    bool solved = cv::solvePnP(world, img, cameraMatrix, distortionMatrix,
+                               rVec, tVec, false, cv::SOLVEPNP_IPPE_SQUARE);
+    if (!solved) {
+      cv::solvePnP(world, img, cameraMatrix, distortionMatrix, rVec, tVec);
+    }
     cv::Rodrigues(rVec, rMat);
     rMat.convertTo(output.colRange(0, 3), CV_64F);
     tVec.convertTo(output.col(3), CV_64F);
