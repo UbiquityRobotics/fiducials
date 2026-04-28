@@ -134,9 +134,25 @@ void StagNode::loadMarkerSizeConfig() {
     }
   }
 
+  if (!std::filesystem::exists(config_path)) {
+    RCLCPP_ERROR(this->get_logger(),
+                 "Marker config file '%s' does not exist.",
+                 config_path.c_str());
+    return;
+  }
+
+  RCLCPP_INFO(this->get_logger(),
+              "Loading marker size config from '%s'.",
+              config_path.c_str());
+
   try {
     const YAML::Node config = YAML::LoadFile(config_path.string());
-    const YAML::Node markers = config["markers"];
+    YAML::Node config_root = config;
+    if (config["stag_detect"] && config["stag_detect"]["ros__parameters"]) {
+      config_root = config["stag_detect"]["ros__parameters"];
+    }
+
+    const YAML::Node markers = config_root["markers"];
     if (!markers) {
       RCLCPP_WARN(this->get_logger(),
                   "Marker config file '%s' does not contain a 'markers' list. "
@@ -168,7 +184,7 @@ void StagNode::loadMarkerSizeConfig() {
                   marker_id, configured_size);
     }
 
-    if (const YAML::Node default_size = config["default_marker_size"]) {
+    if (const YAML::Node default_size = config_root["default_marker_size"]) {
       const float configured_default_size = default_size.as<float>();
       if (configured_default_size > 0.0f) {
         marker_size = configured_default_size;
@@ -182,7 +198,7 @@ void StagNode::loadMarkerSizeConfig() {
     RCLCPP_INFO(this->get_logger(),
                 "Loaded %zu marker size entries from '%s'. Default marker size is %.3f m.",
                 marker_sizes_by_id.size(), config_path.c_str(), marker_size);
-  } catch (const YAML::Exception &e) {
+  } catch (const std::exception &e) {
     RCLCPP_ERROR(this->get_logger(),
                  "Failed to parse marker config file '%s': %s",
                  config_path.c_str(), e.what());
