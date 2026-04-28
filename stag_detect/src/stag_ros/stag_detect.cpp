@@ -308,6 +308,12 @@ void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
       Common::publishTransform(transform_msg, markersPub, msg->header,
 			       tag_tf_prefix, std::to_string(markers[i].id), publish_tf, shared_from_this());
 
+      RCLCPP_INFO(
+          this->get_logger(),
+          "Published marker id=%d size=%.3f m position=(x=%.6f, y=%.6f, z=%.6f)",
+          markers[i].id, current_marker_size, transform_msg.translation.x,
+          transform_msg.translation.y, transform_msg.translation.z);
+
 
       vision_msgs::msg::Detection2D markerobj;
       markerobj.header = msg->header;
