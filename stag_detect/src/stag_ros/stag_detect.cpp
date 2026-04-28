@@ -107,14 +107,60 @@ void StagNode::loadParameters() {
   tag_tf_prefix = this->declare_parameter<std::string>("tag_tf_prefix", "STag_");
   marker_size = this->declare_parameter<float>("marker_size", 0.18f);
   config_file = this->declare_parameter<std::string>("config_file", "");
+  marker_config_loaded = false;
+
+  RCLCPP_INFO(this->get_logger(),
+              "Startup marker_size=%.3f m config_file='%s'",
+              marker_size, config_file.c_str());
 
   loadMarkerSizeConfig();
+}
+
+std::filesystem::path StagNode::resolveMarkerConfigPath() const {
+  const std::filesystem::path raw_path(config_file);
+  if (raw_path.is_absolute()) {
+    return raw_path;
+  }
+
+  const auto package_share =
+      std::filesystem::path(ament_index_cpp::get_package_share_directory("stag_detect"));
+  const auto cwd_candidate = std::filesystem::current_path() / raw_path;
+  if (std::filesystem::exists(cwd_candidate)) {
+    return cwd_candidate;
+  }
+
+  const auto package_candidate = package_share / raw_path;
+  if (std::filesystem::exists(package_candidate)) {
+    return package_candidate;
+  }
+
+  std::filesystem::path cfg_suffix;
+  bool found_cfg = false;
+  for (const auto &part : raw_path) {
+    const std::string segment = part.string();
+    if (segment == "cfg") {
+      found_cfg = true;
+    }
+    if (found_cfg) {
+      cfg_suffix /= part;
+    }
+  }
+
+  if (found_cfg) {
+    const auto cfg_candidate = package_share / cfg_suffix;
+    if (std::filesystem::exists(cfg_candidate)) {
+      return cfg_candidate;
+    }
+  }
+
+  return package_candidate;
 }
 
 void StagNode::loadMarkerSizeConfig() {
   marker_sizes_by_id.clear();
   logged_marker_size_ids.clear();
   warned_missing_marker_ids.clear();
+  marker_config_loaded = false;
   if (config_file.empty()) {
     RCLCPP_INFO(this->get_logger(),
                 "No marker config file provided. Using marker_size=%.3f m for all tags.",
@@ -122,23 +168,11 @@ void StagNode::loadMarkerSizeConfig() {
     return;
   }
 
-  std::filesystem::path config_path(config_file);
-  if (!config_path.is_absolute()) {
-    const auto package_share =
-        std::filesystem::path(ament_index_cpp::get_package_share_directory("stag_detect"));
-    const auto package_relative_path = package_share / config_path;
-    if (std::filesystem::exists(package_relative_path)) {
-      config_path = package_relative_path;
-    } else {
-      config_path = std::filesystem::absolute(config_path);
-    }
-  }
+  const std::filesystem::path config_path = resolveMarkerConfigPath();
 
   if (!std::filesystem::exists(config_path)) {
-    RCLCPP_ERROR(this->get_logger(),
-                 "Marker config file '%s' does not exist.",
-                 config_path.c_str());
-    return;
+    throw std::runtime_error(
+        "Marker config file '" + config_path.string() + "' does not exist.");
   }
 
   RCLCPP_INFO(this->get_logger(),
@@ -198,10 +232,10 @@ void StagNode::loadMarkerSizeConfig() {
     RCLCPP_INFO(this->get_logger(),
                 "Loaded %zu marker size entries from '%s'. Default marker size is %.3f m.",
                 marker_sizes_by_id.size(), config_path.c_str(), marker_size);
+    marker_config_loaded = true;
   } catch (const std::exception &e) {
-    RCLCPP_ERROR(this->get_logger(),
-                 "Failed to parse marker config file '%s': %s",
-                 config_path.c_str(), e.what());
+    throw std::runtime_error(
+        "Failed to load marker config file '" + config_path.string() + "': " + e.what());
   }
 }
 
@@ -280,6 +314,12 @@ void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
           const bool has_configured_size =
               marker_sizes_by_id.find(markers[i].id) != marker_sizes_by_id.end();
           const float current_marker_size = getMarkerSizeForId(markers[i].id);
+          if (!config_file.empty() && !marker_config_loaded) {
+            RCLCPP_ERROR(this->get_logger(),
+                         "Marker config '%s' was requested but not loaded. "
+                         "Pose estimation is falling back to marker_size.",
+                         config_file.c_str());
+          }
           logMarkerSizeSelection(markers[i].id, current_marker_size, has_configured_size);
           const float half_marker_size = current_marker_size / 2.0f;
           // Top left
