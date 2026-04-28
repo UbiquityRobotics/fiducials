@@ -94,7 +94,6 @@ StagNode::StagNode() : Node("stag_detect") {
 StagNode::~StagNode() { delete stag; }
 
 void StagNode::loadParameters() {
-  // Declare and load parameters.
   stag_library = this->declare_parameter<int>("stag_library", 15);
   error_correction = this->declare_parameter<int>("error_correction", 7);
   image_topic = this->declare_parameter<std::string>("image_topic", "image_raw");
@@ -107,135 +106,39 @@ void StagNode::loadParameters() {
   tag_tf_prefix = this->declare_parameter<std::string>("tag_tf_prefix", "STag_");
   marker_size = this->declare_parameter<float>("marker_size", 0.18f);
   config_file = this->declare_parameter<std::string>("config_file", "");
-  marker_config_loaded = false;
-
-  RCLCPP_INFO(this->get_logger(),
-              "Startup marker_size=%.3f m config_file='%s'",
-              marker_size, config_file.c_str());
 
   loadMarkerSizeConfig();
 }
 
-std::filesystem::path StagNode::resolveMarkerConfigPath() const {
-  const std::filesystem::path raw_path(config_file);
-  if (raw_path.is_absolute()) {
-    return raw_path;
-  }
-
-  const auto package_share =
-      std::filesystem::path(ament_index_cpp::get_package_share_directory("stag_detect"));
-  const auto cwd_candidate = std::filesystem::current_path() / raw_path;
-  if (std::filesystem::exists(cwd_candidate)) {
-    return cwd_candidate;
-  }
-
-  const auto package_candidate = package_share / raw_path;
-  if (std::filesystem::exists(package_candidate)) {
-    return package_candidate;
-  }
-
-  std::filesystem::path cfg_suffix;
-  bool found_cfg = false;
-  for (const auto &part : raw_path) {
-    const std::string segment = part.string();
-    if (segment == "cfg") {
-      found_cfg = true;
-    }
-    if (found_cfg) {
-      cfg_suffix /= part;
-    }
-  }
-
-  if (found_cfg) {
-    const auto cfg_candidate = package_share / cfg_suffix;
-    if (std::filesystem::exists(cfg_candidate)) {
-      return cfg_candidate;
-    }
-  }
-
-  return package_candidate;
-}
-
 void StagNode::loadMarkerSizeConfig() {
   marker_sizes_by_id.clear();
-  logged_marker_size_ids.clear();
-  warned_missing_marker_ids.clear();
-  marker_config_loaded = false;
   if (config_file.empty()) {
-    RCLCPP_INFO(this->get_logger(),
-                "No marker config file provided. Using marker_size=%.3f m for all tags.",
-                marker_size);
     return;
   }
 
-  const std::filesystem::path config_path = resolveMarkerConfigPath();
-
-  if (!std::filesystem::exists(config_path)) {
-    throw std::runtime_error(
-        "Marker config file '" + config_path.string() + "' does not exist.");
+  std::filesystem::path config_path(config_file);
+  if (!config_path.is_absolute()) {
+    const auto package_share =
+        std::filesystem::path(ament_index_cpp::get_package_share_directory("stag_detect"));
+    config_path = package_share / config_path;
   }
-
-  RCLCPP_INFO(this->get_logger(),
-              "Loading marker size config from '%s'.",
-              config_path.c_str());
 
   try {
     const YAML::Node config = YAML::LoadFile(config_path.string());
-    YAML::Node config_root = config;
-    if (config["stag_detect"] && config["stag_detect"]["ros__parameters"]) {
-      config_root = config["stag_detect"]["ros__parameters"];
+    if (const YAML::Node default_size = config["default_marker_size"]) {
+      marker_size = default_size.as<float>();
     }
 
-    const YAML::Node markers = config_root["markers"];
-    if (!markers) {
-      RCLCPP_WARN(this->get_logger(),
-                  "Marker config file '%s' does not contain a 'markers' list. "
-                  "Using marker_size fallback.",
-                  config_path.c_str());
-      return;
-    }
+    const YAML::Node markers = config["markers"];
+    if (!markers) return;
 
     for (const YAML::Node &marker : markers) {
-      if (!marker["id"] || !marker["size"]) {
-        RCLCPP_WARN(this->get_logger(),
-                    "Skipping marker entry without both 'id' and 'size' in '%s'.",
-                    config_path.c_str());
-        continue;
-      }
-
-      const int marker_id = marker["id"].as<int>();
-      const float configured_size = marker["size"].as<float>();
-      if (configured_size <= 0.0f) {
-        RCLCPP_WARN(this->get_logger(),
-                    "Skipping marker %d because configured size must be positive.",
-                    marker_id);
-        continue;
-      }
-
-      marker_sizes_by_id[marker_id] = configured_size;
-      RCLCPP_INFO(this->get_logger(),
-                  "Configured marker %d size: %.3f m",
-                  marker_id, configured_size);
+      marker_sizes_by_id[marker["id"].as<int>()] = marker["size"].as<float>();
     }
-
-    if (const YAML::Node default_size = config_root["default_marker_size"]) {
-      const float configured_default_size = default_size.as<float>();
-      if (configured_default_size > 0.0f) {
-        marker_size = configured_default_size;
-      } else {
-        RCLCPP_WARN(this->get_logger(),
-                    "Ignoring non-positive default_marker_size in '%s'.",
-                    config_path.c_str());
-      }
-    }
-
-    RCLCPP_INFO(this->get_logger(),
-                "Loaded %zu marker size entries from '%s'. Default marker size is %.3f m.",
-                marker_sizes_by_id.size(), config_path.c_str(), marker_size);
-    marker_config_loaded = true;
   } catch (const std::exception &e) {
-    throw std::runtime_error(
-        "Failed to load marker config file '" + config_path.string() + "': " + e.what());
+    RCLCPP_ERROR(this->get_logger(),
+                 "Failed to load marker config file '%s': %s",
+                 config_path.c_str(), e.what());
   }
 }
 
@@ -245,25 +148,6 @@ float StagNode::getMarkerSizeForId(int marker_id) const {
     return marker_size_it->second;
   }
   return marker_size;
-}
-
-void StagNode::logMarkerSizeSelection(
-    int marker_id, float marker_size_value, bool is_configured_size) {
-  if (logged_marker_size_ids.find(marker_id) != logged_marker_size_ids.end()) {
-    return;
-  }
-
-  if (is_configured_size) {
-    RCLCPP_INFO(this->get_logger(),
-                "Marker %d will use configured size %.3f m for pose estimation.",
-                marker_id, marker_size_value);
-  } else if (warned_missing_marker_ids.insert(marker_id).second) {
-    RCLCPP_WARN(this->get_logger(),
-                "Marker %d is not present in '%s'. Falling back to marker_size %.3f m.",
-                marker_id, config_file.c_str(), marker_size_value);
-  }
-
-  logged_marker_size_ids.insert(marker_id);
 }
 
 void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg) {
@@ -311,16 +195,7 @@ void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
             tag_image[ci] = markers[i].corners[ci];
           }
 
-          const bool has_configured_size =
-              marker_sizes_by_id.find(markers[i].id) != marker_sizes_by_id.end();
           const float current_marker_size = getMarkerSizeForId(markers[i].id);
-          if (!config_file.empty() && !marker_config_loaded) {
-            RCLCPP_ERROR(this->get_logger(),
-                         "Marker config '%s' was requested but not loaded. "
-                         "Pose estimation is falling back to marker_size.",
-                         config_file.c_str());
-          }
-          logMarkerSizeSelection(markers[i].id, current_marker_size, has_configured_size);
           const float half_marker_size = current_marker_size / 2.0f;
           // Top left
           tag_world[0] = cv::Point3d(-half_marker_size, half_marker_size, 0.0);
@@ -363,12 +238,6 @@ void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
 
       Common::publishTransform(transform_msg, markersPub, msg->header,
 			       tag_tf_prefix, std::to_string(markers[i].id), publish_tf, shared_from_this());
-
-      RCLCPP_INFO(
-          this->get_logger(),
-          "Published marker id=%d size=%.3f m position=(x=%.6f, y=%.6f, z=%.6f)",
-          markers[i].id, current_marker_size, transform_msg.translation.x,
-          transform_msg.translation.y, transform_msg.translation.z);
 
 
       vision_msgs::msg::Detection2D markerobj;
