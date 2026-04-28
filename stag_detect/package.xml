@@ -28,8 +28,9 @@
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>fiducial_msgs</depend>
-  <depend>camera_info_manager</depend>
+  <depend>ament_index_cpp</depend>
   <depend>python3-cairosvg</depend>
+  <depend>yaml-cpp</depend>
 
   <!-- Dynamic reconfigure is not directly supported in ROS2 -->
   <!-- <depend>dynamic_reconfigure</depend> Check for ROS2 alternatives or remove if not needed -->

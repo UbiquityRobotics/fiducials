@@ -4,7 +4,6 @@ project(stag_detect)
 # Required dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
-find_package(camera_info_manager REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -16,6 +15,8 @@ find_package(image_transport REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(fiducial_msgs REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+find_package(yaml-cpp REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(dynamic_reconfigure QUIET) # Not fully supported in ROS2, alternatives may be needed
 find_package(Threads REQUIRED)
@@ -62,7 +63,7 @@ ament_target_dependencies(stag_core
 # Declare the executable
 add_executable(stag_detect src/stag_ros/stag_detect.cpp)
 ament_target_dependencies(stag_detect
-  camera_info_manager
+  ament_index_cpp
   cv_bridge
   geometry_msgs
   tf2_geometry_msgs
@@ -80,6 +81,7 @@ ament_target_dependencies(stag_detect
 target_link_libraries(stag_detect
   stag_core
   ${OpenCV_LIBS}
+  yaml-cpp
 )
 
 # Install targets

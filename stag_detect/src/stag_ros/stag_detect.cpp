@@ -41,7 +41,10 @@ SOFTWARE.
 #include "vision_msgs/msg/detection2_d.hpp"
 #include "vision_msgs/msg/detection2_d_array.hpp"
 #include "vision_msgs/msg/object_hypothesis_with_pose.hpp"
+#include "ament_index_cpp/get_package_share_directory.hpp"
+#include "yaml-cpp/yaml.h"
 
+#include <filesystem>
 #include <stdexcept>
 #include <iostream>
 #include <stag_ros/common.hpp>
@@ -91,19 +94,60 @@ StagNode::StagNode() : Node("stag_detect") {
 StagNode::~StagNode() { delete stag; }
 
 void StagNode::loadParameters() {
-    // Declare and load parameters
-    stag_library = this->declare_parameter<int>("stag_library", 15);
-    error_correction = this->declare_parameter<int>("error_correction", 7);
-    image_topic = this->declare_parameter<std::string>("image_topic", "image_raw");
-    camera_info_topic = this->declare_parameter<std::string>("camera_info_topic", "camera_info");
-    markers_topic = this->declare_parameter<std::string>("markers_topic", "stag_ros/markers");
-    markers_array_topic = this->declare_parameter<std::string>("markers_array_topic", "stag_ros/markers_array");
-    is_compressed = this->declare_parameter<bool>("is_compressed", false);
-    debug_images = this->declare_parameter<bool>("debug_images", true);
-    publish_tf = this->declare_parameter<bool>("publish_tf", false);
-    tag_tf_prefix = this->declare_parameter<std::string>("tag_tf_prefix", "STag_");
-    marker_size = this->declare_parameter<float>("marker_size", 0.18f);
+  stag_library = this->declare_parameter<int>("stag_library", 15);
+  error_correction = this->declare_parameter<int>("error_correction", 7);
+  image_topic = this->declare_parameter<std::string>("image_topic", "image_raw");
+  camera_info_topic = this->declare_parameter<std::string>("camera_info_topic", "camera_info");
+  markers_topic = this->declare_parameter<std::string>("markers_topic", "stag_ros/markers");
+  markers_array_topic = this->declare_parameter<std::string>("markers_array_topic", "stag_ros/markers_array");
+  is_compressed = this->declare_parameter<bool>("is_compressed", false);
+  debug_images = this->declare_parameter<bool>("debug_images", true);
+  publish_tf = this->declare_parameter<bool>("publish_tf", false);
+  tag_tf_prefix = this->declare_parameter<std::string>("tag_tf_prefix", "STag_");
+  marker_size = this->declare_parameter<float>("marker_size", 0.18f);
+  config_file = this->declare_parameter<std::string>("config_file", "");
 
+  loadMarkerSizeConfig();
+}
+
+void StagNode::loadMarkerSizeConfig() {
+  marker_sizes_by_id.clear();
+  if (config_file.empty()) {
+    return;
+  }
+
+  std::filesystem::path config_path(config_file);
+  if (!config_path.is_absolute()) {
+    const auto package_share =
+        std::filesystem::path(ament_index_cpp::get_package_share_directory("stag_detect"));
+    config_path = package_share / config_path;
+  }
+
+  try {
+    const YAML::Node config = YAML::LoadFile(config_path.string());
+    if (const YAML::Node default_size = config["default_marker_size"]) {
+      marker_size = default_size.as<float>();
+    }
+
+    const YAML::Node markers = config["markers"];
+    if (!markers) return;
+
+    for (const YAML::Node &marker : markers) {
+      marker_sizes_by_id[marker["id"].as<int>()] = marker["size"].as<float>();
+    }
+  } catch (const std::exception &e) {
+    RCLCPP_ERROR(this->get_logger(),
+                 "Failed to load marker config file '%s': %s",
+                 config_path.c_str(), e.what());
+  }
+}
+
+float StagNode::getMarkerSizeForId(int marker_id) const {
+  const auto marker_size_it = marker_sizes_by_id.find(marker_id);
+  if (marker_size_it != marker_sizes_by_id.end()) {
+    return marker_size_it->second;
+  }
+  return marker_size;
 }
 
 void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg) {
@@ -144,25 +188,23 @@ void StagNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
 
       for (int i = 0; i < markers.size(); i++) {
 
-          std::vector<cv::Point2d> tag_image(5);
-          std::vector<cv::Point3d> tag_world(5);
-
-          tag_image[0] = markers[i].center;
-          tag_world[0] = cv::Point3d(0.0, 0.0, 0.0);
+          std::vector<cv::Point2d> tag_image(4);
+          std::vector<cv::Point3d> tag_world(4);
 
           for (size_t ci = 0; ci < 4; ++ci) {
-            tag_image[ci + 1] = markers[i].corners[ci];
+            tag_image[ci] = markers[i].corners[ci];
           }
 
-          float half_makrer_size = marker_size/2.0;
+          const float current_marker_size = getMarkerSizeForId(markers[i].id);
+          const float half_marker_size = current_marker_size / 2.0f;
           // Top left
-          tag_world[1] = cv::Point3d(-half_makrer_size, half_makrer_size, 0.0);
+          tag_world[0] = cv::Point3d(-half_marker_size, half_marker_size, 0.0);
           // Top right
-          tag_world[2] = cv::Point3d(half_makrer_size, half_makrer_size, 0.0);
+          tag_world[1] = cv::Point3d(half_marker_size, half_marker_size, 0.0);
           // Bottom right
-          tag_world[3] = cv::Point3d(half_makrer_size, -half_makrer_size, 0.0);
+          tag_world[2] = cv::Point3d(half_marker_size, -half_marker_size, 0.0);
           // Bottom left
-          tag_world[4] = cv::Point3d(-half_makrer_size, -half_makrer_size, 0.0);
+          tag_world[3] = cv::Point3d(-half_marker_size, -half_marker_size, 0.0);
 
 
           cv::Mat marker_pose = cv::Mat::zeros(3, 4, CV_64F);

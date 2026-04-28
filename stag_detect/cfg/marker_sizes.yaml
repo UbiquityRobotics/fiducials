@@ -1,0 +1,6 @@
+default_marker_size: 0.18
+markers:
+  - id: 8
+    size: 0.08
+  - id: 18
+    size: 0.14
