@@ -1,0 +1,173 @@
+name: Release ROS 2 Multi-Arch Debian Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag Name (e.g. v1.0.0 or latest)'
+        required: false
+        default: 'latest'
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    name: Resolve Release Version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      clean_version: ${{ steps.vars.outputs.clean_version }}
+    steps:
+      - name: Compute Clean Version
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.tag_name }}" ]]; then
+            RAW_VERSION="${{ inputs.tag_name }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            RAW_VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            RAW_VERSION="${GITHUB_REF_NAME}"
+          fi
+
+          # Debian Policy §5.6.12 requires version to start with a digit
+          CLEAN_VERSION=$(echo "${RAW_VERSION}" | sed -E 's/^[^0-9]*//')
+          [[ -z "${CLEAN_VERSION}" || "${RAW_VERSION}" == "latest" ]] && CLEAN_VERSION="1.0.0-latest"
+
+          echo "tag=${RAW_VERSION}" >> $GITHUB_OUTPUT
+          echo "clean_version=${CLEAN_VERSION}" >> $GITHUB_OUTPUT
+          echo "Resolved tag: ${RAW_VERSION} -> clean version: ${CLEAN_VERSION}"
+
+  build-debs:
+    name: Build Debian (${{ matrix.arch }})
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup ROS 2 Jazzy
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: jazzy
+
+      - name: Install System Dependencies via rosdep
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libopencv-dev python3-cairosvg python3-joblib
+          rosdep update
+          rosdep install --from-paths . --ignore-src -r -y --rosdistro jazzy \
+            --skip-keys "fiducial_msgs fiducial_core fiducial_detect aruco_detect stag_detect"
+
+      - name: Compile and Merge Install
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          mkdir -p /tmp/pkg-root/opt/ros/jazzy
+
+          colcon build \
+            --merge-install \
+            --install-base /tmp/pkg-root/opt/ros/jazzy \
+            --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Run Test Suite
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test \
+            --merge-install \
+            --install-base /tmp/pkg-root/opt/ros/jazzy
+          colcon test-result --verbose
+
+      - name: Assemble Debian Package
+        env:
+          CLEAN_VERSION: ${{ needs.version.outputs.clean_version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          # 1. Clean colcon workspace scripts to avoid dpkg collisions
+          rm -f /tmp/pkg-root/opt/ros/jazzy/setup.* \
+                /tmp/pkg-root/opt/ros/jazzy/local_setup.* \
+                /tmp/pkg-root/opt/ros/jazzy/_local_setup_util* \
+                /tmp/pkg-root/opt/ros/jazzy/COLCON_IGNORE \
+                /tmp/pkg-root/opt/ros/jazzy/.colcon_install_layout
+
+          # 2. Stage Debian control directory and set standard permissions
+          mkdir -p /tmp/pkg-root/DEBIAN
+          find /tmp/pkg-root -type d -exec chmod 755 {} +
+
+          # 3. Generate DEBIAN/control file
+          cat << EOF | sed 's/^          //' > /tmp/pkg-root/DEBIAN/control
+          Package: ros-jazzy-fiducials
+          Version: ${CLEAN_VERSION}
+          Section: misc
+          Priority: optional
+          Architecture: ${ARCH}
+          Maintainer: Ubiquity Robotics <support@ubiquityrobotics.com>
+          Depends: ros-jazzy-ros-base, ros-jazzy-rclcpp, ros-jazzy-rclcpp-components, ros-jazzy-sensor-msgs, ros-jazzy-geometry-msgs, ros-jazzy-vision-msgs, ros-jazzy-visualization-msgs, ros-jazzy-tf2, ros-jazzy-tf2-ros, ros-jazzy-tf2-geometry-msgs, ros-jazzy-image-transport, ros-jazzy-cv-bridge, ros-jazzy-camera-info-manager, ros-jazzy-compressed-image-transport, ros-jazzy-rosidl-default-runtime, libopencv-dev, python3-cairosvg, python3-joblib
+          Homepage: https://github.com/UbiquityRobotics/fiducials
+          Description: Ubiquity Robotics Visual Fiducial Stack (ArUco & STag)
+           Complete high-performance computer vision marker tracking suite for autonomous
+           docking, precision alignment, and landmark localization on Magni robots. Includes
+           C++20 IPPE pose estimation, ROS 2 Jazzy composable components, and REP-145 interfaces.
+          EOF
+
+          # 4. Build .deb package
+          PKG_NAME="ros-jazzy-fiducials_${CLEAN_VERSION}_${ARCH}.deb"
+          dpkg-deb --build --root-owner-group /tmp/pkg-root "${PKG_NAME}"
+          sha256sum "${PKG_NAME}" > "${PKG_NAME}.sha256"
+
+          echo "=== Package Metadata (${ARCH}) ==="
+          dpkg-deb -I "${PKG_NAME}"
+          echo "=== Executables & Shared Libraries (${ARCH}) ==="
+          dpkg-deb -c "${PKG_NAME}" | grep -E "bin/|lib/" | head -n 35
+
+      - name: Upload Package Artifact (${{ matrix.arch }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: ros-jazzy-fiducials-${{ matrix.arch }}
+          path: |
+            ros-jazzy-fiducials_*.deb
+            ros-jazzy-fiducials_*.deb.sha256
+          retention-days: 14
+
+  publish-release:
+    name: Publish Release Assets to GitHub
+    needs: [version, build-debs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts (amd64)
+        uses: actions/download-artifact@v4
+        with:
+          name: ros-jazzy-fiducials-amd64
+          path: release-assets
+
+      - name: Download Artifacts (arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: ros-jazzy-fiducials-arm64
+          path: release-assets
+
+      - name: Verify Release Assets
+        run: |
+          echo "=== Ready to Publish Assets ==="
+          ls -la release-assets/
+          cat release-assets/*.sha256
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: ${{ needs.version.outputs.tag == 'latest' && 'Fiducials Latest Rolling Release' || needs.version.outputs.tag }}
+          prerelease: ${{ contains(needs.version.outputs.tag, 'beta') || needs.version.outputs.tag == 'latest' }}
+          files: |
+            release-assets/*
+          generate_release_notes: true
