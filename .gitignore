@@ -3,3 +3,5 @@
 .vscode
 **log
 *.bag
+docs/
+*plan*.md
