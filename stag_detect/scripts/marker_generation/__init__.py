@@ -1,0 +1,1 @@
+"""STag marker generation package."""

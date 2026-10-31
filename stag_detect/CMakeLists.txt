@@ -100,5 +100,13 @@ install(DIRECTORY cfg/
   DESTINATION share/${PROJECT_NAME}/cfg
 )
 
+
+# Python marker generation tools
+install(PROGRAMS
+  scripts/create_stag_markers.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Export package
+
 ament_package()
