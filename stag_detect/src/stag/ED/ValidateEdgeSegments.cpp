@@ -110,7 +110,7 @@ static short *ComputePrewitt3x3(unsigned char *srcImg, int width, int height,
   for (int i = 0; i < maxGradValue; i++)
     H[i] = (double)grads[i] / ((double)size);
 
-  delete grads;
+  delete[] grads;
   return gradImg;
 }  // end-ComputePrewitt3x3
 
@@ -408,8 +408,8 @@ void ValidateEdgeSegments(EdgeMap *map, unsigned char *srcImg,
   /// Extract the new edge segments after validation
   ExtractNewSegments(map);
 
-  delete H;
-  delete gradImg;
+  delete[] H;
+  delete[] gradImg;
 }  // end-ValidateEdgeSegments
 
 ///----------------------------------------------------------------------------------

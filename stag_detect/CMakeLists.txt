@@ -58,6 +58,7 @@ add_library(stag_core
 ament_target_dependencies(stag_core
   OpenCV
 )
+set_target_properties(stag_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Declare the executable
 add_executable(stag_detect src/stag_ros/stag_detect.cpp)
@@ -91,6 +92,10 @@ install(TARGETS
   LIBRARY DESTINATION lib
 )
 
+install(DIRECTORY include/
+  DESTINATION include
+)
+
 # Install directories
 install(DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
@@ -108,5 +113,7 @@ install(PROGRAMS
 )
 
 # Export package
+ament_export_include_directories(include)
+ament_export_libraries(stag_core)
 
 ament_package()

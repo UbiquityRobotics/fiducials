@@ -181,9 +181,9 @@ void MyRGB2Lab(unsigned char *redImg, unsigned char *greenImg,
 
   //  printf("b: min: %4.2lf, max: %4.2lf\n", min, max);
 
-  delete L;
-  delete a;
-  delete b;
+  delete[] L;
+  delete[] a;
+  delete[] b;
 }  // end-MyRGB2Lab
 
 ///------------------------------------------------------------------------------------------
@@ -384,9 +384,9 @@ void StdRGB2Lab(unsigned char *redImg, unsigned char *greenImg,
     bImg[i] = (unsigned char)((b[i] - min) * scale);
   }
 
-  delete L;
-  delete a;
-  delete b;
+  delete[] L;
+  delete[] a;
+  delete[] b;
 }  // end-StdRGB2Lab
 
 ///-------------------------------------------------------------------------------------
@@ -849,9 +849,9 @@ void RGB2Luv(unsigned char *redImg, unsigned char *greenImg,
     vImg[i] = (unsigned char)((v[i] - min) * scale);
   }
 
-  delete L;
-  delete u;
-  delete v;
+  delete[] L;
+  delete[] u;
+  delete[] v;
 }  // end-RGB2Luv
 
 /*------------------ RGB 2 HSL ----------------------------------
@@ -987,9 +987,9 @@ void RGB2HSL(unsigned char *redImg, unsigned char *greenImg,
     LImg[i] = (unsigned char)((L[i] - min) * scale);
   }
 
-  delete H;
-  delete S;
-  delete L;
+  delete[] H;
+  delete[] S;
+  delete[] L;
 }  // end-RGB2HSL
 
 void RGB2YUV(unsigned char *redImg, unsigned char *greenImg,
@@ -1024,7 +1024,7 @@ void DumpGradImage(char *file, short *gradImg, int width, int height) {
 
   // Burak - commented the line below, it was making a fuss
   // SaveImage(file, (char *)out, width, height, 8);
-  delete out;
+  delete[] out;
 }  // end-DumpGradImg
 
 ///-------------------------------------------------------------------------------------------
@@ -1043,7 +1043,7 @@ void DumpGradImage(char *file, short *gradImg, int width, int height,
 
   // Burak - commented the line below, it was making a fuss
   // SaveImage(file, (char *)out, width, height, 8);
-  delete out;
+  delete[] out;
 }  // end-DumpGradImg
 
 ///-------------------------------------------------------------------------------------------
@@ -1067,7 +1067,7 @@ void DumpEdgeSegments(char *file, EdgeMap *map) {
 
   // Burak - commented the line below, it was making a fuss
   // SaveImage(file, (char *)edgeImg, width, height, 8);
-  delete edgeImg;
+  delete[] edgeImg;
 }  // end-DumpEdgeSegments
 
 ///-------------------------------------------------------------------------------------------
@@ -1125,7 +1125,7 @@ void ColorEdgeSegments(char *file, EdgeMap *map, unsigned char *srcImg) {
 
   // Burak - commented the line below, it was making a fuss
   // SaveImage(file, (char *)colorImg, width, height, 24);
-  delete colorImg;
+  delete[] colorImg;
 }  // end-ColorEdgeSegments
 
 ///-------------------------------------------------------------------------------------------
@@ -1177,7 +1177,7 @@ void ShowJointPoints(char *file, EdgeMap *map, unsigned char *jointPoints,
 
   // Burak - commented the line below, it was making a fuss
   // SaveImage(file, (char *)colorImg, width, height, 24);
-  delete colorImg;
+  delete[] colorImg;
 }  // end-ShowJointPoints
 
 ///-------------------------------------------------------------------

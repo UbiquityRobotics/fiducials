@@ -246,7 +246,7 @@ void FiducialsNode::estimatePoseSingleMarkers(float markerLength,
 
        getSingleMarkerObjectPoints(fiducialSize, markerObjPoints);
        cv::solvePnP(markerObjPoints, corners[i], cameraMatrix, distCoeffs,
-                    rvecs[i], tvecs[i]);
+                    rvecs[i], tvecs[i], false, cv::SOLVEPNP_IPPE_SQUARE);
 
        reprojectionError[i] =
           getReprojectionError(markerObjPoints, corners[i],
@@ -467,7 +467,7 @@ void FiducialsNode::poseEstimateCallback(const FiducialArrayConstPtr & msg)
                 if (vis_msgs) {
                     vision_msgs::msg::Detection2D vm;
                     vision_msgs::msg::ObjectHypothesisWithPose vmh;
-                    vmh.hypothesis.class_id = ids[i];
+                    vmh.hypothesis.class_id = std::to_string(ids[i]);
                     vmh.hypothesis.score = exp(-2 * object_error); // [0, infinity] -> [1,0]
                     vmh.pose.pose.position.x = tvecs[i][0];
                     vmh.pose.pose.position.y = tvecs[i][1];
@@ -653,22 +653,59 @@ FiducialsNode::FiducialsNode() : Node("aruco_detect"), broadcaster(this)
         std::vector<std::string> parts;
         boost::split(parts, element, boost::is_any_of(":"));
         if (parts.size() == 2) {
-            double len = std::stod(parts[1]);
+            std::string part0 = boost::algorithm::trim_copy(parts[0]);
+            std::string part1 = boost::algorithm::trim_copy(parts[1]);
+            double len = 0.0;
+            std::string range_str;
+            if (part0.find('-') != std::string::npos) {
+                range_str = part0;
+                try { len = std::stod(part1); } catch (...) {
+                    RCLCPP_ERROR(this->get_logger(), "Malformed fiducial_len_override length: %s", part1.c_str());
+                    continue;
+                }
+            } else if (part1.find('-') != std::string::npos) {
+                range_str = part1;
+                try { len = std::stod(part0); } catch (...) {
+                    RCLCPP_ERROR(this->get_logger(), "Malformed fiducial_len_override length: %s", part0.c_str());
+                    continue;
+                }
+            } else {
+                try {
+                    len = std::stod(part0);
+                    range_str = part1;
+                } catch (...) {
+                    try {
+                        len = std::stod(part1);
+                        range_str = part0;
+                    } catch (...) {
+                        RCLCPP_ERROR(this->get_logger(), "Malformed fiducial_len_override: %s", element.c_str());
+                        continue;
+                    }
+                }
+            }
             std::vector<std::string> range;
-            boost::split(range, element, boost::is_any_of("-"));
+            boost::split(range, range_str, boost::is_any_of("-"));
             if (range.size() == 2) {
-               int start = std::stoi(range[0]);
-               int end = std::stoi(range[1]);
-               RCLCPP_INFO(this->get_logger(), "Setting fiducial id range %d - %d length to %f",
-                        start, end, len);
-               for (int j=start; j<=end; j++) {
-                   fiducialLens[j] = len;
+               try {
+                   int start = std::stoi(boost::algorithm::trim_copy(range[0]));
+                   int end = std::stoi(boost::algorithm::trim_copy(range[1]));
+                   RCLCPP_INFO(this->get_logger(), "Setting fiducial id range %d - %d length to %f",
+                            start, end, len);
+                   for (int j=start; j<=end; j++) {
+                       fiducialLens[j] = len;
+                   }
+               } catch (const std::exception& e) {
+                   RCLCPP_ERROR(this->get_logger(), "Malformed fiducial_len_override range: %s (%s)", range_str.c_str(), e.what());
                }
             }
             else if (range.size() == 1){
-               int fid = std::stoi(range[0]);
-               RCLCPP_INFO(this->get_logger(), "Setting fiducial id %d length to %f", fid, len);
-               fiducialLens[fid] = len;
+               try {
+                   int fid = std::stoi(boost::algorithm::trim_copy(range[0]));
+                   RCLCPP_INFO(this->get_logger(), "Setting fiducial id %d length to %f", fid, len);
+                   fiducialLens[fid] = len;
+               } catch (const std::exception& e) {
+                   RCLCPP_ERROR(this->get_logger(), "Malformed fiducial_len_override id: %s (%s)", range_str.c_str(), e.what());
+               }
             }
             else {
                RCLCPP_ERROR(this->get_logger(), "Malformed fiducial_len_override: %s", element.c_str());

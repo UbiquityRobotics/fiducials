@@ -37,9 +37,8 @@ struct Common {
                              const cv::Mat &distortionMatrix) {
     if (img.empty() or world.empty()) return;
     cv::Mat rVec, rMat, tVec;
-    // optimize for 5 planar points
-    // possibly choose to reduce to the 4 for use with advanced algos
-    cv::solvePnP(world, img, cameraMatrix, distortionMatrix, rVec, tVec);
+    // optimize for 5 planar points using closed-form IPPE solver
+    cv::solvePnP(world, img, cameraMatrix, distortionMatrix, rVec, tVec, false, cv::SOLVEPNP_IPPE);
     cv::Rodrigues(rVec, rMat);
     rMat.convertTo(output.colRange(0, 3), CV_64F);
     tVec.convertTo(output.col(3), CV_64F);
@@ -76,8 +75,7 @@ struct Common {
     }
 
     geometry_msgs::msg::PoseStamped pose_msg;
-    pose_msg.header.frame_id = frame_id;
-    pose_msg.header.stamp = header.stamp;
+    pose_msg.header = header;
     pose_msg.pose.position.x = transform.translation.x;
     pose_msg.pose.position.y = transform.translation.y;
     pose_msg.pose.position.z = transform.translation.z;

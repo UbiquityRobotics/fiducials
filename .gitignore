@@ -1,7 +1,68 @@
+# ==============================================================================
+# ROS 2 Standard .gitignore (Ubiquity Fiducials)
+# ==============================================================================
+
+# Colcon & Ament build workspaces
+build/
+install/
+log/
+.colcon/
+
+# C / C++ compiled artifacts & libraries
+*.o
+*.obj
+*.a
+*.la
+*.lo
+*.so
+*.dylib
+*.dll
+*.gcov
+*.gcda
+*.gcno
+
+# Tooling / Compilation Database
+compile_commands.json
+.cache/
+.clangd/
+
+# Python compiled bytecode & packaging
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor & IDE artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
 *~
-*.pyc
-.vscode
-**log
+.#*
+*.sublime-workspace
+*.sublime-project
+
+# ROS Bags and Logs
 *.bag
+*.mcap
+*.db3
+**log
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# ------------------------------------------------------------------------------
+# Private Documentation and Notes
+# ------------------------------------------------------------------------------
 docs/
 *plan*.md
+REFACTORING_MASTER_PLAN.md
+docs/REFACTORING_MASTER_PLAN.md

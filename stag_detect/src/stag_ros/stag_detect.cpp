@@ -267,18 +267,11 @@ void StagNode::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::ConstShare
     rectificationMat.at<double>(2, 1) = msg->r[7];
     rectificationMat.at<double>(2, 2) = msg->r[8];
     // Get projection Matrix
-    projectionMat.at<double>(0, 0) = msg->p[0];
-    projectionMat.at<double>(0, 1) = msg->p[1];
-    projectionMat.at<double>(0, 2) = msg->p[2];
-    projectionMat.at<double>(1, 0) = msg->p[3];
-    projectionMat.at<double>(1, 1) = msg->p[4];
-    projectionMat.at<double>(1, 2) = msg->p[5];
-    projectionMat.at<double>(2, 0) = msg->p[6];
-    projectionMat.at<double>(2, 1) = msg->p[7];
-    projectionMat.at<double>(2, 2) = msg->p[8];
-    projectionMat.at<double>(2, 0) = msg->p[9];
-    projectionMat.at<double>(2, 1) = msg->p[10];
-    projectionMat.at<double>(2, 2) = msg->p[11];
+    for (int r = 0; r < 3; ++r) {
+      for (int c = 0; c < 4; ++c) {
+        projectionMat.at<double>(r, c) = msg->p[r * 4 + c];
+      }
+    }
 
     got_camera_info = true;
   }

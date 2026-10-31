@@ -179,9 +179,9 @@ EdgeMap *DetectEdgesByEDPF(unsigned char *srcImg, int width, int height,
 #endif
 
   // Clean up
-  delete gradImg;
-  delete dirImg;
-  delete smoothImg;
+  delete[] gradImg;
+  delete[] dirImg;
+  delete[] smoothImg;
 
   return map;
 }  // DetectEdgesByEDPF
